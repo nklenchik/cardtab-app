@@ -41,7 +41,7 @@ Search step https://claude.ai/artifact/54GP2em6K97QyeEGvsdBdU ; bulk flow https:
 ## Drop 1 built (2026-11-03)
 Local-first store, dashboard and sign-in, all in app/ (see README.md). Tested in Chromium at desktop and iPhone size, light and dark.
 - Store: IndexedDB, one database per signed-in email; money in whole cents; ids, timestamps and soft deletes so sync can be added later. Undo stack (30 steps). Other open tabs refresh automatically.
-- Usage counts entries added this month (adds and duplicates). Edits are free. Deleting does not give a slot back; undoing an add does. Sample entries from Testing tools don't count.
+- Usage counts entries added this month (adds and duplicates). Edits are free. Counted by when an entry was added, not its date. Deleting an entry added this month gives the slot back (Nick agreed 2026-11-03); deleting one from an earlier month doesn't. Sample entries from Testing tools don't count.
 - Refunds are treated as money back on a purchase: Spent = purchases minus refunds.
 - Sales store "after fees and shipping" as typed by the user, so fees shown are exact (sale minus what reached you). No estimated fee is used anywhere in Drop 1.
 - Free: tiles, chart caption and fees cover this month; the monthly chart shows the last 3 months; the list always shows every entry with all filters. Premium: everything follows the date range (all time chart shows up to the latest 12 months).
@@ -53,4 +53,3 @@ Local-first store, dashboard and sign-in, all in app/ (see README.md). Tested in
 ## Open questions for Nick
 - Free chart: last 3 months (matches the 3-month report history) or this month only?
 - Refund meaning: always money back on a purchase, or can it also be a refund you gave a buyer?
-- Should deleting an entry give a Free slot back? (Currently no, to stop delete-and-re-add.)

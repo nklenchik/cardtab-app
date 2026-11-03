@@ -81,7 +81,7 @@
     const tile = $('ct-profit').parentElement; tile.classList.toggle('ct-positive', t.profit >= 0); tile.classList.toggle('ct-negative', t.profit < 0);
     const note = $('app-scope'), p = $('ct-period').value;
     note.hidden = premium() || p === 'month' || !S.all().length;
-    if (!note.hidden) note.innerHTML = 'Totals and insights show ' + esc(D.monthLabel) + '. <button type="button" data-upgrade>All time and date ranges with Premium</button>';
+    if (!note.hidden) note.innerHTML = 'Totals show ' + esc(D.monthLabel) + ' · <button type="button" data-upgrade>All time with Premium</button>';
     $('ct-ins-scope').textContent = premium() ? periodLabel(p) : 'This month';
   }
 

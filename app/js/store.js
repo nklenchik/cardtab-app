@@ -5,8 +5,9 @@
 
    Plan rules
    - Free: 20 new entries per calendar month (local time). Warn at 17, block at 20, resets on the 1st.
-     Adding (or duplicating) uses a slot. Editing does not. Deleting does not give a slot back,
-     except undoing an add, which does.
+     Adding (or duplicating) uses a slot, counted by when it was added (not its date, so backdating
+     doesn't dodge the limit). Editing is free. Deleting an entry added this month gives its slot back;
+     deleting an entry from an earlier month doesn't.
    - Premium: unlimited.
 */
 (function () {
@@ -163,7 +164,7 @@
       const { e, errors, ok } = normalize(input);
       if (!ok) { const err = new Error('invalid'); err.code = 'invalid'; err.errors = errors; throw err; }
       const t = new Date().toISOString();
-      e.id = uid(); e.createdAt = t; e.updatedAt = t; e.deleted = false;
+      e.id = uid(); e.createdAt = t; e.updatedAt = t; e.deleted = false; e.counted = true;
       await putEntry(e); await bumpUsage(1);
       pushUndo((opts && opts.label) || 'Entry added', async () => { await dropEntry(e.id); await bumpUsage(-1); });
       changed('add'); return clone(e);
@@ -183,8 +184,11 @@
     async remove(id) {
       const cur = entries.get(id); if (!cur || cur.deleted) return;
       const e = Object.assign(clone(cur), { deleted: true, updatedAt: new Date().toISOString() });
+      // An entry added this month gives its slot back when deleted. Older entries don't (that month is over).
+      const giveBack = e.counted !== false && String(e.createdAt).slice(0, 7) === ym(new Date());
       await putEntry(e);
-      pushUndo('Entry deleted', async () => { e.deleted = false; e.updatedAt = new Date().toISOString(); await putEntry(e); });
+      if (giveBack) await bumpUsage(-1);
+      pushUndo('Entry deleted', async () => { e.deleted = false; e.updatedAt = new Date().toISOString(); await putEntry(e); if (giveBack) await bumpUsage(1); });
       changed('remove');
     },
 
@@ -230,7 +234,7 @@
     async _setUsage(n) { await putMeta('usage', { month: ym(new Date()), used: n }); changed('usage'); },
     async _loadSample(rows) {
       const t = new Date().toISOString();
-      for (const r of rows) { const { e } = normalize(r); e.id = uid(); e.createdAt = t; e.updatedAt = t; e.deleted = false; await putEntry(e); }
+      for (const r of rows) { const { e } = normalize(r); e.id = uid(); e.createdAt = t; e.updatedAt = t; e.deleted = false; e.counted = false; await putEntry(e); }
       changed('sample');
     },
     async _clearAll() {
