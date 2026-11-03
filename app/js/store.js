@@ -106,6 +106,7 @@
     } else { e.net = null; e.fees = null; e.ship = null; }
     e.art = e.art || null;
     if (e.source != null) e.source = String(e.source).slice(0, 400);
+    if (e.artSource != null) e.artSource = /^https?:\/\//i.test(e.artSource) ? String(e.artSource).slice(0, 500) : null;
     const errors = {};
     if (!e.name) errors.name = 'Add the card or item';
     if (e.amount == null || e.amount < 0) errors.amount = 'Enter an amount';
