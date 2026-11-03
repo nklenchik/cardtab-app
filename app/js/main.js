@@ -1,0 +1,100 @@
+/* Card Tab boot: signed out shows the sign-in page, signed in shows the dashboard (the first screen after sign-in).
+   Also runs the account menu (usage lives here) and the local-mode testing tools. */
+(function () {
+  'use strict';
+  const S = window.CTStore, Sess = window.CTSession, Dash = window.CTDash;
+  const $ = id => document.getElementById(id);
+  const vAuth = $('view-auth'), vApp = $('view-app'), menu = $('app-menu'), av = $('app-avatar');
+  let auth = null;
+
+  const displayName = s => s.name || (s.via === 'google' && s.email.endsWith('.local') ? 'You' : s.email.split('@')[0].replace(/[._+-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase()));
+
+  async function showApp(session, isNew) {
+    vAuth.hidden = true; vApp.hidden = false; document.title = 'Card Tab';
+    await S.open({ email: session.email });
+    av.textContent = (displayName(session)[0] || '?').toUpperCase();
+    $('am-name').textContent = displayName(session); $('am-email').textContent = session.email.endsWith('.local') ? 'Signed in on this device' : session.email;
+    $('am-dev').hidden = !Sess.LOCAL_MODE;
+    Dash.mount();
+    if (!S.persistent) Dash.toast('This browser isn’t letting Card Tab save on the device, so entries last until you close the tab.');
+    else if (isNew && !S.all().length) Dash.toast('Welcome to Card Tab');
+    history.replaceState(null, '', location.pathname);
+  }
+  function showAuth() {
+    S.close(); closeMenu();
+    vApp.hidden = true; vAuth.hidden = false; document.title = 'Sign in · Card Tab';
+    if (!auth) auth = window.CTAuth.mount(vAuth, (s, isNew) => showApp(s, isNew)); else auth.reset();
+    setTimeout(() => $('auth-email').focus({ preventScroll: true }), 50);
+  }
+
+  // ---------- account menu ----------
+  function renderMenu() {
+    const u = S.usage(), p = $('am-plan'), n = $('am-note');
+    if (u.plan === 'premium') {
+      p.innerHTML = '<div class="r"><b>Premium</b><small>Unlimited entries</small></div><small>' + u.used + (u.used === 1 ? ' entry' : ' entries') + ' added this month</small>';
+      n.hidden = true;
+    } else {
+      p.innerHTML = '<div class="r"><b>Free plan</b><button type="button" class="up" data-upgrade>Upgrade</button></div><div class="am-meter' + (u.used >= S.WARN_AT ? ' warn' : '') + '"><i style="width:' + Math.min(100, u.used / u.limit * 100) + '%"></i></div><small>' + u.used + ' of ' + u.limit + ' entries this month · resets ' + u.resetsOn + '</small>';
+      n.hidden = !(u.warn || u.blocked);
+      n.textContent = u.blocked ? 'You’ve used all 20 free entries. They reset on ' + u.resetsOn + '.' : 'You’re nearing your limit: ' + u.left + (u.left === 1 ? ' entry' : ' entries') + ' left this month.';
+    }
+    menu.querySelectorAll('[data-plan]').forEach(b => b.classList.toggle('on', b.dataset.plan === u.plan));
+  }
+  function placeMenu() {
+    const r = av.getBoundingClientRect(), w = menu.offsetWidth;
+    menu.style.top = (r.bottom + 8) + 'px';
+    menu.style.left = Math.max(12, Math.min(r.right - w, innerWidth - w - 12)) + 'px';
+  }
+  function openMenu() { renderMenu(); menu.hidden = false; placeMenu(); av.setAttribute('aria-expanded', 'true'); const f = menu.querySelector('[role="menuitem"]'); if (f) f.focus({ preventScroll: true }); }
+  function closeMenu(focus) { if (menu.hidden) return; menu.hidden = true; av.setAttribute('aria-expanded', 'false'); if (focus) av.focus(); }
+  av.addEventListener('click', e => { e.stopPropagation(); menu.hidden ? openMenu() : closeMenu(); });
+  document.addEventListener('click', e => { if (!menu.hidden && !e.target.closest('#app-menu')) closeMenu(); });
+  document.addEventListener('keydown', e => {
+    if (menu.hidden) return;
+    if (e.key === 'Escape') { closeMenu(true); return; }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault(); const items = [...menu.querySelectorAll('button:not([hidden]), summary')].filter(x => x.offsetParent);
+      const i = items.indexOf(document.activeElement); const n = items[(i + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length]; if (n) n.focus();
+    }
+  });
+  addEventListener('resize', () => { if (!menu.hidden) placeMenu(); });
+  S.on(() => { if (!menu.hidden) renderMenu(); });
+
+  menu.addEventListener('click', async e => {
+    const b = e.target.closest('button, summary'); if (!b) return;
+    if (b.dataset.soon) { closeMenu(); Dash.toast(b.dataset.soon + ' arrive in a later update.'); return; }
+    if (b.id === 'am-export') { closeMenu(); Dash.exportCSV(); return; }
+    if (b.id === 'am-out') { Sess.signOut(); showAuth(); return; }
+    if (b.dataset.plan) { await S.setPlan(b.dataset.plan); Dash.toast(b.dataset.plan === 'premium' ? 'Now testing as Premium' : 'Now testing as Free'); return; }
+    const d = b.dataset.dev; if (!d) return;
+    if (d === 'sample') { await S._loadSample(sampleEntries()); Dash.toast('Loaded ' + sampleEntries().length + ' sample entries (they don’t count toward the limit)'); }
+    else if (d === 'near') { await S._setUsage(17); Dash.toast('Usage set to 17 of 20'); }
+    else if (d === 'full') { await S._setUsage(20); Dash.toast('Usage set to 20 of 20'); }
+    else if (d === 'usage0') { await S._setUsage(0); Dash.toast('Usage reset to 0'); }
+    else if (d === 'days') { const t = new Date(); await S._setSigninDays([-2, -1, 0].map(i => S.ymd(new Date(t.getFullYear(), t.getMonth(), t.getDate() + i)))); Dash.toast('Counted as 3 sign-in days. The Import link shows on the first-run screen for Free.'); }
+    else if (d === 'clear') { if (b.dataset.armed) { delete b.dataset.armed; b.textContent = 'Clear all data'; closeMenu(); await S._clearAll(); Dash.toast('All entries cleared on this device'); } else { b.dataset.armed = 1; b.textContent = 'Tap again to clear everything'; setTimeout(() => { delete b.dataset.armed; b.textContent = 'Clear all data'; }, 4000); } }
+  });
+
+  // Sample entries for testing, dated around today so every view has something to show (art from the site demo)
+  function sampleEntries() {
+    const now = new Date(), Y = now.getFullYear(), M = now.getMonth(), D = now.getDate();
+    const at = (mBack, day) => { const last = new Date(Y, M - mBack + 1, 0).getDate(); const d = mBack === 0 ? Math.min(day, D) : Math.min(day, last); return S.ymd(new Date(Y, M - mBack, d)); };
+    const art = k => ({ list: 'assets/card-art/' + k + '-sm.webp', detail: 'assets/card-art/' + k + '.webp' });
+    return [
+      { date: at(0, Math.ceil(D * .9)), type: 'sale', platform: 'eBay', name: 'Pikachu ex - 238/191 - SV08: Surging Sparks', amount: '255.00', net: '214.50', condition: 'Near Mint', art: art('pikachu-ex') },
+      { date: at(0, Math.ceil(D * .45)), type: 'purchase', platform: 'eBay', name: 'Gengar ex - 154/128 - ME: 30th Celebration', amount: '64.80', condition: 'Near Mint', art: art('gengar-ex') },
+      { date: at(0, Math.ceil(D * .2)), type: 'sale', platform: 'TCGplayer', name: 'Chi-Yu ex - 259/193 - SV02: Paldea Evolved', qty: 2, amount: '85.90', net: '74.22', condition: 'Near Mint', art: art('chi-yu-ex') },
+      { date: at(1, 26), type: 'purchase', platform: 'eBay', name: 'Son Gohan : Youth - FB03-139 (Alternate Art) - Raging Roar', amount: '142.88', condition: 'Near Mint', art: art('son-gohan-youth') },
+      { date: at(1, 23), type: 'sale', platform: 'TCGplayer', name: 'Charizard ex - 199/165 - SV: Scarlet & Violet 151', amount: '277.04', net: '240.03', condition: 'Lightly Played', art: art('charizard-ex') },
+      { date: at(1, 9), type: 'refund', platform: 'eBay', name: 'Houndoom - 4/64 - Neo Revelation', amount: '18.40', note: 'Arrived creased, seller refunded', art: { list: 'assets/card-art/houndoom-sm.webp', detail: 'assets/card-art/houndoom.webp' } },
+      { date: at(2, 17), type: 'purchase', platform: 'TCGplayer', name: 'Greninja ex - 214/167 - SV06: Twilight Masquerade', amount: '227.75', condition: 'Near Mint', art: art('greninja-ex') },
+      { date: at(2, 11), type: 'sale', platform: 'Card Show', name: 'Blastoise - 2/102 - Base Set Unlimited', amount: '120.00', net: '120.00', condition: 'Lightly Played', art: art('blastoise') },
+      { date: at(2, 4), type: 'purchase', platform: 'Whatnot', name: 'Houndoom - 4/64 - Neo Revelation', amount: '18.40', condition: 'Near Mint', art: { list: 'assets/card-art/houndoom-sm.webp', detail: 'assets/card-art/houndoom.webp' } },
+      { date: at(3, 20), type: 'purchase', platform: 'Local game store', name: 'Surging Sparks booster bundle', amount: '32.39', condition: 'Sealed' }
+    ];
+  }
+
+  // ---------- go ----------
+  const s = Sess.current();
+  if (s) showApp(s, false); else showAuth();
+})();

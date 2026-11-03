@@ -1,0 +1,18 @@
+name = "card-tab-api"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# Create these once (see README): a D1 database and an R2 bucket.
+[[d1_databases]]
+binding = "DB"
+database_name = "card-tab"
+database_id = "REPLACE_WITH_ID_FROM_wrangler_d1_create"
+
+[[r2_buckets]]
+binding = "ART"
+bucket_name = "card-tab-art"
+
+[vars]
+ALLOWED_ORIGIN = "https://app.cardtab.app"
+
+# Secret (never put it in this file):  wrangler secret put JUSTTCG_API_KEY
