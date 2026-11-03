@@ -5,7 +5,9 @@
   const S = window.CTStore, Sess = window.CTSession, Dash = window.CTDash;
   const $ = id => document.getElementById(id);
   const vAuth = $('view-auth'), vApp = $('view-app'), menu = $('app-menu'), av = $('app-avatar');
-  let auth = null;
+  let auth = null, whoName = '';
+  const esc = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const PREM_PILL = '<span class="am-prem"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/></svg>Premium</span>';
 
   const displayName = s => s.name || (s.via === 'google' && s.email.endsWith('.local') ? 'You' : s.email.split('@')[0].replace(/[._+-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase()));
 
@@ -13,7 +15,7 @@
     vAuth.hidden = true; vApp.hidden = false; document.title = 'Card Tab';
     await S.open({ email: session.email });
     av.textContent = (displayName(session)[0] || '?').toUpperCase();
-    $('am-name').textContent = displayName(session); $('am-email').textContent = session.email.endsWith('.local') ? 'Signed in on this device' : session.email;
+    whoName = displayName(session); $('am-name').textContent = whoName; $('am-email').textContent = session.email.endsWith('.local') ? 'Signed in on this device' : session.email;
     $('am-dev').hidden = !Sess.LOCAL_MODE;
     Dash.mount();
     if (!S.persistent) Dash.toast('This browser isn’t letting Card Tab save on the device, so entries last until you close the tab.');
@@ -30,8 +32,10 @@
   // ---------- account menu ----------
   function renderMenu() {
     const u = S.usage(), p = $('am-plan'), n = $('am-note');
+    // A Premium account shows a cranberry Premium pill beside the owner's name
+    $('am-name').innerHTML = '<span class="am-nm">' + esc(whoName) + '</span>' + (u.plan === 'premium' ? PREM_PILL : '');
     if (u.plan === 'premium') {
-      p.innerHTML = '<div class="r"><b>Premium</b><small>Unlimited entries</small></div><small>' + u.used + (u.used === 1 ? ' entry' : ' entries') + ' added this month</small>';
+      p.innerHTML = '<div class="r"><b>Premium plan</b><small>Unlimited entries</small></div><small>' + u.used + (u.used === 1 ? ' entry' : ' entries') + ' added this month</small>';
       n.hidden = true;
     } else {
       p.innerHTML = '<div class="r"><b>Free plan</b><button type="button" class="up" data-upgrade>Upgrade</button></div><div class="am-meter' + (u.used >= S.WARN_AT ? ' warn' : '') + '"><i style="width:' + Math.min(100, u.used / u.limit * 100) + '%"></i></div><small>' + u.used + ' of ' + u.limit + ' entries this month · resets ' + u.resetsOn + '</small>';

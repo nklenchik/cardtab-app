@@ -189,3 +189,10 @@ a,button,select,summary,label,[role="button"]{touch-action:manipulation}
 @keyframes row-in{from{opacity:0;transform:translateY(-8px);background:rgba(23,101,165,.12)}60%{opacity:1;transform:none}to{background:transparent}}
 .ct-demo .ct-row.ct-leaving,.ct-demo .ct-month.ct-leaving{overflow:hidden;pointer-events:none;transition:height .3s var(--ease),opacity .2s ease,transform .3s var(--ease),padding .3s var(--ease),border-color .3s ease;opacity:0;transform:translateX(-14px)}
 @media(prefers-reduced-motion:reduce){.ct-demo .ct-row.ct-new{animation:none}.ct-demo .ct-row.ct-leaving,.ct-demo .ct-month.ct-leaving{transition:none}}
+
+/* Premium pill beside the account owner's name in the account menu */
+.am-who #am-name{display:flex;align-items:center;gap:8px;min-width:0}
+.am-nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.am-prem{flex:none;display:inline-flex;align-items:center;gap:4px;padding:2px 9px 2px 7px;border-radius:999px;background:var(--brand);color:#fff;font-size:11px;font-weight:750;line-height:1.5;letter-spacing:.01em;white-space:nowrap}
+.am-who .am-nm{color:var(--text);font-size:13px;font-weight:700}
+.am-who .am-prem{color:#fff;font-size:11px}
