@@ -67,3 +67,10 @@ Local-first store, dashboard and sign-in, all in app/ (see README.md). Tested in
 - Smoothness: entries are contained and off-screen entries are skipped (content-visibility). With 200 entries at 4x CPU slowdown, dropped frames per open/close went from 9 to about 1-3 on desktop. Placeholder art scales with its tile. Tap handling matches the site (touch-action: manipulation, no grey tap flash).
 - Dark mode: the add sheet's search box, segments and fields use a lighter fill and a quiet outline so they're visible without focus.
 - Not testable here: real Safari/iPhone. If open/close still feels off on a device, note which device and browser.
+
+## Roadmap (agreed 2026-11-03)
+1. Thursday Nov 5: Cloudflare domain move; app online (Pages), app.cardtab.app attached.
+2. Real sign-in (Google + emailed link) and online saving across devices.
+3. **Payments: remind Nick here.** Leaning Stripe (Checkout + Billing + Customer Portal); decide on sales tax handling: plain Stripe, Stripe Managed Payments (+3.5%, confirm US eligibility) or Paddle (5% + 50c). Push the yearly plan (fixed per-charge fees hurt $4/mo most).
+4. Launch.
+Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium), then Card Board on real data.
