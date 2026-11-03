@@ -16,7 +16,7 @@
     date: ['date', 'order date', 'sold date', 'sale date', 'purchase date', 'transaction date', 'day', 'when'],
     type: ['transaction', 'type', 'transaction type', 'kind', 'buy sell', 'buy or sell', 'action', 'category'],
     platform: ['platform', 'marketplace', 'site', 'source', 'where', 'venue', 'channel', 'store', 'sold on', 'bought on', 'seller', 'buyer'],
-    name: ['items', 'item', 'card', 'cards', 'card name', 'name', 'title', 'description', 'product', 'listing', 'item name'],
+    name: ['items', 'item', 'card', 'cards', 'card name', 'name', 'title', 'description', 'product', 'listing', 'item name', 'what', 'card or item', 'item description', 'details'],
     gross: ['gross', 'gross profit', 'gross sale', 'sold for', 'sale price', 'sold price', 'price sold', 'sale amount', 'revenue', 'sale total', 'sold'],
     net: ['net', 'net profit', 'payout', 'after fees', 'you keep', 'net sale', 'earnings', 'take home', 'net amount', 'proceeds'],
     purchase: ['total purchase price', 'purchase price', 'purchase', 'cost', 'paid', 'buy price', 'bought for', 'price paid', 'amount paid', 'spent'],
@@ -44,7 +44,7 @@
         const hasCore = mapColumns(sh.rows[r]).date != null;
         const bodyRows = sh.rows.slice(r + 1).filter(x => x && x.some(v => v != null && v !== '')).length;
         const score = sc * 10 + (hasCore ? 15 : 0) + Math.min(bodyRows, 500) / 100;
-        if (sc >= 3 && (!best || score > best.score)) best = { sheet: si, header: r, score };
+        if ((sc >= 3 || (sc >= 2 && bodyRows > 0)) && (!best || score > best.score)) best = { sheet: si, header: r, score };
       }
     });
     return best;
@@ -144,10 +144,17 @@
       if (!row.some(v => v != null && v !== '')) continue;
       const rawName = get('name'), d = date(get('date'));
       let gross = cents(get('gross')), net = cents(get('net')), buy = cents(get('purchase')), amt = cents(get('amount'));
-      const flags = [];
+      const flags = [], x = { row: r + 1, flags };
       if (!rawName && gross == null && net == null && buy == null && amt == null) { skipped.push({ row: r + 1, why: 'No card or amount' }); continue; }
       let type = typeOf(get('type'));
-      if (!type) type = (gross != null || net != null) && buy == null ? 'sale' : buy != null ? 'purchase' : amt != null && amt < 0 ? 'sale' : amt != null ? 'purchase' : null;
+      // No type column: the wording decides first ("sold", "bought"), then which money columns are filled.
+      // A single amount column with no wording counts as a purchase (money out) and is listed for a check.
+      if (!type) {
+        const words = String(rawName || '') + ' ' + String(get('note') || '');
+        type = /\b(sold|sale|sell)\b/i.test(words) ? 'sale' : /\b(bought|buy|purchased?)\b/i.test(words) ? 'purchase' : /\brefund/i.test(words) ? 'refund'
+          : (gross != null || net != null) && buy == null ? 'sale' : buy != null ? 'purchase' : amt != null ? 'purchase' : null;
+        if (type && map.gross == null && map.net == null && map.purchase == null && !/\b(sold|sale|sell|bought|buy|purchased?|refund)/i.test(words)) flags.push('No sale or purchase column, so it was set as a purchase. Change it after importing if it was a sale.');
+      }
       if (!type) { skipped.push({ row: r + 1, why: 'Couldn’t tell if it’s a sale or a purchase' }); continue; }
       const allNotes = [note(map.gross), note(map.net), note(map.purchase), note(map.name), note(map.amount), String(get('note') || '')].filter(Boolean);
       const e = { type, date: d, platform: platformOf(get('platform')), source: String(rawName || '').trim(), qty: 1, condition: '', note: allNotes.join('\n') };
@@ -169,7 +176,7 @@
         e.amount = gross;
         const fsC = cents(get('fees')), shC = cents(get('ship'));
         const split = fsC != null || shC != null ? { fees: Math.abs(fsC || 0), ship: Math.abs(shC || 0) } : noteSplit(note(map.net) || note(map.gross) || get('note'));
-        if (split && split.fees + split.ship === gross - net) { e.fees = split.fees; e.ship = split.ship; }
+        if (split && split.fees + split.ship === gross - net) { e.fees = split.fees; e.ship = split.ship; if (fsC == null && shC == null) x.fromNote = true; }
         else { e.net = net; if (gross !== net) flags.push(split ? 'The note’s fees and shipping don’t add up to this sale, so they’re kept together as one amount.' : 'No note splitting fees from shipping, so they’re kept together as one amount.'); e.combined = gross !== net; }
       } else if (type === 'purchase') {
         e.amount = Math.abs(buy != null ? buy : amt != null ? amt : gross != null ? gross : 0);
@@ -178,9 +185,9 @@
         e.amount = Math.abs(net != null ? net : gross != null ? gross : amt != null ? amt : buy != null ? buy : 0);
         if (e.amount === 0) flags.push('A $0 refund, kept for your history.');
       }
-      out.push({ row: r + 1, entry: e, flags });
+      x.entry = e; x.hasNote = allNotes.length > 0; out.push(x);
     }
-    return { ok: true, sheet: sh.name, sheetIndex: t.sheet, headerRow: t.header + 1, header, map, rows: out, skipped };
+    return { ok: true, notesRead: out.filter(x => x.hasNote).length, notesSplit: out.filter(x => x.fromNote).length, sheet: sh.name, sheetIndex: t.sheet, headerRow: t.header + 1, header, map, rows: out, skipped };
   }
 
   // Summary for the review screen (cents)
