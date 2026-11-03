@@ -48,7 +48,7 @@
     const span = document.createElement('span'); span.textContent = text; t.appendChild(span);
     if (opts.undo) {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = 'Undo';
-      b.addEventListener('click', async () => { const l = await S.undo(); toast(l ? 'Undone' : 'Nothing to undo'); });
+      b.addEventListener('click', doUndo);
       t.appendChild(b);
     }
     box.appendChild(t); toastEl = t;
@@ -125,7 +125,11 @@
   }
   function detailsHtml(t) {
     const bits = [];
-    if (t.type === 'sale') { const fee = t.amount - t.net, pct = t.amount ? Math.round(fee / t.amount * 1000) / 10 : 0; bits.push('Fees and shipping <strong>' + money(fee) + '</strong>' + (t.amount ? ' (' + pct + '% of the sale)' : '')); }
+    if (t.type === 'sale') {
+      const fee = t.amount - t.net, pct = t.amount ? Math.round(fee / t.amount * 1000) / 10 : 0;
+      if (t.fees != null) bits.push('Fees <strong>' + money(t.fees) + '</strong> · Shipping <strong>' + money(t.ship || 0) + '</strong>' + (t.amount ? ' (' + pct + '% of the sale)' : ''));
+      else bits.push('Fees and shipping <strong>' + money(fee) + '</strong>' + (t.amount ? ' (' + pct + '% of the sale)' : ''));
+    }
     if (t.qty > 1) bits.push('Quantity <strong>' + t.qty + '</strong> · ' + money(Math.round(t.amount / t.qty)) + ' each');
     if (t.condition) bits.push('Condition <strong>' + esc(t.condition) + '</strong>');
     return '<div class="ct-open-actions"><div class="ct-row-expanded-info">' + (bits.length ? '<div class="ct-market-note">' + bits.join(' · ') + '</div>' : '') + (t.note ? '<div class="ct-row-note">' + esc(t.note) + '</div>' : '') + '<div class="ct-demo-actions"><button type="button" data-act="edit">Edit</button><button type="button" data-act="dup">Duplicate</button><button type="button" data-act="del">Delete</button></div></div></div>';
@@ -238,7 +242,7 @@
       e.stopPropagation();
       const id = act.closest('.ct-row').querySelector('.ct-row-toggle').dataset.tx, t = S.get(id); if (!t) return;
       if (act.dataset.act === 'edit') window.CTEditor.open(t, afterEditor);
-      else if (act.dataset.act === 'del') { await S.remove(id); toast('Entry deleted', { undo: true }); }
+      else if (act.dataset.act === 'del') removeAnimated(id);
       else if (act.dataset.act === 'dup') {
         if (S.usage().blocked) { limitToast(); return; }
         const c = await S.duplicate(id); justAdded = c.id; expanded = null; render(); usageToast('Entry duplicated');
@@ -323,6 +327,7 @@
   function afterEditor(result, entry) {
     if (result === 'added') { justAdded = entry.id; expanded = null; render(); usageToast('Entry added'); }
     else if (result === 'edited') toast('Changes saved', { undo: true });
+    else if (result === 'delete') removeAnimated(entry);
     else if (result === 'deleted') toast('Entry deleted', { undo: true });
     else if (result === 'limit') limitToast();
   }
@@ -336,6 +341,30 @@
   $('ct-add').addEventListener('click', openAdd);
   $('af-primary').addEventListener('click', () => { if (premium()) toast('Spreadsheet import arrives in the next update.'); else openAdd(); });
   $('af-secondary').addEventListener('click', () => { if (premium()) openAdd(); else toast('Import is part of Premium. Upgrading opens at launch.'); });
+
+  // ---------- delete and undo, animated ----------
+  // The entry folds away (and its month heading too, if it was the last one), then it's removed from the store.
+  function removeAnimated(id) {
+    const btn = $('ct-rows').querySelector('[data-tx="' + id + '"]'), row = btn && btn.closest('.ct-row');
+    const done = async () => { if (expanded === id) expanded = null; await S.remove(id); toast('Entry deleted', { undo: true }); };
+    if (!row || calm.matches) { done(); return; }
+    const prev = row.previousElementSibling, next = row.nextElementSibling;
+    const lastInMonth = prev && prev.classList.contains('ct-month') && (!next || next.classList.contains('ct-month') || next.classList.contains('ct-earlier-btn'));
+    const els = lastInMonth ? [row, prev] : [row];
+    els.forEach(el => { el.style.height = el.getBoundingClientRect().height + 'px'; el.style.minHeight = '0px'; el.style.contentVisibility = 'visible'; });
+    void row.offsetWidth;
+    els.forEach(el => { el.classList.add('ct-leaving'); el.style.height = '0px'; el.style.paddingTop = '0px'; el.style.paddingBottom = '0px'; el.style.borderColor = 'transparent'; });
+    setTimeout(done, 300);
+  }
+  // Undo brings the entry back with the same slide-in a new entry gets
+  async function doUndo() {
+    const before = new Set(S.all().map(e => e.id));
+    const label = await S.undo();
+    if (!label) { toast('Nothing to undo'); return; }
+    const back = S.all().find(e => !before.has(e.id));
+    if (back) { justAdded = back.id; render(); }
+    toast('Undone');
+  }
 
   // ---------- export ----------
   function exportCSV() {
@@ -354,7 +383,7 @@
   document.addEventListener('keydown', async e => {
     if (root.hidden || window.CTEditor.isOpen || (window.CTAddSheet && window.CTAddSheet.isOpen)) return;
     const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
-    if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && !typing) { e.preventDefault(); const l = await S.undo(); toast(l ? 'Undone' : 'Nothing to undo'); }
+    if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && !typing) { e.preventDefault(); doUndo(); }
     else if (e.key === '/' && !typing) { e.preventDefault(); $('ct-search').focus(); }
     else if (e.key === 'Escape' && !xp.hidden) { xset(false); xb.focus(); }
   });

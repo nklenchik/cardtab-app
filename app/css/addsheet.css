@@ -1,7 +1,9 @@
 /* Add-a-card sheet: the approved prototype's styles, scoped to #as. */
-#as{--raised:var(--card);--chip:var(--card);--brand-fill:#a50e37;--font:Manrope,system-ui,-apple-system,"Segoe UI",sans-serif;--green:var(--ct-green);border:0;padding:0;background:transparent;color:var(--text);max-width:none;max-height:none;width:100%;height:100%;margin:0;overflow:hidden;font-family:var(--font);font-size:15px;line-height:1.4}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) #as{--brand-fill:#d63a64}}
-:root[data-theme="dark"] #as{--brand-fill:#d63a64}
+#as{--surface:#efeee8;--raised:#fff;--chip:var(--card);--brand-fill:#a50e37;--font:Manrope,system-ui,-apple-system,"Segoe UI",sans-serif;--green:var(--ct-green);border:0;padding:0;background:transparent;color:var(--text);max-width:none;max-height:none;width:100%;height:100%;margin:0;overflow:hidden;font-family:var(--font);font-size:15px;line-height:1.4}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) #as{--brand-fill:#d63a64;--surface:#323230;--raised:#2a2a28;--line:rgba(255,255,255,.14)}}
+:root[data-theme="dark"] #as{--brand-fill:#d63a64;--surface:#323230;--raised:#2a2a28;--line:rgba(255,255,255,.14)}
+/* The search box keeps a quiet outline when it isn't focused, so it's easy to find in both themes */
+#as .search{border-color:var(--line)}#as .search:focus-within{border-color:var(--brand)}
 #as[open]{display:flex;align-items:center;justify-content:center}
 #as::backdrop{background:rgba(10,10,10,.45);animation:fade-in .2s ease}
 #as button,#as input,#as select{font:inherit;color:inherit}#as button{cursor:pointer;touch-action:manipulation}
@@ -13,7 +15,10 @@
 #as .other{border:0;background:none;color:var(--muted);font-size:12.5px;text-decoration:underline;text-underline-offset:3px;padding:4px 2px;margin:2px auto 0;flex:none}
 #as .addtyped{display:block;margin:12px auto 0;border:1px solid var(--line);background:var(--raised);border-radius:999px;padding:9px 16px;font-weight:700;font-size:13.5px}
 #as .kept{margin-top:14px}
-#as .kept .field input{font-size:30px}#as .kept .field .d{font-size:22px}
+#as .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+#as .mini{display:grid;gap:4px;min-width:0}
+#as .kept .field input{font-size:26px}#as .kept .field .d{font-size:19px}
+#as .sub b.neg{color:var(--err)}
 #as .err{color:var(--err);font-size:12.5px;margin-top:6px;min-height:0}
 #as .tile .art{background-size:cover!important}
 #as button{cursor:pointer;touch-action:manipulation}

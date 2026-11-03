@@ -9,7 +9,7 @@
   const f = n => form.elements[n];
   let editing = null, type = 'purchase', onDone = null;
 
-  const AMOUNT_LABEL = { purchase: 'Paid', sale: 'Sold for', refund: 'Refunded' };
+  const AMOUNT_LABEL = { purchase: 'Total paid', sale: 'Sold for', refund: 'Refunded' };
 
   function setType(t) {
     type = t;
@@ -17,6 +17,7 @@
     btns.forEach((b, i) => { const on = b.dataset.type === t; b.setAttribute('aria-checked', on); b.tabIndex = on ? 0 : -1; if (on) form.querySelector('.ed-pill').style.transform = 'translateX(' + (i * 100) + '%)'; });
     document.getElementById('ed-amount-l').textContent = AMOUNT_LABEL[t];
     document.getElementById('ed-net-f').hidden = t !== 'sale';
+    keep();
     clearErrors();
   }
   form.querySelector('.ed-seg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setType(b.dataset.type); });
@@ -25,6 +26,15 @@
     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); const n = order[(i + (e.key === 'ArrowRight' ? 1 : 2)) % 3]; setType(n); form.querySelector('[data-type="' + n + '"]').focus(); }
   });
 
+  // Live "You keep" line for sales: sale price minus fees minus your shipping, to the cent
+  function keep() {
+    const el = document.getElementById('ed-keep'); if (!el) return;
+    const a = S.toCents(f('amount').value), fe = S.toCents(f('fees').value) || 0, sh = S.toCents(f('ship').value) || 0;
+    if (type !== 'sale' || a == null) { el.innerHTML = 'Sold for includes any shipping the buyer paid.'; return; }
+    const k = a - fe - sh;
+    el.innerHTML = 'You keep <b' + (k < 0 ? ' class="neg"' : '') + '>' + (k < 0 ? '−' : '') + '$' + S.fromCents(Math.abs(k)) + '</b> · Sold for includes any shipping the buyer paid.';
+  }
+  ['amount', 'fees', 'ship'].forEach(n => f(n).addEventListener('input', keep));
   function clearErrors() { form.querySelectorAll('.ed-err').forEach(x => { x.textContent = ''; }); form.querySelectorAll('.ed-f.bad').forEach(x => x.classList.remove('bad')); }
   function showErrors(errs) {
     clearErrors(); let first = null;
@@ -32,6 +42,7 @@
     if (first) first.focus();
   }
   const cents = c => (c == null ? '' : S.fromCents(c));
+  const last0 = () => { try { return JSON.parse(localStorage.getItem('ct.lastEntry') || '{}'); } catch (e) { return {}; } };
 
   function open(entry, done) {
     editing = entry || null; onDone = done || null;
@@ -42,9 +53,11 @@
     const last = (() => { try { return JSON.parse(localStorage.getItem('ct.lastEntry') || '{}'); } catch (e) { return {}; } })();
     const e = editing || { type: last.type || 'purchase', platform: last.platform || '', date: S.today(), qty: 1 };
     setType(e.type);
-    f('name').value = e.name || ''; f('amount').value = cents(e.amount); f('net').value = cents(e.net);
+    f('name').value = e.name || ''; f('amount').value = cents(e.amount);
+    if (editing && e.type === 'sale') { f('fees').value = cents(e.fees != null ? e.fees : e.amount - e.net); f('ship').value = cents(e.ship != null ? e.ship : 0); }
+    else { f('fees').value = ''; f('ship').value = last.ship != null ? S.fromCents(last.ship) : ''; }
     f('qty').value = e.qty || 1; f('date').value = e.date || S.today(); f('platform').value = e.platform || '';
-    f('condition').value = e.condition || ''; f('note').value = e.note || '';
+    f('condition').value = e.condition || ''; f('note').value = e.note || ''; keep();
     document.getElementById('ed-platforms').innerHTML = [...new Set(S.platforms().concat(['eBay', 'TCGplayer', 'Mercari', 'Whatnot', 'Card Show', 'Facebook Marketplace', 'Local game store']))].map(p => '<option value="' + p.replace(/"/g, '&quot;') + '">').join('');
     const u = S.usage(), left = document.getElementById('ed-left');
     left.hidden = !!editing || !(u.warn);
@@ -56,12 +69,12 @@
 
   form.addEventListener('submit', async ev => {
     ev.preventDefault();
-    const data = { type, name: f('name').value, amount: f('amount').value, net: f('net').value, qty: f('qty').value, date: f('date').value, platform: f('platform').value, condition: f('condition').value, note: f('note').value };
+    const data = { type, name: f('name').value, amount: f('amount').value, fees: f('fees').value, ship: f('ship').value, qty: f('qty').value, date: f('date').value, platform: f('platform').value, condition: f('condition').value, note: f('note').value };
     const v = S.validate(data, editing || undefined);
     if (!v.ok) { showErrors(v.errors); return; }
     try {
       const saved = editing ? await S.update(editing.id, data) : await S.add(data);
-      if (!editing) { try { localStorage.setItem('ct.lastEntry', JSON.stringify({ type: saved.type, platform: saved.platform })); } catch (e) {} } // remember type and platform from adds only
+      if (!editing) { try { localStorage.setItem('ct.lastEntry', JSON.stringify({ type: saved.type, platform: saved.platform, ship: saved.type === 'sale' ? saved.ship : (last0().ship) })); } catch (e) {} } // remember type and platform from adds only
       const wasEdit = !!editing; close();
       if (onDone) onDone(wasEdit ? 'edited' : 'added', saved);
     } catch (err) {
@@ -71,12 +84,12 @@
     }
   });
   document.getElementById('ed-del').addEventListener('click', async () => {
-    if (!editing) return; const id = editing.id; close(); await S.remove(id); if (onDone) onDone('deleted');
+    if (!editing) return; const id = editing.id; close(); if (onDone) onDone('delete', id); else await S.remove(id);
   });
   form.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', close));
   dlg.addEventListener('click', e => { if (e.target === dlg) close(); }); // tap outside the sheet
   // Tidy money as you leave the field: "12.5" becomes "12.50"
-  ['amount', 'net'].forEach(n => f(n).addEventListener('blur', () => { const c = S.toCents(f(n).value); if (c != null && c >= 0) f(n).value = S.fromCents(c); }));
+  ['amount', 'fees', 'ship'].forEach(n => f(n).addEventListener('blur', () => { const c = S.toCents(f(n).value); if (c != null && c >= 0) f(n).value = S.fromCents(c); }));
 
   window.CTEditor = { open, close, get isOpen() { return dlg.open; } };
 })();

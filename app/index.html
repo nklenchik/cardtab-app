@@ -105,10 +105,16 @@
     <div class="ed-seg" role="radiogroup" aria-label="Type"><span class="ed-pill" aria-hidden="true"></span><button type="button" role="radio" data-type="purchase">Purchase</button><button type="button" role="radio" data-type="sale">Sale</button><button type="button" role="radio" data-type="refund">Refund</button></div>
     <label class="ed-f"><span>Card or item</span><input name="name" autocomplete="off" placeholder="Charizard ex - 199/165 - SV: Scarlet &amp; Violet 151" enterkeyhint="next"><em class="ed-err" data-err="name"></em></label>
     <div class="ed-row">
-      <label class="ed-f"><span id="ed-amount-l">Paid</span><span class="ed-money"><i>$</i><input name="amount" inputmode="decimal" autocomplete="off" placeholder="0.00"></span><em class="ed-err" data-err="amount"></em></label>
+      <label class="ed-f"><span id="ed-amount-l">Total paid</span><span class="ed-money"><i>$</i><input name="amount" inputmode="decimal" autocomplete="off" placeholder="0.00"></span><em class="ed-err" data-err="amount"></em></label>
       <label class="ed-f ed-qty"><span>Qty</span><input name="qty" type="number" inputmode="numeric" min="1" max="9999" value="1"></label>
     </div>
-    <label class="ed-f" id="ed-net-f"><span>After fees and shipping</span><span class="ed-money"><i>$</i><input name="net" inputmode="decimal" autocomplete="off" placeholder="0.00"></span><small id="ed-net-hint">What actually reached you. Card Tab works out the fees from this, to the cent.</small><em class="ed-err" data-err="net"></em></label>
+    <div class="ed-sale" id="ed-net-f">
+      <div class="ed-row">
+        <label class="ed-f"><span>Transaction fees</span><span class="ed-money"><i>$</i><input name="fees" inputmode="decimal" autocomplete="off" placeholder="0.00"></span><em class="ed-err" data-err="fees"></em></label>
+        <label class="ed-f"><span>Your shipping cost</span><span class="ed-money"><i>$</i><input name="ship" inputmode="decimal" autocomplete="off" placeholder="0.00"></span><em class="ed-err" data-err="ship"></em></label>
+      </div>
+      <p class="ed-keep" id="ed-keep"></p>
+    </div>
     <div class="ed-row">
       <label class="ed-f"><span>Date</span><input name="date" type="date"></label>
       <label class="ed-f"><span>Platform</span><input name="platform" list="ed-platforms" autocomplete="off" placeholder="eBay"><datalist id="ed-platforms"></datalist></label>
@@ -138,7 +144,7 @@
 <div class="pick"><span class="art" id="as-pa"></span><div style="min-width:0"><div class="n" id="as-pn"></div><div class="m" id="as-pm"></div></div><button class="ch" id="as-back" type="button">Change</button></div>
 <div class="pr"><div style="min-width:0;flex:1"><span class="lab" id="as-plab">Total paid</span><label class="field"><span class="d">$</span><input id="as-price" type="text" inputmode="decimal" enterkeyhint="next" autocomplete="off" placeholder="0.00" aria-label="Price"></label></div>
 <div class="qty"><button type="button" id="as-qm" aria-label="One fewer">&minus;</button><output id="as-q">1</output><button type="button" id="as-qp" aria-label="One more">+</button></div></div>
-<div class="kept" id="as-keptw" hidden><span class="lab">After fees and shipping</span><label class="field"><span class="d">$</span><input id="as-kept" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="0.00" aria-label="What reached you after fees and shipping"></label><div class="sub">What actually reached you. Card Tab works out the fees from this, to the cent.</div></div>
+<div class="kept" id="as-keptw" hidden><div class="two"><label class="mini"><span class="lab">Transaction fees</span><span class="field"><span class="d">$</span><input id="as-fees" type="text" inputmode="decimal" enterkeyhint="next" autocomplete="off" placeholder="0.00" aria-label="Transaction fees"></span></label><label class="mini"><span class="lab">Your shipping</span><span class="field"><span class="d">$</span><input id="as-ship" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="0.00" aria-label="Your shipping cost"></span></label></div><div class="sub" id="as-keep">Sold for includes any shipping the buyer paid.</div></div>
 <div class="err" id="as-err" role="alert"></div>
 <div class="sec"><span class="lab">Condition</span><div class="seg n4" id="as-cond" data-i="0" style="margin-top:6px"><span class="th"></span><button type="button" aria-pressed="true">NM</button><button type="button" aria-pressed="false">LP</button><button type="button" aria-pressed="false">MP</button><button type="button" aria-pressed="false">HP</button></div></div>
 </div>

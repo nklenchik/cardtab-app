@@ -6,7 +6,7 @@
   'use strict';
   const S = window.CTStore;
   const $ = id => document.getElementById(id);
-  const dlg = $('as'), inp = $('as-in'), chips = $('as-chips'), res = $('as-res'), go = $('as-go'), price = $('as-price'), kept = $('as-kept'), sv = $('as-save');
+  const dlg = $('as'), inp = $('as-in'), chips = $('as-chips'), res = $('as-res'), go = $('as-go'), price = $('as-price'), fees = $('as-fees'), ship = $('as-ship'), sv = $('as-save');
   const KEY = 'ct.addsheet';
   const CONDS = ['NM', 'LP', 'MP', 'HP'], COND_FULL = { NM: 'Near Mint', LP: 'Lightly Played', MP: 'Moderately Played', HP: 'Heavily Played' };
   const DEFAULT_PLATFORMS = ['eBay', 'TCGplayer', 'Mercari', 'Whatnot', 'Card Show', 'Facebook Marketplace', 'Local game store'];
@@ -17,7 +17,7 @@
   const grad = h => 'linear-gradient(155deg,hsl(' + h + ' 62% 50%),hsl(' + ((h + 40) % 360) + ' 55% 22%))';
   const artBg = c => (c.art ? 'url(' + c.art.list + ') center/cover no-repeat, ' : '') + grad(c.h == null ? 220 : c.h);
   const CK = '<span class="tick"><svg viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg></span>';
-  const mem = { get() { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } }, set() { try { localStorage.setItem(KEY, JSON.stringify({ type: st.type, plat: $('as-plat').value })); } catch (e) {} } };
+  const mem = { get() { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } }, set(extra) { try { localStorage.setItem(KEY, JSON.stringify(Object.assign(mem.get(), { type: st.type, plat: $('as-plat').value }, extra || {}))); } catch (e) {} } };
 
   function chipsFor(p) {
     const c = [];
@@ -104,27 +104,30 @@
     $('as-pa').style.background = artBg(c); $('as-pn').textContent = c.n;
     $('as-pm').textContent = c.typed ? 'Added as typed' : c.s + ' · ' + c.num + (st.grade ? ' · ' + st.grade : '');
     $('as-q').textContent = st.qty;
-    show(2); price.value = ''; kept.value = ''; $('as-err').textContent = ''; upd(); price.focus();
+    show(2); price.value = ''; fees.value = ''; const ls = mem.get().ship; ship.value = ls != null ? S.fromCents(ls) : ''; $('as-err').textContent = ''; upd(); price.focus();
   }
+  // Sales: sale price minus transaction fees minus your shipping = what you keep, to the cent
   function upd() {
-    const sale = st.type === 'sale', v = S.toCents(price.value), k = S.toCents(kept.value);
+    const sale = st.type === 'sale', v = S.toCents(price.value), fe = S.toCents(fees.value), sh = S.toCents(ship.value);
     $('as-plab').textContent = sale ? 'Sold for' : 'Total paid';
     $('as-keptw').hidden = !sale;
     price.setAttribute('enterkeyhint', sale ? 'next' : 'done');
-    const ok = v != null && v > 0 && (!sale || (k != null && k >= 0));
+    const bad = sale && ((fees.value.trim() && (fe == null || fe < 0)) || (ship.value.trim() && (sh == null || sh < 0)));
+    const ok = v != null && v > 0 && !bad;
     sv.disabled = !ok;
-    sv.textContent = !(v > 0) ? 'Enter a price' : sale && (k == null) ? 'Enter what reached you' : (sale ? 'Save sale · ' : 'Save purchase · ') + money(v);
+    if (sale) { const k = v > 0 ? v - (fe || 0) - (sh || 0) : null; $('as-keep').innerHTML = k == null ? 'Sold for includes any shipping the buyer paid.' : 'You keep <b' + (k < 0 ? ' class="neg"' : '') + '>' + (k < 0 ? '−' : '') + money(k) + '</b> · Sold for includes any shipping the buyer paid.'; }
+    sv.textContent = !(v > 0) ? 'Enter a price' : (sale ? 'Save sale · ' : 'Save purchase · ') + money(v);
   }
   async function save() {
     if (sv.disabled) return;
-    const sale = st.type === 'sale', c = st.card, v = S.toCents(price.value), k = S.toCents(kept.value);
+    const sale = st.type === 'sale', c = st.card, v = S.toCents(price.value), fe = S.toCents(fees.value) || 0, sh = S.toCents(ship.value) || 0, k = v - fe - sh;
     const name = c.typed ? c.n : listName(c);
     try {
-      const e = await S.add({ type: st.type, name, platform: $('as-plat').value, qty: st.qty, amount: v, net: sale ? k : null, condition: COND_FULL[CONDS[st.cond]], art: c.art || null, note: st.grade ? 'Graded ' + st.grade : '' });
+      const e = await S.add({ type: st.type, name, platform: $('as-plat').value, qty: st.qty, amount: v, fees: sale ? fe : null, ship: sale ? sh : null, condition: COND_FULL[CONDS[st.cond]], art: c.art || null, note: st.grade ? 'Graded ' + st.grade : '' });
       const amt = sale ? k : v;
       st.rows.unshift({ n: c.n, m: (c.typed ? '' : c.s + ' · ') + (st.qty > 1 ? '×' + st.qty + ' · ' : '') + CONDS[st.cond], h: c.h, art: c.art, sale, amt, qty: st.qty, isNew: true, id: e.id });
       st.total += sale ? amt : -amt;
-      show(1); inp.value = ''; st.sig = '~'; render(); tween(); inp.focus(); mem.set();
+      show(1); inp.value = ''; st.sig = '~'; render(); tween(); inp.focus(); mem.set(sale ? { ship: sh } : null);
       const u = S.usage();
       flash(u.plan === 'free' && u.blocked ? 'Saved · that was your last free entry this month' : u.plan === 'free' && u.warn ? 'Saved · ' + u.left + (u.left === 1 ? ' free entry' : ' free entries') + ' left' : 'Saved · ready for the next card');
       if (u.plan === 'free' && u.blocked) { setGo(false, 'Free entries used up this month'); inp.disabled = true; }
@@ -146,10 +149,11 @@
   inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (!go.disabled) toPrice(); } });
   go.addEventListener('click', () => toPrice());
   sv.addEventListener('click', save);
-  price.addEventListener('input', upd); kept.addEventListener('input', upd);
-  price.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (st.type === 'sale' && S.toCents(kept.value) == null) kept.focus(); else save(); } });
-  kept.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); save(); } });
-  [price, kept].forEach(f => f.addEventListener('blur', () => { const c = S.toCents(f.value); if (c != null && c >= 0) f.value = S.fromCents(c); }));
+  price.addEventListener('input', upd); fees.addEventListener('input', upd); ship.addEventListener('input', upd);
+  price.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (st.type === 'sale') fees.focus(); else save(); } });
+  fees.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ship.focus(); ship.select(); } });
+  ship.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); save(); } });
+  [price, fees, ship].forEach(f => f.addEventListener('blur', () => { const c = S.toCents(f.value); if (c != null && c >= 0) f.value = S.fromCents(c); }));
   $('as-other').addEventListener('click', () => { const done = st.onDone; close(); window.CTEditor.open(null, done); });
   dlg.querySelector('[data-as-close]').addEventListener('click', close);
   dlg.addEventListener('click', e => { if (e.target === dlg) close(); });
@@ -163,7 +167,7 @@
     if (d.plat && plats.includes(d.plat)) $('as-plat').value = d.plat;
     st.type = d.type === 'sale' ? 'sale' : 'purchase'; setSeg('as-type', st.type === 'sale' ? 1 : 0);
     st.cond = 0; setSeg('as-cond', 0);
-    inp.value = ''; inp.disabled = false; show(1); render();
+    inp.value = ''; inp.disabled = false; $('as-toast').classList.remove('on'); show(1); render();
     dlg.showModal();
     requestAnimationFrame(() => inp.focus({ preventScroll: true }));
   }

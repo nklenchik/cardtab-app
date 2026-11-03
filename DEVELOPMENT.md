@@ -60,3 +60,10 @@ Local-first store, dashboard and sign-in, all in app/ (see README.md). Tested in
 - Card lookup still uses the 12-card sample catalog with colored placeholders for art. Real lookups and art switch on by setting window.CARDTAB_API in index.html once the Worker is deployed (after the Cloudflare move).
 - The prototype's standalone page stays in app/add-sheet/ for reference.
 - Next in Drop 2: Import (Premium), nudges.
+
+## Sales breakdown, delete animation, smoothness (2026-11-03)
+- Sales now record sale price, transaction fees and the seller's shipping cost separately (cents); what you keep is worked out from them, shown live as "You keep $X". "Sold for" includes any shipping the buyer paid. Shipping is remembered from the last sale. Older sales with only "after fees" still work. Export has fees and shipping columns. Purchases are labeled "Total paid".
+- Delete folds the entry away (and its month heading if it was the last one), then removes it; Undo slides it back in.
+- Smoothness: entries are contained and off-screen entries are skipped (content-visibility). With 200 entries at 4x CPU slowdown, dropped frames per open/close went from 9 to about 1-3 on desktop. Placeholder art scales with its tile. Tap handling matches the site (touch-action: manipulation, no grey tap flash).
+- Dark mode: the add sheet's search box, segments and fields use a lighter fill and a quiet outline so they're visible without focus.
+- Not testable here: real Safari/iPhone. If open/close still feels off on a device, note which device and browser.

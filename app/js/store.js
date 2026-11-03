@@ -93,12 +93,25 @@
     e.qty = Math.max(1, Math.min(9999, parseInt(e.qty, 10) || 1));
     e.date = /^\d{4}-\d{2}-\d{2}$/.test(e.date || '') ? e.date : today();
     e.amount = Number.isInteger(e.amount) ? e.amount : toCents(e.amount);
-    if (e.type === 'sale') { e.net = Number.isInteger(e.net) ? e.net : toCents(e.net); } else { e.net = null; }
+    // Sales keep the sale price, the platform's transaction fees and the seller's shipping cost, each to the cent.
+    // What you keep (net) is worked out from those three. Older entries may only have net.
+    const cents = v => (v === '' || v == null ? null : Number.isInteger(v) ? v : toCents(v));
+    if (e.type === 'sale') {
+      e.fees = cents(e.fees); e.ship = cents(e.ship);
+      if (e.fees != null || e.ship != null || input.fees !== undefined || input.ship !== undefined) {
+        e.fees = e.fees == null ? 0 : e.fees; e.ship = e.ship == null ? 0 : e.ship;
+        if (e.amount != null) e.net = e.amount - e.fees - e.ship;
+      } else { e.net = cents(e.net); }
+    } else { e.net = null; e.fees = null; e.ship = null; }
     e.art = e.art || null;
     const errors = {};
     if (!e.name) errors.name = 'Add the card or item';
     if (e.amount == null || e.amount < 0) errors.amount = 'Enter an amount';
-    if (e.type === 'sale' && (e.net == null || e.net < 0)) errors.net = 'Enter what you kept after fees and shipping';
+    if (e.type === 'sale') {
+      if (e.fees != null && e.fees < 0) errors.fees = 'Fees can’t be negative';
+      if (e.ship != null && e.ship < 0) errors.ship = 'Shipping can’t be negative';
+      if (e.net == null && !errors.amount) errors.fees = 'Enter the fees and shipping';
+    }
     return { e, errors, ok: !Object.keys(errors).length };
   }
 
@@ -194,7 +207,7 @@
 
     async duplicate(id) {
       const cur = this.get(id); if (!cur) return null;
-      const copy = { type: cur.type, name: cur.name, platform: cur.platform, condition: cur.condition, qty: cur.qty, amount: cur.amount, net: cur.net, art: cur.art, note: cur.note, date: today() };
+      const copy = { type: cur.type, name: cur.name, platform: cur.platform, condition: cur.condition, qty: cur.qty, amount: cur.amount, net: cur.net, fees: cur.fees, ship: cur.ship, art: cur.art, note: cur.note, date: today() };
       return this.add(copy, { label: 'Entry duplicated' });
     },
 
@@ -224,9 +237,9 @@
     },
 
     exportCSV() {
-      const cols = ['date', 'type', 'platform', 'name', 'qty', 'amount', 'after_fees', 'condition', 'note'];
+      const cols = ['date', 'type', 'platform', 'name', 'qty', 'amount', 'fees', 'shipping', 'after_fees', 'condition', 'note'];
       const q = v => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-      const rows = this.all().slice().reverse().map(e => [e.date, e.type, e.platform, e.name, e.qty, fromCents(e.amount), e.type === 'sale' ? fromCents(e.net) : '', e.condition, e.note].map(q).join(','));
+      const rows = this.all().slice().reverse().map(e => [e.date, e.type, e.platform, e.name, e.qty, fromCents(e.amount), e.type === 'sale' && e.fees != null ? fromCents(e.fees) : '', e.type === 'sale' && e.ship != null ? fromCents(e.ship) : '', e.type === 'sale' ? fromCents(e.net) : '', e.condition, e.note].map(q).join(','));
       return [cols.join(',')].concat(rows).join('\n');
     },
 

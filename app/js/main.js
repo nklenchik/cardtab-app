@@ -81,14 +81,14 @@
     const at = (mBack, day) => { const last = new Date(Y, M - mBack + 1, 0).getDate(); const d = mBack === 0 ? Math.min(day, D) : Math.min(day, last); return S.ymd(new Date(Y, M - mBack, d)); };
     const art = k => ({ list: 'assets/card-art/' + k + '-sm.webp', detail: 'assets/card-art/' + k + '.webp' });
     return [
-      { date: at(0, Math.ceil(D * .9)), type: 'sale', platform: 'eBay', name: 'Pikachu ex - 238/191 - SV08: Surging Sparks', amount: '255.00', net: '214.50', condition: 'Near Mint', art: art('pikachu-ex') },
+      { date: at(0, Math.ceil(D * .9)), type: 'sale', platform: 'eBay', name: 'Pikachu ex - 238/191 - SV08: Surging Sparks', amount: '255.00', fees: '33.80', ship: '6.70', condition: 'Near Mint', art: art('pikachu-ex') },
       { date: at(0, Math.ceil(D * .45)), type: 'purchase', platform: 'eBay', name: 'Gengar ex - 154/128 - ME: 30th Celebration', amount: '64.80', condition: 'Near Mint', art: art('gengar-ex') },
-      { date: at(0, Math.ceil(D * .2)), type: 'sale', platform: 'TCGplayer', name: 'Chi-Yu ex - 259/193 - SV02: Paldea Evolved', qty: 2, amount: '85.90', net: '74.22', condition: 'Near Mint', art: art('chi-yu-ex') },
+      { date: at(0, Math.ceil(D * .2)), type: 'sale', platform: 'TCGplayer', name: 'Chi-Yu ex - 259/193 - SV02: Paldea Evolved', qty: 2, amount: '85.90', fees: '10.57', ship: '1.11', condition: 'Near Mint', art: art('chi-yu-ex') },
       { date: at(1, 26), type: 'purchase', platform: 'eBay', name: 'Son Gohan : Youth - FB03-139 (Alternate Art) - Raging Roar', amount: '142.88', condition: 'Near Mint', art: art('son-gohan-youth') },
-      { date: at(1, 23), type: 'sale', platform: 'TCGplayer', name: 'Charizard ex - 199/165 - SV: Scarlet & Violet 151', amount: '277.04', net: '240.03', condition: 'Lightly Played', art: art('charizard-ex') },
+      { date: at(1, 23), type: 'sale', platform: 'TCGplayer', name: 'Charizard ex - 199/165 - SV: Scarlet & Violet 151', amount: '277.04', fees: '31.83', ship: '5.18', condition: 'Lightly Played', art: art('charizard-ex') },
       { date: at(1, 9), type: 'refund', platform: 'eBay', name: 'Houndoom - 4/64 - Neo Revelation', amount: '18.40', note: 'Arrived creased, seller refunded', art: { list: 'assets/card-art/houndoom-sm.webp', detail: 'assets/card-art/houndoom.webp' } },
       { date: at(2, 17), type: 'purchase', platform: 'TCGplayer', name: 'Greninja ex - 214/167 - SV06: Twilight Masquerade', amount: '227.75', condition: 'Near Mint', art: art('greninja-ex') },
-      { date: at(2, 11), type: 'sale', platform: 'Card Show', name: 'Blastoise - 2/102 - Base Set Unlimited', amount: '120.00', net: '120.00', condition: 'Lightly Played', art: art('blastoise') },
+      { date: at(2, 11), type: 'sale', platform: 'Card Show', name: 'Blastoise - 2/102 - Base Set Unlimited', amount: '120.00', fees: '0', ship: '0', condition: 'Lightly Played', art: art('blastoise') },
       { date: at(2, 4), type: 'purchase', platform: 'Whatnot', name: 'Houndoom - 4/64 - Neo Revelation', amount: '18.40', condition: 'Near Mint', art: { list: 'assets/card-art/houndoom-sm.webp', detail: 'assets/card-art/houndoom.webp' } },
       { date: at(3, 20), type: 'purchase', platform: 'Local game store', name: 'Surging Sparks booster bundle', amount: '32.39', condition: 'Sealed' }
     ];
