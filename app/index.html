@@ -14,6 +14,7 @@
 <link rel="preload" href="fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/demo.css">
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/addsheet.css">
 </head>
 <body class="ct-demo">
 
@@ -119,11 +120,40 @@
   </form>
 </dialog>
 
+<!-- ============ Add a card (free-text sheet) ============ -->
+<dialog id="as" aria-labelledby="as-h"><div class="phone"><div class="sheet">
+<div class="grab"></div>
+<div class="hd"><h2 id="as-h">Add a card</h2><button class="x" type="button" data-as-close aria-label="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l10 10M13 3L3 13"/></svg></button></div>
+<div class="ctx"><div class="seg n2" id="as-type" data-i="0"><span class="th"></span><button type="button" data-v="purchase" aria-pressed="true">Purchase</button><button type="button" data-v="sale" aria-pressed="false">Sale</button></div>
+<div class="sel"><select id="as-plat" aria-label="Platform"></select></div></div>
+<div id="as-s1" style="display:flex;flex-direction:column;flex:1;min-height:0">
+<label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+<input id="as-in" type="text" enterkeyhint="next" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Card name, number, set, grade&hellip;" aria-label="Card"></label>
+<div class="chips" id="as-chips" aria-live="polite"></div>
+<div class="body" id="as-res"></div>
+<button class="save" id="as-go" type="button" disabled>Pick a card</button>
+<button class="other" id="as-other" type="button">Refund or something else? Use the full form</button></div>
+<div id="as-s2" style="display:none;flex-direction:column;flex:1;min-height:0">
+<div class="body">
+<div class="pick"><span class="art" id="as-pa"></span><div style="min-width:0"><div class="n" id="as-pn"></div><div class="m" id="as-pm"></div></div><button class="ch" id="as-back" type="button">Change</button></div>
+<div class="pr"><div style="min-width:0;flex:1"><span class="lab" id="as-plab">Total paid</span><label class="field"><span class="d">$</span><input id="as-price" type="text" inputmode="decimal" enterkeyhint="next" autocomplete="off" placeholder="0.00" aria-label="Price"></label></div>
+<div class="qty"><button type="button" id="as-qm" aria-label="One fewer">&minus;</button><output id="as-q">1</output><button type="button" id="as-qp" aria-label="One more">+</button></div></div>
+<div class="kept" id="as-keptw" hidden><span class="lab">After fees and shipping</span><label class="field"><span class="d">$</span><input id="as-kept" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="0.00" aria-label="What reached you after fees and shipping"></label><div class="sub">What actually reached you. Card Tab works out the fees from this, to the cent.</div></div>
+<div class="err" id="as-err" role="alert"></div>
+<div class="sec"><span class="lab">Condition</span><div class="seg n4" id="as-cond" data-i="0" style="margin-top:6px"><span class="th"></span><button type="button" aria-pressed="true">NM</button><button type="button" aria-pressed="false">LP</button><button type="button" aria-pressed="false">MP</button><button type="button" aria-pressed="false">HP</button></div></div>
+</div>
+<button class="save" id="as-save" type="button" disabled>Enter a price</button></div>
+</div><div class="toast" id="as-toast"></div></div></dialog>
+
 <div class="app-toasts" id="app-toasts" aria-live="polite"></div>
 
 <script src="js/store.js"></script>
 <script src="js/auth.js"></script>
+<script>/* Set to the deployed Worker URL for live lookups and real art. Empty = built-in sample catalog. */window.CARDTAB_API="";</script>
+<script src="js/parser.js"></script>
+<script src="js/lookup.js"></script>
 <script src="js/editor.js"></script>
+<script src="js/addsheet.js"></script>
 <script src="js/dash.js"></script>
 <script src="js/main.js"></script>
 </body>

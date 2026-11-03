@@ -1,0 +1,173 @@
+/* Add-a-card sheet (Drop 2), wired to the store.
+   Type a listing-style title -> chips show what was understood -> one match, or "Which one is your card?" ->
+   price -> save. The sheet stays open for the next card and keeps one running total for the session.
+   Sales ask for what actually reached you (exact fees), never an estimate. */
+(function () {
+  'use strict';
+  const S = window.CTStore;
+  const $ = id => document.getElementById(id);
+  const dlg = $('as'), inp = $('as-in'), chips = $('as-chips'), res = $('as-res'), go = $('as-go'), price = $('as-price'), kept = $('as-kept'), sv = $('as-save');
+  const KEY = 'ct.addsheet';
+  const CONDS = ['NM', 'LP', 'MP', 'HP'], COND_FULL = { NM: 'Near Mint', LP: 'Lightly Played', MP: 'Moderately Played', HP: 'Heavily Played' };
+  const DEFAULT_PLATFORMS = ['eBay', 'TCGplayer', 'Mercari', 'Whatnot', 'Card Show', 'Facebook Marketplace', 'Local game store'];
+  const st = { tok: 0, busy: false, type: 'purchase', cond: 0, qty: 1, sel: -1, list: [], sig: '', why: '', card: null, parsed: null, rows: [], total: 0, shown: 0, onDone: null };
+
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const money = c => '$' + (Math.abs(c) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const grad = h => 'linear-gradient(155deg,hsl(' + h + ' 62% 50%),hsl(' + ((h + 40) % 360) + ' 55% 22%))';
+  const artBg = c => (c.art ? 'url(' + c.art.list + ') center/cover no-repeat, ' : '') + grad(c.h == null ? 220 : c.h);
+  const CK = '<span class="tick"><svg viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg></span>';
+  const mem = { get() { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } }, set() { try { localStorage.setItem(KEY, JSON.stringify({ type: st.type, plat: $('as-plat').value })); } catch (e) {} } };
+
+  function chipsFor(p) {
+    const c = [];
+    if (p.name) c.push(['Card', p.name]); if (p.number) c.push(['No.', p.number]); if (p.set) c.push(['Set', p.set]);
+    if (p.rarity) c.push(['Rarity', p.rarity]); if (p.variant) c.push(['Variant', p.variant]);
+    if (p.finishes && p.finishes.length) c.push(['Finish', p.finishes[0]]);
+    if (p.grade) c.push(['Graded', p.grade]); if (p.condition) c.push(['Cond.', p.condition]);
+    if (p.sealed) c.push(['Type', 'Sealed']); if (p.qty) c.push(['Qty', '×' + p.qty]);
+    return c;
+  }
+
+  // Session list: what was added since the sheet opened, with one running total (sales +, purchases −)
+  function sessionHTML() {
+    let h = '<div class="tot"><span class="lab" id="as-tl">This session</span><b id="as-tt"></b></div>';
+    if (!st.rows.length) return h + '<div class="none" style="margin-top:14px">Nothing yet. Your first card will show up here.</div>';
+    st.rows.forEach(r => {
+      h += '<div class="row' + (r.isNew ? ' new' : '') + '"><span class="art" style="background:' + artBg(r) + '"></span><div class="tx"><div class="n">' + esc(r.n) + '</div><div class="m">' + esc(r.m) + '</div></div><div class="amt' + (r.sale ? ' in' : '') + '">' + (r.sale ? '+' : '−') + money(r.amt) + '</div></div>';
+      r.isNew = false;
+    });
+    return h;
+  }
+  function totals() {
+    const el = $('as-tt'); if (!el) return;
+    const n = st.rows.reduce((a, r) => a + r.qty, 0); $('as-tl').textContent = 'This session · ' + n + (n === 1 ? ' card' : ' cards');
+    const v = Math.round(st.shown); el.textContent = st.rows.length ? (v < 0 ? '−' : '+') + money(v) : ''; el.style.color = v > 0 ? 'var(--green)' : '';
+  }
+  function tween() {
+    const t0 = performance.now(), from = st.shown;
+    (function step(n) { let k = Math.min(1, (n - t0) / 450); k = 1 - Math.pow(1 - k, 3); st.shown = from + (st.total - from) * k; totals(); if (k < 1) requestAnimationFrame(step); })(t0);
+  }
+
+  function setGo(enabled, label) { go.disabled = !enabled; go.textContent = label; }
+  function render() {
+    const t = inp.value.trim(), p = window.CardParser.parse(t);
+    chips.innerHTML = t ? chipsFor(p).map((c, i) => '<span class="chip" style="animation-delay:' + i * 45 + 'ms"><i>' + c[0] + '</i>' + esc(c[1]) + '</span>').join('') : '';
+    const sig = [p.name, p.number, p.set, p.rarity].join('|');
+    if (sig !== st.sig) {
+      st.sig = sig;
+      if (window.CARDTAB_API) {
+        st.busy = true; const tok = ++st.tok; clearTimeout(st.dt);
+        st.dt = setTimeout(() => window.CardLookup.remote(p).then(r => { if (tok !== st.tok) return; st.busy = false; st.list = r.list; st.sel = r.pick; st.why = r.why || ''; render(); }), 280);
+        st.list = []; st.sel = -1;
+      } else { const r = window.CardLookup.search(p); st.list = r.list; st.sel = r.pick; st.why = r.why || ''; }
+    }
+    st.parsed = p;
+    const typed = '<button type="button" class="addtyped" data-typed>Add “' + esc(t.length > 40 ? t.slice(0, 40) + '…' : t) + '” as typed</button>';
+    if (!t) { res.innerHTML = sessionHTML(); totals(); setGo(false, 'Pick a card'); return; }
+    if (!st.list.length && st.busy) { res.innerHTML = '<div class="none">Looking it up…</div>'; setGo(false, 'Pick a card'); return; }
+    if (!st.list.length) { res.innerHTML = '<div class="none">No match yet. Keep typing, or add the number.</div>' + typed; setGo(false, 'Pick a card'); return; }
+    if (st.list.length === 1) {
+      const c = st.list[0];
+      res.innerHTML = '<div class="pick" style="margin-top:12px"><span class="art" style="background:' + artBg(c) + '"></span><div><div class="n">' + esc(c.n) + '</div><div class="m">' + esc(c.s) + ' · ' + esc(c.num) + '</div><div class="m">' + esc(c.r) + '</div></div></div><div class="why"><b>One match.</b> Press Enter.</div>' + typed;
+      st.sel = 0; setGo(true, 'Continue to price'); return;
+    }
+    const pre = st.why && st.why !== 'one';
+    let h = '<div class="q">Which one is your card?<small>' + st.list.length + ' printings match.</small></div><div class="grid">';
+    st.list.forEach((c, i) => {
+      h += '<button type="button" class="tile" data-i="' + i + '" aria-pressed="' + (i === st.sel) + '">' + (pre && i === 0 ? '<span class="best">Best match</span>' : '') + CK + '<span class="art" style="background:' + artBg(c) + '">' + (c.art ? '' : 'ART') + '</span><span class="r">' + esc(c.r) + '</span><span class="s">' + esc(c.s) + '<br>' + esc(c.num) + '</span></button>';
+    });
+    h += '</div>' + (pre ? '<div class="why"><b>' + esc(st.why) + '</b> in what you typed, so it is pre-selected. Press Enter.</div>' : '<div class="why">Not enough to tell. ' + (matchMedia('(hover:hover) and (pointer:fine)').matches ? 'Click' : 'Tap') + ' the art that matches your card.</div>') + typed;
+    res.innerHTML = h; setGo(st.sel > -1, st.sel < 0 ? 'Pick a card' : 'Continue to price');
+  }
+  res.addEventListener('click', e => {
+    const tile = e.target.closest('.tile');
+    if (tile) { st.sel = +tile.dataset.i; render(); const nb = res.querySelectorAll('.tile')[st.sel]; if (nb) nb.focus({ preventScroll: true }); return; }
+    if (e.target.closest('[data-typed]')) toPrice(true);
+  });
+  res.addEventListener('keydown', e => { if (e.key === 'Enter' && st.sel > -1 && e.target.classList.contains('tile')) { e.preventDefault(); toPrice(); } });
+
+  function show(step) { $('as-s1').style.display = step === 1 ? 'flex' : 'none'; $('as-s2').style.display = step === 2 ? 'flex' : 'none'; }
+  function setSeg(id, i) { const el = $(id); el.setAttribute('data-i', i); el.querySelectorAll('button').forEach((b, k) => b.setAttribute('aria-pressed', k === i)); }
+  function seg(id, fn) { $(id).querySelectorAll('button').forEach((b, i) => b.addEventListener('click', () => { setSeg(id, i); fn(b, i); })); }
+
+  // Card name in the list format: "Name - number - set"
+  const listName = c => [c.n, c.num, c.s].filter(Boolean).join(' - ');
+
+  function toPrice(asTyped) {
+    const p = st.parsed || {};
+    if (asTyped) { const t = inp.value.trim(); if (!t) return; st.card = { n: t, s: '', num: '', r: '', h: 220, typed: true }; }
+    else { if (st.sel < 0 || !st.list[st.sel]) return; st.card = st.list[st.sel]; }
+    st.qty = p.qty || 1; st.grade = p.grade || '';
+    const ci = p.condition ? CONDS.indexOf(p.condition) : -1; if (ci > -1) { setSeg('as-cond', ci); st.cond = ci; }
+    const c = st.card;
+    $('as-pa').style.background = artBg(c); $('as-pn').textContent = c.n;
+    $('as-pm').textContent = c.typed ? 'Added as typed' : c.s + ' · ' + c.num + (st.grade ? ' · ' + st.grade : '');
+    $('as-q').textContent = st.qty;
+    show(2); price.value = ''; kept.value = ''; $('as-err').textContent = ''; upd(); price.focus();
+  }
+  function upd() {
+    const sale = st.type === 'sale', v = S.toCents(price.value), k = S.toCents(kept.value);
+    $('as-plab').textContent = sale ? 'Sold for' : 'Total paid';
+    $('as-keptw').hidden = !sale;
+    price.setAttribute('enterkeyhint', sale ? 'next' : 'done');
+    const ok = v != null && v > 0 && (!sale || (k != null && k >= 0));
+    sv.disabled = !ok;
+    sv.textContent = !(v > 0) ? 'Enter a price' : sale && (k == null) ? 'Enter what reached you' : (sale ? 'Save sale · ' : 'Save purchase · ') + money(v);
+  }
+  async function save() {
+    if (sv.disabled) return;
+    const sale = st.type === 'sale', c = st.card, v = S.toCents(price.value), k = S.toCents(kept.value);
+    const name = c.typed ? c.n : listName(c);
+    try {
+      const e = await S.add({ type: st.type, name, platform: $('as-plat').value, qty: st.qty, amount: v, net: sale ? k : null, condition: COND_FULL[CONDS[st.cond]], art: c.art || null, note: st.grade ? 'Graded ' + st.grade : '' });
+      const amt = sale ? k : v;
+      st.rows.unshift({ n: c.n, m: (c.typed ? '' : c.s + ' · ') + (st.qty > 1 ? '×' + st.qty + ' · ' : '') + CONDS[st.cond], h: c.h, art: c.art, sale, amt, qty: st.qty, isNew: true, id: e.id });
+      st.total += sale ? amt : -amt;
+      show(1); inp.value = ''; st.sig = '~'; render(); tween(); inp.focus(); mem.set();
+      const u = S.usage();
+      flash(u.plan === 'free' && u.blocked ? 'Saved · that was your last free entry this month' : u.plan === 'free' && u.warn ? 'Saved · ' + u.left + (u.left === 1 ? ' free entry' : ' free entries') + ' left' : 'Saved · ready for the next card');
+      if (u.plan === 'free' && u.blocked) { setGo(false, 'Free entries used up this month'); inp.disabled = true; }
+    } catch (err) {
+      if (err.code === 'limit') { $('as-err').textContent = 'You’ve used all 20 free entries this month. More on ' + S.usage().resetsOn + '.'; sv.disabled = true; }
+      else if (err.code === 'invalid') $('as-err').textContent = Object.values(err.errors)[0];
+      else console.error(err);
+    }
+  }
+  function flash(t) { const el = $('as-toast'); el.textContent = t; el.classList.add('on'); clearTimeout(flash.t); flash.t = setTimeout(() => el.classList.remove('on'), 1900); }
+
+  seg('as-type', b => { st.type = b.dataset.v; upd(); mem.set(); });
+  seg('as-cond', (b, i) => { st.cond = i; });
+  $('as-plat').addEventListener('change', mem.set);
+  $('as-qm').addEventListener('click', () => { st.qty = Math.max(1, st.qty - 1); $('as-q').textContent = st.qty; });
+  $('as-qp').addEventListener('click', () => { st.qty = Math.min(9999, st.qty + 1); $('as-q').textContent = st.qty; });
+  $('as-back').addEventListener('click', () => { show(1); inp.focus(); });
+  inp.addEventListener('input', render);
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (!go.disabled) toPrice(); } });
+  go.addEventListener('click', () => toPrice());
+  sv.addEventListener('click', save);
+  price.addEventListener('input', upd); kept.addEventListener('input', upd);
+  price.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (st.type === 'sale' && S.toCents(kept.value) == null) kept.focus(); else save(); } });
+  kept.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); save(); } });
+  [price, kept].forEach(f => f.addEventListener('blur', () => { const c = S.toCents(f.value); if (c != null && c >= 0) f.value = S.fromCents(c); }));
+  $('as-other').addEventListener('click', () => { const done = st.onDone; close(); window.CTEditor.open(null, done); });
+  dlg.querySelector('[data-as-close]').addEventListener('click', close);
+  dlg.addEventListener('click', e => { if (e.target === dlg) close(); });
+  dlg.addEventListener('close', () => { const n = st.rows.length, done = st.onDone; st.onDone = null; if (done && n) done('session', n); });
+
+  function open(onDone) {
+    st.onDone = onDone || null; st.rows = []; st.total = 0; st.shown = 0; st.sig = '~'; st.sel = -1;
+    const d = mem.get();
+    const plats = [...new Set(S.platforms().concat(DEFAULT_PLATFORMS))];
+    $('as-plat').innerHTML = plats.map(p => '<option>' + esc(p) + '</option>').join('');
+    if (d.plat && plats.includes(d.plat)) $('as-plat').value = d.plat;
+    st.type = d.type === 'sale' ? 'sale' : 'purchase'; setSeg('as-type', st.type === 'sale' ? 1 : 0);
+    st.cond = 0; setSeg('as-cond', 0);
+    inp.value = ''; inp.disabled = false; show(1); render();
+    dlg.showModal();
+    requestAnimationFrame(() => inp.focus({ preventScroll: true }));
+  }
+  function close() { if (dlg.open) dlg.close(); }
+
+  window.CTAddSheet = { open, close, get isOpen() { return dlg.open; } };
+})();

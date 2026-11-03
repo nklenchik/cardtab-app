@@ -326,7 +326,13 @@
     else if (result === 'deleted') toast('Entry deleted', { undo: true });
     else if (result === 'limit') limitToast();
   }
-  function openAdd() { if (S.usage().blocked) { limitToast(); return; } window.CTEditor.open(null, afterEditor); }
+  function openAdd() {
+    if (S.usage().blocked) { limitToast(); return; }
+    window.CTAddSheet.open((result, n) => {
+      if (result === 'session') { expanded = null; render(); usageToast(n === 1 ? '1 entry added' : n + ' entries added'); }
+      else afterEditor(result, n);
+    });
+  }
   $('ct-add').addEventListener('click', openAdd);
   $('af-primary').addEventListener('click', () => { if (premium()) toast('Spreadsheet import arrives in the next update.'); else openAdd(); });
   $('af-secondary').addEventListener('click', () => { if (premium()) openAdd(); else toast('Import is part of Premium. Upgrading opens at launch.'); });
@@ -346,7 +352,7 @@
 
   // Keyboard: Cmd/Ctrl+Z undoes, "/" jumps to search
   document.addEventListener('keydown', async e => {
-    if (root.hidden || window.CTEditor.isOpen) return;
+    if (root.hidden || window.CTEditor.isOpen || (window.CTAddSheet && window.CTAddSheet.isOpen)) return;
     const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
     if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && !typing) { e.preventDefault(); const l = await S.undo(); toast(l ? 'Undone' : 'Nothing to undo'); }
     else if (e.key === '/' && !typing) { e.preventDefault(); $('ct-search').focus(); }

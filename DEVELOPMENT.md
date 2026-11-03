@@ -53,3 +53,10 @@ Local-first store, dashboard and sign-in, all in app/ (see README.md). Tested in
 ## Open questions for Nick
 - Free chart: last 3 months (matches the 3-month report history) or this month only?
 - Refund meaning: always money back on a purchase, or can it also be a refund you gave a buyer?
+
+## Drop 2, step 1: add-card sheet connected (2026-11-03)
+- + Add New opens the approved free-text sheet (app/js/addsheet.js, css/addsheet.css; parser.js and lookup.js copied into app/js). Saves through the store, so Free limits, undo and the dashboard all apply. The sheet stays open for the next card with one running session total.
+- Changed from the approved prototype: sales ask for "After fees and shipping" (what reached you) instead of showing the 13.25% + $0.30 estimate, and the shipping choice is gone (it only fed that estimate). Added "Add as typed" for cards the catalog doesn't know, and a "Refund or something else? Use the full form" link. Names save in the "Name - number - set" format; graded cards note the grade.
+- Card lookup still uses the 12-card sample catalog with colored placeholders for art. Real lookups and art switch on by setting window.CARDTAB_API in index.html once the Worker is deployed (after the Cloudflare move).
+- The prototype's standalone page stays in app/add-sheet/ for reference.
+- Next in Drop 2: Import (Premium), nudges.
