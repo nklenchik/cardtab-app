@@ -9,7 +9,7 @@
   const f = n => form.elements[n];
   let editing = null, type = 'purchase', onDone = null;
 
-  const AMOUNT_LABEL = { purchase: 'Total paid', sale: 'Sold for', refund: 'Refunded' };
+  const AMOUNT_LABEL = { purchase: 'Total paid', sale: 'Sold for', refund: 'Refunded to buyer' };
 
   function setType(t) {
     type = t;
@@ -58,7 +58,7 @@
     else { f('fees').value = ''; f('ship').value = last.ship != null ? S.fromCents(last.ship) : ''; }
     f('qty').value = e.qty || 1; f('date').value = e.date || S.today(); f('platform').value = e.platform || '';
     f('condition').value = e.condition || ''; f('note').value = e.note || ''; keep();
-    document.getElementById('ed-platforms').innerHTML = [...new Set(S.platforms().concat(['eBay', 'TCGplayer', 'Mercari', 'Whatnot', 'Card Show', 'Facebook Marketplace', 'Local game store']))].map(p => '<option value="' + p.replace(/"/g, '&quot;') + '">').join('');
+    document.getElementById('ed-platforms').innerHTML = S.pickerPlatforms().map(p => '<option value="' + p.replace(/"/g, '&quot;') + '">').join('');
     const u = S.usage(), left = document.getElementById('ed-left');
     left.hidden = !!editing || !(u.warn);
     left.textContent = u.left === 1 ? '1 free entry left this month.' : u.left + ' free entries left this month.';
@@ -74,6 +74,7 @@
     if (!v.ok) { showErrors(v.errors); return; }
     try {
       const saved = editing ? await S.update(editing.id, data) : await S.add(data);
+      if (saved.platform && !S.pickerPlatforms().some(p => p.toLowerCase() === saved.platform.toLowerCase())) await S.addPlatform(saved.platform); // a new platform typed here is kept for this account
       if (!editing) { try { localStorage.setItem('ct.lastEntry', JSON.stringify({ type: saved.type, platform: saved.platform, ship: saved.type === 'sale' ? saved.ship : (last0().ship) })); } catch (e) {} } // remember type and platform from adds only
       const wasEdit = !!editing; close();
       if (onDone) onDone(wasEdit ? 'edited' : 'added', saved);

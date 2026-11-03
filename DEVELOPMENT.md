@@ -42,7 +42,7 @@ Search step https://claude.ai/artifact/54GP2em6K97QyeEGvsdBdU ; bulk flow https:
 Local-first store, dashboard and sign-in, all in app/ (see README.md). Tested in Chromium at desktop and iPhone size, light and dark.
 - Store: IndexedDB, one database per signed-in email; money in whole cents; ids, timestamps and soft deletes so sync can be added later. Undo stack (30 steps). Other open tabs refresh automatically.
 - Usage counts entries added this month (adds and duplicates). Edits are free. Counted by when an entry was added, not its date. Deleting an entry added this month gives the slot back (Nick agreed 2026-11-03); deleting one from an earlier month doesn't. Sample entries from Testing tools don't count.
-- Refunds are treated as money back on a purchase: Spent = purchases minus refunds.
+- Refunds (decided 2026-11-03, matching Nick's Cash Flow sheet): a refund is money paid back to a buyer on a sale, so it comes out of After fees. A refund received on a purchase is handled by editing that purchase.
 - Sales store "after fees and shipping" as typed by the user, so fees shown are exact (sale minus what reached you). No estimated fee is used anywhere in Drop 1.
 - Free: tiles, chart caption and fees cover this month; the monthly chart shows the last 3 months; the list always shows every entry with all filters. Premium: everything follows the date range (all time chart shows up to the latest 12 months).
 - Free first run leads with Add New; the Premium-tagged Import link appears after 3 different sign-in days or when at 17+ entries on/after the 20th. Premium first run leads with Import (wired in Drop 2).
@@ -52,7 +52,6 @@ Local-first store, dashboard and sign-in, all in app/ (see README.md). Tested in
 
 ## Open questions for Nick
 - Free chart: last 3 months (matches the 3-month report history) or this month only?
-- Refund meaning: always money back on a purchase, or can it also be a refund you gave a buyer?
 
 ## Drop 2, step 1: add-card sheet connected (2026-11-03)
 - + Add New opens the approved free-text sheet (app/js/addsheet.js, css/addsheet.css; parser.js and lookup.js copied into app/js). Saves through the store, so Free limits, undo and the dashboard all apply. The sheet stays open for the next card with one running session total.
@@ -74,3 +73,11 @@ Local-first store, dashboard and sign-in, all in app/ (see README.md). Tested in
 3. **Payments: remind Nick here.** Leaning Stripe (Checkout + Billing + Customer Portal); decide on sales tax handling: plain Stripe, Stripe Managed Payments (+3.5%, confirm US eligibility) or Paddle (5% + 50c). Push the yearly plan (fixed per-charge fees hurt $4/mo most).
 4. Launch.
 Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium), then Card Board on real data.
+
+## Import built (2026-11-03)
+- app/js/xlsx-lite.js: reads .xlsx (rows, dates, cell notes) and CSV on the device with the browser's DecompressionStream; no outside library. Old .xls asks to resave.
+- app/js/importer.js: finds the sheet and header row, maps columns by name (Date, Transaction/Type, Platform, Items/Card, Gross, Net, Purchase, Fees, Shipping, Qty, Condition, Notes, Image), reads dates and money in many formats, infers type when missing. Sales: Gross and Net are the source of truth; note text ("fees", "stamp", "tracking", "shipping", typos like "shupping") splits the difference into fees and shipping only when it adds up exactly, else kept as one combined amount and listed. Image links keep TCGplayer product ids and TCGdex ids (entry.ref) for exact matching later; parser fields saved in entry.parsed; entry.match = exact | name | typed.
+- app/js/import-ui.js: Pick a file -> Check the match (sheet picker, column dropdowns, first rows preview) -> Review (counts, totals, matching and fee summary, optional rows-to-check list) -> Import. Re-importing skips entries already there (fingerprint). One Undo removes the whole import. Imports don't use Free slots (Import is Premium).
+- Tested on Nick's Card_Collection.xlsx (Cash Flow): 199 rows; After fees $3,876.57, Spent $2,812.53, Profit $1,064.04 match his sheet to the cent. Sales shows $4,724.37 vs his $4,599.37 because two gift-card rows have only Net; they count as sold for that amount with no fees. 135 rows exact-match ready, 50 by name, 14 typed (multi-card lines, slabs without set). 56 sales split, 42 combined.
+- Platforms: "TCGPlayer" -> TCGplayer, "Marketplace" -> Facebook Marketplace (Nick confirmed). Custom platforms: "+ Add your own…" in the add sheet, or typing a new one in the full form; saved per account (meta.customPlatforms), never shared. Managing/removing them belongs in Settings later.
+- Next for Import, once the Worker is live: a matching pass over entries with entry.ref / entry.parsed to fill art and canonical names, plus a "Which one is your card?" queue for ambiguous ones (respect JustTCG daily limits; batch and cache).

@@ -9,7 +9,6 @@
   const dlg = $('as'), inp = $('as-in'), chips = $('as-chips'), res = $('as-res'), go = $('as-go'), price = $('as-price'), fees = $('as-fees'), ship = $('as-ship'), sv = $('as-save');
   const KEY = 'ct.addsheet';
   const CONDS = ['NM', 'LP', 'MP', 'HP'], COND_FULL = { NM: 'Near Mint', LP: 'Lightly Played', MP: 'Moderately Played', HP: 'Heavily Played' };
-  const DEFAULT_PLATFORMS = ['eBay', 'TCGplayer', 'Mercari', 'Whatnot', 'Card Show', 'Facebook Marketplace', 'Local game store'];
   const st = { tok: 0, busy: false, type: 'purchase', cond: 0, qty: 1, sel: -1, list: [], sig: '', why: '', card: null, parsed: null, rows: [], total: 0, shown: 0, onDone: null };
 
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -141,7 +140,7 @@
 
   seg('as-type', b => { st.type = b.dataset.v; upd(); mem.set(); });
   seg('as-cond', (b, i) => { st.cond = i; });
-  $('as-plat').addEventListener('change', mem.set);
+  $('as-plat').addEventListener('change', e => { if (e.target.value !== '__add') mem.set(); });
   $('as-qm').addEventListener('click', () => { st.qty = Math.max(1, st.qty - 1); $('as-q').textContent = st.qty; });
   $('as-qp').addEventListener('click', () => { st.qty = Math.min(9999, st.qty + 1); $('as-q').textContent = st.qty; });
   $('as-back').addEventListener('click', () => { show(1); inp.focus(); });
@@ -159,12 +158,26 @@
   dlg.addEventListener('click', e => { if (e.target === dlg) close(); });
   dlg.addEventListener('close', () => { const n = st.rows.length, done = st.onDone; st.onDone = null; if (done && n) done('session', n); });
 
+  // Platform picker, with "Add your own" at the end. Your own platforms are saved in your account only.
+  function fillPlatforms(pick) {
+    const plats = S.pickerPlatforms(), sel = $('as-plat');
+    sel.innerHTML = plats.map(p => '<option>' + esc(p) + '</option>').join('') + '<option value="__add">+ Add your own…</option>';
+    sel.value = pick && plats.includes(pick) ? pick : plats[0];
+    sel.dataset.prev = sel.value; $('as-addplat').hidden = true;
+  }
+  $('as-plat').addEventListener('change', e => {
+    if (e.target.value === '__add') { e.target.value = e.target.dataset.prev || ''; $('as-addplat').hidden = false; $('as-newplat').value = ''; $('as-newplat').focus(); }
+    else e.target.dataset.prev = e.target.value;
+  });
+  async function savePlat() { const n = await S.addPlatform($('as-newplat').value); if (!n) { $('as-newplat').focus(); return; } fillPlatforms(n); mem.set(); (st.card ? price : inp).focus(); }
+  $('as-saveplat').addEventListener('click', savePlat);
+  $('as-newplat').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); savePlat(); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); $('as-addplat').hidden = true; } });
+  $('as-cancelplat').addEventListener('click', () => { $('as-addplat').hidden = true; });
+
   function open(onDone) {
     st.onDone = onDone || null; st.rows = []; st.total = 0; st.shown = 0; st.sig = '~'; st.sel = -1;
     const d = mem.get();
-    const plats = [...new Set(S.platforms().concat(DEFAULT_PLATFORMS))];
-    $('as-plat').innerHTML = plats.map(p => '<option>' + esc(p) + '</option>').join('');
-    if (d.plat && plats.includes(d.plat)) $('as-plat').value = d.plat;
+    fillPlatforms(d.plat);
     st.type = d.type === 'sale' ? 'sale' : 'purchase'; setSeg('as-type', st.type === 'sale' ? 1 : 0);
     st.cond = 0; setSeg('as-cond', 0);
     inp.value = ''; inp.disabled = false; $('as-toast').classList.remove('on'); show(1); render();

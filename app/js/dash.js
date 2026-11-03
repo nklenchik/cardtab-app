@@ -213,7 +213,7 @@
       if (sort !== 'high' && m !== current) { current = m; chunks.push('<div class="ct-month">' + m + ' <span>' + perMonth[k] + (perMonth[k] === 1 ? ' entry' : ' entries') + '</span></div>'); }
       const open = expanded === t.id, badge = t.type === 'sale' ? 'Sale' : t.type === 'refund' ? 'Refund' : 'Purchase';
       const after = t.type === 'sale' ? ' &nbsp; After fees <em>' + money(t.net) + '</em>' : '';
-      const verb = t.type === 'sale' ? 'Sold' : t.type === 'refund' ? 'Refunded' : 'Paid';
+      const verb = t.type === 'sale' ? 'Sold' : t.type === 'refund' ? 'Refunded to buyer' : 'Paid';
       chunks.push('<div class="ct-row ' + (open ? 'expanded' : '') + (t.id === justAdded ? ' ct-new' : '') + '"><button type="button" class="ct-row-toggle" data-tx="' + t.id + '" aria-expanded="' + open + '" aria-label="' + (open ? 'Collapse' : 'Expand') + ' ' + esc(t.name) + '">' + artHtml(t, open) + '<div class="ct-expanded-right"><div class="ct-row-meta">' + shortDate(t.date) + (t.platform ? ' · ' + esc(t.platform) : '') + '</div><div class="ct-row-name">' + esc(t.name) + (t.qty > 1 ? ' ×' + t.qty : '') + '</div><div class="ct-row-bottom">' + verb + ' <strong>' + money(t.amount) + '</strong>' + after + '</div></div><span class="ct-tag ' + t.type + '">' + badge + '</span><span class="ct-row-chevron" aria-hidden="true">' + (open ? '−' : '+') + '</span></button>' + (open ? detailsHtml(t) : '') + '</div>');
     });
     justAdded = null;
@@ -339,7 +339,7 @@
     });
   }
   $('ct-add').addEventListener('click', openAdd);
-  $('af-primary').addEventListener('click', () => { if (premium()) toast('Spreadsheet import arrives in the next update.'); else openAdd(); });
+  $('af-primary').addEventListener('click', () => { if (premium()) openImport(); else openAdd(); });
   $('af-secondary').addEventListener('click', () => { if (premium()) openAdd(); else toast('Import is part of Premium. Upgrading opens at launch.'); });
 
   // ---------- delete and undo, animated ----------
@@ -366,6 +366,12 @@
     toast('Undone');
   }
 
+  // ---------- import (Premium) ----------
+  function openImport() {
+    if (!premium()) { toast('Import is part of Premium. Upgrading opens at launch.'); return; }
+    window.CTImportUI.open((n, file) => { expanded = null; showEarlier = false; render(); toast('Imported ' + n + (n === 1 ? ' entry' : ' entries') + (file ? ' from ' + file : ''), { undo: true }); });
+  }
+
   // ---------- export ----------
   function exportCSV() {
     if (!S.all().length) { toast('Nothing to export yet'); return; }
@@ -381,7 +387,7 @@
 
   // Keyboard: Cmd/Ctrl+Z undoes, "/" jumps to search
   document.addEventListener('keydown', async e => {
-    if (root.hidden || window.CTEditor.isOpen || (window.CTAddSheet && window.CTAddSheet.isOpen)) return;
+    if (root.hidden || window.CTEditor.isOpen || (window.CTAddSheet && window.CTAddSheet.isOpen) || (window.CTImportUI && window.CTImportUI.isOpen)) return;
     const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
     if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && !typing) { e.preventDefault(); doUndo(); }
     else if (e.key === '/' && !typing) { e.preventDefault(); $('ct-search').focus(); }
@@ -403,5 +409,5 @@
     render();
   }
 
-  window.CTDash = { mount, render, toast, exportCSV, upgradeNote };
+  window.CTDash = { mount, render, toast, exportCSV, upgradeNote, openImport };
 })();

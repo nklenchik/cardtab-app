@@ -16,6 +16,7 @@
   const FREE_LIMIT = 20, WARN_AT = 17;
   const TYPES = ['purchase', 'sale', 'refund'];
   const SCHEMA = 1;
+  const DEFAULT_PLATFORMS = ['eBay', 'TCGplayer', 'Mercari', 'Whatnot', 'Card Show', 'Facebook Marketplace', 'Local game store', 'Other'];
 
   // ---------- small helpers ----------
   const pad = n => String(n).padStart(2, '0');
@@ -104,6 +105,7 @@
       } else { e.net = cents(e.net); }
     } else { e.net = null; e.fees = null; e.ship = null; }
     e.art = e.art || null;
+    if (e.source != null) e.source = String(e.source).slice(0, 400);
     const errors = {};
     if (!e.name) errors.name = 'Add the card or item';
     if (e.amount == null || e.amount < 0) errors.amount = 'Enter an amount';
@@ -167,7 +169,32 @@
 
     all() { return [...entries.values()].filter(e => !e.deleted).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt)); },
     get(id) { const e = entries.get(id); return e && !e.deleted ? clone(e) : null; },
+    // Platforms used in entries, most used first (for filters)
     platforms() { const s = new Map(); this.all().forEach(e => { if (e.platform) s.set(e.platform, (s.get(e.platform) || 0) + 1); }); return [...s.entries()].sort((a, b) => b[1] - a[1]).map(x => x[0]); },
+    // Platforms someone added themselves. Saved in their own account only, never shared.
+    customPlatforms() { return (meta.customPlatforms || []).slice(); },
+    async addPlatform(name) {
+      const n = String(name || '').trim().slice(0, 40); if (!n) return null;
+      const all = DEFAULT_PLATFORMS.concat(meta.customPlatforms || []);
+      const hit = all.find(p => p.toLowerCase() === n.toLowerCase()); if (hit) return hit;
+      await putMeta('customPlatforms', (meta.customPlatforms || []).concat([n])); changed('platforms'); return n;
+    },
+    // Everything to offer when picking a platform: ones you use most, then your own, then the standard list
+    pickerPlatforms() { return [...new Set(this.platforms().concat(meta.customPlatforms || [], DEFAULT_PLATFORMS))]; },
+    DEFAULT_PLATFORMS,
+
+    // ---------- import ----------
+    // Fingerprint used to skip entries that are already in the account when the same file is imported again
+    fingerprint(e) { return [e.date, e.type, e.amount, e.type === 'sale' ? e.net : '', String(e.source || e.name).toLowerCase().replace(/[^a-z0-9]+/g, '')].join('|'); },
+    // Add many entries at once (Premium import). One Undo removes the whole import. Imports don't use Free entry slots.
+    async importMany(list) {
+      const t = new Date().toISOString(), ids = [];
+      const rows = list.map(r => { const { e } = normalize(r); e.id = uid(); e.createdAt = t; e.updatedAt = t; e.deleted = false; e.counted = false; e.imported = true; ids.push(e.id); return e; });
+      rows.forEach(e => entries.set(e.id, e));
+      if (db) { const tx = db.transaction('entries', 'readwrite'), os = tx.objectStore('entries'); rows.forEach(e => os.put(e)); await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = () => rej(tx.error); }); }
+      pushUndo('Import undone', async () => { for (const id of ids) await dropEntry(id); });
+      changed('import'); return ids.length;
+    },
 
     validate(input, base) { return normalize(input, base); },
 
@@ -226,14 +253,17 @@
 
     // Totals for a list of entries, in cents
     totals(list) {
-      let sales = 0, after = 0, bought = 0, refunds = 0;
+      let sales = 0, after = 0, bought = 0, refunds = 0, fees = 0;
       list.forEach(e => {
-        if (e.type === 'sale') { sales += e.amount; after += e.net; }
+        if (e.type === 'sale') { sales += e.amount; after += e.net; fees += e.amount - e.net; }
         else if (e.type === 'purchase') bought += e.amount;
         else if (e.type === 'refund') refunds += e.amount;
       });
-      const spent = bought - refunds; // a refund is money back on something you bought
-      return { sales, after, spent, profit: after - spent, fees: sales - after, entries: list.length };
+      // A refund is money you paid back to a buyer on a sale, so it comes out of what you kept (as in Nick's Cash Flow sheet).
+      // A refund you receive on a purchase is handled by editing that purchase.
+      after -= refunds;
+      const spent = bought;
+      return { sales, after, spent, profit: after - spent, fees, refunds, entries: list.length };
     },
 
     exportCSV() {

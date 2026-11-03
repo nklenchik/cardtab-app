@@ -43,6 +43,9 @@
       n.textContent = u.blocked ? 'You’ve used all 20 free entries. They reset on ' + u.resetsOn + '.' : 'You’re nearing your limit: ' + u.left + (u.left === 1 ? ' entry' : ' entries') + ' left this month.';
     }
     menu.querySelectorAll('[data-plan]').forEach(b => b.classList.toggle('on', b.dataset.plan === u.plan));
+    // Import: Premium sees it from day one; Free only sees a Premium-tagged link later (see store.showImport)
+    const im = $('am-import'); im.hidden = !S.showImport();
+    im.innerHTML = 'Import a spreadsheet' + (u.plan === 'premium' ? '' : ' <span class="af-lock">Premium</span>');
   }
   function placeMenu() {
     const r = av.getBoundingClientRect(), w = menu.offsetWidth;
@@ -68,6 +71,7 @@
     const b = e.target.closest('button, summary'); if (!b) return;
     if (b.dataset.soon) { closeMenu(); Dash.toast(b.dataset.soon + ' arrive in a later update.'); return; }
     if (b.id === 'am-export') { closeMenu(); Dash.exportCSV(); return; }
+    if (b.id === 'am-import') { closeMenu(); Dash.openImport(); return; }
     if (b.id === 'am-out') { Sess.signOut(); showAuth(); return; }
     if (b.dataset.plan) { await S.setPlan(b.dataset.plan); Dash.toast(b.dataset.plan === 'premium' ? 'Now testing as Premium' : 'Now testing as Free'); return; }
     const d = b.dataset.dev; if (!d) return;
