@@ -72,7 +72,9 @@ Local-first store, dashboard and sign-in, all in app/ (see README.md). Tested in
 2. Real sign-in (Google + emailed link) and online saving across devices.
 3. **Payments: remind Nick here.** Leaning Stripe (Checkout + Billing + Customer Portal); decide on sales tax handling: plain Stripe, Stripe Managed Payments (+3.5%, confirm US eligibility) or Paddle (5% + 50c). Push the yearly plan (fixed per-charge fees hurt $4/mo most).
 4. Launch.
-Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium), then Card Board on real data.
+Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Board on real data.
+
+**Don't forget (Nick asked): art for imported entries.** When the Worker is live, run an art pass over entries: exact match via entry.ref (TCGplayer id / TCGdex id) first, else entry.artSource (the sheet's own image link), else keep the letter placeholder. The Worker fetches, converts to WebP (AVIF later), list ~240px wide and detail ~640px, renames, strips metadata, stores in R2. Fill existing entries automatically, no re-import. Google thumbnail links (encrypted-tbn) are low quality; prefer a match.
 
 ## Import built (2026-11-03)
 - app/js/xlsx-lite.js: reads .xlsx (rows, dates, cell notes) and CSV on the device with the browser's DecompressionStream; no outside library. Old .xls asks to resave.
