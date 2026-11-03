@@ -154,27 +154,34 @@
 </div><div class="toast" id="as-toast"></div></div></dialog>
 
 <!-- ============ Import a spreadsheet (Premium) ============ -->
-<dialog class="ed imp" id="imp" aria-labelledby="imp-h">
-  <div class="ed-form imp-form">
-    <div class="ed-head"><div><h2 id="imp-h">Import a spreadsheet</h2><p class="imp-steps" id="imp-steps"><span class="on">1 Pick a file</span><span>2 Review</span></p></div><button type="button" class="ed-x" data-imp-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+<dialog class="ed imp" id="imp" aria-label="Import a spreadsheet">
+  <div class="ed-form imp-form" id="imp-form">
+    <div class="imp-top"><button type="button" class="imp-back" id="imp-back" aria-label="Back" hidden>‹</button><button type="button" class="ed-x" data-imp-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <section class="imp-step" id="imp-s1">
-      <label class="imp-drop" id="imp-drop"><input type="file" id="imp-file" accept=".xlsx,.csv,.tsv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"><span class="imp-ic" aria-hidden="true">↥</span><b id="imp-drop-t">Drop your spreadsheet here</b><span>or choose a file · Excel (.xlsx) or CSV</span></label>
-      <p class="imp-fine">Your file is read on this device and never uploaded. Google Sheets: File › Download › Microsoft Excel (.xlsx) keeps your notes.</p>
-      <p class="imp-err" id="imp-err1" role="alert" hidden></p>
+      <div class="imp-ic" aria-hidden="true">↥</div>
+      <h2>Import your spreadsheet</h2>
+      <p>CSV or Excel. It stays on your device.</p>
+      <label class="ct-add imp-btn"><span id="imp-choose">Choose file</span><input type="file" id="imp-file" title="" aria-label="Choose a spreadsheet" accept=".xlsx,.csv,.tsv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"></label>
+      <p class="imp-or">or drop it here</p>
+      <p class="imp-err" id="imp-err" role="alert" hidden></p>
     </section>
     <section class="imp-step" id="imp-s2" hidden>
-      <div class="imp-from"><p id="imp-from"></p><button type="button" class="imp-link" id="imp-tab-btn" hidden>Change tab</button></div>
-      <label class="ed-f imp-tab" id="imp-tab" hidden><span>Tab</span><select id="imp-sheet"></select></label>
-      <p class="imp-big" id="imp-big"></p>
-      <div class="imp-tiles" id="imp-tiles"></div>
-      <h3 class="imp-sub">Your first rows</h3>
-      <div class="imp-prev" id="imp-prev"></div>
-      <ul class="imp-facts" id="imp-facts"></ul>
-      <details class="imp-check" id="imp-check"><summary id="imp-check-s"></summary><div id="imp-check-l"></div></details>
-      <div class="imp-fix" id="imp-fix" hidden><p class="imp-fix-h" id="imp-fix-h">Tell Card Tab which column is which</p><div class="imp-map" id="imp-map"></div><button type="button" class="imp-link" id="imp-more">Show more columns</button></div>
-      <p class="imp-err" id="imp-err2" role="alert" hidden></p>
+      <h2 id="imp-count"></h2>
+      <p class="imp-meta"><span id="imp-range"></span><span id="imp-tabwrap" hidden><span aria-hidden="true">·</span> <select class="imp-tabsel" id="imp-sheet" aria-label="Tab"></select></span></p>
+      <div class="imp-rows" id="imp-rows"></div>
+      <p class="imp-profit" id="imp-profit"></p>
+      <button type="button" class="ct-add imp-btn" id="imp-go"></button>
+      <button type="button" class="imp-link" id="imp-fix">Fix columns</button>
     </section>
-    <div class="ed-foot"><button type="button" class="imp-link imp-fixbtn" id="imp-fixbtn" hidden>Something look off? Fix columns</button><button type="button" class="ed-cancel" id="imp-back" hidden>Back</button><button type="button" class="ed-cancel" data-imp-close>Cancel</button><button type="button" class="ct-add ed-save" id="imp-next" disabled>Continue</button></div>
+    <section class="imp-step" id="imp-s3" hidden>
+      <h2 id="imp-q"></h2>
+      <p id="imp-qsub"></p>
+      <div class="imp-pills" id="imp-pills" role="group"></div>
+    </section>
+    <section class="imp-step" id="imp-s4" hidden>
+      <div class="imp-done" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      <h2 id="imp-done-t"></h2>
+    </section>
   </div>
 </dialog>
 
