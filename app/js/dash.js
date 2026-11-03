@@ -121,7 +121,7 @@
   function artHtml(t, open) {
     if (t.art && (t.art.list || t.art.detail)) return '<img class="ct-card-art" src="' + esc(open ? (t.art.detail || t.art.list) : (t.art.list || t.art.detail)) + '" data-full="' + esc(t.art.detail || t.art.list) + '" alt="" width="44" height="61" loading="lazy">';
     const letter = (t.name.match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase();
-    return '<span class="ct-card-art ct-art-ph" aria-hidden="true">' + esc(letter) + '</span>';
+    return '<span class="ct-card-art ct-art-ph" aria-hidden="true"><i>' + esc(letter) + '</i></span>';
   }
   function detailsHtml(t) {
     const bits = [];

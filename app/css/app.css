@@ -14,8 +14,7 @@ button{font:inherit;color:inherit}
   .ct-demo .ct-app{height:100dvh;display:flex;flex-direction:column}
   .ct-demo .ct-demo-top{flex:none}
   .ct-demo .ct-demo-grid{flex:1;min-height:0;grid-template-rows:minmax(0,1fr)}
-  .ct-demo .ct-demo-left{overflow-y:auto;scrollbar-width:none;padding-bottom:22px;min-height:0}
-  .ct-demo .ct-demo-left::-webkit-scrollbar{display:none}
+  .ct-demo .ct-demo-left{padding-bottom:22px;min-height:0}
   .ct-demo #ct-rows{padding-bottom:18px}
 }
 @media(max-width:760px){.ct-demo .ct-app{padding:14px 12px calc(28px + env(safe-area-inset-bottom,0px))}}
@@ -79,8 +78,11 @@ button{font:inherit;color:inherit}
 @media(max-width:760px){.app-first{padding:40px 18px}}
 
 /* ---------- entry art placeholder (real art arrives with the add-card sheet in Drop 2) ---------- */
-.ct-demo .ct-art-ph{display:grid;place-items:center;aspect-ratio:44/61;background:var(--ct-surface);border:1px solid var(--ct-line);border-radius:5px;color:var(--ct-muted);font-weight:800;font-size:15px;line-height:1;overflow:hidden}
-.ct-demo .ct-row.expanded .ct-art-ph{height:auto;font-size:32px}
+/* The letter is sized from the tile's own width, so it scales in step with the tile when an entry opens or closes
+   (a fixed font size snapped mid-animation). No border either: a scaled border visibly thickens while it animates. */
+.ct-demo .ct-art-ph{display:grid;place-items:center;aspect-ratio:44/61;background:var(--ct-surface);border:0;border-radius:5px;color:var(--ct-muted);overflow:hidden;container-type:inline-size}
+.ct-demo .ct-art-ph i{font-style:normal;font-weight:800;font-size:30cqi;line-height:1}
+.ct-demo .ct-row.expanded .ct-art-ph{height:auto}
 .ct-demo .ct-row:hover .ct-art-ph,.ct-demo .ct-row.expanded .ct-art-ph{background:var(--ct-bg)}
 .ct-demo .ct-tag.refund{background:#e7e8f9;color:#5753a4}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .ct-demo .ct-tag.refund{background:#24233f;color:#a9a6f0}}
@@ -169,3 +171,5 @@ button{font:inherit;color:inherit}
 .ed-save{min-width:96px;font-weight:700}
 /* Phones: on an empty account the "Add your first card" card comes first, above the empty totals */
 @media(max-width:760px){.ct-demo .ct-demo-grid.is-empty .app-first-wrap{order:-1}}
+/* Desktop: the left column only becomes scrollable on short windows; an always-scrollable column cost frames while entries animate */
+@media(min-width:761px) and (max-height:800px){.ct-demo .ct-demo-left{overflow-y:auto;scrollbar-width:none}.ct-demo .ct-demo-left::-webkit-scrollbar{display:none}}
