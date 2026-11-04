@@ -20,13 +20,13 @@
   window.CTPremiumArt = [
     { src: 'assets/card-art/mega-gengar-ex-wall.webp', focus: { x: .5, y: .22 } },
     { src: 'assets/card-art/magby-wall.webp', focus: { x: .5, y: .3 } },
-    { src: 'assets/card-art/articuno-ex-wall.webp', focus: { x: .5, y: .3 } }
+    { src: 'assets/card-art/dragonair-wall.webp', focus: { x: .5, y: .2 } }
   ];
   let loading = null;
   function load() {
     if (window.CTBoard) return Promise.resolve();
     if (loading) return loading;
-    const V = '27.0'; // bump when board files change, so phones don't keep an old copy
+    const V = '27.4'; // bump when board files change, so phones don't keep an old copy
     const css = new Promise((res, rej) => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'board/board.css?v=' + V; l.onload = res; l.onerror = rej; document.head.appendChild(l); });
     const js = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'board/board.js?v=' + V; s.async = true; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
     loading = Promise.all([css, js]).then(() => { sync(); }).catch(e => { loading = null; throw e; });
