@@ -130,6 +130,7 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - Avatar: your first initial on one of 8 colors, or a photo uploaded or taken with the camera (Take photo shows on touch devices only). Photos are shrunk to 1024px on the way in, positioned with drag plus a zoom slider or the scroll wheel, and saved as a 256px WebP (JPEG fallback).
 - Export:
   - entries as CSV, or Excel (SheetJS, loaded only when needed)
-  - the board as a PDF (print styles)
+  - the board as a PDF (html-to-image + jsPDF, loaded only when needed)
   - the board as PNG, JPG or WebP (html-to-image, loaded only when needed)
 - Escape no longer closes the whole board when a dialog is open.
+- In the claude.ai preview, files go through the viewer's save prompt (`downloads` capability). Elsewhere a normal download link is used. The real app will use normal downloads.

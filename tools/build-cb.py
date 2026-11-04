@@ -38,7 +38,7 @@ markup='''<section class="cbx enter" id="cbx" hidden role="dialog" aria-modal="t
 <dialog id="ex" class="sheet" aria-labelledby="ex-h"><div class="awp exp">
   <div class="awh"><h2 id="ex-h">Export</h2><button type="button" class="x" data-close aria-label="Close">✕</button></div>
   <div class="exg"><p class="lab">Your entries</p><div class="chips"><button type="button" data-ex="csv">CSV</button><button type="button" data-ex="xlsx">Excel</button></div><small>Every entry, to the cent, with fees and shipping.</small></div>
-  <div class="exg"><p class="lab">Report</p><div class="chips"><button type="button" data-ex="pdf">PDF</button></div><small>This Card Board, ready to print or save.</small></div>
+  <div class="exg"><p class="lab">Report</p><div class="chips"><button type="button" data-ex="pdf">PDF</button></div><small>This Card Board, ready to share or print.</small></div>
   <div class="exg"><p class="lab">Card Board as an image</p><div class="chips"><button type="button" data-ex="png">PNG</button><button type="button" data-ex="jpg">JPG</button><button type="button" data-ex="webp">WebP</button></div><small>For sharing. Uses the period and platform you have picked.</small></div>
   <p class="exs" id="ex-s" role="status"></p>
 </div></dialog>

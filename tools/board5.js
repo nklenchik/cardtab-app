@@ -418,24 +418,31 @@ paintAvatar();
 // export: entries as CSV or Excel, the board as a PDF or an image
 const ex=$('ex');
 function openExport(){$('ex-s').textContent='';ex.showModal()}
-function download(name,blobOrUrl){const a=document.createElement('a');a.download=name;a.href=typeof blobOrUrl==='string'?blobOrUrl:URL.createObjectURL(blobOrUrl);document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();if(typeof blobOrUrl!=='string')URL.revokeObjectURL(a.href)},1500)}
+// files go through the viewer's save prompt in claude.ai (the page can't download on its own there); a normal link elsewhere
+const toBlob=async d=>typeof d==='string'?await (await fetch(d)).blob():d;
+let dlNS;const dlCap=()=>dlNS!==undefined?Promise.resolve(dlNS):(window.claude&&claude.use?claude.use('downloads').then(n=>dlNS=n,()=>dlNS=null):Promise.resolve(dlNS=null));
+async function download(name,data){const blob=await toBlob(data),dl=await dlCap();
+  if(dl){try{await dl.save({filename:name,data:blob});return 'saved'}catch(e){if(e&&e.code==='declined')return 'declined';if(e&&e.code==='rate_limited')return 'busy';throw e}}
+  const a=document.createElement('a');a.download=name;a.href=URL.createObjectURL(blob);document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);return 'saved'}
 function loadScript(src){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=()=>no(new Error('Could not load '+src));document.head.appendChild(s)})}
 const stamp=()=>TODAY;
 function rowsOut(){return E.slice().sort((a,b)=>a.date<b.date?-1:1).map(e=>{const fs=e.type==='sale'?e.amount-e.net:0;return {Date:e.date,Type:e.type[0].toUpperCase()+e.type.slice(1),Card:e.name,Number:e.no,Set:e.set,Platform:e.platform,Qty:e.qty,Amount:(e.amount/100).toFixed(2),'Fees and shipping':(fs/100).toFixed(2),'You kept':e.type==='sale'?(e.net/100).toFixed(2):''}})}
-async function doExport(kind){const st=$('ex-s');st.textContent='Preparing…';
+async function doExport(kind){const st=$('ex-s');st.textContent='Preparing…';let res='saved';
   try{
     if(kind==='csv'){const rows=rowsOut(),cols=Object.keys(rows[0]),q=v=>/[",\n]/.test(String(v))?'"'+String(v).replace(/"/g,'""')+'"':String(v);
-      download('card-tab-entries-'+stamp()+'.csv',new Blob([cols.join(',')+'\n'+rows.map(r=>cols.map(c=>q(r[c])).join(',')).join('\n')],{type:'text/csv'}))}
+      res=await download('card-tab-entries-'+stamp()+'.csv',new Blob([cols.join(',')+'\n'+rows.map(r=>cols.map(c=>q(r[c])).join(',')).join('\n')],{type:'text/csv'}))}
     else if(kind==='xlsx'){if(!window.XLSX)await loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
-      const rows=rowsOut().map(r=>Object.assign({},r,{Amount:+r.Amount,'Fees and shipping':+r['Fees and shipping'],'You kept':r['You kept']===''?'':+r['You kept']})),ws=XLSX.utils.json_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Entries');XLSX.writeFile(wb,'card-tab-entries-'+stamp()+'.xlsx')}
-    else if(kind==='pdf'){ex.close();if(editing)setEditing(false);setTimeout(()=>window.print(),250);st.textContent='';return}
+      const rows=rowsOut().map(r=>Object.assign({},r,{Amount:+r.Amount,'Fees and shipping':+r['Fees and shipping'],'You kept':r['You kept']===''?'':+r['You kept']})),ws=XLSX.utils.json_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Entries');res=await download('card-tab-entries-'+stamp()+'.xlsx',new Blob([XLSX.write(wb,{type:'array',bookType:'xlsx'})]))}
     else{if(!window.htmlToImage)await loadScript('https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js');
       if(editing)setEditing(false);hideTip();const node=$('cb').querySelector('.frame'),bg=getComputedStyle($('cb')).backgroundColor;
       const opt={pixelRatio:2,backgroundColor:bg,style:{padding:'24px'},width:node.offsetWidth+48,height:node.offsetHeight+48,filter:n=>!(n.classList&&(n.classList.contains('tctl')||n.classList.contains('back')||n.classList.contains('acctw')||n.classList.contains('wmore')))};
       const name='card-board-'+stamp()+'.'+kind;
-      if(kind==='png')download(name,await htmlToImage.toPng(node,opt));
-      else if(kind==='jpg')download(name,await htmlToImage.toJpeg(node,Object.assign({quality:.92},opt)));
-      else{const cv=await htmlToImage.toCanvas(node,opt);download(name,cv.toDataURL('image/webp',.92))}}
-    st.textContent='Done. Check your downloads.';buzz('firm')
+      if(kind==='png')res=await download(name,await htmlToImage.toPng(node,opt));
+      else if(kind==='jpg')res=await download(name,await htmlToImage.toJpeg(node,Object.assign({quality:.92},opt)));
+      else if(kind==='webp'){const cv=await htmlToImage.toCanvas(node,opt);res=await download(name,cv.toDataURL('image/webp',.92))}
+      else{if(!window.jspdf)await loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js');
+        const cv=await htmlToImage.toCanvas(node,opt),w=cv.width/2,h=cv.height/2,doc=new jspdf.jsPDF({orientation:w>h?'landscape':'portrait',unit:'px',format:[w,h],hotfixes:['px_scaling']});
+        doc.addImage(cv.toDataURL('image/jpeg',.92),'JPEG',0,0,w,h);res=await download(name,doc.output('blob'))}}
+    st.textContent=res==='declined'?'Not saved.':res==='busy'?'One moment, a save is already open.':'Saved.';if(res==='saved')buzz('firm')
   }catch(err){st.textContent='That didn’t work here. Try again in the app.';console.warn(err)}}
 ex.addEventListener('click',e=>{if(e.target===ex){ex.close();return}const b=e.target.closest('button');if(!b)return;if(b.dataset.ex)doExport(b.dataset.ex);else if(b.hasAttribute('data-close'))ex.close()});
