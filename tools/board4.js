@@ -117,7 +117,7 @@ function wire(root,ctx){
 
 // ---------- render, with smooth reflow ----------
 function rects(){const m={};$('simple').querySelectorAll('[data-k]').forEach(el=>m[el.dataset.k]=el.getBoundingClientRect());return m}
-function flip(before){if(calm.matches)return;$('simple').querySelectorAll('[data-k]').forEach(el=>{const a=before[el.dataset.k],b=el.getBoundingClientRect();
+function flip(before,skip){if(calm.matches)return;$('simple').querySelectorAll('[data-k]').forEach(el=>{if(el.dataset.k===skip)return;const a=before[el.dataset.k],b=el.getBoundingClientRect();
   if(!a){el.animate([{opacity:0,transform:'scale(.96)'},{opacity:1,transform:'none'}],{duration:320,easing:'cubic-bezier(.2,.7,.2,1)'});return}
   const dx=a.left-b.left,dy=a.top-b.top;if(Math.abs(dx)<1&&Math.abs(dy)<1&&Math.abs(a.width-b.width)<1&&Math.abs(a.height-b.height)<1)return;
   el.animate([{transform:'translate('+dx+'px,'+dy+'px)',clipPath:'inset(0 '+Math.max(0,b.width-a.width)+'px '+Math.max(0,b.height-a.height)+'px 0 round 22px)'},{transform:'none',clipPath:'inset(0 0 0 0 round 22px)'}],{duration:380,easing:'cubic-bezier(.2,.7,.2,1)'})})}
@@ -160,20 +160,39 @@ function openWidgetMenu(btn,w){closeMenus();hideTip();const m=$('wmenu');
   m.onclick=ev=>{const b=ev.target.closest('button');if(!b)return;m.hidden=true;if(b.dataset.msize){setSize(w.k,b.dataset.msize);return}const i=layout.findIndex(x=>x.k===w.k);layout.splice(i,1);save();render(true)}}
 // corner resize: drag the grip and the widget snaps between Small, Medium and Large; the board makes room as you go
 let rz=null;
+// nearest size for the width being dragged (in a narrow window Small and Medium share half the width)
+function snapTo(r){const want=(r.x+r.gap)/(r.col+r.gap);let best=null,bd=Infinity;ORDER.forEach(sz=>{const d=Math.abs(r.eff[sz]-want);if(d<bd-0.001){bd=d;best=sz}});const cur=layout.find(x=>x.k===r.k).size;return r.eff[cur]===r.eff[best]?cur:best}
+// Live corner resize: the widget's edge follows the cursor, its contents rearrange as it changes width (container queries),
+// and the widgets around it make room whenever it needs another column. On release it glides to the nearest of S, M or L.
+const effCols=()=>$('simple').getBoundingClientRect().width>1000?{S:3,M:6,L:12}:{S:6,M:6,L:12};
 $('simple').addEventListener('pointerdown',e=>{
   const g=e.target.closest('.grip');
-  if(g&&editing){const sec=g.closest('[data-k]'),grid=$('simple').getBoundingClientRect(),gap=parseFloat(getComputedStyle($('simple')).columnGap)||14;e.preventDefault();$('simple').setPointerCapture(e.pointerId);
-    rz={k:sec.dataset.k,left:sec.getBoundingClientRect().left,col:(grid.width-11*gap)/12,gap,el:sec};sec.classList.add('resizing');return}
+  if(g&&editing){const sec=g.closest('[data-k]'),grid=$('simple').getBoundingClientRect(),gap=parseFloat(getComputedStyle($('simple')).columnGap)||14,r=sec.getBoundingClientRect();e.preventDefault();$('simple').setPointerCapture(e.pointerId);
+    const col=(grid.width-11*gap)/12,eff=effCols();
+    rz={k:sec.dataset.k,el:sec,sx:e.clientX,sw:r.width,max:grid.width,f:Math.max(1,(grid.width-r.width)/Math.max(60,innerWidth-16-e.clientX)),col,gap,eff,min:eff.S*col+(eff.S-1)*gap,n:Math.round((r.width+gap)/(col+gap)),x:r.width,raf:0};
+    sec.classList.add('resizing');sec.style.justifySelf='start';sec.style.width=r.width+'px';sec.style.gridColumn='span '+rz.n;hideTip();return}
   const h=e.target.closest('.drag');if(h&&editing){const sec=h.closest('[data-k]');e.preventDefault();$('simple').setPointerCapture(e.pointerId);drag={k:sec.dataset.k,el:sec,x:e.clientX,y:e.clientY};sec.classList.add('lifted')}});
 $('simple').addEventListener('pointermove',e=>{
-  if(rz){const want=(e.clientX-rz.left+rz.gap)/(rz.col+rz.gap);let best='S',bd=Infinity;ORDER.forEach(s=>{const d=Math.abs(COLS[s]-want);if(d<bd){bd=d;best=s}});
-    const el=$('simple').querySelector('[data-k="'+rz.k+'"]');el.querySelector('.szlab').textContent=SIZE_NAMES[best];setSize(rz.k,best);return}
+  if(rz){rz.x=Math.max(rz.min,Math.min(rz.max,rz.sw+(e.clientX-rz.sx)*rz.f)); // the edge follows the cursor; near the screen's right edge it grows faster so Large is still reachable
+    if(!rz.raf)rz.raf=requestAnimationFrame(()=>{if(!rz)return;rz.raf=0;const el=rz.el;el.style.width=rz.x+'px';
+      const n=Math.max(1,Math.min(12,Math.ceil((rz.x+rz.gap)/(rz.col+rz.gap)-0.02)));
+      if(n!==rz.n){const before=rects();rz.n=n;el.style.gridColumn='span '+n;flip(before,rz.k)}
+      el.querySelector('.szlab').textContent=SIZE_NAMES[snapTo(rz)]});
+    return}
   if(!drag)return;drag.el.style.transform='translate('+(e.clientX-drag.x)+'px,'+(e.clientY-drag.y)+'px) scale(1.02)';
   const over=[...$('simple').querySelectorAll('[data-k]')].find(el=>{if(el===drag.el)return false;const r=el.getBoundingClientRect();return e.clientX>r.left&&e.clientX<r.right&&e.clientY>r.top&&e.clientY<r.bottom});
   $('simple').querySelectorAll('.drop').forEach(el=>el.classList.remove('drop'));if(over)over.classList.add('drop');drag.over=over?over.dataset.k:null});
 let drag=null;
 function endPointer(){
-  if(rz){const el=$('simple').querySelector('[data-k="'+rz.k+'"]');if(el)el.classList.remove('resizing');rz=null;return}
+  if(rz){const r=rz;rz=null;if(r.raf)cancelAnimationFrame(r.raf);const el=r.el,w=layout.find(x=>x.k===r.k),size=snapTo(r),curW=el.getBoundingClientRect().width,before=rects();
+    w.size=size;save();el.classList.remove('szS','szM','szL','pS','pF');el.classList.add(phone.matches?(size==='S'&&KPI[r.k]?'pS':'pF'):'sz'+size);
+    el.style.gridColumn='';el.style.width='';const finalW=el.getBoundingClientRect().width;flip(before,r.k);
+    el.querySelector('.grip').setAttribute('aria-label','Resize '+CATALOG[r.k].t+'. Now '+SIZE_NAMES[size]);
+    const done=()=>{el.style.justifySelf='';el.style.width='';el.classList.remove('resizing')};
+    if(calm.matches||Math.abs(finalW-curW)<1){done();return}
+    el.style.width=curW+'px';void el.offsetWidth;el.style.transition='width .32s cubic-bezier(.2,.7,.2,1)';el.style.width=finalW+'px';
+    setTimeout(()=>{el.style.transition='';done()},340);return}
+
   if(!drag)return;const d=drag;drag=null;d.el.classList.remove('lifted');$('simple').querySelectorAll('.drop').forEach(el=>el.classList.remove('drop'));
   if(d.over){d.el.style.transform='';const from=layout.findIndex(w=>w.k===d.k),to=layout.findIndex(w=>w.k===d.over);const [w]=layout.splice(from,1);layout.splice(to,0,w);save();render(true)}
   else{d.el.style.transition='transform .3s cubic-bezier(.2,.7,.2,1)';d.el.style.transform='';setTimeout(()=>{d.el.style.transition=''},320)}}
