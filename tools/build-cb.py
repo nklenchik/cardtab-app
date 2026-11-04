@@ -1,8 +1,10 @@
 import json,base64,sys
-MAIN=len(sys.argv)<2
-VAR=sys.argv[1] if not MAIN else 'A'  # the main board uses phone layout A
+SOFT='soft' in sys.argv[1:]
+args=[a for a in sys.argv[1:] if a!='soft']
+MAIN=not args
+VAR=args[0] if args else 'A'  # the main board uses phone layout A
 P=json.load(open('dash-parts.json'))
-board_css=open('board-part.html').read().replace('__SITECSS__',open('site-cb.css').read())+open('board4.css').read()+open('board5.css').read()+open('board6.css').read()+open('board7.css').read()+open('board8.css').read()+open('board9.css').read()+open('board10.css').read()+open('board11.css').read()+open('board12.css').read()+(open('board13.css').read() if VAR else '')
+board_css=open('board-part.html').read().replace('__SITECSS__',open('site-cb.css').read())+open('board4.css').read()+open('board5.css').read()+open('board6.css').read()+open('board7.css').read()+open('board8.css').read()+open('board9.css').read()+open('board10.css').read()+open('board11.css').read()+open('board12.css').read()+(open('board13.css').read() if VAR else '')+(open('board14-soft.css').read() if SOFT else '')
 markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
 <section class="cbx off" id="cbx" inert aria-hidden="true" role="dialog" aria-modal="true" aria-label="Card Board">
 <div id="cb"><div class="frame">
@@ -142,5 +144,6 @@ page=P['css']+board_css+tipcss+'</style>\n\n'+P['html']+markup+head_js+P['js']+o
 logo='data:image/webp;base64,'+base64.b64encode(open('/home/claude/cardtab-app/app/assets/logo-128.webp','rb').read()).decode()
 out=page.replace('__LOGO__',logo)
 if not MAIN:out=out.replace('<title>Card Board Preview</title>','<title>Card Board Phone '+VAR+'</title>',1)
-open('card-board-preview.html' if MAIN else 'card-board-'+VAR.lower()+'.html','w').write(out)
+if SOFT:out=out.replace('<title>Card Board Preview</title>','<title>Card Board Soft</title>',1)
+open(('card-board-soft.html' if SOFT else 'card-board-preview.html') if MAIN else 'card-board-'+VAR.lower()+'.html','w').write(out)
 print(len(page))

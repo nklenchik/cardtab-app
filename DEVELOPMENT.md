@@ -348,3 +348,9 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - Desktop Ask is a panel under the Ask button that grows out of it (scale from .18 at the button, .46s, cubic-bezier(.2,.8,.2,1)); it shrinks back on close; lighter backdrop. Phones keep the bottom sheet.
 - Close buttons are SVG icons in true 34px circles (box-sizing, padding 0, aspect-ratio 1) on every device. New chat is a matching 34px pill that never wraps; the Ask subtitle truncates.
 - Best month label: 40px headroom, value 25px above the bar, the "best month" label 9.5px, 12px above the bar.
+
+### Soft skin (test copy)
+- python3 build-cb.py soft -> card-board-soft.html. Adds board14-soft.css only: nothing else changes.
+- Page #f8f7f4 (dark #121110), white cards (dark #1f1d1b) with a hairline 1px border (same width, so nothing moves) and a faint shadow; buttons and the bottom bar get hairline edges; fine dotted row dividers; chart guide lines quieter; bars unchanged from the main board.
+- tools/t82.js proves every widget and every child element sits at the same position and size as the main board, for all 10 kinds x 5 sizes on desktop and phone. Sheet timing matches the main board.
+- Design preview: tools/soft-style.html.
