@@ -642,3 +642,8 @@ $('ask-form').addEventListener('submit',e=>{e.preventDefault();const v=$('ask-in
 askd.addEventListener('click',e=>{if(e.target===askd){askd.close();return}const b=e.target.closest('button');if(!b)return;if(b.dataset.q){ask(b.dataset.q);return}
   if(b.id==='ask-stop'&&askCtl){askCtl.abort();return}if(b.id==='ask-new'){askTurns=[];$('ask-log').innerHTML='';paintAskAvail();return}if(b.hasAttribute('data-close'))askd.close()});
 $('cb-ask').addEventListener('click',openAsk);
+
+// ---------- sheets: the title and the main button stay put; only the part between them scrolls, with its own scrollbar ----------
+document.querySelectorAll('dialog.sheet .awp').forEach(p=>{if(p.closest('#askd'))return;const kids=[...p.children];let i=0;while(i<kids.length&&kids[i].matches('.awh,.awtop'))i++;
+  let j=kids.length;while(j>i&&kids[j-1].matches('.go,.rsb,.awfoot,.shnote,.awt'))j--;if(j-i<1)return;
+  const body=document.createElement('div');body.className='awbody';p.insertBefore(body,kids[i]);kids.slice(i,j).forEach(k=>body.appendChild(k))});

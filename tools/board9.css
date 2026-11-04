@@ -210,3 +210,16 @@ dialog.sheet .awp>.go,dialog.sheet .awp>.rsb,#aw .awfoot{position:sticky;bottom:
 dialog.sheet .awp:has(>.go:last-child),dialog.sheet .awp:has(>.rsb:last-child){padding-bottom:0}
 dialog.sheet .awp>.go:last-child,dialog.sheet .awp>.rsb:last-child{margin-bottom:22px}
 @media(max-width:760px){dialog.sheet .awp>.go:last-child{margin-bottom:max(22px,env(safe-area-inset-bottom,0px))}}
+/* replaces the pinned-header approach: the sheet itself never scrolls; its middle does */
+dialog.sheet .awp,#aw.awg .awp{overflow:hidden;padding-bottom:22px!important}
+dialog.sheet .awp>.awh,#aw .awtop{position:static;margin:0;padding:0;box-shadow:none;background:none}
+#aw .awtop{padding:0}
+dialog.sheet .awp>.go,dialog.sheet .awp>.rsb,#aw .awfoot{position:static;box-shadow:none;margin:0!important}
+#aw .awfoot{background:none;padding:0}
+.awbody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:16px;margin:0 -22px;padding:4px 22px;
+  /* soft shadows appear at the top and bottom edge only when there is more to scroll */
+  background:linear-gradient(var(--cb-alt) 30%,transparent) top/100% 26px no-repeat local,linear-gradient(transparent,var(--cb-alt) 70%) bottom/100% 26px no-repeat local,
+    radial-gradient(farthest-side at 50% 0,rgba(0,0,0,.14),transparent) top/100% 10px no-repeat scroll,radial-gradient(farthest-side at 50% 100%,rgba(0,0,0,.14),transparent) bottom/100% 10px no-repeat scroll;background-color:var(--cb-alt)}
+#aw .awbody{padding-top:12px;padding-bottom:10px}
+#aw .awbody .thumbs{padding:0 6px}
+.shp .awbody{gap:12px}
