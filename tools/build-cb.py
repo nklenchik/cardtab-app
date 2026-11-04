@@ -1,5 +1,6 @@
 import json,base64,sys
-VAR=sys.argv[1] if len(sys.argv)>1 else ''
+MAIN=len(sys.argv)<2
+VAR=sys.argv[1] if not MAIN else 'A'  # the main board uses phone layout A
 P=json.load(open('dash-parts.json'))
 board_css=open('board-part.html').read().replace('__SITECSS__',open('site-cb.css').read())+open('board4.css').read()+open('board5.css').read()+open('board6.css').read()+open('board7.css').read()+open('board8.css').read()+open('board9.css').read()+open('board10.css').read()+open('board11.css').read()+open('board12.css').read()+(open('board13.css').read() if VAR else '')
 markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
@@ -17,7 +18,7 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
     </div>
     <button type="button" class="iconb" id="cb-stories" aria-label="Card Stories"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="3"/><path d="M8.2 6.2h3.3M13.5 6.2h2.3"/><path d="M8.5 16.5l2.4-2.8 2 1.8 2.8-3.6"/></svg><span>Stories</span></button>
     <button type="button" class="iconb" id="cb-ask" aria-label="Ask about your numbers"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2 5.3 5.5 1.9-5.5 2-2 5.3-2-5.3-5.5-2 5.5-1.9z"/><path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg><span>Ask</span></button>
-    <button type="button" class="iconb" id="cb-share" aria-label="Share Card Board"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3L10.5 13.5"/><path d="M21 3l-6.5 18-4-7.5L3 9.5z"/></svg><span>Share</span></button>
+    <button type="button" class="iconb" id="cb-share" aria-label="Share Card Board"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.6 4.4v3.5C7.6 8.5 4.3 12.4 3.6 19.2c2.1-3.6 5.3-5.3 10-5.4v3.6c0 .7.8 1 1.3.6l6.3-5.9c.4-.3.4-.9 0-1.2L14.9 3.8c-.5-.4-1.3-.1-1.3.6z" fill="currentColor" stroke="none"/></svg><span>Share</span></button>
     <div class="perwrap acctw"><button type="button" class="acct" id="cb-acct" aria-haspopup="true" aria-expanded="false" aria-label="Account"><span class="av" id="cb-av">N</span></button>
 <div class="cb-menu am" id="cb-amenu" hidden role="menu">
   <button type="button" class="amh" data-am="profile"><span class="av lg" id="cb-av2">N</span><span><b><span id="am-name">Nick</span> <i class="prem2">✦ Premium</i></b><small>nklenchik@gmail.com</small></span></button>
@@ -70,6 +71,7 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
 </div></dialog>
 <dialog id="cr" class="sheet" aria-labelledby="cr-h"><div class="awp crp">
   <div class="awh"><h2 id="cr-h">Custom dates</h2><button type="button" class="x" data-close aria-label="Close">✕</button></div>
+  <div class="crpre" id="cr-pre" role="radiogroup" aria-label="Dates"></div>
   <div class="crsum"><button type="button" class="crb" id="cr-fb"><small>From</small><b id="cr-f"></b></button><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><button type="button" class="crb" id="cr-tb"><small>To</small><b id="cr-t"></b></button></div>
   <div class="cal"><div class="calh"><button type="button" id="cr-prev" aria-label="Previous month">‹</button><b id="cr-title" aria-live="polite"></b><button type="button" id="cr-next" aria-label="Next month">›</button></div>
     <div class="calw" aria-hidden="true"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div><div class="cald" id="cr-days"></div></div>
@@ -139,6 +141,6 @@ const STORIES_HTML=__STORIES__;
 page=P['css']+board_css+tipcss+'</style>\n\n'+P['html']+markup+head_js+P['js']+open('board5.js').read()+(open('board13.js').read() if VAR else '')+'\n})();\n</script>\n'
 logo='data:image/webp;base64,'+base64.b64encode(open('/home/claude/cardtab-app/app/assets/logo-128.webp','rb').read()).decode()
 out=page.replace('__LOGO__',logo)
-if VAR:out=out.replace('<title>Card Board Preview</title>','<title>Card Board Phone '+VAR+'</title>',1)
-open(('card-board-'+VAR.lower()+'.html') if VAR else 'card-board-preview.html','w').write(out)
+if not MAIN:out=out.replace('<title>Card Board Preview</title>','<title>Card Board Phone '+VAR+'</title>',1)
+open('card-board-preview.html' if MAIN else 'card-board-'+VAR.lower()+'.html','w').write(out)
 print(len(page))

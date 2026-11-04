@@ -10,3 +10,16 @@
 .csx.out{transform:translate3d(100%,0,0);transition:transform .28s cubic-bezier(.4,0,.8,.6)}
 .csx iframe{border:0;width:100%;height:100%;display:block;background:transparent}
 @media(prefers-reduced-motion:reduce){.csx.in,.csx.out{transition:none}}
+
+/* Add widgets: the kind you're filtering by is a solid pill */
+dialog #aw-cats button[aria-pressed="true"]{background:var(--text);color:var(--bg);box-shadow:none}
+dialog #aw-cats button{transition:background .2s,color .2s}
+/* desktop: Stories opens in place. The board eases back, Stories fades and settles in, the cards rise one by one. Phones keep the slide. */
+@media(min-width:761px){
+  .csx{transform:scale(1.03);opacity:0;box-shadow:none}
+  .csx.in{transform:none;opacity:1;transition:transform .55s cubic-bezier(.2,.9,.25,1),opacity .3s ease-out}
+  .csx.out{transform:scale(1.02);opacity:0;transition:transform .28s ease-in,opacity .24s ease-in}
+  .cbx.csback{transform:scale(.97);opacity:.5;transition:transform .55s cubic-bezier(.2,.9,.25,1),opacity .4s ease-out}
+  .cbx.csret{transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .3s ease-out}
+}
+@media(prefers-reduced-motion:reduce){.cbx.csback{transform:none;opacity:1}}

@@ -119,6 +119,34 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 #ths .go{flex:none}
 @media(max-width:420px){.topt{gap:12px;padding:14px 13px;font-size:14.5px}.tsw.big span{width:18px;height:18px}}
 #lbc{display:grid;place-items:center}
+/* ---- v2.6: date sheet with month tiles; phone quick picks ---- */
+.spre{display:none}
+#crs.pre .spre{display:grid;gap:8px}
+#crs.pre:not(.cust) .mpk{display:none}
+#crs .sheet{overflow-y:auto;overscroll-behavior:contain}
+.mpk{display:grid;gap:12px}
+.srow{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:0 16px;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--text);font:inherit;font-weight:750;font-size:15.5px;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.srow .ck{margin-left:auto;color:var(--brand);font-weight:900;opacity:0;transform:scale(.6);transition:opacity .15s,transform .2s}
+.srow[aria-checked="true"]{border-color:var(--text);box-shadow:inset 0 0 0 1px var(--text)}
+.srow[aria-checked="true"] .ck{opacity:1;transform:none}
+.srow .cv{margin-left:auto;color:var(--muted);font-size:20px;line-height:1;transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.srow[aria-expanded="true"] .cv{transform:rotate(90deg)}
+.msum{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;color:var(--muted)}
+.mb2{display:grid;gap:2px;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:9px 12px;cursor:pointer;font:inherit;color:var(--text)}
+.mb2 small{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.mb2 b{font-size:15px;font-weight:800;white-space:nowrap}
+.mb2.on{border-color:var(--text);box-shadow:inset 0 0 0 1px var(--text)}
+.mgrid{display:grid;gap:14px}
+.myr{display:grid;gap:8px}.myr>b{font-size:13px;font-weight:800;color:var(--muted)}
+.mtiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px 0}
+.mt{height:44px;border:0;background:transparent;color:var(--text);font:inherit;font-weight:750;font-size:14.5px;cursor:pointer;border-radius:12px;position:relative;-webkit-tap-highlight-color:transparent}
+.mt:disabled{opacity:.28;cursor:default}
+.mt.in{background:color-mix(in srgb,var(--brand) 13%,transparent);border-radius:0}
+.mt.sel{background:var(--brand);color:#fff}
+.mt.rs{border-radius:12px 0 0 12px}.mt.re{border-radius:0 12px 12px 0}
+.mtiles .mt.in:nth-child(4n+1),.mtiles .mt.re:nth-child(4n+1){border-top-left-radius:12px;border-bottom-left-radius:12px}
+.mtiles .mt.in:nth-child(4n),.mtiles .mt.rs:nth-child(4n){border-top-right-radius:12px;border-bottom-right-radius:12px}
+@media(hover:hover){.mt:not(:disabled):not(.sel):hover{background:color-mix(in srgb,var(--text) 7%,transparent)}}
 /* ---- v2.5 phone variants (set by the board build: html.vA / html.vB) ---- */
 .csdock,.cstoast{display:none}
 @media(max-width:600px){
@@ -168,9 +196,9 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
   <p class="foot">On your board, a “Stories” button next to Ask and Share opens this page. Tap a story to make it bigger, then save or share it. “Showing” changes what a story says. Card art fills in once the art service is running.</p>
 </div>
 <div class="sheetw" id="ths" hidden><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ths-h"><div class="shh"><div><h2 id="ths-h">Themes</h2><p class="shs" id="ths-s"></p></div></div><div class="tgrid" id="tgrid"></div><button class="go" data-close>Done</button></div></div>
-<div class="sheetw" id="crs" hidden><div class="sheet sm" role="dialog" aria-modal="true" aria-labelledby="crs-h"><div class="shh"><h2 id="crs-h">Custom range</h2><button class="xx" data-close aria-label="Close">✕</button></div>
-  <div class="mrow2"><label>From<select id="cr-a"></select></label><label>To<select id="cr-b"></select></label></div><p class="crn" id="cr-n"></p><button class="go" id="cr-go">Show these months</button></div></div>
-<div class="csdock" id="csdock"><button type="button" data-d="save"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 14.5V19h14v-4.5"/></svg>Save</button><button type="button" class="p" data-d="share"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3L10.5 13.5"/><path d="M21 3l-6.5 18-4-7.5L3 9.5z"/></svg>Share this story</button></div><div class="cstoast" id="cstoast" role="status"></div>
+<div class="sheetw" id="crs" hidden><div class="sheet sm" role="dialog" aria-modal="true" aria-labelledby="crs-h"><div class="shh"><h2 id="crs-h">Custom dates</h2><button class="xx" data-close aria-label="Close">✕</button></div>
+  <div class="spre" id="spre" role="radiogroup" aria-label="Dates"></div><div class="mpk" id="mpk"><div class="msum"><button type="button" class="mb2" id="mp-a"><small>From</small><b></b></button><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><button type="button" class="mb2" id="mp-b"><small>To</small><b></b></button></div><div class="mgrid" id="mgrid"></div><p class="crn" id="cr-n" role="status"></p><button class="go" id="cr-go">Show these months</button></div></div></div>
+<div class="csdock" id="csdock"><button type="button" data-d="save"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 14.5V19h14v-4.5"/></svg>Save</button><button type="button" class="p" data-d="share"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.6 4.4v3.5C7.6 8.5 4.3 12.4 3.6 19.2c2.1-3.6 5.3-5.3 10-5.4v3.6c0 .7.8 1 1.3.6l6.3-5.9c.4-.3.4-.9 0-1.2L14.9 3.8c-.5-.4-1.3-.1-1.3.6z" fill="currentColor" stroke="none"/></svg>Share this story</button></div><div class="cstoast" id="cstoast" role="status"></div>
 <div class="lb" id="lb" hidden><div class="box"><div id="lbc"></div><p class="note" id="lbn"></p><div class="acts"><button class="g xb" data-a="close" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><button data-a="save">Save image</button><button data-a="share">Share</button></div></div></div>
 
 <script>
@@ -264,11 +292,12 @@ const TH=[
  ['Holo',[P('linear-gradient(135deg,#a1c4fd,#c2e9fb,#fbc2eb)','#1d1d3a','#5b3fd1'),P('linear-gradient(135deg,#fbc2eb,#a6c1ee)','#1d1d3a','#d6336c'),P('linear-gradient(135deg,#84fab0,#8fd3f4)','#0b2a2a','#0b5f8a'),P('linear-gradient(135deg,#f6d365,#fda085)','#3a1d0b','#c2185b'),P('linear-gradient(135deg,#d4fc79,#96e6a1)','#13261b','#2f6b3e')]],
  ['Matcha',[P('#c8d8a8','#22301a','#4f6b2b'),P('#eef3e2','#22301a','#4f6b2b'),P('#4f6b2b','#f3f8e8','#e5efc9'),P('#22301a','#e5efc9','#a9c47a'),P('#a9c47a','#22301a','#22301a')]],
  ['Retro',[P('#f2e3c6','#2b2118','#e4572e'),P('#2b2118','#f2e3c6','#f3a712'),P('#e4572e','#fff4e6','#f2e3c6'),P('#29335c','#f2e3c6','#f3a712'),P('#f3a712','#2b2118','#29335c')]]];
+const PHT=matchMedia('(max-width:600px)');PHT.addEventListener&&PHT.addEventListener('change',()=>paintChips());
 let NAME='';const EMB=(()=>{try{return window.parent!==window&&typeof parent.cbStoriesBack==='function'}catch(e){return false}})(),foot=()=>NAME?NAME+' · Card Tab':'Card Tab';
 let th=0,mi=[0,0,0,0,0];
 const sw=t=>t[1].slice(0,3).map(p=>'<span style="background:'+(p.bg.startsWith('#')?p.bg:p.bg.match(/#\w{6}/)[0])+'"></span>').join('');
 const FEW=5;
-function paintChips(){const show=[...Array(FEW).keys()];if(th>=FEW)show[FEW-1]=th;$('thm').innerHTML=show.map(i=>'<button class="tchip" aria-pressed="'+(i===th)+'" data-i="'+i+'"><span class="tsw">'+sw(TH[i])+'</span>'+TH[i][0]+'</button>').join('')+'<button class="tchip more" data-all>All '+TH.length+' themes ›</button>'}
+function paintChips(){const F=PHT.matches?2:FEW,show=[...Array(F).keys()];if(th>=F)show[F-1]=th;$('thm').innerHTML=show.map(i=>'<button class="tchip" aria-pressed="'+(i===th)+'" data-i="'+i+'"><span class="tsw">'+sw(TH[i])+'</span>'+TH[i][0]+'</button>').join('')+'<button class="tchip more" data-all>All '+TH.length+' themes ›</button>'}
 function paintGrid(){$('tgrid').innerHTML=TH.map((t,i)=>'<button class="topt" aria-pressed="'+(i===th)+'" data-i="'+i+'"><span class="tsw big">'+sw(t)+'</span><span>'+t[0]+'</span></button>').join('')}
 function setTheme(i){th=i;paintChips();document.querySelectorAll('#track .sl').forEach(el=>paintStory(el,+el.dataset.n));try{localStorage.setItem('cs.theme',th)}catch(err){}}
 paintChips();
@@ -284,18 +313,31 @@ render();
 $('thm').addEventListener('click',e=>{if(e.target.closest('[data-all]')){openSheet('ths');return}const b=e.target.closest('[data-i]');if(!b)return;setTheme(+b.dataset.i)});
 const allMonths=months('all'),mLab=m=>mName(m,{month:'short',year:'numeric'}),customLab=()=>cust[0]===cust[1]?mLab(cust[0]):mLab(cust[0])+' – '+mLab(cust[1]);
 function setPer(p){per=p;$('perl').textContent=p==='custom'?customLab():PER.find(x=>x[0]===p)[1];render();document.querySelectorAll('#track .sl').forEach(el=>{el.classList.add('swap');setTimeout(()=>el.classList.remove('swap'),450)})}
-function openMenu(){const m=$('perm');m.innerHTML=PER.map(p=>'<button role="menuitemradio" aria-checked="'+(p[0]===per)+'" data-p="'+p[0]+'">'+p[1]+'</button>').join('')+'<hr><button role="menuitemradio" aria-checked="'+(per==='custom')+'" data-p="custom">Custom range…</button>';m.hidden=false;$('perb').setAttribute('aria-expanded','true');m.style.left='';m.style.right='';const r=m.getBoundingClientRect();if(r.left<8){m.style.left='0';m.style.right='auto'}else if(r.right>innerWidth-8){m.style.right='0';m.style.left='auto'}}
+function openMenu(){const m=$('perm');m.innerHTML=PER.map(p=>'<button role="menuitemradio" aria-checked="'+(p[0]===per)+'" data-p="'+p[0]+'">'+p[1]+'</button>').join('')+'<hr><button role="menuitemradio" aria-checked="'+(per==='custom')+'" data-p="custom">Custom dates…</button>';m.hidden=false;$('perb').setAttribute('aria-expanded','true');m.style.left='';m.style.right='';const r=m.getBoundingClientRect();if(r.left<8){m.style.left='0';m.style.right='auto'}else if(r.right>innerWidth-8){m.style.right='0';m.style.left='auto'}}
 function closeMenu(){$('perm').hidden=true;$('perb').setAttribute('aria-expanded','false')}
-$('perb').addEventListener('click',e=>{e.stopPropagation();$('perm').hidden?openMenu():closeMenu()});
-$('perm').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(!b)return;closeMenu();if(b.dataset.p==='custom')openSheet('crs');else setPer(b.dataset.p)});
+$('perb').addEventListener('click',e=>{e.stopPropagation();if(PHS.matches){closeMenu();openSheet('crs',true);return}$('perm').hidden?openMenu():closeMenu()});
+$('perm').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(!b)return;closeMenu();if(b.dataset.p==='custom')openSheet('crs',false);else setPer(b.dataset.p)});
 document.addEventListener('click',e=>{if(!e.target.closest('.perw'))closeMenu()});
 // custom range: pick the first and last month
-const opts=allMonths.map(m=>'<option value="'+m+'">'+mLab(m)+'</option>').join('');$('cr-a').innerHTML=opts;$('cr-b').innerHTML=opts;
-function checkCr(){const a=$('cr-a').value,b=$('cr-b').value,ok=a<=b;$('cr-go').disabled=!ok;const n=allMonths.indexOf(b)-allMonths.indexOf(a)+1;$('cr-n').textContent=ok?cnt(n,'month','months'):'The first month needs to come before the last.'}
-['cr-a','cr-b'].forEach(id=>$(id).addEventListener('change',checkCr));
-$('cr-go').addEventListener('click',()=>{cust=[$('cr-a').value,$('cr-b').value];closeSheet('crs');setPer('custom')});
+// month tiles, styled like Card Board's calendar: first tap sets the start, second the end; tap From or To to change just that one
+const MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],PHS=matchMedia('(max-width:600px)');let mp={a:null,b:null,pick:'a'};
+function drawMp(){const ys=[...new Set(allMonths.map(m=>m.slice(0,4)))];
+  $('mgrid').innerHTML=ys.map(y=>'<div class="myr"><b>'+y+'</b><div class="mtiles">'+MS.map((n,i)=>{const m=y+'-'+String(i+1).padStart(2,'0'),dis=!allMonths.includes(m),s=m===mp.a||m===mp.b,span=mp.a&&mp.b&&mp.a!==mp.b,inr=span&&m>mp.a&&m<mp.b;
+    return '<button type="button" class="mt'+(s?' sel':'')+(inr?' in':'')+(span&&m===mp.a?' rs':'')+(span&&m===mp.b?' re':'')+'" data-m="'+m+'"'+(dis?' disabled':'')+' aria-pressed="'+s+'" aria-label="'+mLab(m)+'">'+n+'</button>'}).join('')+'</div></div>').join('');
+  $('mp-a').querySelector('b').textContent=mp.a?mLab(mp.a):'Pick a month';$('mp-b').querySelector('b').textContent=mp.b?mLab(mp.b):'Pick a month';
+  $('mp-a').classList.toggle('on',mp.pick==='a');$('mp-b').classList.toggle('on',mp.pick==='b');
+  const ok=mp.a&&mp.b;$('cr-go').disabled=!ok;$('cr-n').textContent=ok?cnt(allMonths.indexOf(mp.b)-allMonths.indexOf(mp.a)+1,'month','months'):'Tap the last month.'}
+$('mgrid').addEventListener('click',e=>{const t=e.target.closest('[data-m]');if(!t||t.disabled)return;const m=t.dataset.m;
+  if(mp.pick==='b'&&mp.a){if(m<mp.a){mp.b=mp.a;mp.a=m}else mp.b=m;mp.pick='a'}else{mp.a=m;mp.b=null;mp.pick='b'}drawMp()});
+$('mp-a').addEventListener('click',()=>{mp.pick='a';drawMp()});$('mp-b').addEventListener('click',()=>{mp.pick='b';drawMp()});
+$('cr-go').addEventListener('click',()=>{if(!mp.a||!mp.b)return;cust=[mp.a,mp.b];closeSheet('crs');setPer('custom')});
+// phones: the time range opens one sheet with quick picks; Custom dates opens the month tiles inside it
+function paintPre(){const cu=$('crs').classList.contains('cust');$('spre').innerHTML=PER.map(p=>'<button type="button" class="srow" role="radio" data-sp="'+p[0]+'" aria-checked="'+(p[0]===per&&!cu)+'">'+p[1]+'<span class="ck" aria-hidden="true">✓</span></button>').join('')+'<button type="button" class="srow" data-sp="custom" aria-expanded="'+cu+'" aria-checked="'+cu+'">Custom dates<span class="cv" aria-hidden="true">›</span></button>'}
+$('spre').addEventListener('click',e=>{const b=e.target.closest('[data-sp]');if(!b)return;const k=b.dataset.sp,w=$('crs');
+  if(k==='custom'){w.classList.toggle('cust');paintPre();if(w.classList.contains('cust')){const g=$('mgrid');if(!matchMedia('(prefers-reduced-motion: reduce)').matches)g.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:280,easing:'cubic-bezier(.2,.8,.2,1)'});setTimeout(()=>$('cr-go').scrollIntoView({block:'nearest',behavior:'smooth'}),60)}return}
+  paintPre();b.setAttribute('aria-checked','true');setTimeout(()=>{closeSheet('crs');setPer(k)},140)});
 // sheets
-function openSheet(id){const w=$(id);if(id==='crs'){const M0=months(per);$('cr-a').value=M0[0]<allMonths[0]?allMonths[0]:M0[0];$('cr-b').value=M0[M0.length-1];checkCr()}if(id==='ths'){paintGrid();$('ths-s').textContent=TH.length+' looks for your stories. '+(matchMedia('(hover:none)').matches?'Tap':'Click')+' one to try it.';$('ths-s').classList.remove('msg')}w.hidden=false;w.classList.remove('out')}
+function openSheet(id,pre){const w=$(id);if(id==='crs'){const M0=months(per).filter(m=>allMonths.includes(m));mp={a:M0[0]||allMonths[0],b:M0[M0.length-1]||allMonths[allMonths.length-1],pick:'a'};w.classList.toggle('pre',!!pre);w.classList.toggle('cust',!pre||per==='custom');$('crs-h').textContent=pre?'Dates':'Custom dates';paintPre();drawMp()}if(id==='ths'){paintGrid();$('ths-s').textContent=TH.length+' looks for your stories. '+(matchMedia('(hover:none)').matches?'Tap':'Click')+' one to try it.';$('ths-s').classList.remove('msg')}w.hidden=false;w.classList.remove('out')}
 function closeSheet(id){const w=$(id);w.classList.add('out');setTimeout(()=>{w.hidden=true},190)}
 document.querySelectorAll('.sheetw').forEach(w=>w.addEventListener('click',e=>{if(e.target===w||e.target.closest('[data-close]'))closeSheet(w.id)}));
 $('track').addEventListener('click',e=>{const mb=e.target.closest('[data-mb]');if(mb){const n=+mb.dataset.mb;mi[n]=(mi[n]+1)%D.stories[n].opts.length;const sl=$('track').querySelector('.sl[data-n="'+n+'"]');sl.innerHTML=storyHTML(n);sl.classList.remove('swap');void sl.offsetWidth;sl.classList.add('swap');mb.children[1].textContent=D.stories[n].opts[mi[n]].k;return}
@@ -317,6 +359,9 @@ window.csSync=function(){
   try{const v=JSON.parse(localStorage.getItem('cb.view')||'null');if(v){if(['l12','ytd','ly','all'].includes(v.period))np=v.period;else if(v.period==='custom'&&v.custom&&v.custom.from){const a=v.custom.from.slice(0,7),b=v.custom.to.slice(0,7);if(allMonths.includes(a)||allMonths.includes(b)){np='custom';nc=[a<allMonths[0]?allMonths[0]:a,b]}}}}catch(e){}
   if(nc)cust=nc;per=np;$('perl').textContent=per==='custom'?customLab():PER.find(x=>x[0]===per)[1];render()};
 csSync();
+window.csEnter=function(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const parts=[document.querySelector('.top'),document.querySelector('.controls')].filter(Boolean);parts.forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:420,delay:80+i*50,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));
+  document.querySelectorAll('#track .cell').forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(26px) scale(.97)'},{opacity:1,transform:'none'}],{duration:560,delay:170+i*55,easing:'cubic-bezier(.2,.9,.25,1)',fill:'backwards'}))};
 if(EMB)document.querySelector('.foot').hidden=true;
 // thumb bar on phones: save or share the story you're looking at
 let toastT=0;$('csdock').addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(!b)return;const dots=[...$('dots').querySelectorAll('i')],n=Math.max(0,dots.findIndex(d=>d.classList.contains('on'))),nm=D.stories[n].name;

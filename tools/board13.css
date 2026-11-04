@@ -66,4 +66,16 @@
   .molab{margin:10px 0 0;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
   .moplats{display:grid;gap:8px}
 }
+/* phone date sheet */
+.crpre{display:none}
+@media(max-width:760px){
+  dialog#cr.pre .crpre{display:grid;gap:8px}
+  dialog#cr.pre:not(.cust) .crsum,dialog#cr.pre:not(.cust) .cal,dialog#cr.pre:not(.cust) #cr-go,dialog#cr.pre:not(.cust) #cr-n{display:none}
+  .crrow{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:0 16px;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--text);font:inherit;font-weight:750;font-size:15.5px;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s}
+  .crrow .ck{margin-left:auto;color:var(--brand);font-weight:900;opacity:0;transform:scale(.6);transition:opacity .15s,transform .2s}
+  .crrow[aria-checked="true"]{border-color:var(--text);box-shadow:inset 0 0 0 1px var(--text)}
+  .crrow[aria-checked="true"] .ck{opacity:1;transform:none}
+  .crrow .cv{margin-left:auto;color:var(--muted);display:grid;transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+  .crrow[aria-expanded="true"] .cv{transform:rotate(90deg)}
+}
 @media(prefers-reduced-motion:reduce){.cbdock,.cbslim{transition:none!important}}

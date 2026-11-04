@@ -282,3 +282,14 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - Stories on phones (both): bottom bar to Save or Share the story in view; A also gets the big title.
 - Stories icon is now the story card with progress bars (main board too).
 - Test: tools/t71.js.
+
+### v16 + Stories v2.6
+- Main board uses phone layout A (build-cb.py with no argument). B kept as a build option only.
+- Phone dates: tapping the range opens #cr as one bottom sheet (class pre): quick picks, Custom dates expands the calendar inside it, Compare applies right away. Desktop keeps the dropdown.
+- Phone and desktop arrangements are separate: cb.layout.v3 (desktop) and cb.layout.phone.v1 (phone, starts as a copy of desktop). Added widgets go to both; remove/move/resize/reset only touch the current screen. Switch point is the 600px phone grid.
+- Share icon is the filled curved arrow everywhere.
+- Add widgets: the selected kind (All/Numbers/Charts/Lists) is a solid pill.
+- Desktop Stories entrance: board eases back (scale .97, fades), Stories fades and settles from 1.03, header then cards rise one by one (csEnter). Phones keep the slide.
+- Stories dates: same menu as the board; custom dates are month tiles (tap start, tap end; From/To to change one). On phones the range opens one sheet with quick picks + month tiles.
+- Stories on phones shows 2 themes + All 24 themes.
+- Test: tools/t72.js.
