@@ -1,0 +1,27 @@
+/* ================= v13: room to breathe — back to the site's proportions ================= */
+.cbx #cb .simple{grid-auto-rows:206px;gap:16px}
+@media(max-width:600px){.cbx #cb .simple{gap:14px;grid-auto-rows:clamp(168px,calc((100vw - 46px)/2),220px)}}
+.cbx #cb .wq{padding:22px 24px;border-radius:22px}
+.cbx #cb .wq.eS{padding:18px 20px}
+@media(max-width:600px){.cbx #cb .wq{padding:18px 18px}.cbx #cb .wq.eS{padding:15px 16px}}
+.cbx #cb .wb{margin:0 -10px;padding:0 10px}
+/* titles: the site's size and weight, in the main text color */
+.cbx #cb .wq .ttl{font-size:18px;font-weight:800;letter-spacing:-.02em;color:var(--text)}
+.cbx #cb .wq.eS .ttl{font-size:15.5px;color:var(--text)}
+@media(max-width:600px){.cbx #cb .wq .ttl{font-size:16px}.cbx #cb .wq.eS .ttl{font-size:14px}}
+.cbx #cb .wq .wh{margin-bottom:14px;min-height:24px}
+.cbx #cb .wq.eS .wh{margin-bottom:8px}
+.cbx #cb .dl.hd{font-size:13px}
+/* the ⋯ button waits for a hover on computers; it's always there while editing and on touch screens */
+@media(hover:hover) and (pointer:fine){.cbx #cb:not(.editing) .wq .wmore{opacity:0;transition:opacity .2s}.cbx #cb:not(.editing) .wq:hover .wmore,.cbx #cb .wq .wmore:focus-visible{opacity:.7}}
+@media(hover:none),(pointer:coarse){.cbx #cb .wq .wmore{opacity:.45}}
+/* fewer small labels in normal view: counts live in the entries sheet behind the number */
+.cbx #cb:not(.editing) .k-profit .hz>.cap,.cbx #cb:not(.editing) .k-sales .hz>.cap,.cbx #cb:not(.editing) .k-spent .hz>.cap,.cbx #cb:not(.editing) .k-fees .hz>.cap{display:none}
+/* the trend line is quiet; the number carries the color */
+.cbx #cb .wq .kspk,.cbx #cb .wq .kspk.r,.cbx #cb .wq .kspk.mu{color:color-mix(in srgb,var(--muted) 70%,transparent)}
+.cbx #cb .wq .kspk svg path{stroke-width:1.8}
+.cbx #cb .wq .kspk{margin-top:14px}
+/* lists get a touch more air */
+.cbx #cb .wq .lr .r{padding:10px 10px}
+.cbx #cb .eM .lr .r{padding:4px 10px}
+@media(max-width:600px){.cbx #cb .eM .lr .r:nth-child(n+3){display:none}}

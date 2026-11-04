@@ -228,3 +228,13 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
   2. Card journeys: each bought-and-sold card as a 3-slide story (bought → sold → fees → result).
   3. Milestones (could come later).
   4. Card-art widgets: Recent sales (fan), Top sales (card tops), Still holding (art grid plus total paid), Biggest loss, Recent buys.
+
+### Card Board v13: room to breathe (Nov 4)
+- Back to the site's proportions:
+  - padding 22/24px (Small 18/20; phones 18 and 15/16)
+  - rows 206px with 16px gaps (phones 14px)
+  - titles 18px, bold, in the main text color (Small 15.5px; phones 16 and 14)
+- Quieter: the ⋯ button appears on hover on computers (always shown while editing and on touch screens); count captions on number widgets are hidden in normal view (they're in the entries sheet); trend lines are soft grey, so the number carries the color.
+- Phone Wide lists show 2 rows instead of 3.
+- `tools/t57.js` sweep: no overflow at any size, compare mode or range.
+- Next: rebuild the Card Stories preview to match the original site design: 4–5 story cards, a Showing switch per card, 20+ themes, tap to enlarge, save or share as an image, Year in Cards. The month-recap player is retired; its best parts become card options.
