@@ -15,12 +15,14 @@ const CATALOG={
   kept:{t:'What each platform kept',s:'Top fees',d:'Fees and shipping as a share of each sale'},
   win:{t:'Your biggest win',s:'Biggest win',d:'The card that made you the most'},
   budget:{t:'Spend vs budget',s:'Budget',d:'How many months you stayed under budget'}};
-const DEFAULT=[['profit','S'],['sales','S'],['spent','S'],['fees','S'],['month','L'],['sell','M'],['where','S'],['win','S'],['budget','M'],['kept','M']].map(([k,size],i)=>({id:'d'+i,k,size}));
+const DEFAULT=[['profit','S'],['sales','S'],['spent','S'],['month','B']].map(([k,size],i)=>({id:'d'+i,k,size}));
 const LKEY='cb.layout.v3';
 let layout=(()=>{try{const s=JSON.parse(localStorage.getItem(LKEY));if(Array.isArray(s)&&s.every(w=>w.id&&CATALOG[w.k]&&DIM[w.size]))return s}catch(e){}return JSON.parse(JSON.stringify(DEFAULT))})();
-const save=()=>{try{localStorage.setItem(LKEY,JSON.stringify(layout))}catch(e){}};
+const save=()=>{try{localStorage.setItem(LKEY,JSON.stringify(layout));localStorage.setItem('cb.custom','1')}catch(e){}};
+const customized=()=>{try{return localStorage.getItem('cb.custom')==='1'}catch(e){return true}};
 const newId=()=>'w'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 let period='l12',plat='all',editing=false;
+const VKEY='cb.view',saveView=()=>{try{localStorage.setItem(VKEY,JSON.stringify({period,plat,custom}))}catch(e){}};
 const BUDGET=15000; // example monthly budget ($150) until the budget setting exists
 const phone=matchMedia('(max-width:600px)');
 const units=()=>phone.matches?2:4;
@@ -81,6 +83,10 @@ let viewing=false;const saveShare=()=>{try{localStorage.setItem('cb.share',JSON.
 const maskAmt=()=>viewing&&!share.amt,maskNames=()=>viewing&&!share.names,noTips=()=>viewing&&!share.tips;
 // dollar amounts become dots for people who shouldn't see them; percentages and counts stay
 const hideMoney=h=>maskAmt()?h.replace(/[−+-]?\$[\d,]+(?:\.\d\d)?/g,'$•••'):h;
+// ---------- see the entries behind a number ----------
+const canDrill=()=>!editing&&!viewing&&!rz&&!drag;
+const dd=o=>' data-drill="'+esc(JSON.stringify(o))+'"';
+const KTYPES={profit:null,sales:['sale'],spent:['purchase'],fees:['sale'],month:null};
 // ---------- the site's tooltip ----------
 let tipEl=null;
 function tip(){if(!tipEl){tipEl=document.createElement('div');tipEl.className='cb-tip';tipEl.setAttribute('role','status');$('cb').appendChild(tipEl)}return tipEl}
@@ -117,7 +123,7 @@ function fillCharts(root,ctx){root.querySelectorAll('.cv[data-cv]').forEach(el=>
   svg.querySelectorAll('rect[data-i]').forEach(rc=>{const i=+rc.dataset.i,bar=svg.querySelector('path[data-i="'+i+'"]');
     ['pointerenter','focus'].forEach(ev=>rc.addEventListener(ev,e=>{if(bar&&!rz&&(ev==='focus'||e.pointerType==='mouse'))bar.classList.add('hv')}));
     ['pointerleave','blur'].forEach(ev=>rc.addEventListener(ev,()=>{if(bar)bar.classList.remove('hv')}));
-    bindTip(rc,bar||rc,()=>sp.tip(i))})})}
+    bindTip(rc,bar||rc,()=>sp.tip(i));if(sp.ent)rc.addEventListener('click',e=>{if(!canDrill())return;e.stopPropagation();openEntries(sp.ent(i))})})})}
 function spark(vals){const n=vals.length;if(n<2)return '';const mx=Math.max(...vals),mn=Math.min(0,...vals),r=(mx-mn)||1;const pts=vals.map((v,i)=>[(i/(n-1)*100).toFixed(1),(28-((v-mn)/r)*26).toFixed(1)]);
   return '<svg class="spk" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><path d="M'+pts.map(p=>p.join(' ')).join('L')+'" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
 const CHIP={eBay:['--cb-crbg','--cb-cr'],TCGplayer:['--cb-blbg','--cb-bl']};
@@ -127,7 +133,7 @@ const segCol=p=>CHIP[p]?'var('+CHIP[p][1]+')':'var(--cb-gry)';
 function shareBar(rows,total){if(!rows.length||!total)return '';const top=rows.slice(0,2),rest=total-top.reduce((a,x)=>a+x.v,0),segs=top.map(x=>({k:x.k,v:x.v}));if(rest>0)segs.push({k:'Other',v:rest});
   return '<div class="shb" role="img" aria-label="'+esc(segs.map(x=>x.k+' '+Math.round(x.v/total*100)+'%').join(', '))+'">'+segs.map(x=>'<i style="flex:'+x.v+';background:'+segCol(x.k)+'" title="'+esc(x.k)+'"></i>').join('')+'</div>'}
 // list rows: big sizes open in place like the site's FAQs; small sizes show the same detail in a tooltip
-const row=(inner,detail,open)=>'<div class="r" '+(open?'data-row':'data-tipd="'+esc(detail)+'"')+'>'+inner+'<div class="d">'+esc(detail)+'</div></div>';
+const row=(inner,detail,open,drill)=>'<div class="r" '+(open?'data-row':'data-tipd="'+esc(detail)+'"'+(drill?dd(drill):''))+'>'+inner+'<div class="d">'+esc(detail)+(open&&drill?' <button type="button" class="seeent"'+dd(drill)+'>See entries ›</button>':'')+'</div></div>';
 
 // ---------- widget bodies: one layout per metric per size ----------
 function body(k,ctx,s,w){
@@ -135,18 +141,18 @@ function body(k,ctx,s,w){
   if(KPI[k])return kpiBody(k,ctx,s,t,w);
   if(k==='month'){const data=mt.map(x=>Object.assign({},x,{v:totals(x.list).profit,on:x.list.length>0})),tot=data.reduce((a,d)=>a+d.v,0),act=data.filter(d=>d.on),bestM=act.length?act.reduce((a,d)=>d.v>a.v?d:a):null;
     const tipf=i=>{const tt=totals(mt[i].list);return '<b>'+mt[i].l+'</b>Sales '+kshort(tt.sales)+'<br>Spent '+kshort(tt.spent)+'<br>Profit <span class="'+(tt.profit>=0?'p':'l')+'">'+kshort(tt.profit)+'</span>'};
-    const ch=o=>cv(ctx,Object.assign({data,tip:tipf,aria:'Profit by '+unit,unit:'profit',bestLabel:'best '+unit},o));
+    const ch=o=>cv(ctx,Object.assign({data,tip:tipf,aria:'Profit by '+unit,unit:'profit',bestLabel:'best '+unit,ent:i=>({t:'Profit',sub:mt[i].l,a:mt[i].from,b:mt[i].to})},o));
     if(!act.length)return '<p class="eg">No entries in this period.</p>';
     if(s==='S')return '<div class="mS"><div class="cq">'+bn((bestM.v>=0?'+':'')+kshort(bestM.v),bestM.v>=0?'g':'r',30)+'</div><small class="cap">'+bestM.m+'</small>'+ch({labels:false,maxW:14,r:3})+'</div>';
     const sum='<div class="msum"><span><small>Total</small><b class="num">'+money(tot)+'</b></span><span><small>Average '+unit+'</small><b class="num">'+money(Math.round(tot/Math.max(1,data.length)))+'</b></span><span><small>Best '+unit+'</small><b class="num">'+bestM.m+'</b></span></div>';
     if(s==='M')return '<div class="fill">'+ch({labels:true,best:true,maxW:30,r:6})+'</div>';
-    if(s==='B')return '<div class="split banner">'+ch({labels:true,best:true,maxW:38,r:7})+sum.replace('class="msum"','class="msum v"')+'</div>';
+    if(s==='B')return '<div class="split banner">'+ch({labels:true,best:false,maxW:38,r:7})+sum.replace('class="msum"','class="msum v"')+'</div>';
     return '<div class="fill">'+ch({labels:true,best:true,maxW:s==='X'?46:34,r:8})+sum+'</div>'}
   if(k==='sell'){const upTo=p.filter(e=>e.date<=ctx.b),q=ty=>upTo.filter(e=>e.type===ty),qs=ty=>q(ty).reduce((a,e)=>a+e.qty,0),b=qs('purchase'),sd=qs('sale'),r=qs('refund'),pct=b?Math.min(100,Math.round(sd/b*100)):0;
     const spent=q('purchase').reduce((a,e)=>a+e.amount,0),made=q('sale').reduce((a,e)=>a+e.net,0);
     if(!b)return '<p class="eg">No purchases yet.</p>';
     const rows=[['Bought',b,100,'var(--cb-gry)','Spent '+kshort(spent)+' · about '+kshort(spent/b)+' each'],['Sold',sd,Math.min(100,sd/b*100),'var(--cb-pos)','Made back '+kshort(made)+(sd?' · about '+kshort(made/sd)+' each':'')],['Refunded',r,Math.max(r?2:0,r/b*100),'var(--cb-neg)',r+' returned · '+(r/b*100).toFixed(1)+'% of cards bought']];
-    const prs=open=>rows.map(([l,n,wd,c,d])=>'<div class="pr" '+(open?'data-row':'data-tipd="'+esc(d)+'"')+'><div class="t"><span>'+l+'</span><span>'+cnt(n,'card','cards')+'</span></div><div class="bar"><i style="width:'+wd.toFixed(1)+'%;background:'+c+'"></i></div><div class="d">'+esc(d)+'</div></div>').join('');
+    const TY={Bought:'purchase',Sold:'sale',Refunded:'refund'};const prs=open=>rows.map(([l,n,wd,c,d])=>'<div class="pr" '+(open?'data-row':'data-tipd="'+esc(d)+'"'+dd({t:l,a:'0000-01-01',b:ctx.b,types:[TY[l]]}))+'><div class="t"><span>'+l+'</span><span>'+cnt(n,'card','cards')+'</span></div><div class="bar"><i style="width:'+wd.toFixed(1)+'%;background:'+c+'"></i></div><div class="d">'+esc(d)+(open?' <button type="button" class="seeent"'+dd({t:l,sub:'Up to '+dLong(ctx.b),a:'0000-01-01',b:ctx.b,types:[TY[l]]})+'>See entries ›</button>':'')+'</div></div>').join('');
     const hero='<div class="cq">'+bn(pct+'%','g',s==='S'?44:64)+'</div><small class="cap">of the cards you’ve bought have sold</small>';
     if(s==='S')return '<div class="sS"><div class="cq">'+bn(pct+'%','g',44)+'</div><small class="cap">of cards sold</small><div class="prog"><div class="bar"><i style="width:'+pct+'%"></i></div><small>'+sd+' of '+b+'</small></div></div>';
     if(s==='M'||s==='B')return '<div class="split'+(s==='B'?' wide':'')+'"><div class="hz">'+hero+'</div><div class="st tight">'+prs(false)+'</div></div>';
@@ -155,7 +161,7 @@ function body(k,ctx,s,w){
   if(k==='where'){const sp={},n={};inP.filter(e=>e.type==='purchase').forEach(e=>{sp[e.platform]=(sp[e.platform]||0)+e.amount;n[e.platform]=(n[e.platform]||0)+e.qty});const rows=Object.keys(sp).map(x=>({k:x,v:sp[x],n:n[x]})).sort((a,b)=>b.v-a.v);
     if(!rows.length)return '<p class="eg">No purchases in this period.</p>';
     const pc=x=>Math.round(x.v/Math.max(1,t.spent)*100)+'% of spend',det=x=>cnt(x.n,'card','cards')+' · about '+kshort(x.v/x.n)+' each';
-    const list=(m,open)=>'<div class="lr">'+rows.slice(0,m).map(x=>row(chip(x.k)+'<span class="n">'+esc(x.k)+'<small>'+pc(x)+'</small></span><span class="v">'+kshort(x.v)+'</span>',det(x),open)).join('')+'</div>';
+    const list=(m,open)=>'<div class="lr">'+rows.slice(0,m).map(x=>row(chip(x.k)+'<span class="n">'+esc(x.k)+'<small>'+pc(x)+'</small></span><span class="v">'+kshort(x.v)+'</span>',det(x),open,{t:'Bought on '+x.k,a:ctx.a,b:ctx.b,types:['purchase'],plat:x.k})).join('')+'</div>';
     if(s==='S'){const x=rows[0];return '<div class="wS"><div class="who">'+chip(x.k)+'<b>'+esc(x.k)+'</b></div><div class="cq">'+bn(kshort(x.v),'',30)+'</div><small class="cap">'+pc(x)+'</small>'+shareBar(rows,t.spent)+'</div>'}
     if(s==='M')return list(3,false);
     if(s==='B')return '<div class="split wide"><div class="hz"><small class="cap">Spent across '+cnt(rows.length,'platform','platforms')+'</small><div class="cq">'+bn(money(t.spent),'',36)+'</div>'+shareBar(rows,t.spent)+'</div>'+list(3,false)+'</div>';
@@ -165,7 +171,7 @@ function body(k,ctx,s,w){
     const rows=Object.keys(g).filter(x=>g[x].s>0).map(x=>({k:x,pct:g[x].f/g[x].s*100,f:g[x].f,n:g[x].n})).sort((a,b)=>b.pct-a.pct),mx=Math.max(1,...rows.map(r=>r.pct));
     if(!rows.length)return '<p class="eg">No sales in this period.</p>';
     const det=x=>kshort(x.f)+' in fees and shipping on '+cnt(x.n,'sale','sales');
-    const list=(m,open,cls)=>'<div class="lr kl '+(cls||'')+'">'+rows.slice(0,m).map(x=>row(chip(x.k)+'<span class="n">'+esc(x.k)+'<small><i class="kb2"><b style="width:'+(x.pct/mx*100).toFixed(1)+'%"></b></i></small></span><span class="v">'+x.pct.toFixed(1)+'%</span>',det(x),open)).join('')+'</div>';
+    const list=(m,open,cls)=>'<div class="lr kl '+(cls||'')+'">'+rows.slice(0,m).map(x=>row(chip(x.k)+'<span class="n">'+esc(x.k)+'<small><i class="kb2"><b style="width:'+(x.pct/mx*100).toFixed(1)+'%"></b></i></small></span><span class="v">'+x.pct.toFixed(1)+'%</span>',det(x),open,{t:'Sold on '+x.k,a:ctx.a,b:ctx.b,types:['sale'],plat:x.k,fees:true})).join('')+'</div>';
     if(s==='S'){const x=rows[0];return '<div class="wS"><div class="who">'+chip(x.k)+'<b>'+esc(x.k)+'</b></div><div class="cq">'+bn(x.pct.toFixed(1)+'%','',34)+'</div><small class="cap">of each '+esc(x.k)+' sale</small></div>'}
     if(s==='M')return list(3,false);
     if(s==='B')return list(6,false,'three');
@@ -176,15 +182,15 @@ function body(k,ctx,s,w){
     if(!wins.length)return '<p class="eg">No card bought and sold in this period yet.</p>';const w=wins[0];
     const nmOf=x=>maskNames()?'A card from your collection':x.e.name;const art='<span class="art" aria-hidden="true">'+(maskNames()?'':esc(w.e.name[0]))+'</span>',meta=maskNames()?esc(w.e.platform):esc([w.e.no,w.e.set].filter(Boolean).join(' · ')||w.e.platform);
     const also=m=>wins.length>1?'<div class="alsoup"><p class="mh2">Also up</p>'+wins.slice(1,m+1).map(x=>'<div class="mr"><span>'+esc(nmOf(x))+'</span><b class="num">'+ksigned(x.g)+'</b></div>').join('')+'</div>':'';
-    if(s==='S')return '<div class="winS">'+art+'<div class="wtx"><div class="cq">'+bn(ksigned(w.g),'g',28)+'</div><b class="nm">'+esc(nmOf(w))+'</b><small>Bought '+kshort(w.b)+' · Sold '+kshort(w.s)+'</small></div></div>';
-    const hero='<div class="bestc">'+art+'<div class="wtx"><b class="nm">'+esc(nmOf(w))+'</b><em class="no">'+meta+'</em><small>Bought '+kshort(w.b)+' · Sold '+kshort(w.s)+'</small><span class="amt num">'+ksigned(w.g)+'</span></div></div>';
+    if(s==='S')return '<div class="winS drill"'+dd({t:w.e.name,sub:'Every entry for this card',card:key(w.e)})+' role="button" tabindex="0" title="See the entries">'+art+'<div class="wtx"><div class="cq">'+bn(ksigned(w.g),'g',28)+'</div><b class="nm">'+esc(nmOf(w))+'</b><small>Bought '+kshort(w.b)+' · Sold '+kshort(w.s)+'</small></div></div>';
+    const hero='<div class="bestc drill"'+dd({t:w.e.name,sub:'Every entry for this card',card:key(w.e)})+' role="button" tabindex="0" title="See the entries">'+art+'<div class="wtx"><b class="nm">'+esc(nmOf(w))+'</b><em class="no">'+meta+'</em><small>Bought '+kshort(w.b)+' · Sold '+kshort(w.s)+'</small><span class="amt num">'+ksigned(w.g)+'</span></div></div>';
     if(s==='M')return hero;
     if(s==='B')return '<div class="split wide">'+hero+also(3)+'</div>';
     if(s==='L')return '<div class="col">'+hero+also(3)+'</div>';
     return '<div class="split wide">'+hero+also(5)+'</div>'}
   if(k==='budget'){const _m=[];for(let m=ctx.a.slice(0,7);m<=ctx.b.slice(0,7);m=nextMonth(m))_m.push(m);const bk=_m.slice(-12),bt=bk.map(x=>totals(p.filter(e=>ym(e.date)===x)).spent),under=bt.filter(v=>v<=BUDGET).length,now=bt[bt.length-1]||0;
     const data=bk.map((x,i)=>({k:x,v:bt[i],n:mLabel(x,{month:'narrow'}),s:mLabel(x,{month:'short'}),l:mLong(x)})),tipf=i=>{const d=BUDGET-bt[i];return '<b>'+mLong(bk[i])+'</b>Spent '+kshort(bt[i])+' of '+kshort(BUDGET)+'<br><span class="'+(d>=0?'p':'l')+'">'+kshort(Math.abs(d))+(d>=0?' under':' over')+'</span>'};
-    const ch=o=>cv(ctx,Object.assign({data,limit:BUDGET,tip:tipf,aria:'Spending by month against a $150 budget',unit:'spent'},o));
+    const ch=o=>cv(ctx,Object.assign({data,limit:BUDGET,tip:tipf,aria:'Spending by month against a $150 budget',unit:'spent',ent:i=>({t:'Spent',sub:mLong(bk[i]),a:bk[i]+'-01',b:lastDay(bk[i]),types:['purchase']})},o));
     const hero='<div class="bh"><b class="num">'+under+'<i> of '+bk.length+'</i></b><small class="cap">'+(bk.length===1?'month':'months')+' under budget</small></div>';
     const note='<span class="eg">Example budget of $150 a month</span>';
     if(s==='S')return '<div class="bS">'+hero.replace(/months? under budget/,'under budget')+ch({labels:false,maxW:12,r:3})+'</div>';
@@ -202,15 +208,16 @@ function kpiBody(k,ctx,s,t,w){const T=!(w&&w.trend===false);
   const cls=k==='profit'?(v>=0?'g':'r'):'',dl=chg==null?'<span class="sm">'+sub+'</span>':'',kdv=dl?'<div class="kd">'+dl+'</div>':'';
   const spk='<div class="kspk'+(k==='profit'?(v<0?' r':''):' mu')+'">'+spark(series)+'</div>';
   const nm=CATALOG[k].t.toLowerCase(),tipf=i=>{const tt=totals(mt[i].list);return '<b>'+mt[i].l+'</b>'+CATALOG[k].t+' <span class="'+(k==='profit'?(tt.profit>=0?'p':'l'):'')+'">'+kshort(KPI[k](tt))+'</span>'};
-  const bars=o=>cv(ctx,Object.assign({data:mt.map((x,i)=>Object.assign({},x,{v:series[i],on:x.list.length>0})),color:KCOL[k],tip:tipf,aria:CATALOG[k].t+' by '+unit,unit:nm},o));
+  const bars=o=>cv(ctx,Object.assign({data:mt.map((x,i)=>Object.assign({},x,{v:series[i],on:x.list.length>0})),color:KCOL[k],tip:tipf,aria:CATALOG[k].t+' by '+unit,unit:nm,ent:i=>({t:CATALOG[k].t,sub:mt[i].l,a:mt[i].from,b:mt[i].to,types:KTYPES[k]})},o));
+  const drill=dd({t:CATALOG[k].t,a:ctx.a,b:ctx.b,types:KTYPES[k],fees:k==='fees'});
   const avg=money(Math.round(series.reduce((a,x)=>a+x,0)/Math.max(1,series.length)));
   // with the trend hidden, the number gets the room and the count takes the chart's place
-  if(s==='S')return '<div class="kS'+(T?'':' notr')+'"><div class="cq">'+bn(money(v),cls,T?34:40)+'</div>'+kdv+''+(T?spk:'<small class="cap kfoot">'+sub+'</small>')+'</div>';
-  if(s==='M'){const hz='<div class="hz"><div class="cq">'+bn(money(v),cls,T?40:48)+'</div>'+'<small class="cap">'+sub+'</small></div>';return T?'<div class="split">'+hz+spk+'</div>':hz}
-  if(s==='B'){const hz='<div class="hz"><div class="cq">'+bn(money(v),cls,44)+'</div>'+'<small class="cap">'+sub+'</small></div>';return T?'<div class="split wide">'+hz+bars({labels:true,maxW:30,r:6})+'</div>':hz}
+  if(s==='S')return '<div class="kS'+(T?'':' notr')+'"><div class="cq drill"'+drill+' role="button" tabindex="0" title="See the entries">'+bn(money(v),cls,T?34:40)+'</div>'+kdv+''+(T?spk:'<small class="cap kfoot">'+sub+'</small>')+'</div>';
+  if(s==='M'){const hz='<div class="hz"><div class="cq drill"'+drill+' role="button" tabindex="0" title="See the entries">'+bn(money(v),cls,T?40:48)+'</div>'+'<small class="cap">'+sub+'</small></div>';return T?'<div class="split">'+hz+spk+'</div>':hz}
+  if(s==='B'){const hz='<div class="hz"><div class="cq drill"'+drill+' role="button" tabindex="0" title="See the entries">'+bn(money(v),cls,44)+'</div>'+'<small class="cap">'+sub+'</small></div>';return T?'<div class="split wide">'+hz+bars({labels:true,maxW:30,r:6})+'</div>':hz}
   const facts='<div class="facts"><span><small>Average '+unit+'</small><b class="num">'+avg+'</b></span><span><small>Best '+unit+'</small><b class="num">'+mt[bi].m+'</b></span>'+(s==='X'?'<span><small>'+(k==='fees'?'Share of sales':'Count')+'</small><b class="num">'+(k==='fees'?sub.replace(' of sales',''):sub)+'</b></span>':'')+'</div>';
-  if(s==='L')return '<div class="col'+(T?'':' notrend')+'"><div class="cq">'+bn(money(v),cls,T?48:60)+'</div>'+kdv+''+(T?bars({labels:true,maxW:26,r:6}):'')+facts+'</div>';
-  const hz='<div class="hz"><div class="cq">'+bn(money(v),cls,56)+'</div>'+kdv+''+facts+'</div>';return T?'<div class="split wide">'+hz+bars({labels:true,maxW:40,r:8})+'</div>':hz}
+  if(s==='L')return '<div class="col'+(T?'':' notrend')+'"><div class="cq drill"'+drill+' role="button" tabindex="0" title="See the entries">'+bn(money(v),cls,T?48:60)+'</div>'+kdv+''+(T?bars({labels:true,maxW:26,r:6}):'')+facts+'</div>';
+  const hz='<div class="hz"><div class="cq drill"'+drill+' role="button" tabindex="0" title="See the entries">'+bn(money(v),cls,56)+'</div>'+kdv+''+facts+'</div>';return T?'<div class="split wide">'+hz+bars({labels:true,maxW:40,r:8})+'</div>':hz}
 
 function kpiDelta(k,ctx){if(!KPI[k]||!ctx.prevP)return '';const v=KPI[k](totals(ctx.inP)),pv=KPI[k](totals(ctx.prevP));if(!pv)return '';
   const chg=(v-pv)/Math.abs(pv)*100,up=chg>=0,good=GOOD[k]==='up'?up:!up,vs=compare==='year'?'vs last year':'vs previous period';
@@ -227,8 +234,8 @@ function wire(root,ctx){
   root.querySelectorAll('[data-tipd]').forEach(el=>{el.tabIndex=0;bindTip(el,el,()=>esc(el.dataset.tipd))});
   // tap-to-open rows, one open at a time per widget, like the site's FAQs
   (root.matches&&root.matches('.w')?[root]:[...root.querySelectorAll('.w')]).forEach(sec=>{const list=[...sec.querySelectorAll('[data-row]')];list.forEach(el=>{el.setAttribute('role','button');el.tabIndex=0;el.setAttribute('aria-expanded','false');
-    const tog=()=>{if(rz||drag||editing||noTips())return;const o=el.getAttribute('aria-expanded')==='true';list.forEach(x=>x.setAttribute('aria-expanded','false'));el.setAttribute('aria-expanded',!o)};
-    el.addEventListener('click',tog);el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tog()}})})});
+    const tog=e=>{if(e&&e.target&&e.target.closest('.seeent'))return;if(rz||drag||editing||noTips())return;const o=el.getAttribute('aria-expanded')==='true';list.forEach(x=>x.setAttribute('aria-expanded','false'));el.setAttribute('aria-expanded',!o)};
+    el.addEventListener('click',e=>tog(e));el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tog()}})})});
 }
 
 // ---------- render, with smooth reflow ----------
@@ -243,7 +250,7 @@ function flip(before,skip){markEdges();if(calm.matches)return;const els=[...$('s
   el.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'none'}],{duration:340,easing:'cubic-bezier(.2,.7,.2,1)',id:'fl'})})}
 function render(animate){
   const before=animate?rects():null,ctx=ctxNow();hideTip();
-  $('simple').innerHTML=layout.map(w=>widgetHTML(w,ctx)).join('');$('addw').hidden=!editing;
+  $('simple').innerHTML=layout.map(w=>widgetHTML(w,ctx)).join('')+(!editing&&!customized()&&!viewing?'<button type="button" class="mkw szS" id="mkw"><span class="pl" aria-hidden="true">+</span><b>Make it yours</b><small>Add, resize and move widgets</small></button>':'');$('addw').hidden=!editing;
   $('cb').classList.toggle('editing',editing);wire($('simple'),ctx);markEdges();
   if(before)flip(before)}
 function grow(){const cb=$('cb');if(calm.matches)return;cb.classList.add('grow');void cb.offsetWidth;requestAnimationFrame(()=>requestAnimationFrame(()=>cb.classList.remove('grow')))}
@@ -258,11 +265,14 @@ function closeMenus(){document.querySelectorAll('.cbx .cb-menu').forEach(m=>{m.h
 function pickMenu(btn,menuEl,items,cur,onPick,foot){
   btn.addEventListener('click',e=>{e.stopPropagation();hideTip();const o=menuEl.hidden;closeMenus();if(!o)return;menuEl.innerHTML=items().map(([k,l])=>'<button type="button" role="menuitemradio" aria-checked="'+(k===cur())+'" data-k="'+esc(k)+'">'+esc(l)+'</button>').join('')+(foot?foot():'');menuEl.hidden=false;btn.setAttribute('aria-expanded','true');placeMenu(btn,menuEl)});
   menuEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.cmp){setCompare(b.dataset.cmp);b.parentNode.querySelectorAll('button').forEach(x=>x.setAttribute('aria-checked',x===b));return}onPick(b.dataset.k,b.textContent);closeMenus()})}
-pickMenu($('cb-per'),$('cb-menu'),()=>PERIODS,()=>period,(k,l)=>{if(k==='custom'){openCustom();return}period=k;$('cb-perl').textContent=l;render(false);grow()},()=>'<div class="mcmp"><span>Compare to</span><div class="seg">'+COMPARE.map(([c,l])=>'<button type="button" data-cmp="'+c+'" aria-checked="'+(compare===c)+'">'+l.replace('Previous period','Previous')+'</button>').join('')+'</div></div>');
+pickMenu($('cb-per'),$('cb-menu'),()=>PERIODS,()=>period,(k,l)=>{if(k==='custom'){openCustom();return}period=k;$('cb-perl').textContent=l;saveView();render(false);grow()},()=>'<div class="mcmp"><span>Compare to</span><div class="seg">'+COMPARE.map(([c,l])=>'<button type="button" data-cmp="'+c+'" aria-checked="'+(compare===c)+'">'+l.replace('Previous period','Previous')+'</button>').join('')+'</div></div>');
 // custom dates: a range calendar. First tap sets the start, second tap the end; tap From or To to change just that one.
 const cr=$('cr'),COMPARE=[['prev','Previous period'],['year','Last year'],['off','Off']];let cal=null;
 function setCompare(c){compare=c;try{localStorage.setItem('cb.compare',c)}catch(e){}render(false)}
 const dLong=d=>dFmt(d,{month:'short',day:'numeric',year:'numeric'});
+const customLabel=()=>{const sameY=custom.from.slice(0,4)===custom.to.slice(0,4);return dFmt(custom.from,sameY?{month:'short',day:'numeric'}:{month:'short',day:'numeric',year:'numeric'})+' – '+dLong(custom.to)};
+(function restoreView(){try{const v=JSON.parse(localStorage.getItem(VKEY));if(!v)return;if(v.custom&&v.custom.from)custom=v.custom;if(PERIODS.some(p=>p[0]===v.period)&&(v.period!=='custom'||custom.from)){period=v.period;$('cb-perl').textContent=period==='custom'?customLabel():PERIODS.find(p=>p[0]===period)[1]}
+  if(v.plat&&(v.plat==='all'||E.some(e=>e.platform===v.plat))){plat=v.plat;$('cb-platl').textContent=plat==='all'?'All platforms':plat}}catch(e){}})();
 function openCustom(){const [a,b]=rangeFor(period);cal={from:custom.from||a,to:custom.to||b,pick:'from',cmp:compare};cal.view=cal.to.slice(0,7);drawCal();cr.showModal()}
 function drawCal(){const mn=startDate(),mx=TODAY,v=cal.view,dow=new Date(v+'-01T12:00:00').getDay(),nd=+lastDay(v).slice(8);
   $('cr-title').textContent=mLabel(v,{month:'long',year:'numeric'});$('cr-prev').disabled=v<=mn.slice(0,7);$('cr-next').disabled=v>=mx.slice(0,7);
@@ -285,9 +295,9 @@ cr.addEventListener('click',e=>{if(e.target===cr){cr.close();return}const b=e.ta
   if(b.id==='cr-tb'){cal.pick='to';if(cal.to)cal.view=cal.to.slice(0,7);drawCal();return}
   if(b.dataset.cmp){cal.cmp=b.dataset.cmp;drawCal();return}
   if(b.id==='cr-go'){custom={from:cal.from,to:cal.to};period='custom';compare=cal.cmp;try{localStorage.setItem('cb.compare',compare)}catch(e){}const sameY=custom.from.slice(0,4)===custom.to.slice(0,4);
-    $('cb-perl').textContent=dFmt(custom.from,sameY?{month:'short',day:'numeric'}:{month:'short',day:'numeric',year:'numeric'})+' – '+dLong(custom.to);buzz('firm');cr.close();render(false);grow();return}
+    $('cb-perl').textContent=customLabel();saveView();buzz('firm');cr.close();render(false);grow();return}
   if(b.hasAttribute('data-close'))cr.close()});
-pickMenu($('cb-plat'),$('cb-pmenu'),()=>[['all','All platforms']].concat([...new Set(E.map(e=>e.platform))].sort().map(p=>[p,p])),()=>plat,(k,l)=>{plat=k;$('cb-platl').textContent=l;render(false);grow()});
+pickMenu($('cb-plat'),$('cb-pmenu'),()=>[['all','All platforms']].concat([...new Set(E.map(e=>e.platform))].sort().map(p=>[p,p])),()=>plat,(k,l)=>{plat=k;$('cb-platl').textContent=l;saveView();render(false);grow()});
 $('cb-acct').addEventListener('click',e=>{e.stopPropagation();hideTip();const m=$('cb-amenu'),o=m.hidden;closeMenus();if(o){m.hidden=false;$('cb-acct').setAttribute('aria-expanded','true')}});
 document.addEventListener('click',e=>{if(!e.target.closest('.perwrap')&&!e.target.closest('#wmenu'))closeMenus();if(!e.target.closest('#cb [data-tip]'))hideTip()});
 
@@ -298,14 +308,19 @@ $('cb-edit').addEventListener('click',()=>setEditing(!editing));
 // reset asks first, and sits far from Done
 const rs=$('rs');$('cb-reset').addEventListener('click',()=>{buzz('tap');rs.showModal()});
 rs.addEventListener('click',e=>{if(e.target===rs){rs.close();return}const b=e.target.closest('button');if(!b)return;
-  if(b.id==='rs-yes'){rs.close();layout=JSON.parse(JSON.stringify(DEFAULT));save();buzz('warn');render(true)}else rs.close()});
+  if(b.id==='rs-yes'){rs.close();layout=JSON.parse(JSON.stringify(DEFAULT));save();try{localStorage.removeItem('cb.custom')}catch(err){}buzz('warn');render(true)}else rs.close()});
 $('addw').addEventListener('click',()=>openAdd());
-function removeWidget(id){buzz('warn');const el=$('simple').querySelector('.w[data-id="'+id+'"]'),i=layout.findIndex(w=>w.id===id);if(i<0)return;layout.splice(i,1);save();
+let undoT=0;function showUndo(msg,fn){const u=$('undo');$('undo-t').textContent=msg;u.hidden=false;u.classList.remove('out');$('undo-b').onclick=()=>{clearTimeout(undoT);hideUndo();fn()};clearTimeout(undoT);undoT=setTimeout(hideUndo,5000)}
+function hideUndo(){const u=$('undo');if(u.hidden)return;u.classList.add('out');setTimeout(()=>{u.hidden=true;u.classList.remove('out')},200)}
+function removeWidget(id){buzz('warn');const el=$('simple').querySelector('.w[data-id="'+id+'"]'),i=layout.findIndex(w=>w.id===id);if(i<0)return;const gone=layout[i];layout.splice(i,1);save();
+  showUndo((gone.name||CATALOG[gone.k].t)+' removed',()=>{layout.splice(Math.min(i,layout.length),0,gone);save();buzz('tick');render(true)});
   if(!el||calm.matches){render(true);return}
   el.style.pointerEvents='none';el.animate([{opacity:1,transform:'none'},{opacity:0,transform:'scale(.9)'}],{duration:180,easing:'ease-in',fill:'forwards'}).onfinish=()=>render(true)}
 function moveWidget(id,d){const i=layout.findIndex(w=>w.id===id),j=i+d;if(i<0||j<0||j>=layout.length)return;layout.splice(j,0,layout.splice(i,1)[0]);save();render(true)}
 $('simple').addEventListener('click',e=>{
   if(justDragged){justDragged=false;e.stopPropagation();return}
+  if(e.target.closest('#mkw')){setEditing(true);setTimeout(openAdd,220);return}
+  const dr=e.target.closest('[data-drill]');if(dr&&canDrill()){e.stopPropagation();openEntries(JSON.parse(dr.dataset.drill));return}
   const sec=e.target.closest('.w[data-id]');if(!sec)return;const w=byId(sec.dataset.id);if(!w)return;
   if(e.target.closest('.rm')){removeWidget(w.id);return}
   const more=e.target.closest('.wmore');if(more){e.stopPropagation();openWidgetMenu(more,w)}
@@ -477,7 +492,7 @@ function close(){
 xb.addEventListener('click',open);$('close').addEventListener('click',close);
 document.addEventListener('click',e=>{const wm=$('wmenu');if(!wm.hidden&&!e.target.closest('#wmenu')&&!e.target.closest('.wmore'))wm.hidden=true});
 cbx.addEventListener('scroll',hideTip,{passive:true});
-document.addEventListener('keydown',e=>{if(e.key!=='Escape'||!shown||aw.open||$('av').open||$('ex').open||$('cr').open||$('rs').open||$('shd').open||$('askd').open)return;if(!$('wmenu').hidden){$('wmenu').hidden=true;return}if(!$('cb-menu').hidden||!$('cb-pmenu').hidden||!$('cb-amenu').hidden){closeMenus();return}if(editing){setEditing(false);return}close()});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape'||!shown||document.querySelector('dialog[open]'))return;if(!$('wmenu').hidden){$('wmenu').hidden=true;return}if(!$('cb-menu').hidden||!$('cb-pmenu').hidden||!$('cb-amenu').hidden){closeMenus();return}if(editing){setEditing(false);return}close()});
 
 // ---------- account menu: profile, plan, import/export, settings, sign out ----------
 let profile=(()=>{try{return Object.assign({first:'Nick',last:'',show:'first'},JSON.parse(localStorage.getItem('cb.profile'))||{})}catch(e){return {first:'Nick',last:'',show:'first'}}})();
@@ -595,7 +610,7 @@ shd.addEventListener('click',async e=>{if(e.target===shd){shd.close();return}con
   if(sw){share[sw]=!share[sw];saveShare();paintShare();buzz('tick');if(viewing)render(false);return}
   if(b.dataset.v&&b.parentNode.id==='sh-live'){share.live=b.dataset.v==='live';saveShare();paintShare();return}
   if(b.dataset.v&&b.parentNode.id==='sh-exp'){share.exp=b.dataset.v;saveShare();paintShare();return}
-  if(b.id==='sh-copy'){try{await navigator.clipboard.writeText(SH_URL());toast('Link copied')}catch(err){const i=$('sh-link');i.focus();i.select();toast('Press ⌘C or Ctrl+C to copy')}buzz('tick');return}
+  if(b.id==='sh-copy'){try{await navigator.clipboard.writeText(SH_URL());b.textContent='Copied ✓';b.classList.add('ok');setTimeout(()=>{b.textContent='Copy link';b.classList.remove('ok')},1500)}catch(err){const i=$('sh-link');i.focus();i.select();toast('Press ⌘C or Ctrl+C to copy')}buzz('tick');return}
   if(b.id==='sh-new'){share.id=Math.random().toString(36).slice(2,10);saveShare();paintShare();toast('New link made. The old one no longer works.');return}
   if(b.id==='sh-add'){addEmail();return}
   if(b.dataset.rm){share.emails.splice(+b.dataset.rm,1);saveShare();paintShare();return}
@@ -649,3 +664,23 @@ $('cb-ask').addEventListener('click',openAsk);
 document.querySelectorAll('dialog.sheet .awp').forEach(p=>{if(p.closest('#askd'))return;const kids=[...p.children];let i=0;while(i<kids.length&&kids[i].matches('.awh,.awtop'))i++;
   let j=kids.length;while(j>i&&kids[j-1].matches('.go,.rsb,.awfoot,.shnote,.awt'))j--;if(j-i<1)return;
   const body=document.createElement('div');body.className='awbody';p.insertBefore(body,kids[i]);kids.slice(i,j).forEach(k=>body.appendChild(k))});
+
+// the entries sheet: what makes up a number, newest first, grouped by month
+const ent=$('ent');
+function openEntries(o){hideTip();const key=e=>e.name.toLowerCase().replace(/[^a-z0-9]/g,'')+'|'+e.no;
+  let list=pool().filter(e=>e.date>=(o.a||'0000')&&e.date<=(o.b||'9999')&&(!o.types||o.types.includes(e.type))&&(!o.plat||e.platform===o.plat)&&(!o.card||key(e)===o.card)&&(!o.fees||e.amount-e.net>0));
+  if(o.card)list=E.filter(e=>key(e)===o.card);
+  list=list.slice().sort((a,b)=>a.date<b.date?1:-1);
+  const sum=list.reduce((t,e)=>t+(e.type==='sale'?(o.fees?e.amount-e.net:e.net):-e.amount),0),scope=o.sub||(o.card?'':$('cb-perl').textContent+(plat==='all'?'':' · '+plat));
+  $('ent-h').textContent=o.t;$('ent-sub').textContent=[scope,cnt(list.length,'entry','entries')+(list.length?' · '+(o.fees?'fees and shipping '+money(sum):(sum>=0?'net +':'net ')+money(sum)):'')].filter(Boolean).join(' · ');
+  let h='',m='';list.slice(0,300).forEach(e=>{const mm=e.date.slice(0,7);if(mm!==m){m=mm;h+='<p class="emh">'+mLong(mm)+'</p>'}
+    const sale=e.type==='sale',amt=sale?'+'+money(e.amount):'−'+money(e.amount),sub=sale?(o.fees?'fees '+money(e.amount-e.net):'you kept '+money(e.net)):'';
+    h+='<div class="er"><span class="ety t-'+e.type+'">'+(sale?'Sale':e.type==='purchase'?'Buy':'Refund')+'</span><div class="en"><b>'+esc(e.name)+(e.qty>1?' ×'+e.qty:'')+'</b><small>'+dFmt(e.date,{month:'short',day:'numeric'})+' · '+esc(e.platform)+(e.no?' · '+esc(e.no):'')+'</small></div><div class="ea'+(sale?' p':'')+'">'+amt+(sub?'<small>'+sub+'</small>':'')+'</div></div>'});
+  $('ent-list').innerHTML=h||'<p class="enone">No entries here.</p>';$('ent-list').scrollTop=0;buzz('tap');ent.showModal()}
+ent.addEventListener('click',e=>{if(e.target===ent){ent.close();return}const b=e.target.closest('button');if(b&&b.hasAttribute('data-close'))ent.close()});
+$('simple').addEventListener('keydown',e=>{const d=e.target.closest('.drill[data-drill]');if(d&&(e.key==='Enter'||e.key===' ')){e.preventDefault();if(canDrill())openEntries(JSON.parse(d.dataset.drill))}});
+
+// ---------- motion for menus and sheets: GPU-only (transform and opacity), springy in, quick out ----------
+document.querySelectorAll('dialog.sheet').forEach(d=>{const nat=HTMLDialogElement.prototype.close;
+  d.close=function(v){if(!this.open||this.classList.contains('closing'))return;if(calm.matches){nat.call(this,v);return}this.classList.add('closing');setTimeout(()=>{this.classList.remove('closing');nat.call(this,v)},190)};
+  d.addEventListener('cancel',e=>{e.preventDefault();d.close()})});

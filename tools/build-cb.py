@@ -1,6 +1,6 @@
 import json,base64
 P=json.load(open('dash-parts.json'))
-board_css=open('board-part.html').read().replace('__SITECSS__',open('site-cb.css').read())+open('board4.css').read()+open('board5.css').read()+open('board6.css').read()+open('board7.css').read()+open('board8.css').read()+open('board9.css').read()
+board_css=open('board-part.html').read().replace('__SITECSS__',open('site-cb.css').read())+open('board4.css').read()+open('board5.css').read()+open('board6.css').read()+open('board7.css').read()+open('board8.css').read()+open('board9.css').read()+open('board10.css').read()
 markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
 <section class="cbx off" id="cbx" inert aria-hidden="true" role="dialog" aria-modal="true" aria-label="Card Board">
 <div id="cb"><div class="frame">
@@ -57,6 +57,11 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
   <p class="askleft" id="ask-left" role="status" hidden></p>
   <p class="askfine">Answers use only the numbers on this board, for the dates and platforms you picked.</p>
 </div></dialog>
+<dialog id="ent" class="sheet" aria-labelledby="ent-h"><div class="awp entp">
+  <div class="awh"><div><h2 id="ent-h"></h2><small class="askscope" id="ent-sub"></small></div><button type="button" class="x" data-close aria-label="Close">✕</button></div>
+  <div class="entlist" id="ent-list"></div>
+</div></dialog>
+<div class="undo" id="undo" role="status" aria-live="polite" hidden><span id="undo-t"></span><button type="button" id="undo-b">Undo</button></div>
 <dialog id="rs" class="sheet" aria-labelledby="rs-h"><div class="awp rsp">
   <h2 id="rs-h">Reset the board?</h2><p>Your widgets go back to the starting layout. Your entries aren’t touched.</p>
   <div class="rsb"><button type="button" class="tbtn" id="rs-no">No</button><button type="button" class="go danger" id="rs-yes">Yes, reset</button></div>

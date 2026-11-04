@@ -202,3 +202,21 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - Sheet scrolling, revised: the sheet itself never scrolls. A script wraps everything between the title and the main button in `.awbody`, which scrolls on its own, with its own scrollbar and soft edge shadows. Pinned headers had clipped the gallery's + badges.
 - Edit mode top bar holds only "Card Board", a quiet "Drag to move · drag a corner to resize" under it, and a solid cranberry Done on the right. Back, the time range, platforms, Ask, Share and your picture hide until Done. Reset moved to the bottom of the board ("Reset to the starting layout"), far from Done, and still asks first.
 - The board is titled with the first name ("Nick's Card Board"), updating live when the profile name changes; long names shorten with an ellipsis. The Premium pill left the title (it stays in the account menu). Usernames can replace the first name later.
+
+### Card Board v12: starter board, entries, undo, remembered view, motion (Nov 4)
+- New accounts start with four widgets: Profit, Sales, Spent (Small) and Profit by month (Banner). A dashed "Make it yours" tile (it opens Edit plus Add widgets) shows until the first change (`cb.custom`); Reset brings it back.
+- See the entries behind a number (not in Edit mode or viewer mode):
+  - Number widgets: click the number to see the matching entries (Profit: all; Sales: sales; Spent: purchases; Fees: sales with fees).
+  - Any bar (number widgets, Profit by month, Budget): that day, week or month.
+  - Where you buy, What each platform kept and How much of it sold: "See entries ›" in an opened row, or tapping a compact row.
+  - Biggest win: every entry for that card.
+  - The sheet groups entries by month, newest first, with type pills, "you kept", and a net total; it shows up to 300 entries.
+- Undo: removing a widget shows "[Name] removed · Undo" for 5 seconds and puts it back where it was.
+- The time range (including custom dates) and platform are remembered between visits (`cb.view`).
+- Motion, all transform and opacity:
+  - menus pop from their button, with the account menu items staggered
+  - sheets spring in on desktop and slide up on phones, with their contents fading up in sequence
+  - the backdrop fades in and out; closing animates (dialog.close is wrapped; Escape is handled through "cancel")
+  - the profile picture pops in, the Ask sparkle gives a little spin, and Copy link turns green with "Copied ✓"
+  - at a 4× slowed CPU, Share, Profile and Ask open with 1–2 slow frames out of about 40
+- Empty-board hints are on hold until Card Board moves into the app (they depend on how adding entries works there).
