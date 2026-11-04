@@ -1075,19 +1075,27 @@ const saveSt=()=>{try{localStorage.setItem(PKEY,JSON.stringify(st))}catch(e){}};
 const bump=(id,f)=>{const n=st.n[id]||(st.n[id]={v:0,t:0});n[f]++;saveSt()};
 // read the results later from the console (and from the server once the app is online): views, taps and tap rate per headline
 window.CTPremiumStats=()=>Object.entries(st.n).map(([id,n])=>({id,headline:(HEADS.find(h=>h[0]===id)||Object.values(CTX).find(c=>c[0]===id)||[0,id])[1],views:n.v,taps:n.t,rate:n.v?Math.round(n.t/n.v*1000)/10+'%':'—'}));
-// art: the user's own high-res card art first, then a few good-looking picks the app ships with
-function artList(){const seen=new Set(),out=[];(E||[]).forEach(e=>{const w=e.art&&e.art.wall;if(w&&!seen.has(w)){seen.add(w);out.push({src:w,focus:e.art.focus})}});
-  (window.CTPremiumArt||[]).forEach(a=>{if(!seen.has(a.src)){seen.add(a.src);out.push(a)}});return out}
+// art: the account's own cards. Their priciest purchases first (top 3, rotating), then cards they sold, then the app's picks.
+// A card's artwork-only copy (art.wall) is used when it exists; otherwise the regular card image, zoomed to its artwork window.
+// (After the Cloudflare move the art service makes artwork-only copies for every free user's top 3 purchases, so this fallback fades out.)
+const cardKey=e=>(e.name||'')+'|'+(e.no||'')+'|'+(e.set||'');
+function pick(rows){const best=new Map();rows.forEach(e=>{const a=e.art;if(!a||!(a.wall||a.detail))return;const k=cardKey(e),per=(e.amount||0)/Math.max(1,e.qty||1);const o=best.get(k);if(!o||per>o.per)best.set(k,{e,per})});
+  return [...best.values()].sort((x,y)=>y.per-x.per).slice(0,3).map(({e})=>{const a=e.art,f=Array.isArray(a.focus)?{x:a.focus[0]/100,y:a.focus[1]/100}:a.focus;
+    return a.wall?{src:a.wall,focus:f}:{src:a.detail,card:true}})}
+function artList(){const rows=E||[];let out=pick(rows.filter(e=>e.type==='purchase'));if(!out.length)out=pick(rows.filter(e=>e.type==='sale'));
+  return out.length?out:(window.CTPremiumArt||[]).slice()}
 let shownId=null;
 function openPm(ctx){
   const c=CTX[ctx];let id,h;
   if(c){[id,h]=c}else{const x=HEADS[st.h%HEADS.length];st.h=(st.h+1)%HEADS.length;[id,h]=x}
   shownId=id;$('pm-h').textContent=h;bump(id,'v');
   const list=artList(),hero=$('pm-art');
-  if(list.length){const a=list[st.a%list.length];st.a=(st.a+1)%Math.max(1,list.length*7);saveSt();
+  if(list.length){const a=list[st.a%list.length];st.a=(st.a+1)%420;saveSt();
     const fy=a.focus&&a.focus.y!=null?Math.round(a.focus.y*100)+'%':'24%',fx=a.focus&&a.focus.x!=null?Math.round(a.focus.x*100)+'%':'50%';
-    hero.style.backgroundImage='url("'+new URL(a.src,document.baseURI).href.replace(/"/g,'%22')+'")';hero.style.backgroundPosition=fx+' '+fy;hero.classList.add('pmart')}
-  else{hero.classList.remove('pmart');hero.style.backgroundImage='';hero.style.backgroundPosition=''}
+    hero.style.backgroundImage='url("'+new URL(a.src,document.baseURI).href.replace(/"/g,'%22')+'")';
+    // a whole card: zoom past the frame and name strip so only the artwork window fills the header
+    hero.style.backgroundSize=a.card?'120% auto':'';hero.style.backgroundPosition=a.card?'50% 21%':fx+' '+fy;hero.classList.add('pmart')}
+  else{hero.classList.remove('pmart');hero.style.backgroundImage='';hero.style.backgroundPosition='';hero.style.backgroundSize=''}
   closeMenus();hideTip();buzz('tap');pms.showModal();const pp=pms.querySelector('.pmp');pp.tabIndex=-1;pp.focus({preventScroll:true})}
 PM_OPEN=openPm;
 // warm the art up the first time a free user opens the board, so the sheet never shows a blank header
