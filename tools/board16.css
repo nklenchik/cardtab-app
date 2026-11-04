@@ -1,7 +1,7 @@
 
 /* ---------- v16 free plan ---------- */
 /* Premium sheet: the art leads, fading into the sheet; the price sits in a pill */
-dialog.sheet.pms .awp.pmp{padding:0;gap:0;overflow:hidden auto;background:var(--cb-alt);width:min(400px,calc(100vw - 32px))}
+dialog.sheet.pms .awp.pmp{padding:0!important;border:0!important;gap:0;overflow:hidden auto;background:var(--cb-alt);width:min(400px,calc(100vw - 32px))}
 .pms .pmhero{position:relative;flex:none;height:228px;background:linear-gradient(150deg,color-mix(in srgb,var(--brand) 85%,#000),#2a0d18 70%,#141010);overflow:visible}
 .pms .pmhero.pmart{background-color:#1d1b19;background-size:cover;background-repeat:no-repeat}
 .pms .pmhero::after{content:"";position:absolute;inset:-1px -1px -3px;background:linear-gradient(180deg,rgba(0,0,0,.28),rgba(0,0,0,0) 30%,rgba(0,0,0,.12) 46%,color-mix(in srgb,var(--cb-alt) 86%,transparent) 80%,var(--cb-alt) 97%)}
@@ -42,3 +42,5 @@ html.cbfree #cb-stories>span::after,html.cbfree #cb-ask>span::after,html.cbfree 
 #cr .crrow.lockd{color:var(--muted)}
 #cr .crrow.lockd .mlock{margin-left:auto;display:inline-grid;place-items:center;color:var(--brand)}
 html.cbfree #cr.pre .crcmp{display:none}
+
+.pms .pmp:focus{outline:none}

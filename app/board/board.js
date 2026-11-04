@@ -843,7 +843,7 @@ askd.addEventListener('click',e=>{if(e.target===askd){askd.close();return}const 
 $('cb-ask').addEventListener('click',openAsk);
 
 // ---------- sheets: the title and the main button stay put; only the part between them scrolls, with its own scrollbar ----------
-document.querySelectorAll('dialog.sheet .awp').forEach(p=>{if(p.closest('#askd'))return;const kids=[...p.children];let i=0;while(i<kids.length&&kids[i].matches('.awh,.awtop'))i++;
+document.querySelectorAll('dialog.sheet .awp').forEach(p=>{if(p.closest('#askd')||p.closest('#pms'))return;const kids=[...p.children];let i=0;while(i<kids.length&&kids[i].matches('.awh,.awtop'))i++;
   let j=kids.length;while(j>i&&kids[j-1].matches('.go,.rsb,.awfoot,.shnote,.awt'))j--;if(j-i<1)return;
   const body=document.createElement('div');body.className='awbody';p.insertBefore(body,kids[i]);kids.slice(i,j).forEach(k=>body.appendChild(k))});
 
@@ -1088,7 +1088,7 @@ function openPm(ctx){
     const fy=a.focus&&a.focus.y!=null?Math.round(a.focus.y*100)+'%':'24%',fx=a.focus&&a.focus.x!=null?Math.round(a.focus.x*100)+'%':'50%';
     hero.style.backgroundImage='url("'+new URL(a.src,document.baseURI).href.replace(/"/g,'%22')+'")';hero.style.backgroundPosition=fx+' '+fy;hero.classList.add('pmart')}
   else{hero.classList.remove('pmart');hero.style.backgroundImage='';hero.style.backgroundPosition=''}
-  closeMenus();hideTip();buzz('tap');pms.showModal()}
+  closeMenus();hideTip();buzz('tap');pms.showModal();const pp=pms.querySelector('.pmp');pp.tabIndex=-1;pp.focus({preventScroll:true})}
 PM_OPEN=openPm;
 // warm the art up the first time a free user opens the board, so the sheet never shows a blank header
 let warmed=false;function warmArt(){if(warmed||!cbFree())return;warmed=true;artList().slice(0,3).forEach(a=>{const i=new Image();i.decoding='async';i.src=a.src})}

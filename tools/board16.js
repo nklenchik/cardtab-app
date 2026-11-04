@@ -25,7 +25,7 @@ function openPm(ctx){
     const fy=a.focus&&a.focus.y!=null?Math.round(a.focus.y*100)+'%':'24%',fx=a.focus&&a.focus.x!=null?Math.round(a.focus.x*100)+'%':'50%';
     hero.style.backgroundImage='url("'+new URL(a.src,document.baseURI).href.replace(/"/g,'%22')+'")';hero.style.backgroundPosition=fx+' '+fy;hero.classList.add('pmart')}
   else{hero.classList.remove('pmart');hero.style.backgroundImage='';hero.style.backgroundPosition=''}
-  closeMenus();hideTip();buzz('tap');pms.showModal()}
+  closeMenus();hideTip();buzz('tap');pms.showModal();const pp=pms.querySelector('.pmp');pp.tabIndex=-1;pp.focus({preventScroll:true})}
 PM_OPEN=openPm;
 // warm the art up the first time a free user opens the board, so the sheet never shows a blank header
 let warmed=false;function warmArt(){if(warmed||!cbFree())return;warmed=true;artList().slice(0,3).forEach(a=>{const i=new Image();i.decoding='async';i.src=a.src})}

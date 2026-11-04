@@ -459,3 +459,4 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 - Quiet line ("Free shows your last 3 months · See Premium") shows the first 3 times a free user opens the board.
 - Fixes found on the way: the sheet's art class clashed with the board's `.art`; CSS custom-property URLs resolved against board/ (404), so the art is set inline with an absolute URL.
 - v27.1: locked widgets in Add widgets are softly blurred (names stay sharp) instead of faded; Featured card's preview now shows its art in the gallery (it waited for a fade-in that never ran there).
+- v27.2: Premium sheet art now starts flush at the top (the shared sheet scroll wrapper was adding space; the Premium sheet opts out), no border line over the art, and no focus ring on ✕ when it opens.
