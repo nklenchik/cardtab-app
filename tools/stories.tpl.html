@@ -1,0 +1,240 @@
+<title>Card Stories Preview</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap">
+<style>
+/* Layout: a short page of working mocks. Stories first (the tab, the month covers, the player), then card journeys, milestones, and the card-art widgets. */
+:root{--bg:#ecebe5;--sheet:#f6f5f0;--card:#fff;--text:#1d1d1b;--muted:#6f6e68;--line:#e2e0d8;--brand:#a50e37;--brand2:#c7234f;--soft:#fbe3ea;--pos:#3b6d11;--bar:#7dbb57;--neg:#d6405f;--hl:#efede5;
+  --f:Manrope,-apple-system,"Segoe UI",sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121211;--sheet:#1b1b1a;--card:#262624;--text:#f1efe8;--muted:#a4a4a0;--line:#383836;--brand:#c7234f;--brand2:#e0476f;--soft:#3d1220;--pos:#6cb83a;--bar:#6cb83a;--neg:#ef6b86;--hl:#31312e;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121211;--sheet:#1b1b1a;--card:#262624;--text:#f1efe8;--muted:#a4a4a0;--line:#383836;--brand:#c7234f;--brand2:#e0476f;--soft:#3d1220;--pos:#6cb83a;--bar:#6cb83a;--neg:#ef6b86;--hl:#31312e;color-scheme:dark}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{background:var(--bg);color:var(--text);font-family:var(--f);font-size:14px;line-height:1.4;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding-block:32px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:44px}
+header{max-width:660px}h1{font-size:28px;font-weight:800;letter-spacing:-.03em;margin:0 0 8px;text-wrap:balance}
+header p,.sec>p{margin:0;color:var(--muted);font-weight:600;font-size:15px;max-width:640px}
+.wrap>*,.sec>*{min-width:0}
+.sec{display:grid;gap:16px}.sec h2{margin:0;font-size:19px;font-weight:800;letter-spacing:-.02em}
+.lab{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0}
+button{font-family:var(--f)}button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.panel{background:var(--sheet);border:1px solid var(--line);border-radius:26px;padding:20px}
+/* tab */
+.tabbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.tabbar .ttl{font-size:22px;font-weight:800;letter-spacing:-.03em}
+.seg{display:inline-flex;background:var(--hl);border-radius:999px;padding:3px;position:relative}
+.seg button{position:relative;z-index:1;border:0;background:none;padding:8px 18px;font-weight:800;font-size:14px;color:var(--muted);border-radius:999px;cursor:pointer;transition:color .2s}
+.seg button[aria-selected="true"]{color:var(--text)}
+.seg i{position:absolute;top:3px;bottom:3px;left:3px;border-radius:999px;background:var(--card);box-shadow:0 1px 4px rgba(0,0,0,.12);transition:transform .32s cubic-bezier(.2,.9,.25,1.05),width .32s cubic-bezier(.2,.9,.25,1.05)}
+/* month covers */
+.covers{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;padding:4px 2px 8px}
+.covers::-webkit-scrollbar{display:none}
+.cov{flex:0 0 150px;height:210px;border:0;border-radius:20px;padding:14px;color:#fff;text-align:left;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;position:relative;overflow:hidden;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s}
+.cov:hover{transform:translateY(-3px);box-shadow:0 12px 26px rgba(0,0,0,.18)}
+.cov small{font-size:12px;font-weight:800;opacity:.85}.cov b{font-size:22px;font-weight:800;letter-spacing:-.03em;line-height:1.05}.cov em{font-style:normal;font-size:13px;font-weight:800}
+.cov .seen{position:absolute;top:12px;right:12px;width:9px;height:9px;border-radius:50%;background:#fff}
+.cov.done .seen{opacity:0}
+/* the story player */
+.player{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(8,8,8,.72);padding:16px;animation:fade .25s ease both}
+.player.out{animation:fadeo .2s ease both}
+@keyframes fade{from{opacity:0}}@keyframes fadeo{to{opacity:0}}
+.story{position:relative;width:min(390px,100%);height:min(720px,calc(100dvh - 32px));border-radius:28px;overflow:hidden;color:#fff;animation:rise .38s cubic-bezier(.18,.89,.32,1.08) both;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+@keyframes rise{from{opacity:0;transform:translateY(18px) scale(.96)}}
+@media(max-width:500px){.player{padding:0}.story{width:100%;height:100dvh;border-radius:0}}
+.bars{position:absolute;top:max(12px,env(safe-area-inset-top,0px));left:12px;right:12px;display:flex;gap:4px;z-index:3}
+.bars span{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.3);overflow:hidden}
+.bars i{display:block;height:100%;width:0;background:#fff;border-radius:2px}
+.shead{position:absolute;top:calc(max(12px,env(safe-area-inset-top,0px)) + 14px);left:14px;right:8px;display:flex;align-items:center;gap:10px;z-index:3;font-weight:800;font-size:13.5px}
+.shead .lg{width:30px;height:30px;border-radius:9px;background:#fff;color:var(--brand);display:grid;place-items:center;font-weight:800;font-size:14px}
+.shead .x{margin-left:auto;width:38px;height:38px;border:0;background:none;color:#fff;font-size:20px;cursor:pointer}
+.slide{position:absolute;inset:0;padding:96px 26px 34px;display:flex;flex-direction:column}
+.slide.in>*{animation:sin .55s cubic-bezier(.2,.8,.2,1) both}
+.slide.in>*:nth-child(2){animation-delay:.08s}.slide.in>*:nth-child(3){animation-delay:.16s}.slide.in>*:nth-child(4){animation-delay:.24s}.slide.in>*:nth-child(5){animation-delay:.32s}
+@keyframes sin{from{opacity:0;transform:translateY(14px)}}
+.kick{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.8;margin:0 0 10px}
+.big{font-size:54px;font-weight:800;letter-spacing:-.045em;line-height:1;margin:0;font-variant-numeric:tabular-nums}
+.mid{font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1.08;margin:0;text-wrap:balance}
+.line{font-size:17px;font-weight:650;line-height:1.4;margin:14px 0 0;opacity:.92;text-wrap:pretty}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:auto}
+.trio div{background:rgba(255,255,255,.14);border-radius:16px;padding:12px}.trio small{display:block;font-size:12px;font-weight:700;opacity:.8}.trio b{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums}
+.tap{position:absolute;top:80px;bottom:0;width:38%;z-index:2;border:0;background:none;cursor:pointer}.tap.l{left:0}.tap.r{right:0;width:62%}
+.sact{display:flex;gap:10px;margin-top:auto;position:relative;z-index:4}
+.sact button{flex:1;border:0;border-radius:14px;padding:14px;font-weight:800;font-size:15px;cursor:pointer;background:#fff;color:var(--text)}.sact button.g{background:rgba(255,255,255,.18);color:#fff}
+.bg-1{background:radial-gradient(120% 80% at 20% 0%,#d23a62 0%,#a50e37 45%,#5e0820 100%)}
+.bg-2{background:radial-gradient(120% 80% at 80% 0%,#3d6f1b 0%,#24450f 55%,#142708 100%)}
+.bg-2n{background:radial-gradient(120% 80% at 80% 0%,#5a5955 0%,#34332f 55%,#1d1d1b 100%)}
+.bg-3{background:radial-gradient(120% 80% at 50% 0%,#2a2a28 0%,#1b1b1a 60%,#101010 100%)}
+.bg-4{background:radial-gradient(120% 80% at 20% 0%,#1d5f99 0%,#123e66 55%,#0a2238 100%)}
+.bg-5{background:radial-gradient(120% 80% at 50% 0%,#d23a62 0%,#7d0b2b 70%)}
+/* card art placeholder (real art comes from the art service) */
+.art{display:grid;place-items:center;flex:none;border-radius:8px;background:linear-gradient(155deg,#d9577a,#7d0b2b);color:#fff;font-weight:800;box-shadow:inset 0 0 0 3px rgba(255,255,255,.22),0 10px 22px rgba(0,0,0,.25);aspect-ratio:63/88}
+.art.b{background:linear-gradient(155deg,#5fa0d6,#174b78)}.art.g{background:linear-gradient(155deg,#8cc96a,#2e5c12)}.art.k{background:linear-gradient(155deg,#8a8983,#3a3936)}.art.o{background:linear-gradient(155deg,#f0a35c,#a5551a)}
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;margin:auto 0}
+.hero .art{width:150px;font-size:56px;transform:rotate(-3deg)}
+.fan{position:relative;height:190px;margin:22px 0 8px}
+.fan .art{position:absolute;width:118px;font-size:42px;left:50%;top:0}
+.fan .art:nth-child(1){transform:translateX(-120%) rotate(-10deg)}.fan .art:nth-child(2){transform:translateX(-50%) translateY(-8px)}.fan .art:nth-child(3){transform:translateX(20%) rotate(10deg)}
+.tl{margin-top:auto;display:grid;gap:0}
+.tl>div{display:grid;grid-template-columns:16px 1fr auto;gap:12px;align-items:start;padding-bottom:16px;position:relative}
+.tl>div::before{content:"";position:absolute;left:7px;top:14px;bottom:0;width:2px;background:rgba(255,255,255,.25)}.tl>div:last-child::before{display:none}
+.tl i{width:16px;height:16px;border-radius:50%;background:#fff;margin-top:2px}.tl b{font-size:15px;font-weight:800}.tl small{display:block;font-size:12.5px;opacity:.8;font-weight:650}.tl span{font-weight:800;font-variant-numeric:tabular-nums}
+/* journeys strip */
+.jrow{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;padding:4px 2px 8px;scroll-snap-type:x mandatory}.jrow::-webkit-scrollbar{display:none}
+.jc{flex:0 0 280px;scroll-snap-align:start;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px;display:grid;grid-template-columns:72px 1fr;gap:14px;align-items:center}
+.jc .art{width:72px;font-size:28px}
+.jc b{display:block;font-size:15px;font-weight:800;line-height:1.15;letter-spacing:-.02em}.jc small{display:block;color:var(--muted);font-weight:650;font-size:12.5px;margin-top:4px}
+.jc .gain{font-size:22px;font-weight:800;letter-spacing:-.03em;color:var(--pos);margin-top:6px;font-variant-numeric:tabular-nums}.jc .gain.l{color:var(--neg)}
+.jbar{grid-column:1/-1;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:750;color:var(--muted)}
+.jbar span{flex:1;height:6px;border-radius:3px;background:var(--hl);position:relative;overflow:hidden}.jbar span i{position:absolute;inset:0 auto 0 0;background:var(--bar);border-radius:3px}
+/* milestones */
+.ms{display:grid;gap:8px;max-width:560px}
+.m{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:13px 16px}
+.m .ic{width:40px;height:40px;border-radius:12px;background:var(--soft);color:var(--brand);display:grid;place-items:center;flex:none}
+.m b{display:block;font-size:15px;font-weight:800}.m small{color:var(--muted);font-weight:650;font-size:12.5px}
+.m .d{margin-left:auto;font-size:12px;font-weight:750;color:var(--muted);white-space:nowrap}
+/* card-art widgets */
+.wg{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.w{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-height:190px;min-width:0}
+.w.wide{grid-column:span 2}
+@media(max-width:600px){.w.wide{grid-column:auto}}
+.w .t{font-size:13.5px;font-weight:800;color:var(--muted)}
+.w .why{font-size:12px;color:var(--muted);font-weight:650;margin-top:auto}
+.wfan{position:relative;height:120px}
+.wfan .art{position:absolute;width:62px;font-size:22px;top:6px}
+.wfan .art:nth-child(1){left:0;transform:rotate(-6deg)}.wfan .art:nth-child(2){left:38px;transform:translateY(-4px)}.wfan .art:nth-child(3){left:76px;transform:rotate(6deg)}
+.wfan .lst{position:absolute;right:0;top:4px;display:grid;gap:6px;text-align:right;font-weight:800;font-size:13px;font-variant-numeric:tabular-nums}
+.wfan .lst small{display:block;color:var(--muted);font-size:11.5px;font-weight:650}
+.tops{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.tops div{display:grid;gap:6px;min-width:0}
+.tops .crop{height:62px;overflow:hidden;border-radius:8px 8px 0 0;mask-image:linear-gradient(#000 70%,transparent);-webkit-mask-image:linear-gradient(#000 70%,transparent)}
+.tops .crop .art{width:100%;font-size:26px;border-radius:8px;box-shadow:inset 0 0 0 3px rgba(255,255,255,.22)}
+.tops b{font-size:14px;font-weight:800;color:var(--pos);font-variant-numeric:tabular-nums}.tops small{font-size:11px;color:var(--muted);font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hold{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.hold div{display:grid;gap:4px;text-align:center}.hold .art{width:100%;font-size:18px;border-radius:6px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.22)}.hold small{font-size:11px;font-weight:750;color:var(--muted);font-variant-numeric:tabular-nums}
+.hsum{display:flex;justify-content:space-between;font-weight:800;font-size:13.5px}.hsum span{color:var(--muted);font-weight:650}
+.one{display:flex;gap:14px;align-items:center}.one .art{width:64px;font-size:24px}
+.one b{display:block;font-size:14.5px;font-weight:800;line-height:1.15}.one small{display:block;color:var(--muted);font-weight:650;font-size:12px;margin-top:3px}.one .amt{font-size:22px;font-weight:800;letter-spacing:-.03em;margin-top:4px;font-variant-numeric:tabular-nums}.one .amt.l{color:var(--neg)}.one .amt.p{color:var(--pos)}
+.verdict{display:grid;gap:4px;font-size:13px;font-weight:650;color:var(--muted)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>Card Stories</h1>
+  <p>Working mocks built from your real entries. Stories have no settings to manage: one recap per month, made for you. Tap a month to play it.</p>
+</header>
+
+<section class="sec">
+  <h2>1. Stories lives beside your board</h2>
+  <p>A single switch at the top of your board. The board stays exactly as you set it.</p>
+  <div class="panel">
+    <div class="tabbar"><span class="ttl">Nick’s Card Board</span><div class="seg" role="tablist" id="seg"><i></i><button role="tab" aria-selected="false" data-t="board">Board</button><button role="tab" aria-selected="true" data-t="stories">Stories</button></div></div>
+    <div style="margin-top:18px"><p class="lab" style="margin-bottom:10px">Your months</p><div class="covers" id="covers"></div></div>
+  </div>
+</section>
+
+<section class="sec">
+  <h2>2. Card journeys</h2>
+  <p>Every card you bought and sold, told start to finish. Tap one to open its story.</p>
+  <div class="jrow" id="jrow"></div>
+</section>
+
+<section class="sec">
+  <h2>3. Milestones</h2>
+  <p>A few moments worth noticing. They appear on their own; nothing to set up. Could come later.</p>
+  <div class="ms" id="ms"></div>
+</section>
+
+<section class="sec">
+  <h2>4. Card-art widgets for your board</h2>
+  <p>Art does the work; numbers stay few and large. Placeholders stand in until the art service fills real card images.</p>
+  <div class="wg" id="wg"></div>
+</section>
+</div>
+
+<div class="player" id="player" hidden></div>
+
+<script>
+(function(){'use strict';
+const RAW=__DATA__,TODAY='2026-11-03';
+const E=RAW.map(r=>({date:r[0],type:r[1]==='s'?'sale':r[1]==='r'?'refund':'purchase',platform:r[2]||'Other',name:r[3],amount:r[4],net:r[5],qty:r[6]||1,no:r[7]||'',set:r[8]||''}));
+const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=c=>(c<0?'−':'')+'$'+(Math.abs(c)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const signed=c=>(c>=0?'+':'−')+'$'+(Math.abs(c)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const short=c=>(c<0?'−':'')+'$'+Math.round(Math.abs(c)/100).toLocaleString('en-US');
+const mName=(k,o)=>new Date(k+'-15T12:00:00').toLocaleString('en-US',o||{month:'long'});
+const dShort=d=>new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+const days=(a,b)=>Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5);
+const key=e=>e.name.toLowerCase().replace(/[^a-z0-9]/g,'')+'|'+e.no;
+const ART=['','b','g','k','o'],artCls=n=>ART[[...n].reduce((a,c)=>a+c.charCodeAt(0),0)%ART.length];
+const art=(n,st)=>'<span class="art '+artCls(n)+'"'+(st?' style="'+st+'"':'')+' aria-hidden="true">'+esc(n.replace(/^(SS|SSB)\s+/,'')[0])+'</span>';
+function tot(l){let s=0,k=0,sp=0,f=0,r=0;l.forEach(e=>{if(e.type==='sale'){s+=e.amount;k+=e.net;f+=e.amount-e.net}else if(e.type==='purchase')sp+=e.amount;else r+=e.amount});return {sales:s,kept:k-r,spent:sp,fees:f,profit:k-r-sp,n:l.length}}
+// every card bought and later sold: its journey
+const buys={},sells={};E.forEach(e=>{const k=key(e);if(e.type==='purchase')(buys[k]=buys[k]||[]).push(e);if(e.type==='sale')(sells[k]=sells[k]||[]).push(e)});
+const journeys=Object.keys(sells).filter(k=>buys[k]).map(k=>{const b=buys[k].slice().sort((x,y)=>x.date<y.date?-1:1)[0],s=sells[k].slice().sort((x,y)=>x.date<y.date?-1:1).pop(),cost=buys[k].reduce((a,e)=>a+e.amount,0),kept=sells[k].reduce((a,e)=>a+e.net,0),gross=sells[k].reduce((a,e)=>a+e.amount,0);
+  return {name:b.name,no:b.no,set:b.set,b,s,cost,kept,gross,fees:gross-kept,gain:kept-cost,held:Math.max(0,days(b.date,s.date))}}).filter(j=>j.s.date>=j.b.date).sort((x,y)=>y.gain-x.gain);
+const months=[...new Set(E.map(e=>e.date.slice(0,7)))].sort().filter(m=>m<TODAY.slice(0,7)).reverse().slice(0,12);
+// ---------- 1. tab + month covers ----------
+const seg=$('seg');function paintSeg(){const on=seg.querySelector('[aria-selected="true"]'),i=seg.querySelector('i');i.style.width=on.offsetWidth+'px';i.style.transform='translateX('+(on.offsetLeft-3)+'px)'}
+seg.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-selected',x===b));paintSeg()});requestAnimationFrame(paintSeg);addEventListener('resize',paintSeg);
+const BG=['bg-1','bg-4','bg-2','bg-5','bg-3'];
+$('covers').innerHTML=months.map((m,i)=>{const t=tot(E.filter(e=>e.date.slice(0,7)===m));return '<button class="cov '+BG[i%BG.length]+'" data-m="'+m+'"><span class="seen"></span><small>'+mName(m,{year:'numeric'})+'</small><div><b>'+mName(m)+'</b><br><em>'+(t.profit>=0?signed(t.profit):'Stocking up')+'</em></div></button>'}).join('');
+$('covers').addEventListener('click',e=>{const c=e.target.closest('[data-m]');if(c){c.classList.add('done');play(recap(c.dataset.m))}});
+// ---------- the recap: five slides, written from the month's own numbers ----------
+function recap(m){const L=E.filter(e=>e.date.slice(0,7)===m),t=tot(L),name=mName(m),pm=(()=>{const x=new Date(m+'-15T12:00:00');x.setMonth(x.getMonth()-1);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')})(),pt=tot(E.filter(e=>e.date.slice(0,7)===pm));
+  const nb=L.filter(e=>e.type==='purchase').reduce((a,e)=>a+e.qty,0),ns=L.filter(e=>e.type==='sale').reduce((a,e)=>a+e.qty,0),S=[];
+  S.push({bg:'bg-1',h:'<p class="kick">Your month</p><p class="big" style="font-size:64px">'+name+'</p><p class="line">'+(ns?ns+(ns===1?' card':' cards')+' sold':'Nothing sold')+' and '+nb+(nb===1?' card':' cards')+' bought.</p><div class="fan">'+L.slice(0,3).map(e=>art(e.name)).join('')+'</div>'});
+  const up=t.profit>=0;S.push({bg:up?'bg-2':'bg-2n',h:'<p class="kick">'+(up?'You came out ahead':'A building month')+'</p><p class="big">'+signed(t.profit)+'</p><p class="line">'+(up?'After fees and shipping, minus what you spent.':'You put '+money(t.spent)+' into new cards. That’s money on your shelf, not gone.')+'</p><div class="trio"><div><small>Sold</small><b>'+short(t.sales)+'</b></div><div><small>Spent</small><b>'+short(t.spent)+'</b></div><div><small>Fees</small><b>'+short(t.fees)+'</b></div></div>'});
+  const jm=journeys.filter(j=>j.s.date.slice(0,7)===m);
+  if(jm.length){const j=jm[0];S.push({bg:'bg-3',j,h:'<p class="kick">Best flip</p><div class="hero">'+art(j.name)+'<div><p class="mid">'+esc(j.name)+'</p><p class="big" style="font-size:44px;margin-top:10px;color:#9bd57a">'+signed(j.gain)+'</p></div></div><p class="line" style="text-align:center">Held '+j.held+' days. Tap for its story.</p>'})}
+  else{const big=L.filter(e=>e.type==='purchase').sort((a,b)=>b.amount-a.amount)[0];if(big)S.push({bg:'bg-3',h:'<p class="kick">Biggest buy</p><div class="hero">'+art(big.name)+'<div><p class="mid">'+esc(big.name)+'</p><p class="big" style="font-size:44px;margin-top:10px">'+money(big.amount)+'</p></div></div><p class="line" style="text-align:center">On '+esc(big.platform)+', '+dShort(big.date)+'.</p>'})}
+  const by={};L.filter(e=>e.type==='sale').forEach(e=>{const o=by[e.platform]||(by[e.platform]={n:0,f:0,s:0});o.n++;o.f+=e.amount-e.net;o.s+=e.amount});const tp=Object.keys(by).sort((a,b)=>by[b].s-by[a].s)[0];
+  if(tp)S.push({bg:'bg-4',h:'<p class="kick">Where you sold</p><p class="mid" style="font-size:44px">'+esc(tp)+'</p><p class="line">'+by[tp].n+(by[tp].n===1?' sale':' sales')+' worth '+money(by[tp].s)+'. Fees and shipping took '+money(by[tp].f)+', or '+(by[tp].f/Math.max(1,by[tp].s)*100).toFixed(1)+'% of each sale.</p>'});
+  const ch=pt.n?t.profit-pt.profit:null;
+  S.push({bg:'bg-5',end:true,h:'<p class="kick">That’s '+name+'</p><p class="mid">'+(ch==null?'Your first month on the books.':ch>=0?signed(ch)+' better than '+mName(pm)+'.':'Down '+short(-ch)+' from '+mName(pm)+'. Next month is a fresh start.')+'</p><p class="line">'+mName((()=>{const x=new Date(m+'-15T12:00:00');x.setMonth(x.getMonth()+1);return x.toISOString().slice(0,7)})())+'’s story shows up here when the month ends.</p><div class="sact"><button class="g" data-act="entries">See entries</button><button data-act="share">Share story</button></div>'});
+  return {title:name,slides:S}}
+function journeySlides(j){return {title:j.name,slides:[
+  {bg:'bg-3',h:'<p class="kick">A card’s story</p><div class="hero">'+art(j.name)+'<div><p class="mid">'+esc(j.name)+'</p><p class="line" style="margin-top:6px">'+esc([j.no,j.set].filter(Boolean).join(' · '))+'</p></div></div>'},
+  {bg:'bg-4',h:'<p class="kick">Start to finish</p><p class="mid">'+j.held+' days in your collection</p><div class="tl"><div><i></i><div><b>Bought</b><small>'+dShort(j.b.date)+' · '+esc(j.b.platform)+'</small></div><span>'+money(j.cost)+'</span></div><div><i></i><div><b>Sold</b><small>'+dShort(j.s.date)+' · '+esc(j.s.platform)+'</small></div><span>'+money(j.gross)+'</span></div><div><i></i><div><b>Fees and shipping</b><small>What the platform and postage took</small></div><span>−'+money(j.fees).replace('−','')+'</span></div></div>'},
+  {bg:j.gain>=0?'bg-2':'bg-2n',end:true,h:'<p class="kick">'+(j.gain>=0?'You made':'You lost')+'</p><p class="big">'+signed(j.gain)+'</p><p class="line">'+(j.cost?(j.gain/j.cost*100).toFixed(0)+'% on what you paid.':'')+'</p><div class="sact"><button data-act="share">Share story</button></div>'}]}}
+// ---------- the player: tap right for next, left for back, hold to pause; GPU-only progress ----------
+const P=$('player');let st=null;
+function play(story){st={s:story,i:0,t0:0,raf:0,paused:false,dur:5200,el:0};P.innerHTML='<div class="story" role="dialog" aria-label="'+esc(story.title)+' story"><div class="bars">'+story.slides.map(()=>'<span><i></i></span>').join('')+'</div><div class="shead"><span class="lg">C</span><span>Card Tab · '+esc(story.title)+'</span><button class="x" aria-label="Close">✕</button></div><div class="stage"></div><button class="tap l" aria-label="Previous"></button><button class="tap r" aria-label="Next"></button></div>';P.hidden=false;P.classList.remove('out');show(0);document.addEventListener('keydown',keys)}
+function show(i){const sl=st.s.slides[i];st.i=i;st.el=0;st.t0=performance.now();const story=P.querySelector('.story');story.className='story '+sl.bg;
+  const stage=P.querySelector('.stage');stage.innerHTML='<div class="slide in">'+sl.h+'</div>';
+  P.querySelectorAll('.bars i').forEach((b,k)=>{b.style.transition='none';b.style.width=k<i?'100%':'0'});
+  const cur=P.querySelectorAll('.bars i')[i];void cur.offsetWidth;cur.style.transition='width '+st.dur+'ms linear';cur.style.width='100%';
+  clearTimeout(st.raf);if(!sl.end)st.raf=setTimeout(()=>next(),st.dur);
+  stage.onclick=e=>{const a=e.target.closest('[data-act]');if(a){e.stopPropagation();a.textContent=a.dataset.act==='share'?'Saved as an image in the app':'Opens your entries in the app';return}if(sl.j&&e.target.closest('.hero')){close(()=>play(journeySlides(sl.j)))}}}
+function next(){if(st.i<st.s.slides.length-1)show(st.i+1);else close()}
+function prev(){show(Math.max(0,st.i-1))}
+function close(after){clearTimeout(st&&st.raf);document.removeEventListener('keydown',keys);P.classList.add('out');setTimeout(()=>{P.hidden=true;P.innerHTML='';if(after)after()},190)}
+function keys(e){if(e.key==='Escape')close();else if(e.key==='ArrowRight')next();else if(e.key==='ArrowLeft')prev()}
+P.addEventListener('click',e=>{if(e.target===P)close();else if(e.target.closest('.x'))close();else if(e.target.closest('.tap.r'))next();else if(e.target.closest('.tap.l'))prev();else if(e.target.closest('.hero')&&st.s.slides[st.i].j){}});
+// hold to pause: the progress bar freezes where it is
+P.addEventListener('pointerdown',e=>{if(!e.target.closest('.tap'))return;const sl=st.s.slides[st.i];if(sl.end)return;st.hold=setTimeout(()=>{st.paused=true;clearTimeout(st.raf);const b=P.querySelectorAll('.bars i')[st.i],w=getComputedStyle(b).width;b.style.transition='none';b.style.width=w;st.el=performance.now()-st.t0},180)});
+P.addEventListener('pointerup',e=>{clearTimeout(st&&st.hold);if(st&&st.paused){st.paused=false;e.stopPropagation();const left=Math.max(300,st.dur-st.el),b=P.querySelectorAll('.bars i')[st.i];void b.offsetWidth;b.style.transition='width '+left+'ms linear';b.style.width='100%';st.raf=setTimeout(next,left);P.dataset.skip='1';setTimeout(()=>delete P.dataset.skip,0)}},true);
+P.addEventListener('click',e=>{if(P.dataset.skip){e.stopPropagation()}},true);
+// ---------- 2. journeys ----------
+$('jrow').innerHTML=journeys.slice(0,8).map((j,i)=>'<button class="jc" data-j="'+i+'" style="text-align:left;cursor:pointer;font:inherit;color:inherit">'+art(j.name)+'<div><b>'+esc(j.name)+'</b><small>'+dShort(j.b.date)+' → '+dShort(j.s.date)+' · '+j.held+' days</small><div class="gain'+(j.gain<0?' l':'')+'">'+signed(j.gain)+'</div></div><div class="jbar">Paid '+short(j.cost)+'<span><i style="width:'+Math.min(100,j.cost/Math.max(1,j.kept)*100).toFixed(0)+'%"></i></span>Kept '+short(j.kept)+'</div></button>').join('');
+$('jrow').addEventListener('click',e=>{const c=e.target.closest('[data-j]');if(c)play(journeySlides(journeys[+c.dataset.j]))});
+// ---------- 3. milestones ----------
+const mt={};E.forEach(e=>{const m=e.date.slice(0,7);(mt[m]=mt[m]||[]).push(e)});const best=Object.keys(mt).map(m=>({m,p:tot(mt[m]).profit})).sort((a,b)=>b.p-a.p)[0];
+const sales=E.filter(e=>e.type==='sale').sort((a,b)=>a.date<b.date?-1:1),bigSale=sales.slice().sort((a,b)=>b.amount-a.amount)[0];
+const IC={star:'<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.6 1-5.8-4.3-4.1 5.9-.9z"/>',up:'<path d="M4 17l6-6 4 4 6-7M14 8h6v6"/>',tag:'<path d="M3 12V4h8l9 9-8 8z"/><circle cx="7.5" cy="8.5" r="1.4"/>',hash:'<path d="M5 9h14M5 15h14M10 4L8 20M16 4l-2 16"/>'};
+const icon=n=>'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+IC[n]+'</svg>';
+const ms=[[ 'up','Best month so far',mName(best.m,{month:'long',year:'numeric'})+' · '+signed(best.p)+' profit',best.m+'-28'],['star','Biggest single sale',esc(bigSale.name)+' · '+money(bigSale.amount),bigSale.date],['hash',sales.length+' cards sold','Since your first sale on '+dShort(sales[0].date)+', '+sales[0].date.slice(0,4),sales[sales.length-1].date],['tag','Best flip ever',esc(journeys[0].name)+' · '+signed(journeys[0].gain),journeys[0].s.date]];
+$('ms').innerHTML=ms.map(([i,b,s,d])=>'<div class="m"><span class="ic">'+icon(i)+'</span><div><b>'+b+'</b><small>'+s+'</small></div><span class="d">'+dShort(d)+'</span></div>').join('');
+// ---------- 4. card-art widgets ----------
+const recentSales=sales.slice().reverse().slice(0,3),recentBuys=E.filter(e=>e.type==='purchase').sort((a,b)=>a.date<b.date?1:-1).slice(0,3);
+const soldKeys=new Set(Object.keys(sells)),holding=E.filter(e=>e.type==='purchase'&&!soldKeys.has(key(e))).sort((a,b)=>a.date<b.date?1:-1),hv=holding.reduce((a,e)=>a+e.amount,0);
+const losses=journeys.filter(j=>j.gain<0).sort((a,b)=>a.gain-b.gain);
+const fan=(list,val)=>'<div class="wfan">'+list.map(e=>art(e.name)).join('')+'<div class="lst">'+list.map(e=>'<div>'+val(e)+'<small>'+dShort(e.date)+'</small></div>').join('')+'</div></div>';
+const W=[
+ ['Recent sales',fan(recentSales,e=>money(e.amount)),'Your last three sales, newest in front.'],
+ ['Top sales','<div class="tops">'+sales.slice().sort((a,b)=>b.amount-a.amount).slice(0,4).map(e=>'<div><span class="crop">'+art(e.name)+'</span><b>'+short(e.amount)+'</b><small>'+esc(e.name)+'</small></div>').join('')+'</div>','Your biggest sales. Just the top of each card, so four fit cleanly.','wide'],
+ ['Still holding','<div class="hsum"><b>'+holding.length+' cards</b><span>you paid '+short(hv)+'</span></div><div class="hold">'+holding.slice(0,6).map(e=>'<div>'+art(e.name)+'<small>'+short(e.amount)+'</small></div>').join('')+'</div>','Cards you bought and haven’t sold yet.','wide'],
+ ['Biggest loss',losses.length?'<div class="one">'+art(losses[0].name)+'<div><b>'+esc(losses[0].name)+'</b><small>Bought '+short(losses[0].cost)+' · kept '+short(losses[0].kept)+'</small><div class="amt l">'+signed(losses[0].gain)+'</div></div></div>':'<p class="why" style="margin:auto 0">No losing flips. Nice.</p>','The other side of Biggest win.'],
+ ['Recent buys',fan(recentBuys,e=>money(e.amount)),'What just came into your collection.']];
+$('wg').innerHTML=W.map(([t,b,why,cls])=>'<div class="w '+(cls||'')+'"><span class="t">'+t+'</span>'+b+'<span class="why">'+why+'</span></div>').join('');
+})();
+</script>

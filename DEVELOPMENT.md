@@ -220,3 +220,11 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
   - the profile picture pops in, the Ask sparkle gives a little spin, and Copy link turns green with "Copied ✓"
   - at a 4× slowed CPU, Share, Profile and Ask open with 1–2 slow frames out of about 40
 - Empty-board hints are on hold until Card Board moves into the app (they depend on how adding entries works there).
+
+### Card Stories preview (Nov 4)
+- Nick: keep Card Board and Stories clean and simple. No customization in Stories.
+- `tools/stories.tpl.html` (data injected from cb-data2.json) has four working mocks:
+  1. A Board | Stories switch with month covers; tap one for a full-screen recap: tap right or left, hold to pause, Escape or ✕ to close. Five slides written from the month's numbers: cover, money (positive "You came out ahead" or kind "A building month"), best flip (tap for its journey) or biggest buy, where you sold with fees, then a wrap-up vs last month with See entries / Share story.
+  2. Card journeys: each bought-and-sold card as a 3-slide story (bought → sold → fees → result).
+  3. Milestones (could come later).
+  4. Card-art widgets: Recent sales (fan), Top sales (card tops), Still holding (art grid plus total paid), Biggest loss, Recent buys.
