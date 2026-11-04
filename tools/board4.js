@@ -99,7 +99,7 @@ function widgetHTML(w,ctx,forceCls){
   const sz=forceCls||(phone.matches?(w.size==='S'&&KPI[w.k]?'pS':'pF'):'sz'+w.size); // phones: number widgets two across, everything else full width
   return '<section class="w wq '+cls+' '+sz+'" data-k="'+w.k+'"><div class="wh"><h3 class="ttl" style="margin:0">'+CATALOG[w.k].t+'</h3><button type="button" class="wmore" aria-label="Options for '+CATALOG[w.k].t+'" aria-haspopup="true">⋯</button></div>'+body(w.k,ctx)+
     '<div class="wt"><button type="button" class="drag" aria-label="Move '+CATALOG[w.k].t+'" title="Drag to move"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></button><button type="button" class="mv" data-move="-1" aria-label="Move up">↑</button><button type="button" class="mv" data-move="1" aria-label="Move down">↓</button><button type="button" class="rm" aria-label="Remove '+CATALOG[w.k].t+'">✕</button></div>'+
-    '<button type="button" class="grip" aria-label="Resize '+CATALOG[w.k].t+'. Now '+SIZE_NAMES[w.size]+'" title="Drag to resize"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M13 5L5 13M13 9.5L9.5 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><span class="szlab" aria-hidden="true"></span></section>'}
+    (phone.matches&&!KPI[w.k]?'':'<button type="button" class="grip" aria-label="Resize '+CATALOG[w.k].t+'. Now '+SIZE_NAMES[w.size]+'" title="Drag to resize"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M13 5L5 13M13 9.5L9.5 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>')+'</section>'}
 
 // ---------- interactions inside widgets, matching the site ----------
 function wire(root,ctx){
@@ -137,6 +137,7 @@ function pickMenu(btn,menuEl,items,cur,onPick){
   menuEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;onPick(b.dataset.k,b.textContent);closeMenus()})}
 pickMenu($('cb-per'),$('cb-menu'),()=>PERIODS,()=>period,(k,l)=>{period=k;$('cb-perl').textContent=l;render(false);grow()});
 pickMenu($('cb-plat'),$('cb-pmenu'),()=>[['all','All platforms']].concat([...new Set(E.map(e=>e.platform))].sort().map(p=>[p,p])),()=>plat,(k,l)=>{plat=k;$('cb-platl').textContent=l;render(false);grow()});
+$('cb-acct').addEventListener('click',e=>{e.stopPropagation();hideTip();const m=$('cb-amenu'),o=m.hidden;closeMenus();if(o){m.hidden=false;$('cb-acct').setAttribute('aria-expanded','true')}});
 document.addEventListener('click',e=>{if(!e.target.closest('.perwrap')&&!e.target.closest('#wmenu'))closeMenus();if(!e.target.closest('#cb [data-tip]'))hideTip()});
 
 // ---------- customize ----------
@@ -151,51 +152,60 @@ $('simple').addEventListener('click',e=>{
   const more=e.target.closest('.wmore');if(more){e.stopPropagation();openWidgetMenu(more,layout[i])}
 });
 function setSize(k,s){const w=layout.find(x=>x.k===k);if(!w||w.size===s)return;const before=rects();w.size=s;const el=$('simple').querySelector('[data-k="'+k+'"]');
-  if(el){el.classList.remove('szS','szM','szL','pS','pF');el.classList.add(phone.matches?(s==='S'&&KPI[k]?'pS':'pF'):'sz'+s);el.querySelector('.grip').setAttribute('aria-label','Resize '+CATALOG[k].t+'. Now '+SIZE_NAMES[s])}
+  if(el){el.classList.remove('szS','szM','szL','pS','pF');el.classList.add(phone.matches?(s==='S'&&KPI[k]?'pS':'pF'):'sz'+s);const gp=el.querySelector('.grip');if(gp)gp.setAttribute('aria-label','Resize '+CATALOG[k].t+'. Now '+SIZE_NAMES[s])}
   flip(before);save()}
 // widget menu (⋯): size and remove
 function openWidgetMenu(btn,w){closeMenus();hideTip();const m=$('wmenu');
   m.innerHTML='<div class="mh">Size</div><div class="msz">'+ORDER.map(s=>'<button type="button" data-msize="'+s+'" aria-pressed="'+(w.size===s)+'">'+SIZE_NAMES[s]+'</button>').join('')+'</div><button type="button" data-act="rm" class="danger">Remove from board</button>';
   const r=btn.getBoundingClientRect(),host=$('cb').getBoundingClientRect();m.hidden=false;m.style.top=(r.bottom-host.top+6)+'px';m.style.left=Math.max(8,Math.min(r.right-host.left-236,host.width-244))+'px';
   m.onclick=ev=>{const b=ev.target.closest('button');if(!b)return;m.hidden=true;if(b.dataset.msize){setSize(w.k,b.dataset.msize);return}const i=layout.findIndex(x=>x.k===w.k);layout.splice(i,1);save();render(true)}}
-// corner resize: drag the grip and the widget snaps between Small, Medium and Large; the board makes room as you go
-let rz=null;
-// nearest size for the width being dragged (in a narrow window Small and Medium share half the width)
-function snapTo(r){const want=(r.x+r.gap)/(r.col+r.gap);let best=null,bd=Infinity;ORDER.forEach(sz=>{const d=Math.abs(r.eff[sz]-want);if(d<bd-0.001){bd=d;best=sz}});const cur=layout.find(x=>x.k===r.k).size;return r.eff[cur]===r.eff[best]?cur:best}
-// Live corner resize: the widget's edge follows the cursor, its contents rearrange as it changes width (container queries),
-// and the widgets around it make room whenever it needs another column. On release it glides to the nearest of S, M or L.
-const effCols=()=>$('simple').getBoundingClientRect().width>1000?{S:3,M:6,L:12}:{S:6,M:6,L:12};
+// ---------- corner resize ----------
+// Grab anywhere near the corner. The widget's content steps aside and a clean card follows the cursor over a faint
+// column grid, with a dashed outline showing exactly where the edge will land (Small, Medium or Large). Nothing else
+// moves while you drag. On release the card glides into place, the board settles once, and the content fades back in,
+// already arranged for its new size.
+let rz=null,drag=null;
+function gridSpec(){const g=$('simple'),r=g.getBoundingClientRect(),gap=parseFloat(getComputedStyle(g).columnGap)||14,col=(r.width-11*gap)/12,ph=phone.matches;
+  return {r,gap,col,ph,eff:ph?{S:6,M:12,L:12}:r.width>1000?{S:3,M:6,L:12}:{S:6,M:6,L:12}}}
+const spanW=(g,n)=>n*g.col+(n-1)*g.gap;
+function snapSize(x,g,k){let best='S',bd=Infinity;ORDER.forEach(sz=>{const d=Math.abs(spanW(g,g.eff[sz])-x);if(d<bd-0.5){bd=d;best=sz}});const cur=layout.find(w=>w.k===k).size;return g.eff[cur]===g.eff[best]?cur:best}
+function rzLayers(g){const sim=$('simple');let ov=$('rzgrid');if(!ov){ov=document.createElement('div');ov.id='rzgrid';ov.className='rzgrid';ov.setAttribute('aria-hidden','true');sim.appendChild(ov)}
+  const n=g.ph?2:12;ov.style.gridTemplateColumns='repeat('+n+',minmax(0,1fr))';ov.innerHTML='<i></i>'.repeat(n);
+  const o=document.createElement('div');o.className='rzo';o.setAttribute('aria-hidden','true');const c=document.createElement('div');c.className='rzg';c.setAttribute('aria-hidden','true');sim.appendChild(o);sim.appendChild(c);return {o,c}}
+function placeRz(){if(!rz)return;rz.raf=0;const g=rz.g,W=g.r.width,x=rz.x,s=snapSize(x,g,rz.k),sw=spanW(g,g.eff[s]);
+  rz.c.style.width=x+'px';rz.c.style.left=Math.max(0,Math.min(rz.left,W-x))+'px';
+  rz.o.style.width=sw+'px';rz.o.style.left=Math.max(0,Math.min(rz.left,W-sw))+'px';
+  if(rz.s!==s){rz.s=s;rz.c.querySelector('.rzs').textContent=SIZE_NAMES[s]}}
 $('simple').addEventListener('pointerdown',e=>{
-  const g=e.target.closest('.grip');
-  if(g&&editing){const sec=g.closest('[data-k]'),grid=$('simple').getBoundingClientRect(),gap=parseFloat(getComputedStyle($('simple')).columnGap)||14,r=sec.getBoundingClientRect();e.preventDefault();$('simple').setPointerCapture(e.pointerId);
-    const col=(grid.width-11*gap)/12,eff=effCols();
-    rz={k:sec.dataset.k,el:sec,sx:e.clientX,sw:r.width,max:grid.width,f:Math.max(1,(grid.width-r.width)/Math.max(60,innerWidth-16-e.clientX)),col,gap,eff,min:eff.S*col+(eff.S-1)*gap,n:Math.round((r.width+gap)/(col+gap)),x:r.width,raf:0};
-    sec.classList.add('resizing');sec.style.justifySelf='start';sec.style.width=r.width+'px';sec.style.gridColumn='span '+rz.n;hideTip();return}
+  const gr=e.target.closest('.grip');
+  if(gr&&editing){const sec=gr.closest('[data-k]'),g=gridSpec(),r=sec.getBoundingClientRect();e.preventDefault();$('simple').setPointerCapture(e.pointerId);hideTip();
+    const left=r.left-g.r.left,top=r.top-g.r.top,room=Math.max(60,(e.pointerType==='touch'?innerWidth-8:innerWidth-16)-e.clientX);
+    const {o,c}=rzLayers(g);c.innerHTML='<span class="ttl">'+CATALOG[sec.dataset.k].t+'</span><span class="rzs"></span>';
+    [o,c].forEach(el=>{el.style.top=top+'px';el.style.height=r.height+'px'});
+    rz={k:sec.dataset.k,el:sec,g,o,c,left,top,h:r.height,sx:e.clientX,w0:r.width,x:r.width,s:null,raf:0,f:Math.max(1,(g.r.width-r.width)/room)};
+    placeRz();sec.classList.add('rz-src');$('cb').classList.add('rzing');return}
   const h=e.target.closest('.drag');if(h&&editing){const sec=h.closest('[data-k]');e.preventDefault();$('simple').setPointerCapture(e.pointerId);drag={k:sec.dataset.k,el:sec,x:e.clientX,y:e.clientY};sec.classList.add('lifted')}});
 $('simple').addEventListener('pointermove',e=>{
-  if(rz){rz.x=Math.max(rz.min,Math.min(rz.max,rz.sw+(e.clientX-rz.sx)*rz.f)); // the edge follows the cursor; near the screen's right edge it grows faster so Large is still reachable
-    if(!rz.raf)rz.raf=requestAnimationFrame(()=>{if(!rz)return;rz.raf=0;const el=rz.el;el.style.width=rz.x+'px';
-      const n=Math.max(1,Math.min(12,Math.ceil((rz.x+rz.gap)/(rz.col+rz.gap)-0.02)));
-      if(n!==rz.n){const before=rects();rz.n=n;el.style.gridColumn='span '+n;flip(before,rz.k)}
-      el.querySelector('.szlab').textContent=SIZE_NAMES[snapTo(rz)]});
-    return}
+  if(rz){const g=rz.g;rz.x=Math.max(spanW(g,g.eff.S),Math.min(g.r.width,rz.w0+(e.clientX-rz.sx)*rz.f));if(!rz.raf)rz.raf=requestAnimationFrame(placeRz);return}
   if(!drag)return;drag.el.style.transform='translate('+(e.clientX-drag.x)+'px,'+(e.clientY-drag.y)+'px) scale(1.02)';
   const over=[...$('simple').querySelectorAll('[data-k]')].find(el=>{if(el===drag.el)return false;const r=el.getBoundingClientRect();return e.clientX>r.left&&e.clientX<r.right&&e.clientY>r.top&&e.clientY<r.bottom});
   $('simple').querySelectorAll('.drop').forEach(el=>el.classList.remove('drop'));if(over)over.classList.add('drop');drag.over=over?over.dataset.k:null});
-let drag=null;
 function endPointer(){
-  if(rz){const r=rz;rz=null;if(r.raf)cancelAnimationFrame(r.raf);const el=r.el,w=layout.find(x=>x.k===r.k),size=snapTo(r),curW=el.getBoundingClientRect().width,before=rects();
-    w.size=size;save();el.classList.remove('szS','szM','szL','pS','pF');el.classList.add(phone.matches?(size==='S'&&KPI[r.k]?'pS':'pF'):'sz'+size);
-    el.style.gridColumn='';el.style.width='';const finalW=el.getBoundingClientRect().width;flip(before,r.k);
-    el.querySelector('.grip').setAttribute('aria-label','Resize '+CATALOG[r.k].t+'. Now '+SIZE_NAMES[size]);
-    const done=()=>{el.style.justifySelf='';el.style.width='';el.classList.remove('resizing')};
-    if(calm.matches||Math.abs(finalW-curW)<1){done();return}
-    el.style.width=curW+'px';void el.offsetWidth;el.style.transition='width .32s cubic-bezier(.2,.7,.2,1)';el.style.width=finalW+'px';
-    setTimeout(()=>{el.style.transition='';done()},340);return}
-
+  if(rz){const r=rz;rz=null;if(r.raf)cancelAnimationFrame(r.raf);placeRzFinal(r);return}
   if(!drag)return;const d=drag;drag=null;d.el.classList.remove('lifted');$('simple').querySelectorAll('.drop').forEach(el=>el.classList.remove('drop'));
   if(d.over){d.el.style.transform='';const from=layout.findIndex(w=>w.k===d.k),to=layout.findIndex(w=>w.k===d.over);const [w]=layout.splice(from,1);layout.splice(to,0,w);save();render(true)}
   else{d.el.style.transition='transform .3s cubic-bezier(.2,.7,.2,1)';d.el.style.transform='';setTimeout(()=>{d.el.style.transition=''},320)}}
+function placeRzFinal(r){
+  const g=r.g,size=snapSize(r.x,g,r.k),w=layout.find(x=>x.k===r.k),el=r.el,before=rects();
+  w.size=size;save();el.classList.remove('szS','szM','szL','pS','pF');el.classList.add(phone.matches?(size==='S'&&KPI[r.k]?'pS':'pF'):'sz'+size);
+  const gp=el.querySelector('.grip');if(gp)gp.setAttribute('aria-label','Resize '+CATALOG[r.k].t+'. Now '+SIZE_NAMES[size]);
+  const gr=$('simple').getBoundingClientRect(),f=el.getBoundingClientRect();flip(before,r.k);
+  const finish=()=>{r.c.remove();r.o.remove();$('cb').classList.remove('rzing');el.classList.remove('rz-src');if(!calm.matches){el.classList.add('rz-in');setTimeout(()=>el.classList.remove('rz-in'),300)}};
+  r.o.style.opacity='0';
+  if(calm.matches){finish();return}
+  r.c.style.transition='left .34s cubic-bezier(.2,.7,.2,1),top .34s cubic-bezier(.2,.7,.2,1),width .34s cubic-bezier(.2,.7,.2,1),height .34s cubic-bezier(.2,.7,.2,1)';
+  void r.c.offsetWidth;r.c.style.left=(f.left-gr.left)+'px';r.c.style.top=(f.top-gr.top)+'px';r.c.style.width=f.width+'px';r.c.style.height=f.height+'px';
+  setTimeout(finish,350)}
 $('simple').addEventListener('pointerup',endPointer);$('simple').addEventListener('pointercancel',endPointer);
 // keyboard: arrow keys on the grip change size
 $('simple').addEventListener('keydown',e=>{const g=e.target.closest('.grip');if(!g)return;const k=g.closest('[data-k]').dataset.k,w=layout.find(x=>x.k===k),i=ORDER.indexOf(w.size);
@@ -242,4 +252,4 @@ function close(){
 xb.addEventListener('click',open);$('close').addEventListener('click',close);
 document.addEventListener('click',e=>{const wm=$('wmenu');if(!wm.hidden&&!e.target.closest('#wmenu')&&!e.target.closest('.wmore'))wm.hidden=true});
 cbx.addEventListener('scroll',hideTip,{passive:true});
-document.addEventListener('keydown',e=>{if(e.key!=='Escape'||cbx.hidden||aw.open)return;if(!$('wmenu').hidden){$('wmenu').hidden=true;return}if(!$('cb-menu').hidden||!$('cb-pmenu').hidden){closeMenus();return}if(editing){setEditing(false);return}close()});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape'||cbx.hidden||aw.open)return;if(!$('wmenu').hidden){$('wmenu').hidden=true;return}if(!$('cb-menu').hidden||!$('cb-pmenu').hidden||!$('cb-amenu').hidden){closeMenus();return}if(editing){setEditing(false);return}close()});

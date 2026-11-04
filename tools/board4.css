@@ -159,3 +159,38 @@
 @media(max-width:1000px){.cbx #cb.editing .ehint{display:none}}
 /* move-up/down and phone layout follow the same 600px line as the board layout */
 @media(max-width:760px) and (min-width:601px){.cbx #cb .wt .drag{display:grid}.cbx #cb .wt .mv{display:none}}
+/* ================= v5: precise, smooth corner resize ================= */
+.cbx #cb .simple{position:relative}
+/* a generous grab area around the corner grip */
+.cbx #cb .grip{width:34px;height:34px;right:8px;bottom:8px;border-radius:10px}
+.cbx #cb .grip::before{content:"";position:absolute;inset:-18px -8px -8px -18px;border-radius:14px}
+@media(hover:none),(pointer:coarse){.cbx #cb.editing .grip{display:grid;width:40px;height:40px}}
+/* faint column grid behind the board while resizing */
+.cbx #cb .rzgrid{position:absolute;inset:0;display:grid;column-gap:inherit;pointer-events:none;opacity:0;transition:opacity .2s ease;z-index:0}
+.cbx #cb .rzgrid i{border-radius:12px;background:color-mix(in srgb,var(--chip-ink) 5%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--chip-ink) 14%,transparent)}
+.cbx #cb.rzing .rzgrid{opacity:1}
+
+/* where the edge will land */
+.cbx #cb .rzo{position:absolute;z-index:3;border:2px dashed var(--brand);border-radius:22px;background:color-mix(in srgb,var(--brand) 5%,transparent);pointer-events:none;transition:left .16s cubic-bezier(.2,.7,.2,1),width .16s cubic-bezier(.2,.7,.2,1),opacity .2s ease}
+/* the clean card that follows the cursor */
+.cbx #cb .rzg{position:absolute;z-index:4;pointer-events:none;background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:0 18px 44px rgba(0,0,0,.16);padding:22px 24px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;will-change:width,left}
+.cbx #cb .rzg .ttl{font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cbx #cb .rzg .rzs{align-self:flex-end;font-size:12.5px;font-weight:800;background:var(--text);color:var(--bg);border-radius:999px;padding:4px 11px}
+.cbx #cb .simple>.w.rz-src{opacity:0!important;transition:none}
+/* content returns, already arranged for the new size */
+.cbx #cb .rz-in>*:not(.wt):not(.grip){animation:rzin .28s ease both}
+@keyframes rzin{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.cbx #cb .rz-in>*{animation:none}.cbx #cb .rzo{transition:none}}
+.cbx #cb.rzing,.cbx #cb.rzing *{cursor:nwse-resize!important;user-select:none}
+/* back to the dashboard, and the account on the right */
+.cbx .back{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:8px 14px 8px 9px;font-weight:750;font-size:13.5px;white-space:nowrap;flex:none;transition:border-color .2s}
+.cbx .back:hover{border-color:var(--muted)}
+.cbx #cb .cbt{margin:0 auto 0 4px}
+.cbx .acct{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--text);font-weight:800;font-size:15px;position:relative;flex:none}
+.cbx .acct::after{content:"";position:absolute;right:-1px;bottom:-1px;width:12px;height:12px;border-radius:50%;background:var(--brand);border:2px solid var(--cb-alt)}
+.cbx #cb .acctw .cb-menu{right:0;left:auto;min-width:240px}
+.cbx #cb .am1{display:flex;align-items:center;gap:8px;padding:10px 14px 2px}.cbx #cb .am1 b{font-size:15px}
+.cbx #cb .prem2{background:var(--brand);color:#fff;border-radius:999px;font-size:11px;font-weight:750;padding:2px 9px}
+.cbx #cb .am2{padding:0 14px 8px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);margin-bottom:4px}
+.cbx #cb .acctw .cb-menu button[aria-checked]::after{content:none}
+@media(max-width:760px){.cbx .back span{display:none}.cbx .back{padding:9px}.cbx #cb .cbt{order:1}.cbx .back{order:0}.cbx #cb .acctw{order:2}.cbx .tctl{order:3}}

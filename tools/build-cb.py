@@ -4,6 +4,7 @@ board_css=open('board-part.html').read().replace('__SITECSS__',open('site-cb.css
 markup='''<section class="cbx enter" id="cbx" hidden role="dialog" aria-modal="true" aria-label="Card Board">
 <div id="cb"><div class="frame">
   <div class="topbar">
+    <button class="back" id="close" type="button" aria-label="Back to dashboard"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span>Dashboard</span></button>
     <h1 class="cbt">Card Board <span class="prem"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/></svg>Premium</span></h1>
     <div class="tctl">
     <span class="ehint">Drag a corner to resize · drag ⠿ to move</span><button type="button" class="tlink" id="cb-reset" hidden>Reset to default</button>
@@ -11,7 +12,7 @@ markup='''<section class="cbx enter" id="cbx" hidden role="dialog" aria-modal="t
     <div class="perwrap"><button type="button" class="pill alt" id="cb-plat" aria-haspopup="true" aria-expanded="false"><span id="cb-platl">All platforms</span> <i>▾</i></button><div class="cb-menu" id="cb-pmenu" hidden role="menu"></div></div>
     <div class="perwrap"><button type="button" class="pill on" id="cb-per" aria-haspopup="true" aria-expanded="false"><span id="cb-perl">Last 12 months</span> <i>▾</i></button><div class="cb-menu" id="cb-menu" hidden role="menu"></div></div>
     </div>
-    <button class="close" id="close" type="button" aria-label="Close Card Board"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg></button>
+    <div class="perwrap acctw"><button type="button" class="acct" id="cb-acct" aria-haspopup="true" aria-expanded="false" aria-label="Account">N</button><div class="cb-menu" id="cb-amenu" hidden role="menu"><div class="am1"><b>Nick</b><span class="prem2">✦ Premium</span></div><div class="am2">nklenchik@gmail.com</div><button type="button">Settings</button><button type="button">Export everything</button><button type="button">Sign out</button></div></div>
   </div>
   <div class="simple" id="simple"></div>
 </div>
