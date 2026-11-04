@@ -446,3 +446,6 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 ## v26.5: Featured edit controls
 - Featured no longer clips its own edit controls: the art layer clips to the rounded corners instead of the tile, so the remove ✕ and the resize corner show in full.
 - Board files load with `?v=` (board-loader.js `V`); bump it whenever board.css/board.js change so phones don't reuse an old copy.
+
+## v26.6: Done from anywhere
+- In edit mode on phones, once the top Done scrolls away, the slim bar shows a crimson Done pill in place of the time-range pill.

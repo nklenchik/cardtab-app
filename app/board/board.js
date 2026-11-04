@@ -1008,6 +1008,9 @@ if(V==='A'){
   slim.innerHTML='<button type="button" class="sback" aria-label="Back to dashboard" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button><b>Card Board</b><button type="button" class="spill" tabindex="-1"><span></span> <i>▾</i></button>';
   CBROOT.appendChild(slim);
   slim.querySelector('.sback').addEventListener('click',()=>$('close').click());
+  // edit mode: Done rides along in the slim bar, so you can finish from anywhere on the board
+  const sdone=document.createElement('button');sdone.type='button';sdone.className='sdone';sdone.tabIndex=-1;sdone.textContent='Done';slim.appendChild(sdone);
+  sdone.addEventListener('click',()=>{if(editing)setEditing(false)});
   slim.querySelector('.spill').addEventListener('click',()=>{cbx.scrollTo({top:0,behavior:calm.matches?'auto':'smooth'});setTimeout(()=>$('cb-per').click(),calm.matches?0:380)});
 }
 function place(){const ph=PH.matches;
