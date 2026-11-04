@@ -438,13 +438,15 @@ const CATS={profit:'num',sales:'num',spent:'num',fees:'num',sell:'num',win:'num'
 const PLUS_I='<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
 const CHECK_I='<svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.4l2.6 2.5L11 4.4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 let added={},awCat='all';
-function openAdd(){added={};awCat='all';$('aw-q').value='';$('aw-cats').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c==='all'));aw.showModal();drawThumbs()}
+function openAdd(){$('aw-hint').textContent=AW_TIP;$('aw-hint').classList.remove('msg');added={};awCat='all';$('aw-q').value='';$('aw-cats').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c==='all'));aw.showModal();drawThumbs()}
 function drawThumbs(){const g=gridSpec(),W=g.col,H=g.row,ctx=ctxNow(),q=$('aw-q').value.trim().toLowerCase(),host=$('aw-list');
   const keys=Object.keys(CATALOG).filter(k=>(awCat==='all'||CATS[k]===awCat)&&(!q||(CATALOG[k].t+' '+CATALOG[k].d).toLowerCase().includes(q)));
   host.innerHTML=keys.length?keys.map(k=>'<div role="button" tabindex="0" class="thumb'+(added[k]?' added':'')+'" data-k="'+k+'" aria-pressed="'+!!added[k]+'" aria-label="'+(added[k]?'Remove ':'Add ')+CATALOG[k].t+'"><span class="tbox"><span class="tin">'+widgetHTML({id:'pv'+k,k,size:'S'},ctx,'pv')+'</span></span><span class="badge">'+(added[k]?CHECK_I:PLUS_I)+'</span></div>').join(''):'<p class="awnone">No widgets match “'+esc(q)+'”.</p>';
   host.querySelectorAll('.tbox').forEach(bx=>{const sc=bx.clientWidth/W,inn=bx.firstChild,el=inn.firstChild;el.style.width=W+'px';el.style.height=H+'px';inn.style.transform='scale('+sc+')';bx.style.height=(H*sc)+'px'});
   wire(host,ctx)}
-function awToast(m){const t=$('aw-t');t.textContent=m;t.classList.add('on');clearTimeout(awToast.h);awToast.h=setTimeout(()=>t.classList.remove('on'),1600)}
+// the tip line under the gallery briefly becomes the confirmation, then goes back; nothing floats over anything
+const AW_TIP='Tap to add · tap again to remove · resize from the corner on your board';
+function awToast(m){const t=$('aw-hint');clearTimeout(awToast.h);t.classList.remove('msg');void t.offsetWidth;t.textContent=m;t.classList.add('msg');awToast.h=setTimeout(()=>{t.classList.remove('msg');t.textContent=AW_TIP},1800)}
 $('aw-q').addEventListener('input',drawThumbs);
 $('aw-list').addEventListener('keydown',e=>{const th=e.target.closest('.thumb');if(th&&(e.key==='Enter'||e.key===' ')){e.preventDefault();th.click()}});
 $('aw-cats').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;awCat=b.dataset.c;$('aw-cats').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));drawThumbs()});

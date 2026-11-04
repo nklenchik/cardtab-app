@@ -238,3 +238,4 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - Phone Wide lists show 2 rows instead of 3.
 - `tools/t57.js` sweep: no overflow at any size, compare mode or range.
 - Next: rebuild the Card Stories preview to match the original site design: 4–5 story cards, a Showing switch per card, 20+ themes, tap to enlarge, save or share as an image, Year in Cards. The month-recap player is retired; its best parts become card options.
+- Add gallery: the confirmation ("Sales added to the top of your board") now replaces the tip line in place for 1.8 seconds instead of floating over it (it overlapped on phones and desktop).

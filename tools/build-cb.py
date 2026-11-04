@@ -101,9 +101,8 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
   <label class="aws"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="aw-q" type="search" placeholder="Search widgets" autocomplete="off" aria-label="Search widgets"></label>
   <div class="seg awseg" id="aw-cats" role="group" aria-label="Kind"><button type="button" data-c="all" aria-pressed="true">All</button><button type="button" data-c="num" aria-pressed="false">Numbers</button><button type="button" data-c="chart" aria-pressed="false">Charts</button><button type="button" data-c="list" aria-pressed="false">Lists</button></div></div>
   <div class="thumbs" id="aw-list"></div>
-  <div class="awfoot"><p class="awhint">Tap to add · tap again to remove · resize from the corner on your board</p>
+  <div class="awfoot"><p class="awhint" id="aw-hint" role="status" aria-live="polite">Tap to add · tap again to remove · resize from the corner on your board</p>
   <button type="button" class="go" data-close>Done</button></div>
-  <div class="awt" id="aw-t" role="status" aria-live="polite"></div>
 </div></dialog>
 </div>
 </section>

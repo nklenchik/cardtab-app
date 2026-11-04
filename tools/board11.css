@@ -25,3 +25,8 @@
 .cbx #cb .wq .lr .r{padding:10px 10px}
 .cbx #cb .eM .lr .r{padding:4px 10px}
 @media(max-width:600px){.cbx #cb .eM .lr .r:nth-child(n+3){display:none}}
+/* add gallery: the confirmation replaces the tip line in place */
+#aw .awhint{min-height:2.6em;display:flex;align-items:center;justify-content:center;transition:color .2s}
+#aw .awhint.msg{color:var(--text);font-weight:800;animation:hintin .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes hintin{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){#aw .awhint.msg{animation:none}}
