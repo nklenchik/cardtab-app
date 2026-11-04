@@ -1,6 +1,6 @@
 import json,base64,sys
-SOFT='soft' in sys.argv[1:]
-args=[a for a in sys.argv[1:] if a!='soft']
+SOFT='nosoft' not in sys.argv[1:]  # the soft look is the main look now
+args=[a for a in sys.argv[1:] if a not in ('soft','nosoft')]
 MAIN=not args
 VAR=args[0] if args else 'A'  # the main board uses phone layout A
 P=json.load(open('dash-parts.json'))
@@ -20,7 +20,7 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
     </div>
     <button type="button" class="iconb" id="cb-stories" aria-label="Card Stories"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="3"/><path d="M8.2 6.2h3.3M13.5 6.2h2.3"/><path d="M8.5 16.5l2.4-2.8 2 1.8 2.8-3.6"/></svg><span>Stories</span></button>
     <button type="button" class="iconb" id="cb-ask" aria-label="Ask about your numbers"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2 5.3 5.5 1.9-5.5 2-2 5.3-2-5.3-5.5-2 5.5-1.9z"/><path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg><span>Ask</span></button>
-    <button type="button" class="iconb" id="cb-share" aria-label="Share Card Board"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 5l5.5 5.5-5.5 5.5"/><path d="M19 10.5h-7.5A6.5 6.5 0 0 0 5 17v2"/></svg><span>Share</span></button>
+    <button type="button" class="iconb" id="cb-share" aria-label="Share Card Board"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.8 5.6v3.1C8.5 9.2 5.3 12.6 4.6 18.4c2-3 5-4.4 9.2-4.5v3.1c0 .5.6.8 1 .4l5.2-5.1c.3-.3.3-.7 0-1l-5.2-5.1c-.4-.4-1-.1-1 .4z"/></svg><span>Share</span></button>
     <div class="perwrap acctw"><button type="button" class="acct" id="cb-acct" aria-haspopup="true" aria-expanded="false" aria-label="Account"><span class="av" id="cb-av">N</span></button>
 <div class="cb-menu am" id="cb-amenu" hidden role="menu">
   <button type="button" class="amh" data-am="profile"><span class="av lg" id="cb-av2">N</span><span><b><span id="am-name">Nick</span> <i class="prem2">✦ Premium</i></b><small>nklenchik@gmail.com</small></span></button>
@@ -144,6 +144,5 @@ page=P['css']+board_css+tipcss+'</style>\n\n'+P['html']+markup+head_js+P['js']+o
 logo='data:image/webp;base64,'+base64.b64encode(open('/home/claude/cardtab-app/app/assets/logo-128.webp','rb').read()).decode()
 out=page.replace('__LOGO__',logo)
 if not MAIN:out=out.replace('<title>Card Board Preview</title>','<title>Card Board Phone '+VAR+'</title>',1)
-if SOFT:out=out.replace('<title>Card Board Preview</title>','<title>Card Board Soft</title>',1)
-open(('card-board-soft.html' if SOFT else 'card-board-preview.html') if MAIN else 'card-board-'+VAR.lower()+'.html','w').write(out)
+open('card-board-preview.html' if MAIN else 'card-board-'+VAR.lower()+'.html','w').write(out)
 print(len(page))

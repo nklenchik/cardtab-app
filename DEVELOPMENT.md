@@ -359,3 +359,12 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - Share icon: an outlined, compact curved arrow (2px stroke, like the other icons) everywhere, including Stories.
 - Add widgets previews: the mini widget's own border is hidden inside its tile, so the tile edge is clean (no second border, no clipped right edge).
 - Soft skin: a little more shade (card fades to a hint of warm cream at the bottom, shadow .17), and Add widgets uses the same look (hairline tiles, same shade, softer badges, search, footer fade). Layout still identical (t82).
+
+### v24 — soft look is the main look; navigation
+- build-cb.py now includes board14-soft.css by default (pass nosoft for the old look).
+- Share icon: Nick's outlined arrowshape (1.9 stroke) everywhere, Stories included.
+- Add widgets keeps one height whatever the filter: min(860px, visible height - 40) on desktop, visible height - 12 on phones.
+- Phones: menus (profile, platforms, widget ...) open centered over a dimmed screen (#mbd); the bottom bar hides while one is open; tapping the dim closes it.
+- Back gesture / Android back / browser Back: a small history stack (navPush/navDone) in both the board and Stories. Opening the board, Stories, any sheet, any menu or an enlarged story adds a step; Back closes the newest; closing with a button removes its step (no stale history). Order checked: story, then Stories, then the board.
+- Stories: tapping anywhere outside the enlarged story closes it.
+- Test: tools/t84.js.

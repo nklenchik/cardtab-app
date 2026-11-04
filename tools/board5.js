@@ -105,6 +105,14 @@ function bindTip(ev,anchor,fn){ev.setAttribute('data-tip','');
   ev.addEventListener('focus',()=>{if(!rz&&!drag)showTip(anchor,fn())});ev.addEventListener('blur',hideTip);
   ev.addEventListener('click',e=>{if(rz||drag||editing)return;if(TOUCH.matches&&ev.hasAttribute('data-drill'))return;e.stopPropagation();showTip(anchor,fn())})}
 
+// ---------- back gesture (iOS edge swipe, Android back, the browser's Back button) closes the top layer ----------
+// Each layer that opens (the board, Stories, a sheet, a menu) adds one step to history; going back closes the newest one.
+// Closing a layer with its own button removes its step, so history never fills up with stale entries.
+const NAV=[];let navSkip=0,navPopping=false;
+function navPush(k,fn){if(NAV.some(n=>n.k===k))return;NAV.push({k,fn});try{history.pushState({cbn:k},'')}catch(e){}}
+function navDone(k){if(navPopping)return;const i=NAV.findIndex(n=>n.k===k);if(i<0)return;NAV.splice(i,1);navSkip++;try{history.back()}catch(e){navSkip--}}
+addEventListener('popstate',()=>{if(navSkip>0){navSkip--;return}const t=NAV.pop();if(!t)return;navPopping=true;try{t.fn()}catch(e){}navPopping=false});
+
 // ---------- charts, drawn at the exact size of their box ----------
 // cv() leaves a placeholder; fillCharts() measures it after layout and draws the SVG to fit.
 function cv(ctx,spec){ctx.cv.push(spec);return '<div class="cv" data-cv="'+(ctx.cv.length-1)+'"></div>'}
@@ -478,7 +486,7 @@ const fromRect=r=>'translate('+r.left+'px,'+r.top+'px) scale('+(r.width/innerWid
 function prepare(){if(ready||shown)return;render(false);ready=true}
 (window.requestIdleCallback||(f=>setTimeout(f,400)))(prepare,{timeout:1500});
 function open(){
-  if(busy||shown)return;busy=true;xb.classList.remove('hint');$('note').hidden=true;
+  if(busy||shown)return;navPush('board',()=>close());busy=true;xb.classList.remove('hint');$('note').hidden=true;
   if(!ready){render(false);ready=true}
   const r=ins.getBoundingClientRect();shown=true;cbx.scrollTop=0;document.documentElement.style.overflow='hidden';xb.setAttribute('aria-expanded','true');
   cbx.inert=false;cbx.removeAttribute('aria-hidden');
@@ -492,7 +500,7 @@ function open(){
   setTimeout(()=>{cbx.classList.remove('anim');bgl.classList.remove('on');parts.forEach(p=>p.style.transitionDelay='');busy=false;$('close').focus({preventScroll:true})},520+Math.min(parts.length,10)*22);
 }
 function close(){
-  if(busy||!shown)return;busy=true;hideTip();closeMenus();$('wmenu').hidden=true;xb.setAttribute('aria-expanded','false');
+  if(busy||!shown)return;navDone('board');busy=true;hideTip();closeMenus();$('wmenu').hidden=true;xb.setAttribute('aria-expanded','false');
   const finish=()=>{shown=false;cbx.classList.add('off');cbx.classList.remove('anim');bgl.classList.remove('on');cbx.inert=true;cbx.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';busy=false;
     if(editing){editing=false;$('cb-edit').innerHTML=EDIT_I+'<span>Edit</span>';$('cb-edit').classList.remove('on');$('editfoot').hidden=true;$('cb').classList.remove('editing');render(false)}xb.focus({preventScroll:true})};
   if(calm.matches){finish();return}
@@ -747,6 +755,14 @@ $('cbx').addEventListener('click',e=>{if(!editing||justDragged||rz||drag||!e.tar
   if(e.target.closest('.w[data-id],button,a,input,select,textarea,label,dialog,.cb-menu,.addbar,.topbar,.rzg,.rzo,[role="button"],[role="menuitem"],.undo'))return;
   setEditing(false)});
 
+// ---------- menus: on phones they open centered over a dimmed screen (the bottom bar steps aside); back closes them ----------
+;(()=>{const bd=document.createElement('div');bd.className='mbd';bd.id='mbd';$('cb').appendChild(bd);
+  bd.addEventListener('click',e=>{e.stopPropagation();closeMenus();$('wmenu').hidden=true});
+  const menus=[...document.querySelectorAll('#cb .cb-menu')];
+  const sync=()=>{const open=menus.filter(m=>!m.hidden);bd.classList.toggle('on',open.length>0&&matchMedia('(max-width:760px)').matches);
+    menus.forEach(m=>{if(!m.hidden)navPush('menu:'+m.id,()=>{m.hidden=true;closeMenus()});else navDone('menu:'+m.id)})};
+  const mo=new MutationObserver(sync);menus.forEach(m=>mo.observe(m,{attributes:true,attributeFilter:['hidden']}))})();
+
 // ---------- long-press a widget to start editing (phones and tablets) ----------
 ;(()=>{let t=0,xy=null,fired=false;const stop=()=>{clearTimeout(t);xy=null};
   $('simple').addEventListener('pointerdown',e=>{if(!TOUCH.matches||editing||viewing||e.pointerType==='mouse'||!e.target.closest('.w[data-id]'))return;xy=[e.clientX,e.clientY];fired=false;clearTimeout(t);
@@ -758,12 +774,12 @@ $('cbx').addEventListener('click',e=>{if(!editing||justDragged||rz||drag||!e.tar
 
 // ---------- motion for menus and sheets: GPU-only (transform and opacity), springy in, quick out ----------
 document.querySelectorAll('dialog.sheet').forEach(d=>{const nat=HTMLDialogElement.prototype.close;
-  d.close=function(v){if(!this.open||this.classList.contains('closing'))return;if(calm.matches){nat.call(this,v);return}this.classList.add('closing');setTimeout(()=>{this.classList.remove('closing');nat.call(this,v)},190)};
+  d.close=function(v){if(!this.open||this.classList.contains('closing'))return;navDone('dlg:'+this.id);if(calm.matches){nat.call(this,v);return}this.classList.add('closing');setTimeout(()=>{this.classList.remove('closing');nat.call(this,v)},190)};
   d.addEventListener('cancel',e=>{e.preventDefault();d.close()})});
 // opening: the sheet is laid out first while held on its first frame, then the motion starts on the next frame.
 // The heavy first-layout work happens before anything moves, so the slide itself never stutters.
 document.querySelectorAll('dialog.sheet').forEach(d=>{const nat=HTMLDialogElement.prototype.showModal;
-  d.showModal=function(){if(this.open)return;fitDialog(this);
+  d.showModal=function(){if(this.open)return;fitDialog(this);navPush('dlg:'+this.id,()=>this.close());
     if(calm.matches){nat.call(this);settleDialog(this);return}this.classList.add('prep');nat.call(this);settleDialog(this);void this.offsetHeight;requestAnimationFrame(()=>requestAnimationFrame(()=>this.classList.remove('prep')))}});
 // Pin every sheet to the part of the screen you can actually see. Inside the Claude app on iPhone the page's
 // "100%" can be taller or shorter than the visible area, which put sheets mid-screen and cut off at the top.
@@ -780,10 +796,10 @@ addEventListener('resize',()=>document.querySelectorAll('dialog.sheet[open]').fo
 // The page loads quietly in the background once the board is open, so the first slide-in already has the stories on it.
 ;(()=>{const csx=$('csx');let csf=null,open=false;
 function load(){if(csf)return;csf=document.createElement('iframe');csf.title='Card Stories';csf.srcdoc=STORIES_HTML;csx.appendChild(csf)}
-function openStories(){if(open)return;open=true;load();try{csf.contentWindow.csSync()}catch(e){}
+function openStories(){if(open)return;open=true;navPush('stories',()=>window.cbStoriesBack());load();try{csf.contentWindow.csSync()}catch(e){}
   const desk=!matchMedia('(max-width:760px)').matches;csx.classList.remove('out');void csx.offsetWidth;csx.classList.add('in');csx.removeAttribute('aria-hidden');csx.inert=false;if(desk){cbx.classList.remove('csret');cbx.classList.add('csback');try{csf.contentWindow.csEnter&&csf.contentWindow.csEnter()}catch(e){}}
   setTimeout(()=>{try{csf.contentWindow.focus()}catch(e){}},calm.matches?0:420)}
-window.cbStoriesBack=function(){if(!open)return;open=false;csx.classList.remove('in');csx.classList.add('out');if(cbx.classList.contains('csback')){cbx.classList.add('csret');cbx.classList.remove('csback');setTimeout(()=>cbx.classList.remove('csret'),360)}csx.setAttribute('aria-hidden','true');csx.inert=true;
+window.cbStoriesBack=function(){if(!open)return;open=false;navDone('stories');csx.classList.remove('in');csx.classList.add('out');if(cbx.classList.contains('csback')){cbx.classList.add('csret');cbx.classList.remove('csback');setTimeout(()=>cbx.classList.remove('csret'),360)}csx.setAttribute('aria-hidden','true');csx.inert=true;
   setTimeout(()=>{csx.classList.remove('out');try{$('cb-stories').focus({preventScroll:true})}catch(e){}},calm.matches?0:300)};
 window.cbName=()=>(profile.first||'').trim();
 $('cb-stories').addEventListener('click',openStories);

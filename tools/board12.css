@@ -135,3 +135,15 @@ dialog.drawer .awh{align-items:center}
 /* Add widgets: previews show the widget cleanly inside its tile (no second border, nothing clipped on the right) */
 #aw .tbox{background:var(--card);border:1px solid var(--line);box-sizing:border-box}
 #aw .tbox .w{border-color:transparent!important;box-shadow:none!important}
+
+/* phones: menus (profile, platforms, widget ⋯) open centered over a dimmed screen, never under the bottom bar */
+.mbd{display:none}
+@keyframes menuPop{from{opacity:0;transform:translate(-50%,-50%) scale(.95)}to{opacity:1;transform:translate(-50%,-50%)}}
+@media(max-width:760px){
+  .cbx #cb .mbd{display:block;position:fixed;inset:0;z-index:59;background:rgba(10,10,10,.32);opacity:0;pointer-events:none;transition:opacity .22s ease}
+  .cbx #cb .mbd.on{opacity:1;pointer-events:auto}
+  .cbx #cb .cb-menu:not([hidden]){position:fixed!important;left:50%!important;right:auto!important;top:50%!important;bottom:auto!important;transform:translate(-50%,-50%);width:min(360px,calc(100vw - 32px))!important;max-height:calc(100dvh - 48px);overflow:auto;overscroll-behavior:contain;z-index:60!important;animation:menuPop .26s cubic-bezier(.2,.8,.2,1) both!important;transform-origin:50% 50%}
+}
+/* Add widgets keeps one size whatever kind you filter by; only the tiles inside change */
+.awg .awp{height:min(860px,calc(var(--vvh,100dvh) - 40px))}
+@media(max-width:760px){.awg .awp{height:calc(var(--vvh,100dvh) - 12px)}}
