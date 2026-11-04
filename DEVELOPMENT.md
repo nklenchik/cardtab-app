@@ -337,3 +337,9 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - What each platform kept: names in one column so the bars line up, and each bar uses its platform's chip color (it was blue for all). Banner and Extra large now mirror Where you buy: the overall % on the left, the platforms on the right.
 - Banners list in one column; Large and Extra large list tiles start at the top instead of floating mid-tile; Biggest win art in banners is full size (it was a 24px sliver); the How much of it sold caption may use two lines.
 - Tests: tools/t78.js (video), t79.js (slow-motion frames), t80.js (every widget × every size, overflow check).
+
+### v21 — sheets pinned to the visible screen; tap away to finish editing
+- From Nick's iPhone recording (Claude app): the date sheet opened with its bottom mid-screen, its top cut off under the app bar, and its list already scrolled down. Inside the app, a full-height dialog does not match the visible area, and focus jumped to a row partway down the list.
+- fitDialog(): every sheet is sized in pixels to window.visualViewport (top, width, height) when it opens and on resize; phone sheets cap at --vvh. settleDialog(): lists open scrolled to the top, and on touch nothing keeps focus (no jump, no ring).
+- Edit mode: tapping anywhere that is not a widget or a control (gaps, margins, the area around Reset) finishes editing, like Done. Ignores clicks on elements replaced mid-click (the Edit button rewrites itself).
+- Test: tools/t81.js.

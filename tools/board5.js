@@ -735,6 +735,12 @@ function fitFlip(w,b,rows){const W=w.clientWidth,H=w.clientHeight,wide=W/H>1.6,u
 document.addEventListener('pointerdown',e=>{if(!TOUCH.matches)return;if(!e.target.closest('#simple .w.scrubbing'))document.querySelectorAll('#simple svg.sel').forEach(s=>s._clear&&s._clear());
   if(!e.target.closest('#simple .w.flipped'))document.querySelectorAll('#simple .kback').forEach(x=>flipTile(x.closest('.w'),null))},{passive:true});
 
+// ---------- while editing, tapping anywhere that isn't a widget or a control finishes, like tapping Done ----------
+$('cbx').addEventListener('click',e=>{if(!editing||justDragged||rz||drag||!e.target.isConnected)return;
+  if(e.composedPath().some(n=>n.matches&&n.matches('.w[data-id],button,a,input,select,textarea,label,dialog,.cb-menu,.addbar,.topbar,.rzg,.rzo,[role="button"],[role="menuitem"],.undo')))return;
+  if(e.target.closest('.w[data-id],button,a,input,select,textarea,label,dialog,.cb-menu,.addbar,.topbar,.rzg,.rzo,[role="button"],[role="menuitem"],.undo'))return;
+  setEditing(false)});
+
 // ---------- long-press a widget to start editing (phones and tablets) ----------
 ;(()=>{let t=0,xy=null,fired=false;const stop=()=>{clearTimeout(t);xy=null};
   $('simple').addEventListener('pointerdown',e=>{if(!TOUCH.matches||editing||viewing||e.pointerType==='mouse'||!e.target.closest('.w[data-id]'))return;xy=[e.clientX,e.clientY];fired=false;clearTimeout(t);
@@ -751,7 +757,18 @@ document.querySelectorAll('dialog.sheet').forEach(d=>{const nat=HTMLDialogElemen
 // opening: the sheet is laid out first while held on its first frame, then the motion starts on the next frame.
 // The heavy first-layout work happens before anything moves, so the slide itself never stutters.
 document.querySelectorAll('dialog.sheet').forEach(d=>{const nat=HTMLDialogElement.prototype.showModal;
-  d.showModal=function(){if(this.open)return;if(calm.matches){nat.call(this);return}this.classList.add('prep');nat.call(this);void this.offsetHeight;requestAnimationFrame(()=>requestAnimationFrame(()=>this.classList.remove('prep')))}});
+  d.showModal=function(){if(this.open)return;fitDialog(this);
+    if(calm.matches){nat.call(this);settleDialog(this);return}this.classList.add('prep');nat.call(this);settleDialog(this);void this.offsetHeight;requestAnimationFrame(()=>requestAnimationFrame(()=>this.classList.remove('prep')))}});
+// Pin every sheet to the part of the screen you can actually see. Inside the Claude app on iPhone the page's
+// "100%" can be taller or shorter than the visible area, which put sheets mid-screen and cut off at the top.
+function fitDialog(d){const vv=window.visualViewport,h=Math.round(vv?vv.height:innerHeight),t=Math.round(vv?vv.offsetTop:0),w=Math.round(vv?vv.width:innerWidth);
+  d.style.position='fixed';d.style.inset='auto';d.style.left='0';d.style.top=t+'px';d.style.width=w+'px';d.style.height=h+'px';d.style.setProperty('--vvh',h+'px')}
+// open at the top of the list: no jump to whatever got focus first, and no focus ring after a tap
+function settleDialog(d){d.querySelectorAll('.awbody,.awp,.entlist,.asklog').forEach(x=>x.scrollTop=0);
+  if(TOUCH.matches){const a=document.activeElement;if(a&&d.contains(a)&&a.blur)a.blur()}
+  requestAnimationFrame(()=>d.querySelectorAll('.awbody,.awp,.entlist').forEach(x=>x.scrollTop=0))}
+if(window.visualViewport)visualViewport.addEventListener('resize',()=>document.querySelectorAll('dialog.sheet[open]').forEach(fitDialog));
+addEventListener('resize',()=>document.querySelectorAll('dialog.sheet[open]').forEach(fitDialog));
 
 // ---------- Card Stories: its own page, slid in over the board. Back returns here. ----------
 // The page loads quietly in the background once the board is open, so the first slide-in already has the stories on it.

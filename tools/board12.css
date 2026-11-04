@@ -107,3 +107,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .cbx #cb .eX.k-where .split.wide .lr,.cbx #cb .eX.k-kept .split.wide .lr{grid-template-columns:minmax(0,1fr)}
 /* biggest win in a banner: real card art, sized like the other sizes */
 .cbx #cb .eB .bestc .art{height:auto!important;width:76px!important;max-height:none!important;aspect-ratio:63/88;font-size:30px}
+
+/* sheets size to the visible screen (set by fitDialog), never taller */
+@media(max-width:760px){
+  dialog.sheet .awp{max-height:calc(var(--vvh,100dvh) - 12px)!important}
+  dialog.drawer .askp{height:calc(var(--vvh,100dvh) - 40px)!important}
+  dialog.sheet .entp{height:min(calc(var(--vvh,100dvh)*.82),720px)!important}
+}
