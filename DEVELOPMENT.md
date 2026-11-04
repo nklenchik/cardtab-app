@@ -343,3 +343,8 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - fitDialog(): every sheet is sized in pixels to window.visualViewport (top, width, height) when it opens and on resize; phone sheets cap at --vvh. settleDialog(): lists open scrolled to the top, and on touch nothing keeps focus (no jump, no ring).
 - Edit mode: tapping anywhere that is not a widget or a control (gaps, margins, the area around Reset) finishes editing, like Done. Ignores clicks on elements replaced mid-click (the Edit button rewrites itself).
 - Test: tools/t81.js.
+
+### v22
+- Desktop Ask is a panel under the Ask button that grows out of it (scale from .18 at the button, .46s, cubic-bezier(.2,.8,.2,1)); it shrinks back on close; lighter backdrop. Phones keep the bottom sheet.
+- Close buttons are SVG icons in true 34px circles (box-sizing, padding 0, aspect-ratio 1) on every device. New chat is a matching 34px pill that never wraps; the Ask subtitle truncates.
+- Best month label: 40px headroom, value 25px above the bar, the "best month" label 9.5px, 12px above the bar.

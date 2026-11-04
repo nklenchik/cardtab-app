@@ -114,3 +114,20 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   dialog.drawer .askp{height:calc(var(--vvh,100dvh) - 40px)!important}
   dialog.sheet .entp{height:min(calc(var(--vvh,100dvh)*.82),720px)!important}
 }
+
+/* close buttons are true circles on every device; the icon sits dead centre */
+dialog.sheet .x{box-sizing:border-box;width:34px;height:34px;min-width:34px;padding:0;flex:none;display:grid;place-items:center;aspect-ratio:1/1;line-height:0;border-radius:50%}
+.askh{align-items:center;gap:8px}
+.askh #ask-new{box-sizing:border-box;height:34px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--text);display:inline-flex;align-items:center;line-height:1;font-weight:750;text-decoration:none;white-space:nowrap;flex:none}
+.askt{min-width:0}.askt>div{min-width:0}.askscope{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+dialog.drawer .awh{align-items:center}
+/* desktop Ask: grows out of the Ask button, settles as a panel under it */
+@keyframes askGrow{from{opacity:0;transform:scale(.18)}45%{opacity:1}to{opacity:1;transform:none}}
+@keyframes askShrink{to{opacity:0;transform:scale(.6)}}
+@media(min-width:761px){
+  dialog.drawer.pop[open]{display:block}
+  dialog.drawer.pop .askp{position:fixed;top:var(--at);right:var(--ar);width:var(--aw);height:min(660px,calc(var(--vvh,100vh) - var(--at) - 20px));border-radius:22px;transform-origin:var(--ox) -12px;box-shadow:0 24px 60px rgba(0,0,0,.22)}
+  dialog.drawer.pop[open] .askp{animation:askGrow .46s cubic-bezier(.2,.8,.2,1) both}
+  dialog.drawer.pop.closing .askp{animation:askShrink .2s cubic-bezier(.4,0,1,1) both}
+  dialog.drawer.pop::backdrop{background:rgba(10,10,10,.18)}
+}

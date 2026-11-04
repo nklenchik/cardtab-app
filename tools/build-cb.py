@@ -37,7 +37,7 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
 </div>
 <div class="cb-menu" id="wmenu" hidden role="menu"></div>
 <dialog id="shd" class="sheet" aria-labelledby="sh-h"><div class="awp shp">
-  <div class="awh"><h2 id="sh-h">Share Card Board</h2><button type="button" class="x" data-close aria-label="Close">✕</button></div>
+  <div class="awh"><h2 id="sh-h">Share Card Board</h2><button type="button" class="x" data-close aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="shcard"><div class="shrow"><span class="shic" id="sh-acct"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></span><div class="shtx"><b>Share with a link</b><small id="sh-state"></small></div><button type="button" class="swt" role="switch" id="sh-on" aria-checked="false" aria-label="Share with a link"><i></i></button></div>
     <div class="shlink" id="sh-linkrow"><input id="sh-link" readonly aria-label="Share link"><button type="button" class="tbtn" id="sh-copy">Copy link</button></div>
     <button type="button" class="tlink" id="sh-new">Make a new link</button></div>
@@ -52,7 +52,7 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
   <p class="shnote">Preview: links and emails start working once Card Tab is online.</p>
 </div></dialog>
 <dialog id="askd" class="sheet drawer" aria-labelledby="ask-h"><div class="awp askp">
-  <div class="awh"><div class="askt"><span class="askic" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2 5.3 5.5 1.9-5.5 2-2 5.3-2-5.3-5.5-2 5.5-1.9z"/><path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg></span><div><h2 id="ask-h">Ask</h2><small class="askscope" id="ask-scope"></small></div></div><div class="askh"><button type="button" class="tlink" id="ask-new">New chat</button><button type="button" class="x" data-close aria-label="Close">✕</button></div></div>
+  <div class="awh"><div class="askt"><span class="askic" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2 5.3 5.5 1.9-5.5 2-2 5.3-2-5.3-5.5-2 5.5-1.9z"/><path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg></span><div><h2 id="ask-h">Ask</h2><small class="askscope" id="ask-scope"></small></div></div><div class="askh"><button type="button" class="tlink" id="ask-new">New chat</button><button type="button" class="x" data-close aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
   <div class="asklog" id="ask-log" aria-live="polite"></div>
   <div class="askstarts" id="ask-starts"></div>
   <p class="askoff" id="ask-off">Ask isn’t available in this view. It works inside Claude now and in the Card Tab app later.</p>
@@ -61,7 +61,7 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
   <p class="askfine">Answers use only the numbers on this board, for the dates and platforms you picked.</p>
 </div></dialog>
 <dialog id="ent" class="sheet" aria-labelledby="ent-h"><div class="awp entp">
-  <div class="awh"><div><h2 id="ent-h"></h2><small class="askscope" id="ent-sub"></small></div><button type="button" class="x" data-close aria-label="Close">✕</button></div>
+  <div class="awh"><div><h2 id="ent-h"></h2><small class="askscope" id="ent-sub"></small></div><button type="button" class="x" data-close aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="entlist" id="ent-list"></div>
 </div></dialog>
 <div class="undo" id="undo" role="status" aria-live="polite" hidden><span id="undo-t"></span><button type="button" id="undo-b">Undo</button></div>
@@ -70,7 +70,7 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
   <div class="rsb"><button type="button" class="tbtn" id="rs-no">No</button><button type="button" class="go danger" id="rs-yes">Yes, reset</button></div>
 </div></dialog>
 <dialog id="cr" class="sheet" aria-labelledby="cr-h"><div class="awp crp">
-  <div class="awh"><h2 id="cr-h">Custom dates</h2><button type="button" class="x" data-close aria-label="Close">✕</button></div>
+  <div class="awh"><h2 id="cr-h">Custom dates</h2><button type="button" class="x" data-close aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="crpre" id="cr-pre" role="radiogroup" aria-label="Dates"></div>
   <div class="crsum"><button type="button" class="crb" id="cr-fb"><small>From</small><b id="cr-f"></b></button><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><button type="button" class="crb" id="cr-tb"><small>To</small><b id="cr-t"></b></button></div>
   <div class="cal"><div class="calh"><button type="button" id="cr-prev" aria-label="Previous month">‹</button><b id="cr-title" aria-live="polite"></b><button type="button" id="cr-next" aria-label="Next month">›</button></div>
@@ -80,7 +80,7 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
   <button type="button" class="go" id="cr-go">Show these dates</button>
 </div></dialog>
 <dialog id="av" class="sheet" aria-labelledby="av-h"><div class="awp avp">
-  <div class="awh"><h2 id="av-h">Edit profile</h2><button type="button" class="x" data-close aria-label="Close">✕</button></div>
+  <div class="awh"><h2 id="av-h">Edit profile</h2><button type="button" class="x" data-close aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="nmf"><label>First name<input id="pf-first" autocomplete="given-name" maxlength="40"></label><label>Last name<input id="pf-last" autocomplete="family-name" maxlength="40" placeholder="Optional"></label></div>
   <div class="shw"><span>Show my name as</span><div class="seg" id="pf-show" role="radiogroup" aria-label="Show my name as"><button type="button" role="radio" data-sh="first">First name</button><button type="button" role="radio" data-sh="full">Full name</button></div></div>
   <div class="avstage"><div class="avc" id="av-c"><img id="av-img" alt="" hidden draggable="false"><span id="av-l">N</span></div></div>
@@ -93,7 +93,7 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
   <button type="button" class="go" id="av-save">Save</button>
 </div></dialog>
 <dialog id="ex" class="sheet" aria-labelledby="ex-h"><div class="awp exp">
-  <div class="awh"><h2 id="ex-h">Export</h2><button type="button" class="x" data-close aria-label="Close">✕</button></div>
+  <div class="awh"><h2 id="ex-h">Export</h2><button type="button" class="x" data-close aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="exg"><p class="lab">Your entries</p><div class="chips"><button type="button" data-ex="csv">CSV</button><button type="button" data-ex="xlsx">Excel</button></div><small>Every entry, to the cent, with fees and shipping.</small></div>
   <div class="exg"><p class="lab">Report</p><div class="chips"><button type="button" data-ex="pdf">PDF</button></div><small>This Card Board, ready to share or print.</small></div>
   <div class="exg"><p class="lab">Card Board as an image</p><div class="chips"><button type="button" data-ex="png">PNG</button><button type="button" data-ex="jpg">JPG</button><button type="button" data-ex="webp">WebP</button></div><small>For sharing. Uses the period and platform you have picked.</small></div>
@@ -101,7 +101,7 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
 </div></dialog>
 <div class="cbtoast" id="cbtoast" role="status" aria-live="polite"></div>
 <dialog id="aw" class="sheet awg" aria-labelledby="aw-h"><div class="awp">
-  <div class="awtop"><div class="awh"><h2 id="aw-h">Add widgets</h2><button type="button" class="x" data-close aria-label="Close">✕</button></div>
+  <div class="awtop"><div class="awh"><h2 id="aw-h">Add widgets</h2><button type="button" class="x" data-close aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <label class="aws"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="aw-q" type="search" placeholder="Search widgets" autocomplete="off" aria-label="Search widgets"></label>
   <div class="seg awseg" id="aw-cats" role="group" aria-label="Kind"><button type="button" data-c="all" aria-pressed="true">All</button><button type="button" data-c="num" aria-pressed="false">Numbers</button><button type="button" data-c="chart" aria-pressed="false">Charts</button><button type="button" data-c="list" aria-pressed="false">Lists</button></div></div>
   <div class="thumbs" id="aw-list"></div>

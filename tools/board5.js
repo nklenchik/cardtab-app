@@ -111,7 +111,7 @@ function cv(ctx,spec){ctx.cv.push(spec);return '<div class="cv" data-cv="'+(ctx.
 function barsSVG(sp,W,H){
   const d=sp.data,n=d.length;if(!n||W<30||H<24)return '';
   const slot=W/n,labs=sp.labels&&H>=70,every=slot<15?3:slot<22?2:1,fs=slot>40?11.5:10.5;
-  const top=sp.best&&H>=110?32:4,bottom=H-(labs?20:0)-1;
+  const top=sp.best&&H>=110?40:4,bottom=H-(labs?20:0)-1;
   const vals=d.map(x=>x.v),lim=sp.limit||0,pos=Math.max(0,lim,...vals),neg=Math.max(0,...vals.map(v=>-v));
   const avail=bottom-top,sc=avail/((pos+neg)||1),base=top+pos*sc,bw=Math.max(2,Math.min(sp.maxW||44,slot*.62));
   let best=-1,bv=-Infinity;vals.forEach((v,i)=>{if(d[i].on!==false&&v>bv){bv=v;best=i}});
@@ -123,7 +123,7 @@ function barsSVG(sp,W,H){
     if(labs&&i%every===0)s+='<text x="'+c.toFixed(1)+'" y="'+(H-5)+'" text-anchor="middle" class="mt" style="font-size:'+fs+'px">'+esc(slot>46?m.s:m.n)+'</text>';
     hit+='<rect data-i="'+i+'" x="'+(i*slot).toFixed(1)+'" y="0" width="'+slot.toFixed(1)+'" height="'+H+'" tabindex="0" role="img" aria-label="'+esc(m.l+': '+(sp.unit||'')+' '+money(p))+'"/>'});
   if(lim){const y=(base-lim*sc).toFixed(1);s+='<line x1="0" x2="'+W+'" y1="'+y+'" y2="'+y+'" stroke="var(--text)" stroke-opacity=".55" stroke-width="1.5" stroke-dasharray="4 4"/>'}
-  if(sp.best&&top>4&&best>-1&&bv>0){const c=Math.max(28,Math.min(W-28,best*slot+slot/2)),y=base-bv*sc;s+='<text x="'+c.toFixed(1)+'" y="'+Math.max(14,y-22).toFixed(1)+'" text-anchor="middle" fill="var(--green)" style="font:800 15px Manrope,-apple-system,Segoe UI,sans-serif">+'+kshort(bv)+'</text><text x="'+c.toFixed(1)+'" y="'+Math.max(28,y-8).toFixed(1)+'" text-anchor="middle" fill="var(--muted)" style="font:800 11.5px Manrope,-apple-system,Segoe UI,sans-serif">'+(sp.bestLabel||'best month')+'</text>'}
+  if(sp.best&&top>4&&best>-1&&bv>0){const c=Math.max(28,Math.min(W-28,best*slot+slot/2)),y=base-bv*sc;s+='<text x="'+c.toFixed(1)+'" y="'+Math.max(15,y-25).toFixed(1)+'" text-anchor="middle" fill="var(--green)" style="font:800 15px Manrope,-apple-system,Segoe UI,sans-serif">+'+kshort(bv)+'</text><text x="'+c.toFixed(1)+'" y="'+Math.max(28,y-12).toFixed(1)+'" text-anchor="middle" fill="var(--muted)" style="font:700 9.5px Manrope,-apple-system,Segoe UI,sans-serif;letter-spacing:.02em">'+(sp.bestLabel||'best month')+'</text>'}
   return s+hit+'</svg>'}
 function fillCharts(root,ctx){root.querySelectorAll('.cv[data-cv]').forEach(el=>{const sp=ctx.cv[+el.dataset.cv];if(!sp)return;const W=Math.floor(el.clientWidth),H=Math.floor(el.clientHeight);el.innerHTML=hideMoney(barsSVG(sp,W,H));
   const svg=el.querySelector('svg');if(!svg||!sp.tip)return;if(TOUCH.matches){scrubChart(el,svg,sp);return}
@@ -645,7 +645,7 @@ function paintAskLeft(){const left=Math.max(0,ASK_LIMIT-askUsed()),el=$('ask-lef
 if(window.claude&&claude.use)claude.use('sample').then(f=>{sampleFn=f;paintAskAvail()},()=>{});
 function paintAskAvail(){$('ask-off').hidden=!!sampleFn;$('ask-form').hidden=!sampleFn;$('ask-starts').hidden=!sampleFn||askTurns.length>0;$('ask-left').hidden=!sampleFn;if(sampleFn)paintAskLeft()}
 const STARTS=['Which platform costs me the most in fees?','Why was profit down the last few months?','What was my best flip, and why did it work?','Am I buying more than I’m selling?'];
-function openAsk(){closeMenus();$('ask-starts').innerHTML=STARTS.map(q=>'<button type="button" data-q="'+esc(q)+'">'+esc(q)+'</button>').join('');$('ask-scope').textContent=$('cb-perl').textContent+' · '+$('cb-platl').textContent;paintAskAvail();askd.showModal();if(matchMedia('(hover:hover) and (pointer:fine)').matches)setTimeout(()=>{if(askd.open)$('ask-in').focus({preventScroll:true})},420)}
+function openAsk(){closeMenus();placeAsk();$('ask-starts').innerHTML=STARTS.map(q=>'<button type="button" data-q="'+esc(q)+'">'+esc(q)+'</button>').join('');$('ask-scope').textContent=$('cb-perl').textContent+' · '+$('cb-platl').textContent;paintAskAvail();askd.showModal();if(matchMedia('(hover:hover) and (pointer:fine)').matches)setTimeout(()=>{if(askd.open)$('ask-in').focus({preventScroll:true})},420)}
 // everything Claude sees: the period you picked, with exact cents
 function askData(){const ctx=ctxNow(),t=totals(ctx.inP),d=c=>(c/100).toFixed(2),pt={};
   ctx.inP.forEach(e=>{const o=pt[e.platform]||(pt[e.platform]={bought:0,sold:0,fees:0,sales:0,n:0});if(e.type==='purchase')o.bought+=e.amount;if(e.type==='sale'){o.sales+=e.amount;o.fees+=e.amount-e.net;o.n++}});
@@ -691,6 +691,12 @@ function openEntries(o){hideTip();const key=e=>e.name.toLowerCase().replace(/[^a
   $('ent-list').innerHTML=h||'<p class="enone">No entries here.</p>';$('ent-list').scrollTop=0;buzz('tap');ent.showModal()}
 ent.addEventListener('click',e=>{if(e.target===ent){ent.close();return}const b=e.target.closest('button');if(b&&b.hasAttribute('data-close'))ent.close()});
 $('simple').addEventListener('keydown',e=>{const d=e.target.closest('.drill[data-drill]');if(d&&(e.key==='Enter'||e.key===' ')){e.preventDefault();if(canDrill())openEntries(JSON.parse(d.dataset.drill))}});
+
+// desktop: Ask opens as a panel under its button and grows out of it; phones keep the bottom sheet
+function placeAsk(){const d=$('askd');if(matchMedia('(max-width:760px)').matches){d.classList.remove('pop');return}
+  const r=$('cb-ask').getBoundingClientRect(),W=Math.min(420,innerWidth-32),right=Math.max(16,innerWidth-r.right),top=r.bottom+10,left=innerWidth-right-W;
+  d.classList.add('pop');d.style.setProperty('--at',top+'px');d.style.setProperty('--ar',right+'px');d.style.setProperty('--aw',W+'px');d.style.setProperty('--ox',(r.left+r.width/2-left).toFixed(0)+'px')}
+addEventListener('resize',()=>{if($('askd').open)placeAsk()});
 
 // ---------- touch: tap for a quick answer, not a full list ----------
 // Charts: tap or slide across the bars. The bar you're on lights up, the others fade, the header shows that month,
