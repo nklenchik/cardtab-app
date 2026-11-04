@@ -19,7 +19,7 @@ let layout=(()=>{try{const s=JSON.parse(localStorage.getItem('cb.layout.v2'));if
 const save=()=>{try{localStorage.setItem('cb.layout.v2',JSON.stringify(layout))}catch(e){}};
 let period='l12',plat='all',editing=false;
 const BUDGET=15000; // example monthly budget ($150) until the budget setting exists
-const phone=matchMedia('(max-width:760px)'),fine=matchMedia('(hover:hover) and (pointer:fine)');
+const phone=matchMedia('(max-width:600px)'),fine=matchMedia('(hover:hover) and (pointer:fine)');
 
 // ---------- data ----------
 function keysFor(p){
@@ -44,9 +44,9 @@ function showTip(anchor,html){const t=tip(),host=$('cb').getBoundingClientRect()
   let x=Math.max(8,Math.min(host.width-w-8,r.left-host.left+r.width/2-w/2)),y=r.top-host.top-h-10;if(r.top-h-10<70)y=r.bottom-host.top+10;t.style.left=x+'px';t.style.top=y+'px';t.classList.add('show')}
 function hideTip(){if(tipEl)tipEl.classList.remove('show')}
 function bindTip(ev,anchor,fn){ev.setAttribute('data-tip','');
-  ev.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse'&&!editing)showTip(anchor,fn())});ev.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')hideTip()});
-  ev.addEventListener('focus',()=>{if(!editing)showTip(anchor,fn())});ev.addEventListener('blur',hideTip);
-  ev.addEventListener('click',e=>{if(editing)return;e.stopPropagation();showTip(anchor,fn())})}
+  ev.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse'&&!rz&&!drag)showTip(anchor,fn())});ev.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')hideTip()});
+  ev.addEventListener('focus',()=>{if(!rz&&!drag)showTip(anchor,fn())});ev.addEventListener('blur',hideTip);
+  ev.addEventListener('click',e=>{if(rz||drag)return;e.stopPropagation();showTip(anchor,fn())})}
 
 // ---------- charts ----------
 function chartSVG(mt,W,H,o){
@@ -104,14 +104,14 @@ function widgetHTML(w,ctx,forceCls){
 // ---------- interactions inside widgets, matching the site ----------
 function wire(root,ctx){
   root.querySelectorAll('svg.pc').forEach(svg=>svg.querySelectorAll('rect[data-i]').forEach(rc=>{const i=+rc.dataset.i,bar=svg.querySelector('path[data-i="'+i+'"]'),m=ctx.mt[i],t=totals(m.list);
-    ['pointerenter','focus'].forEach(ev=>rc.addEventListener(ev,e=>{if(bar&&!editing&&(ev==='focus'||e.pointerType==='mouse'))bar.classList.add('hv')}));
+    ['pointerenter','focus'].forEach(ev=>rc.addEventListener(ev,e=>{if(bar&&!rz&&(ev==='focus'||e.pointerType==='mouse'))bar.classList.add('hv')}));
     ['pointerleave','blur'].forEach(ev=>rc.addEventListener(ev,()=>{if(bar)bar.classList.remove('hv')}));
     bindTip(rc,bar||rc,()=>'<b>'+mLabel(m.k,{month:'long',year:'numeric'})+'</b>Sales '+kshort(t.sales)+'<br>Spent '+kshort(t.spent)+'<br>Profit <span class="'+(t.profit>=0?'p':'l')+'">'+kshort(t.profit)+'</span>')}));
   root.querySelectorAll('.spend .bars>i[data-i]').forEach(el=>{const i=+el.dataset.i,bk=ctx.keys.slice(-12),v=totals(ctx.p.filter(e=>ym(e.date)===bk[i])).spent,d=BUDGET-v;
     bindTip(el,el,()=>'<b>'+mLabel(bk[i],{month:'long',year:'numeric'})+'</b>Spent '+kshort(v)+' of '+kshort(BUDGET)+'<br><span class="'+(d>=0?'p':'l')+'">'+kshort(Math.abs(d))+(d>=0?' under':' over')+'</span>')});
   // tap-to-open rows, one open at a time per widget, like the site's FAQs
   root.querySelectorAll('[data-k]').forEach(sec=>{const list=[...sec.querySelectorAll('[data-row]')];list.forEach(el=>{el.setAttribute('role','button');el.tabIndex=0;el.setAttribute('aria-expanded','false');
-    const tog=()=>{if(editing)return;const o=el.getAttribute('aria-expanded')==='true';list.forEach(x=>x.setAttribute('aria-expanded','false'));el.setAttribute('aria-expanded',!o)};
+    const tog=()=>{if(rz||drag)return;const o=el.getAttribute('aria-expanded')==='true';list.forEach(x=>x.setAttribute('aria-expanded','false'));el.setAttribute('aria-expanded',!o)};
     el.addEventListener('click',tog);el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tog()}})})});
 }
 

@@ -6,7 +6,7 @@ markup='''<section class="cbx enter" id="cbx" hidden role="dialog" aria-modal="t
   <div class="topbar">
     <h1 class="cbt">Card Board <span class="prem"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/></svg>Premium</span></h1>
     <div class="tctl">
-    <button type="button" class="tlink" id="cb-reset" hidden>Reset to default</button>
+    <span class="ehint">Drag a corner to resize · drag ⠿ to move</span><button type="button" class="tlink" id="cb-reset" hidden>Reset to default</button>
     <button type="button" class="tbtn" id="cb-edit">Customize</button>
     <div class="perwrap"><button type="button" class="pill alt" id="cb-plat" aria-haspopup="true" aria-expanded="false"><span id="cb-platl">All platforms</span> <i>▾</i></button><div class="cb-menu" id="cb-pmenu" hidden role="menu"></div></div>
     <div class="perwrap"><button type="button" class="pill on" id="cb-per" aria-haspopup="true" aria-expanded="false"><span id="cb-perl">Last 12 months</span> <i>▾</i></button><div class="cb-menu" id="cb-menu" hidden role="menu"></div></div>
