@@ -48,11 +48,12 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
   <p class="shnote">Preview: links and emails start working once Card Tab is online.</p>
 </div></dialog>
 <dialog id="askd" class="sheet drawer" aria-labelledby="ask-h"><div class="awp askp">
-  <div class="awh"><div><h2 id="ask-h">Ask</h2><small class="askscope" id="ask-scope"></small></div><div class="askh"><button type="button" class="tlink" id="ask-new">New chat</button><button type="button" class="x" data-close aria-label="Close">✕</button></div></div>
+  <div class="awh"><div class="askt"><span class="askic" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2 5.3 5.5 1.9-5.5 2-2 5.3-2-5.3-5.5-2 5.5-1.9z"/><path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg></span><div><h2 id="ask-h">Ask</h2><small class="askscope" id="ask-scope"></small></div></div><div class="askh"><button type="button" class="tlink" id="ask-new">New chat</button><button type="button" class="x" data-close aria-label="Close">✕</button></div></div>
   <div class="asklog" id="ask-log" aria-live="polite"></div>
   <div class="askstarts" id="ask-starts"></div>
   <p class="askoff" id="ask-off">Ask isn’t available in this view. It works inside Claude now and in the Card Tab app later.</p>
   <form class="askform" id="ask-form" hidden><input id="ask-in" placeholder="Ask about your numbers" autocomplete="off" aria-label="Your question"><button type="submit" class="askgo" id="ask-go" aria-label="Ask"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button><button type="button" class="askgo stop" id="ask-stop" hidden aria-label="Stop"><i></i></button></form>
+  <p class="askleft" id="ask-left" role="status" hidden></p>
   <p class="askfine">Answers use only the numbers on this board, for the dates and platforms you picked.</p>
 </div></dialog>
 <dialog id="rs" class="sheet" aria-labelledby="rs-h"><div class="awp rsp">

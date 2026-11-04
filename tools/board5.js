@@ -494,7 +494,7 @@ $('cb-amenu').addEventListener('click',e=>{const b=e.target.closest('[data-am]')
   if(a==='profile')openAvatar();else if(a==='export')openExport();
   else toast({plan:'Plan and billing opens here in the app',import:'Import opens from the dashboard in the app',plat:'Platforms and fees open here in the app',goal:'Budget and goals open here in the app',help:'Help and feedback open here in the app',out:'Sign out works in the app'}[a])});
 // avatar editor: your initial on a color, or a photo you upload or take, positioned in a circle
-const av=$('av');let ad=null;const AVC=180;
+const av=$('av');let ad=null;const AVC=135;
 function openAvatar(){ad={color:avatar.color||SWATCH[0],photo:null,src:avatar.src||null,x:avatar.x||0,y:avatar.y||0,z:avatar.z||1,img:null,first:profile.first,last:profile.last,show:profile.show};
   $('av-sw').innerHTML=SWATCH.map(c=>'<button type="button" role="radio" data-c="'+c+'" style="--c:'+c+'" aria-label="Color '+c+'" aria-checked="'+(c===ad.color)+'"></button>').join('')+'<button type="button" class="cust" id="av-pick" aria-label="Pick any color" aria-expanded="false"></button>';$('av-cpk').hidden=true;
   $('pf-first').value=ad.first;$('pf-last').value=ad.last;paintShow();
@@ -600,9 +600,14 @@ $('vbar-x').addEventListener('click',()=>setViewing(false));
 $('cb-share').addEventListener('click',openShare);
 
 // ---------- Ask: questions about this board, answered by Claude from your numbers ----------
-const askd=$('askd');let sampleFn=null,askTurns=[],askCtl=null;
+const askd=$('askd'),ASK_LIMIT=50,askKey=()=>'cb.ask.'+TODAY.slice(0,7);let sampleFn=null,askTurns=[],askCtl=null;
+const askUsed=()=>{try{return +localStorage.getItem(askKey())||0}catch(e){return 0}};
+const resetDay=()=>{const x=new Date(TODAY.slice(0,7)+'-15T12:00:00');x.setMonth(x.getMonth()+1);return dFmt(iso(x).slice(0,7)+'-01',{month:'short',day:'numeric'})};
+function paintAskLeft(){const left=Math.max(0,ASK_LIMIT-askUsed()),el=$('ask-left');el.classList.toggle('warn',left<=5);
+  el.textContent=left===0?'You’ve used all '+ASK_LIMIT+' questions this month. They reset on '+resetDay()+'.':left<=5?'Only '+cnt(left,'question','questions')+' left this month. They reset on '+resetDay()+'.':left+' of '+ASK_LIMIT+' questions left this month';
+  $('ask-in').disabled=left===0;$('ask-go').disabled=left===0;$('ask-starts').querySelectorAll('button').forEach(b=>b.disabled=left===0)}
 if(window.claude&&claude.use)claude.use('sample').then(f=>{sampleFn=f;paintAskAvail()},()=>{});
-function paintAskAvail(){$('ask-off').hidden=!!sampleFn;$('ask-form').hidden=!sampleFn;$('ask-starts').hidden=!sampleFn||askTurns.length>0}
+function paintAskAvail(){$('ask-off').hidden=!!sampleFn;$('ask-form').hidden=!sampleFn;$('ask-starts').hidden=!sampleFn||askTurns.length>0;$('ask-left').hidden=!sampleFn;if(sampleFn)paintAskLeft()}
 const STARTS=['Which platform costs me the most in fees?','Why was profit down the last few months?','What was my best flip, and why did it work?','Am I buying more than I’m selling?'];
 function openAsk(){closeMenus();$('ask-starts').innerHTML=STARTS.map(q=>'<button type="button" data-q="'+esc(q)+'">'+esc(q)+'</button>').join('');$('ask-scope').textContent=$('cb-perl').textContent+' · '+$('cb-platl').textContent;paintAskAvail();askd.showModal();setTimeout(()=>$('ask-in').focus(),60)}
 // everything Claude sees: the period you picked, with exact cents
@@ -619,7 +624,7 @@ const ASK_RULES='You are the assistant inside Card Tab, an app where a trading c
 function fmtAns(t){const lines=esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').split('\n');let h='',inl=false;
   lines.forEach(l=>{if(/^\s*[-•]\s+/.test(l)){if(!inl){h+='<ul>';inl=true}h+='<li>'+l.replace(/^\s*[-•]\s+/,'')+'</li>'}else{if(inl){h+='</ul>';inl=false}if(l.trim())h+='<p>'+l+'</p>'}});return h+(inl?'</ul>':'')}
 function addBubble(role,html){const el=document.createElement('div');el.className='bub '+role;el.innerHTML=html;$('ask-log').appendChild(el);$('ask-log').scrollTop=1e6;return el}
-async function ask(q){if(!sampleFn||askCtl||!q.trim())return;$('ask-starts').hidden=true;addBubble('me',esc(q));const out=addBubble('ai','<p class="think">Thinking…</p>');
+async function ask(q){if(!sampleFn||askCtl||!q.trim()||askUsed()>=ASK_LIMIT)return;try{localStorage.setItem(askKey(),askUsed()+1)}catch(e){}paintAskLeft();$('ask-starts').hidden=true;addBubble('me',esc(q));const out=addBubble('ai','<p class="think">Thinking…</p>');
   const input=askTurns.length?askTurns.concat([{role:'user',content:q}]):[{role:'user',content:ASK_RULES+askData()+'\n\nQUESTION\n'+q}];
   askCtl=new AbortController();$('ask-go').hidden=true;$('ask-stop').hidden=false;
   try{const {text}=await sampleFn(input,{signal:askCtl.signal,onText:({text})=>{out.innerHTML=fmtAns(text);$('ask-log').scrollTop=1e6}});out.innerHTML=fmtAns(text);
