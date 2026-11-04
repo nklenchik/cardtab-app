@@ -486,7 +486,9 @@ const shownName=()=>profile.show==='full'&&profile.last?profile.first+' '+profil
 function inkFor(hex){const m=/^#?([0-9a-f]{6})$/i.exec(hex||'');if(!m)return '#fff';const n=parseInt(m[1],16),c=[n>>16,n>>8&255,n&255].map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)}),L=.2126*c[0]+.7152*c[1]+.0722*c[2];return L>.45?'#1d1d1b':'#fff'}
 const NAME='Nick',SWATCH=['#a50e37','#c2410c','#b45309','#15803d','#0f766e','#1d4ed8','#6d28d9','#3f3f46'];
 let avatar=(()=>{try{return JSON.parse(localStorage.getItem('cb.avatar'))||{}}catch(e){return {}}})();
-function paintAvatar(){const c=avatar.color||SWATCH[0];['cb-av','cb-av2'].forEach(id=>{const el=$(id);if(!el)return;el.style.background=avatar.photo?'url('+avatar.photo+') center/cover':c;el.style.color=inkFor(c);el.textContent=avatar.photo?'':initial();el.classList.add('set')});$('am-name').textContent=shownName()}
+function paintAvatar(){const c=avatar.color||SWATCH[0];['cb-av','cb-av2'].forEach(id=>{const el=$(id);if(!el)return;el.style.background=avatar.photo?'url('+avatar.photo+') center/cover':c;el.style.color=inkFor(c);el.textContent=avatar.photo?'':initial();el.classList.add('set')});$('am-name').textContent=shownName();paintTitle()}
+// the board carries your first name: "Nick's Card Board" (usernames can take its place later)
+function paintTitle(){const f=(profile.first||'').trim(),t=f?f+'’s Card Board':'Card Board';$('cbtn').textContent=t;document.title=t}
 function toast(msg){const t=$('cbtoast');t.textContent=msg;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2200)}
 // appearance
 function applyTheme(th){if(th==='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=th;try{localStorage.setItem('cb.theme',th)}catch(e){}

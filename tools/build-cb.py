@@ -6,7 +6,7 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
 <div id="cb"><div class="frame">
   <div class="topbar">
     <button class="back" id="close" type="button" aria-label="Back to dashboard"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span>Dashboard</span></button>
-    <h1 class="cbt"><span class="cbtn">Card Board</span><span class="ehint2">Drag to move · drag a corner to resize</span> <span class="prem"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/></svg>Premium</span></h1>
+    <h1 class="cbt"><span class="cbtn" id="cbtn">Card Board</span><span class="ehint2">Drag to move · drag a corner to resize</span></h1>
     <div class="tctl">
     <button type="button" class="tbtn edit" id="cb-edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg><span>Edit</span></button>
     <div class="perwrap"><button type="button" class="pill on" id="cb-per" aria-haspopup="true" aria-expanded="false"><span id="cb-perl">Last 12 months</span> <i>▾</i></button><div class="cb-menu" id="cb-menu" hidden role="menu"></div></div>

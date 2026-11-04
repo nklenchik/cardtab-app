@@ -238,3 +238,6 @@ dialog.sheet .awp>.go,dialog.sheet .awp>.rsb,#aw .awfoot{position:static;box-sha
 .cbx #cb .editfoot{display:flex;justify-content:center;padding:26px 0 6px}
 .cbx #cb .editfoot[hidden]{display:none}
 .cbx #cb .editfoot .rst{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:13.5px}
+/* "Nick's Card Board": long names shorten with an ellipsis instead of pushing the controls */
+.cbx #cb .cbt{min-width:0}
+.cbx #cb .cbtn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:block}

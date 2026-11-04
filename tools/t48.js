@@ -21,8 +21,8 @@ log.push('ask sent data: '+(await p.evaluate(()=>/Totals: sales/.test(window.__a
 await ctx.close();
 ctx=await b.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});p=await ctx.newPage();p.on('pageerror',e=>errs.push(e.message+' @ '+(e.stack||'').split('\n').slice(1,3).join(' ')));
 await p.goto('file://'+require('path').resolve('cbt.html'));await p.evaluate(()=>localStorage.clear());await p.reload();await p.tap('#expand');await p.waitForTimeout(1200);await p.screenshot({path:'shots/v12-p.png'});
-await p.tap('#cb-edit');await p.waitForTimeout(300);await p.tap('#addw');await p.waitForTimeout(400);await p.screenshot({path:'shots/v12-padd.png'});await p.tap('#aw .go');await p.waitForTimeout(300);
-await p.tap('#cb-per');await p.tap('#cb-menu [data-k="custom"]');await p.waitForTimeout(300);await p.screenshot({path:'shots/v12-pcal.png'});await p.keyboard.press('Escape');await p.tap('#cb-edit');await p.waitForTimeout(300);
+await p.tap('#cb-edit');await p.waitForTimeout(300);await p.tap('#addw');await p.waitForTimeout(400);await p.screenshot({path:'shots/v12-padd.png'});await p.tap('#aw .go');await p.waitForTimeout(300);await p.tap('#cb-edit');await p.waitForTimeout(300);
+await p.tap('#cb-per');await p.tap('#cb-menu [data-k="custom"]');await p.waitForTimeout(300);await p.screenshot({path:'shots/v12-pcal.png'});await p.keyboard.press('Escape');
 await p.tap('#cb-share');await p.waitForTimeout(300);await p.screenshot({path:'shots/v12-pshare.png'});await p.keyboard.press('Escape');
 await p.tap('#cb-ask');await p.waitForTimeout(400);await p.screenshot({path:'shots/v12-pask.png'});
 console.log(log.join('\n'));console.log('ERR',JSON.stringify(errs));await b.close()})();
