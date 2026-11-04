@@ -368,3 +368,9 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - Back gesture / Android back / browser Back: a small history stack (navPush/navDone) in both the board and Stories. Opening the board, Stories, any sheet, any menu or an enlarged story adds a step; Back closes the newest; closing with a button removes its step (no stale history). Order checked: story, then Stories, then the board.
 - Stories: tapping anywhere outside the enlarged story closes it.
 - Test: tools/t84.js.
+
+### v24.1
+- Stories "Your collection / Sold": same rule as the board's How much of it sold (every card bought up to the end of the period, and how many have sold); it showed 100% with "36 bought, 71 sold" before. The fanned card letters sit in each card's top-left corner, so none hide behind the next card.
+- Board: while a phone menu or any sheet is open, the board underneath is locked (no scrolling behind it).
+- Profile menu: Light / Dark / Auto are equal-width pills with padding on both ends (the menu's full-width button rule was stretching them).
+- tools/t86.js sweeps every period x every story option for text that runs out of a story.

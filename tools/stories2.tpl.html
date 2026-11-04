@@ -93,7 +93,7 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 .sl .bl{position:absolute;left:-1cqmin;right:-1cqmin;border-top:.5cqmin dashed var(--dash)}
 .sl .mon{position:absolute;left:0;right:0;bottom:0;display:flex;gap:1.6cqmin}.sl .mon span{flex:1;text-align:center;font-size:2.6cqmin;font-weight:800;opacity:.6}
 .sl .fan{position:absolute;inset:0}
-.sl .fan .card{width:36cqmin;font-size:13cqmin}
+.sl .fan .card{width:36cqmin;font-size:9cqmin;place-items:start;padding:2.6cqmin 3cqmin;line-height:1}
 .sl .fan .card:nth-child(1){transform:translate(-110%,-45%) rotate(-12deg)}.sl .fan .card:nth-child(2){transform:translate(-50%,-56%)}.sl .fan .card:nth-child(3){transform:translate(10%,-45%) rotate(12deg)}
 .sl .tl{display:grid;gap:4cqmin;margin-top:4cqmin}
 .sl .tl div{display:grid;grid-template-columns:3.6cqmin 1fr auto;gap:3cqmin;align-items:center;font-weight:800;font-size:4.2cqmin}
@@ -232,6 +232,8 @@ function model(){const M=months(per),set=new Set(M),L=E.filter(e=>set.has(e.date
   const sp={};L.filter(e=>e.type==='purchase').forEach(e=>{sp[e.platform]=(sp[e.platform]||0)+e.amount});const plats=Object.keys(sp).map(k=>({k,v:sp[k]})).sort((a,b)=>b.v-a.v);
   const under=by.filter(x=>x.spent<=BUDGET).length,avg=Math.round(t.spent/Math.max(1,M.length)),light=by.reduce((a,x,i)=>x.spent<by[a].spent?i:a,0),busy=by.reduce((a,x,i)=>x.n>by[a].n?i:a,0);
   const soldKeys=new Set(Object.keys(sells)),hold=L.filter(e=>e.type==='purchase'&&!E.some(s=>s.type==='sale'&&key(s)===key(e)&&s.date>=e.date)),hv=hold.reduce((a,e)=>a+e.amount,0);
+  // same rule as the board's "How much of it sold": every card bought up to the end of this period, and how many have sold
+  const endM=M[M.length-1],upTo=E.filter(e=>e.date.slice(0,7)<=endM),qn=ty=>upTo.filter(e=>e.type===ty).reduce((a,e)=>a+(e.qty||1),0),nbE=qn('purchase'),soldE=Math.min(nbE,qn('sale'));
   const bigSale=L.filter(e=>e.type==='sale').sort((a,b)=>b.amount-a.amount)[0];
   const roi=t.spent?Math.round(t.profit/t.spent*100):0,per1=t.spent?(t.kept/t.spent).toFixed(2):'0';
   // one month: look at it week by week (1–7, 8–14, 15–21, 22–28, 29–end) and draw the money line day by day
@@ -271,7 +273,7 @@ function model(){const M=months(per),set=new Set(M),L=E.filter(e=>set.has(e.date
      {k:'Avg spend',top:'<div class="num" style="font-size:20cqmin">'+short(avg)+'<small>a month</small></div><div class="h" style="font-size:8cqmin">your average spend.</div><div class="chips"><span class="chip">Budget: '+short(BUDGET)+'</span></div>',vis:vBudget},
      {k:'Lightest month',top:'<div class="num" style="font-size:20cqmin">'+short(by[light].spent)+'<small>in '+mName(M[light],{month:'short'})+'</small></div><div class="h" style="font-size:8cqmin">your lightest month.</div><div class="chips"><span class="chip">'+short(Math.max(0,BUDGET-by[light].spent))+' under budget</span></div>',vis:vBudget}]},
    {name:'Your collection',opts:[
-     {k:'Sold',top:'<div class="num" style="font-size:22cqmin">'+(t.nb?Math.min(100,Math.round(t.ns/t.nb*100)):0)+'%</div><div class="h" style="font-size:8cqmin">of the cards you bought have sold.</div><div class="chips"><span class="chip">'+cnt(t.nb,'bought','bought')+'</span><span class="chip o">'+t.ns+' sold</span></div>',vis:'<div class="fan">'+L.filter(e=>e.type==='sale').slice(0,3).map(e=>card(e.name)).join('')+'</div>'},
+     {k:'Sold',top:'<div class="num" style="font-size:22cqmin">'+(nbE?Math.round(soldE/nbE*100):0)+'%</div><div class="h" style="font-size:8cqmin">of the cards you’ve bought have sold.</div><div class="chips"><span class="chip">'+nbE+' bought</span><span class="chip o">'+soldE+' sold</span></div>',vis:'<div class="fan">'+L.filter(e=>e.type==='sale').slice(0,3).map(e=>card(e.name)).join('')+'</div>'},
      {k:'Still holding',top:'<div class="num" style="font-size:22cqmin">'+hold.length+'</div><div class="h" style="font-size:8cqmin">cards still on your shelf.</div><div class="chips"><span class="chip">You paid '+short(hv)+'</span></div>',vis:'<div class="fan">'+hold.slice(0,3).map(e=>card(e.name)).join('')+'</div>'},
      one?{k:'Busiest week',top:'<div class="h">'+wk[wb].lab+' was your busiest week.</div><p class="p">'+([wk[wb].ns?cnt(wk[wb].ns,'card','cards')+' sold':'',wk[wb].nb?cnt(wk[wb].nb,'card','cards')+' bought':''].filter(Boolean).join(' and ')||'A quiet month')+'.</p>',vis:'<div class="fan">'+L.filter(e=>{const dd=+e.date.slice(8,10);return dd>=wk[wb].d&&dd<=wk[wb].e2}).slice(0,3).map(e=>card(e.name)).join('')+'</div>'}:
      {k:'Busiest month',top:'<div class="h">'+mName(M[busy])+' was your busiest month.</div><p class="p">'+[by[busy].ns?cnt(by[busy].ns,'card','cards')+' sold':'',by[busy].nb?cnt(by[busy].nb,'card','cards')+' bought':''].filter(Boolean).join(' and ')+'.</p>',vis:'<div class="fan">'+L.filter(e=>e.date.slice(0,7)===M[busy]).slice(0,3).map(e=>card(e.name)).join('')+'</div>'}]}

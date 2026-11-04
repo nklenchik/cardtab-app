@@ -147,3 +147,10 @@ dialog.drawer .awh{align-items:center}
 /* Add widgets keeps one size whatever kind you filter by; only the tiles inside change */
 .awg .awp{height:min(860px,calc(var(--vvh,100dvh) - 40px))}
 @media(max-width:760px){.awg .awp{height:calc(var(--vvh,100dvh) - 12px)}}
+
+/* profile menu: Light, Dark and Auto get equal room, with breathing space on both ends */
+.cbx #cb .am .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;padding:3px;flex:none;min-width:186px}
+.cbx #cb .am .seg button{width:auto;display:block;text-align:center;padding:6px 10px;border-radius:999px;font-size:13px;font-weight:750}
+/* while a menu or sheet is open, the board underneath doesn't scroll */
+.cbx.lock{overflow:hidden!important;overscroll-behavior:none;touch-action:none}
+.cbx.lock .cb-menu,.cbx.lock dialog{touch-action:pan-y}

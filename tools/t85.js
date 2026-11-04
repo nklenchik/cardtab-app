@@ -1,0 +1,12 @@
+const pw=require('playwright');(async()=>{const b=await pw.chromium.launch();const errs=[];
+let p=await (await b.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2})).newPage();p.on('pageerror',e=>errs.push(e.message));
+await p.goto('file://'+require('path').resolve('cbt.html'));await p.evaluate(()=>{localStorage.clear();localStorage.setItem('cb.layout.phone.v1',JSON.stringify([...Array(8)].map((_,i)=>({id:'x'+i,k:['profit','sales','month','sell','where','kept','win','budget'][i],size:'M'}))));localStorage.setItem('cb.custom','1')});await p.reload();await p.evaluate(()=>document.getElementById('expand').click());await p.waitForTimeout(1500);
+await p.tap('#cb-acct');await p.waitForTimeout(500);const y0=await p.evaluate(()=>document.getElementById('cbx').scrollTop);
+await p.mouse.wheel(0,600).catch(()=>{});await p.evaluate(()=>document.getElementById('cbx').scrollBy(0,0));await p.waitForTimeout(300);
+console.log('locked',await p.evaluate(()=>document.getElementById('cbx').classList.contains('lock')),'scroll moved',(await p.evaluate(()=>document.getElementById('cbx').scrollTop))-y0);
+const r=await p.evaluate(()=>{const s=document.getElementById('am-theme').getBoundingClientRect();return {x:s.left-14,y:s.top-10,width:s.width+28,height:s.height+20}});await p.screenshot({path:'shots/seg.png',clip:r});
+await p.tap('#mbd',{position:{x:20,y:20}});await p.waitForTimeout(400);console.log('unlocked',!(await p.evaluate(()=>document.getElementById('cbx').classList.contains('lock'))));
+p=await (await b.newContext({viewport:{width:1440,height:900},deviceScaleFactor:1})).newPage();await p.goto('file://'+require('path').resolve('stories-t.html'));await p.waitForTimeout(500);
+console.log(await p.evaluate(()=>document.querySelector('.sl[data-n="4"]').innerText.replace(/\s+/g,' ').slice(0,100)));
+const R=await p.evaluate(()=>{const e=document.querySelector('.sl[data-n="4"]').getBoundingClientRect();return {x:e.left,y:e.top,width:e.width,height:e.height}});await p.screenshot({path:'shots/s5b.png',clip:R});
+console.log('ERR',JSON.stringify(errs));await b.close()})();

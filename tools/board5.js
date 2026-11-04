@@ -755,11 +755,15 @@ $('cbx').addEventListener('click',e=>{if(!editing||justDragged||rz||drag||!e.tar
   if(e.target.closest('.w[data-id],button,a,input,select,textarea,label,dialog,.cb-menu,.addbar,.topbar,.rzg,.rzo,[role="button"],[role="menuitem"],.undo'))return;
   setEditing(false)});
 
+// the board underneath stays still while a phone menu or any sheet is open
+function lockScroll(){const on=(matchMedia('(max-width:760px)').matches&&!!document.querySelector('#cb .cb-menu:not([hidden])'))||!!document.querySelector('#cb dialog[open]');cbx.classList.toggle('lock',on)}
+new MutationObserver(lockScroll).observe($('cb'),{subtree:true,attributes:true,attributeFilter:['open']});
+
 // ---------- menus: on phones they open centered over a dimmed screen (the bottom bar steps aside); back closes them ----------
 ;(()=>{const bd=document.createElement('div');bd.className='mbd';bd.id='mbd';$('cb').appendChild(bd);
   bd.addEventListener('click',e=>{e.stopPropagation();closeMenus();$('wmenu').hidden=true});
   const menus=[...document.querySelectorAll('#cb .cb-menu')];
-  const sync=()=>{const open=menus.filter(m=>!m.hidden);bd.classList.toggle('on',open.length>0&&matchMedia('(max-width:760px)').matches);
+  const sync=()=>{const open=menus.filter(m=>!m.hidden);bd.classList.toggle('on',open.length>0&&matchMedia('(max-width:760px)').matches);lockScroll();
     menus.forEach(m=>{if(!m.hidden)navPush('menu:'+m.id,()=>{m.hidden=true;closeMenus()});else navDone('menu:'+m.id)})};
   const mo=new MutationObserver(sync);menus.forEach(m=>mo.observe(m,{attributes:true,attributeFilter:['hidden']}))})();
 
