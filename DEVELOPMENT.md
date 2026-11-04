@@ -442,3 +442,7 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 ## v26.4: edit mode blank screen (found from Nick's screen recording)
 - Cause: the slim bar's edit-mode class was `ed`, which is also the app's editor dialog class (`.ed{width:100%;height:100%}`), so in the app build the bar stretched over the whole screen whenever you entered edit mode after scrolling. Renamed to `sedit`.
 - Resize grip is now an arc hugging the tile's corner instead of a circle straddling the border.
+
+## v26.5: Featured edit controls
+- Featured no longer clips its own edit controls: the art layer clips to the rounded corners instead of the tile, so the remove ✕ and the resize corner show in full.
+- Board files load with `?v=` (board-loader.js `V`); bump it whenever board.css/board.js change so phones don't reuse an old copy.
