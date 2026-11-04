@@ -438,3 +438,7 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 - Widgets, the dock and the slim bar take no text selection or callout on touch screens (CSS + selectstart), so iOS can't take over a long press and scroll the board away.
 - The slim "‹ Card Board" bar shows only when the board itself has scrolled past its title (measured against the board, not the window).
 - Preview helper: `?preview` in local mode shows a "Load sample entries (Premium)" chip.
+
+## v26.4: edit mode blank screen (found from Nick's screen recording)
+- Cause: the slim bar's edit-mode class was `ed`, which is also the app's editor dialog class (`.ed{width:100%;height:100%}`), so in the app build the bar stretched over the whole screen whenever you entered edit mode after scrolling. Renamed to `sedit`.
+- Resize grip is now an arc hugging the tile's corner instead of a circle straddling the border.

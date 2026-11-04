@@ -99,3 +99,13 @@
 
 /* touch screens: a long press on any widget belongs to the board (edit mode), never to the phone's text selection or callout */
 @media (hover:none),(pointer:coarse){.cbx #cb #simple,.cbx #cb #simple *,.cbdock,.cbdock *,.cbslim,.cbslim *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}}
+/* resize grip: an arc that hugs the tile's own corner (no floating circle straddling the border) */
+.cbx #cb.editing .wq .grip{width:36px!important;height:36px!important;right:0!important;bottom:0!important;left:auto!important;top:auto!important;border-radius:0 0 20px 0!important;background:transparent!important;box-shadow:none!important;color:var(--text);z-index:4;padding:0}
+.cbx #cb.editing .wq .grip svg{display:none}
+.cbx #cb.editing .wq .grip::after{content:"";position:absolute;right:6px;bottom:6px;width:16px;height:16px;border:solid currentColor;border-width:0 4px 4px 0;border-bottom-right-radius:14px;opacity:.55;transition:opacity .15s}
+.cbx #cb.editing .wq .grip:hover::after,.cbx #cb.editing .wq .grip:focus-visible::after{opacity:.9}
+.cbx #cb.editing .wq .grip::before{inset:-8px!important;border-radius:0!important}
+.cbx #cb.editing .wq.edgeR .grip{left:0!important;right:auto!important;border-radius:0 0 0 20px!important}
+.cbx #cb.editing .wq.edgeR .grip::after{right:auto;left:6px;border-width:0 0 4px 4px;border-bottom-right-radius:0;border-bottom-left-radius:14px}
+.cbx #cb.editing .wq.k-feat .grip{color:#fff}
+.cbx #cb.editing .wq.k-feat .grip::after{opacity:.9;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}

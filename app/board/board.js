@@ -1019,7 +1019,7 @@ let lastY=0,tuckT=0;
 function sync(){const open=!cbx.classList.contains('off')&&!cbx.inert,ok=PH.matches&&open&&!document.querySelector('#cb dialog[open]')&&!document.querySelector('#cb .cb-menu:not([hidden])')&&!cbEl.classList.contains('editing')&&!cbEl.classList.contains('viewing')&&!csx.classList.contains('in');
   dock.classList.toggle('on',ok);if(!ok)dock.classList.remove('tuck');
   if(slim){const t=$('cbtn').getBoundingClientRect(),top0=cbx.getBoundingClientRect().top;const show=PH.matches&&open&&!csx.classList.contains('in')&&cbx.scrollTop>40&&t.bottom-top0<8;slim.classList.toggle('on',show);slim.querySelector('.spill span').textContent=$('cb-perl').textContent;
-    const s=cbEl.classList.contains('editing');slim.classList.toggle('ed',s)}}
+    const s=cbEl.classList.contains('editing');slim.classList.toggle('sedit',s)}}
 cbx.addEventListener('scroll',()=>{const y=cbx.scrollTop,dy=y-lastY;lastY=y;
   if(dock.classList.contains('on')){if(dy>6&&y>60)dock.classList.add('tuck');else if(dy<-6)dock.classList.remove('tuck');clearTimeout(tuckT);tuckT=setTimeout(()=>dock.classList.remove('tuck'),700)}
   if(slim)sync()},{passive:true});

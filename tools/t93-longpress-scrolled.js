@@ -1,0 +1,16 @@
+const pw=require('playwright');(async()=>{const b=await pw.chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:664},isMobile:true,hasTouch:true,deviceScaleFactor:1});const p=await ctx.newPage();
+p.on('pageerror',e=>console.log('ERR',e.message));
+await p.goto('http://localhost:8765/index.html');await p.evaluate(()=>{localStorage.clear();localStorage.setItem('ct.session',JSON.stringify({email:'n@x.com',name:'Nick',via:'email',expires:Date.now()+864e5}))});await p.reload();await p.waitForTimeout(500);await p.evaluate(()=>CTStore.setPlan('premium'));await p.reload();await p.waitForTimeout(700);
+await p.evaluate(()=>document.querySelector('[data-dev=sample]').click());await p.waitForTimeout(600);await p.evaluate(()=>document.getElementById('ct-expand').click());await p.waitForTimeout(2600);
+const cdp=await ctx.newCDPSession(p);
+const sel=process.argv[2]||'.k-feat';const SC=+(process.argv[3]||0);await p.evaluate(v=>{document.getElementById('cbx').scrollTop=v},SC);await p.waitForTimeout(400);
+const box=await p.evaluate(s=>{const r=document.querySelector('#simple '+s).getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+Math.min(r.height/2,60)}},sel);
+console.log('press at',box);
+await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:box.x,y:box.y}]});
+await p.waitForTimeout(700);
+await p.screenshot({path:'lp-hold.png'});
+await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+await p.waitForTimeout(600);
+await p.screenshot({path:'lp-after.png'});console.log(await p.evaluate(()=>{const c=document.getElementById('cbx');return {st:c.scrollTop,sh:c.scrollHeight,ch:c.clientHeight,simple:document.getElementById('simple').getBoundingClientRect().top|0}}));
+console.log(await p.evaluate(()=>({editing:document.getElementById('cb').classList.contains('editing'),csx:document.getElementById('csx').className,slim:(document.querySelector('.cbslim')||{}).className,scroll:document.getElementById('cbx').scrollTop,cbx:document.getElementById('cbx').className,hist:history.length})));
+await b.close()})();
