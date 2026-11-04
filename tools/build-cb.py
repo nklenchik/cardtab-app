@@ -1,10 +1,11 @@
 import json,base64,sys
 SOFT='nosoft' not in sys.argv[1:]  # the soft look is the main look now
-args=[a for a in sys.argv[1:] if a not in ('soft','nosoft')]
+APP='app' in sys.argv[1:]  # 'app': build the board as a bundle the real app loads on demand
+args=[a for a in sys.argv[1:] if a not in ('soft','nosoft','app')]
 MAIN=not args
 VAR=args[0] if args else 'A'  # the main board uses phone layout A
 P=json.load(open('dash-parts.json'))
-board_css=open('board-part.html').read().replace('__SITECSS__',open('site-cb.css').read())+open('board4.css').read()+open('board5.css').read()+open('board6.css').read()+open('board7.css').read()+open('board8.css').read()+open('board9.css').read()+open('board10.css').read()+open('board11.css').read()+open('board12.css').read()+(open('board13.css').read() if VAR else '')+(open('board14-soft.css').read() if SOFT else '')
+board_css=open('board-part.html').read().replace('__SITECSS__',open('site-cb.css').read())+open('board4.css').read()+open('board5.css').read()+open('board6.css').read()+open('board7.css').read()+open('board8.css').read()+open('board9.css').read()+open('board10.css').read()+open('board11.css').read()+open('board12.css').read()+(open('board13.css').read() if VAR else '')+(open('board14-soft.css').read() if SOFT else '')+open('board15.css').read()
 markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
 <section class="cbx off" id="cbx" inert aria-hidden="true" role="dialog" aria-modal="true" aria-label="Card Board">
 <div id="cb"><div class="frame">
@@ -142,9 +143,41 @@ function totals(list){let sales=0,after=0,spent=0,ref=0,fees=0;list.forEach(e=>{
 const calm=matchMedia('(prefers-reduced-motion: reduce)');
 const STORIES_HTML=__STORIES__;
 '''.replace('__DATA__',data).replace('__STORIES__',stories_js)
-page=P['css']+board_css+tipcss+'</style>\n\n'+P['html']+markup+head_js+P['js']+open('board5.js').read()+(open('board13.js').read() if VAR else '')+'\n})();\n</script>\n'
+page=P['css']+board_css+tipcss+'</style>\n\n'+P['html']+markup+head_js+P['js']+open('board15.js').read()+open('board5.js').read()+(open('board13.js').read() if VAR else '')+'\n})();\n</script>\n'
 logo='data:image/webp;base64,'+base64.b64encode(open('/home/claude/cardtab-app/app/assets/logo-128.webp','rb').read()).decode()
 out=page.replace('__LOGO__',logo)
 if not MAIN:out=out.replace('<title>Card Board Preview</title>','<title>Card Board Phone '+VAR+'</title>',1)
 open('card-board-preview.html' if MAIN else 'card-board-'+VAR.lower()+'.html','w').write(out)
 print(len(page))
+
+if APP:
+    import re,os
+    # ---- CSS: everything the board needs, fenced inside .cbroot so none of it can change the app's own look ----
+    pc=P['css'];toks=''.join(re.findall(r'(:root(?:\[data-theme="dark"\])?\{[^}]*\}|@media \(prefers-color-scheme:dark\)\{:root:not\(\[data-theme="light"\]\)\{[^}]*\}\})',pc))
+    css=toks+board_css+tipcss
+    css=re.sub(r':root:not\(\[data-theme="light"\]\)\{',':root:not([data-theme="light"]) .cbroot{',css)
+    css=re.sub(r':root\[data-theme="dark"\]\{',':root[data-theme="dark"] .cbroot{',css)
+    css=re.sub(r'(^|[}\s;]):root\{',r'\1.cbroot{',css)
+    css=css.replace('<style>','').replace('</style>','')
+    css+='\n.cbroot,.cbroot *,.cbroot *::before,.cbroot *::after{box-sizing:border-box}\n.cbroot{color:var(--text);font-family:var(--font);font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}\n.cbroot button{font:inherit;color:inherit;cursor:pointer}\n.cbroot button:focus-visible,.cbroot select:focus-visible{outline:2px solid #5b9fe3;outline-offset:2px}\n'
+    # ---- JS ----
+    hj=head_js.replace('<script>\n','',1)
+    hj=re.sub(r"const RAW=.*?\n","",hj,count=1)
+    hj=re.sub(r"const E=RAW\.map\(.*?\n","let E=(window.CTBoardData?window.CTBoardData():[]);\n",hj,count=1)
+    hj=re.sub(r"const TODAY='[\d-]+';","let TODAY=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')})();",hj,count=1)
+    b5=open('board15.js').read()+open('board5.js').read();b13=open('board13.js').read()
+    b5=b5.replace("const cbx=$('cbx'),ins=$('ins'),xb=$('expand')","const cbx=$('cbx'),ins=document.querySelector('.ct-insight')||$('ins'),xb=$('expand')||document.createElement('button')")
+    b5=b5.replace("$('note').hidden=true;","($('note')||{}).hidden=true;").replace("$('expand').addEventListener('click',()=>setTimeout(quiet,3000))","xb.addEventListener('click',()=>setTimeout(quiet,3000))")
+    b5=b5.replace("document.body.appendChild(mhost)","CBROOT.appendChild(mhost)")
+    b13=b13.replace("document.body.appendChild(dock)","CBROOT.appendChild(dock)").replace("document.body.appendChild(slim)","CBROOT.appendChild(slim)")
+    b5=b5.replace("if(a==='go-app'){toast('Opens your entries in the app');return}","if(a==='go-app'){close();return}")
+    assert "CBROOT.appendChild(mhost)" in b5 and "CBROOT.appendChild(dock)" in b13 and "if(a==='go-app'){close();return}" in b5
+    js='/* Card Board for the Card Tab app. Built by tools/build-cb.py app; loaded on demand by js/board-loader.js. */\n(function(){\nif(window.CTBoard)return;\nconst CBROOT=document.createElement("div");CBROOT.className="cbroot";CBROOT.innerHTML='+json.dumps(markup)+';document.body.appendChild(CBROOT);\n'+("document.documentElement.dataset.cbv='"+VAR+"';\n")+hj.split("(function(){",1)[1]+b5+b13+open('board-app-tail.js').read()+'\n})();\n'
+    # the app's own menu already uses these ids; the board's copies get their own names
+    idfix=lambda x:re.sub(r'\bam-(name|theme|hapr|hap)\b',r'cb-am-\1',x)
+    js=idfix(js);css=idfix(css).replace('#cb,:root{--hair-l:1;}','#cb{--hair-l:1;}')
+    js=js.replace('__LOGO__',logo)
+    os.makedirs('app-soft/board',exist_ok=True)
+    open('app-soft/board/board.css','w').write(css.replace('__LOGO__',logo))
+    open('app-soft/board/board.js','w').write(js)
+    print('app bundle',len(css),len(js))

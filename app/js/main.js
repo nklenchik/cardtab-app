@@ -81,7 +81,7 @@
   menu.addEventListener('click', async e => {
     const b = e.target.closest('button, summary'); if (!b) return;
     if (b.closest('#am-theme') || b.id === 'am-hap') return;
-    if (b.dataset.go) { closeMenu(); if (b.dataset.go !== 'entries') Dash.toast(b.dataset.go === 'board' ? 'Opens Card Board' : 'Opens Card Stories'); return; }
+    if (b.dataset.go) { closeMenu(); const g = b.dataset.go; if (g === 'entries') return; if (S.plan() === 'premium' && window.CTBoardLoader) window.CTBoardLoader.open(g === 'stories' ? 'stories' : null); else Dash.toast(g === 'board' ? 'Full-screen Card Board is part of Premium' : 'Card Stories is part of Premium'); return; }
     if (b.dataset.soon) { closeMenu(); Dash.toast(b.dataset.soon + ' arrives in a later update.'); return; }
     if (b.id === 'am-export') { closeMenu(); Dash.exportCSV(); return; }
     if (b.id === 'am-import') { closeMenu(); Dash.openImport(); return; }
@@ -111,7 +111,13 @@
       { date: at(2, 17), type: 'purchase', platform: 'TCGplayer', name: 'Greninja ex - 214/167 - SV06: Twilight Masquerade', amount: '227.75', condition: 'Near Mint', art: art('greninja-ex') },
       { date: at(2, 11), type: 'sale', platform: 'Card Show', name: 'Blastoise - 2/102 - Base Set Unlimited', amount: '120.00', fees: '0', ship: '0', condition: 'Lightly Played', art: art('blastoise') },
       { date: at(2, 4), type: 'purchase', platform: 'Whatnot', name: 'Houndoom - 4/64 - Neo Revelation', amount: '18.40', condition: 'Near Mint', art: { list: 'assets/card-art/houndoom-sm.webp', detail: 'assets/card-art/houndoom.webp' } },
-      { date: at(3, 20), type: 'purchase', platform: 'Local game store', name: 'Surging Sparks booster bundle', amount: '32.39', condition: 'Sealed' }
+      { date: at(3, 20), type: 'purchase', platform: 'Local game store', name: 'Surging Sparks booster bundle', amount: '32.39', condition: 'Sealed' },
+      // HD samples with an artwork-only copy (wall), so Featured card shows full art in the preview
+      { date: at(1, 14), type: 'sale', platform: 'eBay', name: 'Mega Gengar ex - 284/217 - Ascended Heroes', amount: '421.50', fees: '27.83', ship: '1.27', condition: 'Near Mint', art: { list: 'assets/card-art/mega-gengar-ex-sm.webp', detail: 'assets/card-art/mega-gengar-ex.webp', wall: 'assets/card-art/mega-gengar-ex-wall.webp', focus: [50, 50] } },
+      { date: at(4, 2), type: 'purchase', platform: 'TCGplayer', name: 'Mega Gengar ex - 284/217 - Ascended Heroes', amount: '180.00', condition: 'Near Mint', art: { list: 'assets/card-art/mega-gengar-ex-sm.webp', detail: 'assets/card-art/mega-gengar-ex.webp', wall: 'assets/card-art/mega-gengar-ex-wall.webp', focus: [50, 50] } },
+      { date: at(0, Math.ceil(D * .6)), type: 'sale', platform: 'eBay', name: 'Articuno ex - 036/082 - Japanese', amount: '170.00', fees: '22.11', ship: '1.27', condition: 'Lightly Played', art: { list: 'assets/card-art/articuno-ex-sm.webp', detail: 'assets/card-art/articuno-ex.webp', wall: 'assets/card-art/articuno-ex-wall.webp', focus: [50, 62] } },
+      { date: at(2, 6), type: 'purchase', platform: 'Card Show', name: 'Articuno ex - 036/082 - Japanese', amount: '40.00', condition: 'Lightly Played', art: { list: 'assets/card-art/articuno-ex-sm.webp', detail: 'assets/card-art/articuno-ex.webp', wall: 'assets/card-art/articuno-ex-wall.webp', focus: [50, 62] } },
+      { date: at(1, 3), type: 'purchase', platform: 'TCGplayer', name: 'Magby - 186/182 - Paradox Rift', amount: '48.99', condition: 'Near Mint', art: { list: 'assets/card-art/magby-sm.webp', detail: 'assets/card-art/magby.webp', wall: 'assets/card-art/magby-wall.webp', focus: [52, 52] } }
     ];
   }
 

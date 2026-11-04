@@ -14,8 +14,11 @@ const CATALOG={
   where:{t:'Where you buy',s:'Buy from',d:'Which platforms get most of your spending'},
   kept:{t:'What each platform kept',s:'Top fees',d:'Fees and shipping as a share of each sale'},
   win:{t:'Your biggest win',s:'Biggest win',d:'The card that made you the most'},
-  budget:{t:'Spend vs budget',s:'Budget',d:'How many months you stayed under budget'}};
-const DEFAULT=[['profit','S'],['sales','S'],['spent','S'],['month','B']].map(([k,size],i)=>({id:'d'+i,k,size}));
+  budget:{t:'Spend vs budget',s:'Budget',d:'How many months you stayed under budget'},
+  feat:{t:'Featured card',s:'Featured',d:'One of your cards in full art, with the number that matters'},
+  best:{t:'Best sellers',s:'Best sellers',d:'Your top three cards by profit'},
+  pricey:{t:'Priciest card',s:'Priciest',d:'The most you paid for a single card'}};
+const DEFAULT=[['feat','L'],['profit','S'],['sales','S'],['spent','S'],['month','B']].map(([k,size],i)=>({id:'d'+i,k,size}));
 // phone and desktop each keep their own arrangement (order and sizes). The phone starts as a copy of desktop.
 // Widgets you add land on both boards; removing, moving, resizing and Reset only touch the screen you're on.
 const LKEY='cb.layout.v3',LKEYP='cb.layout.phone.v1',clone=x=>JSON.parse(JSON.stringify(x));
@@ -153,6 +156,7 @@ const row=(inner,detail,open,drill)=>'<div class="r" '+(open?'data-row':'data-ti
 
 // ---------- widget bodies: one layout per metric per size ----------
 function body(k,ctx,s,w){
+  if(NEWW[k])return NEWW[k](ctx,s,w);
   const {p,inP,mt,unit}=ctx,t=totals(inP);
   if(KPI[k])return kpiBody(k,ctx,s,t,w);
   if(k==='month'){const data=mt.map(x=>Object.assign({},x,{v:totals(x.list).profit,on:x.list.length>0})),tot=data.reduce((a,d)=>a+d.v,0),act=data.filter(d=>d.on),bestM=act.length?act.reduce((a,d)=>d.v>a.v?d:a):null;
@@ -241,13 +245,13 @@ function kpiDelta(k,ctx){if(!KPI[k]||!ctx.prevP)return '';const v=KPI[k](totals(
   const chg=(v-pv)/Math.abs(pv)*100,up=chg>=0,good=GOOD[k]==='up'?up:!up,vs=compare==='year'?'vs last year':'vs previous period';
   return '<span class="dl hd '+(good?'up':'dn')+'" title="'+vs+'" aria-label="'+(up?'Up ':'Down ')+Math.abs(chg).toFixed(0)+'% '+vs+'">'+(up?'▲':'▼')+'\u2009'+Math.abs(chg).toFixed(0)+'%</span>'}
 const GRIP='<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M13 5L5 13M13 9.5L9.5 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
-function widgetHTML(w,ctx,extra){const s=eff(w.size),t=w.name||(w.k==='month'?'Profit by '+ctx.unit:CATALOG[w.k].t),tt=w.name||(s==='S'?(w.k==='month'?'Best '+ctx.unit:CATALOG[w.k].s):t);
+function widgetHTML(w,ctx,extra){const s=eff(w.size),t=w.name||(w.k==='month'?'Profit by '+ctx.unit:w.k==='feat'?FEAT[FEAT[w.metric]?w.metric:'win'].t:CATALOG[w.k].t),tt=w.name||(s==='S'&&w.k!=='feat'?(w.k==='month'?'Best '+ctx.unit:CATALOG[w.k].s):t);
   return '<section class="w wq sz'+w.size+' e'+s+(s==='B'?' eM':'')+' k-'+w.k+(extra?' '+extra:'')+'" data-id="'+w.id+'" data-k="'+w.k+'" aria-label="'+esc(t)+', '+SIZE_NAMES[s]+'"><div class="wh"><div class="wtl"><h3 class="ttl" title="'+esc(t)+'">'+esc(tt)+'</h3>'+kpiDelta(w.k,ctx)+'</div><button type="button" class="wmore" aria-label="Options for '+t+'" aria-haspopup="true">⋯</button></div><div class="wb">'+hideMoney(body(w.k,ctx,s,w))+'</div>'+
     '<button type="button" class="rm" aria-label="Remove '+t+'"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 2l6 6M8 2L2 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>'+
     '<button type="button" class="grip" aria-label="Resize '+t+'. Now '+SIZE_NAMES[s]+'. Arrow keys change the size." title="Drag to resize">'+GRIP+'</button></section>'}
 
 // ---------- interactions inside widgets, matching the site ----------
-function wire(root,ctx){
+function wire(root,ctx){settleWalls(root);
   fillCharts(root,ctx);
   root.querySelectorAll('[data-tipd]').forEach(el=>{el.tabIndex=0;bindTip(el,el,()=>esc(el.dataset.tipd))});
   // tap-to-open rows, one open at a time per widget, like the site's FAQs
@@ -372,10 +376,13 @@ function setSize(id,s){const w=byId(id);if(!w||w.size===s)return;buzz('tick');co
 const SZL={S:'Small',M:'Wide',B:'Banner',L:'Large',X:'X-Large'};
 function openWidgetMenu(btn,w){closeMenus();hideTip();const m=$('wmenu'),cur=eff(w.size);
   m.innerHTML='<div class="mh">Size</div><div class="msz2" style="--n:'+sizesNow().length+'">'+sizesNow().map(s=>'<button type="button" data-msize="'+s+'" aria-pressed="'+(cur===s)+'" aria-label="'+SIZE_NAMES[s]+'"><i class="sg sg'+s+'"></i><span>'+SZL[s]+'</span></button>').join('')+'</div>'+
+    (w.k==='feat'?'<div class="mh">Featuring</div><div class="mfeat">'+FEAT_ORDER.map(m=>'<button type="button" data-fm="'+m+'" aria-pressed="'+((w.metric||'win')===m)+'">'+FEAT[m].t.replace('Your biggest win','Biggest win')+'</button>').join('')+'</div><div class="mrow"><span>Show</span><div class="seg fshow" role="radiogroup" aria-label="Show">'+[['both','Both'],['$','$'],['%','%']].map(o=>'<button type="button" role="radio" data-fs="'+o[0]+'" aria-checked="'+((w.show||'both')===o[0])+'">'+o[1]+'</button>').join('')+'</div></div>':'')+
     (KPI[w.k]?'<div class="mrow"><span>Show trend</span><button type="button" class="swt" data-act="trend" role="switch" aria-checked="'+(w.trend!==false)+'" aria-label="Show trend"><i></i></button></div>':'')+
     '<div class="msep"></div><button type="button" data-act="rename">Rename</button><button type="button" data-act="up">Move up</button><button type="button" data-act="down">Move down</button><button type="button" data-act="rm" class="danger">Remove</button>';
   const r=btn.getBoundingClientRect(),host=$('cb').getBoundingClientRect();m.hidden=false;const mw=m.offsetWidth;m.style.top=(r.bottom-host.top+6)+'px';m.style.left=Math.max(8,Math.min(r.right-host.left-mw,host.width-mw-8))+'px';
   m.onclick=ev=>{const b=ev.target.closest('button');if(!b)return;
+    if(b.dataset.fm){w.metric=b.dataset.fm;save();buzz('tick');m.querySelectorAll('[data-fm]').forEach(x=>x.setAttribute('aria-pressed',x===b));rebuild(w.id);return}
+    if(b.dataset.fs){w.show=b.dataset.fs;save();buzz('tick');m.querySelectorAll('[data-fs]').forEach(x=>x.setAttribute('aria-checked',x===b));rebuild(w.id);return}
     if(b.dataset.act==='trend'){w.trend=w.trend===false;save();b.setAttribute('aria-checked',w.trend!==false);buzz('tick');rebuild(w.id);return}
     m.hidden=true;if(b.dataset.msize){setSize(w.id,b.dataset.msize);return}
     if(b.dataset.act==='rename'){startRename(w.id);return}if(b.dataset.act==='up')moveWidget(w.id,-1);else if(b.dataset.act==='down')moveWidget(w.id,1);else removeWidget(w.id)}}
@@ -472,8 +479,8 @@ $('simple').addEventListener('keydown',e=>{const gp=e.target.closest('.grip');if
   if(j>-1){e.preventDefault();setSize(id,L[j]);const ng=$('simple').querySelector('.w[data-id="'+id+'"] .grip');if(ng)ng.focus()}});
 
 // ---------- add widgets: a gallery of small widgets; tap to add to the top of the board, tap again to take it back ----------
-const aw=$('aw'),DEF_SIZE={profit:'S',sales:'S',spent:'S',fees:'S',month:'M',sell:'M',where:'S',kept:'M',win:'S',budget:'M'};
-const CATS={profit:'num',sales:'num',spent:'num',fees:'num',sell:'num',win:'num',month:'chart',budget:'chart',where:'list',kept:'list'};
+const aw=$('aw'),DEF_SIZE={profit:'S',sales:'S',spent:'S',fees:'S',month:'M',sell:'M',where:'S',kept:'M',win:'M',budget:'M',feat:'L',best:'L',pricey:'M'};
+const CATS={profit:'num',sales:'num',spent:'num',fees:'num',sell:'num',win:'num',month:'chart',budget:'chart',where:'list',kept:'list',feat:'num',best:'list',pricey:'num'};
 const PLUS_I='<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
 const CHECK_I='<svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.4l2.6 2.5L11 4.4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 let added={},awCat='all';
@@ -484,7 +491,7 @@ function openAdd(){$('aw-hint').textContent=AW_TIP;$('aw-hint').classList.remove
   added={};awCat='all';$('aw-q').value='';$('aw-cats').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c==='all'));aw.showModal();if(!fresh){drawThumbs();awSig=awSigNow()}}
 function drawThumbs(){const g=gridSpec(),W=g.col,H=g.row,ctx=ctxNow(),q=$('aw-q').value.trim().toLowerCase(),host=$('aw-list');
   const keys=Object.keys(CATALOG).filter(k=>(awCat==='all'||CATS[k]===awCat)&&(!q||(CATALOG[k].t+' '+CATALOG[k].d).toLowerCase().includes(q)));
-  host.innerHTML=keys.length?keys.map(k=>'<div role="button" tabindex="0" class="thumb'+(added[k]?' added':'')+'" data-k="'+k+'" aria-pressed="'+!!added[k]+'" aria-label="'+(added[k]?'Remove ':'Add ')+CATALOG[k].t+'"><span class="tbox"><span class="tin">'+widgetHTML({id:'pv'+k,k,size:'S'},ctx,'pv')+'</span></span><span class="badge">'+(added[k]?CHECK_I:PLUS_I)+'</span></div>').join(''):'<p class="awnone">No widgets match “'+esc(q)+'”.</p>';
+  PVMODE=true;try{host.innerHTML=keys.length?keys.map(k=>'<div role="button" tabindex="0" class="thumb'+(added[k]?' added':'')+'" data-k="'+k+'" aria-pressed="'+!!added[k]+'" aria-label="'+(added[k]?'Remove ':'Add ')+CATALOG[k].t+'"><span class="tbox"><span class="tin">'+widgetHTML({id:'pv'+k,k,size:'S'},ctx,'pv')+'</span></span><span class="badge">'+(added[k]?CHECK_I:PLUS_I)+'</span></div>').join(''):'<p class="awnone">No widgets match “'+esc(q)+'”.</p>'}finally{PVMODE=false}
   const bxs=[...host.querySelectorAll('.tbox')],ws=bxs.map(bx=>bx.clientWidth);bxs.forEach((bx,i)=>{const sc=ws[i]/W,inn=bx.firstChild,el=inn.firstChild;el.style.width=W+'px';el.style.height=H+'px';inn.style.transform='scale('+sc+')';bx.style.height=(H*sc)+'px'});
   wire(host,ctx)}
 // the tip line under the gallery briefly becomes the confirmation, then goes back; nothing floats over anything

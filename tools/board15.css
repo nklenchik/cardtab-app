@@ -1,0 +1,91 @@
+
+/* ===== v26 card-art widgets ===== */
+/* Featured card: the art fills the tile inside the same hairline frame (treatment A: deeper shade behind the words) */
+.cbx #cb .wq.k-feat{padding:0;overflow:hidden;position:relative;background:#1d1b19;isolation:isolate}
+.cbx #cb .k-feat>.wh{position:absolute;left:0;right:0;top:0;z-index:3;padding:12px 10px 0 12px;margin:0;pointer-events:none}
+.cbx #cb .k-feat>.wh>*{pointer-events:auto}
+.cbx #cb .k-feat .ttl{display:inline-block;max-width:100%;color:#fff;font-size:11.5px;font-weight:800;letter-spacing:0;background:rgba(255,255,255,.18);-webkit-backdrop-filter:blur(10px) saturate(1.4);backdrop-filter:blur(10px) saturate(1.4);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:5px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cbx #cb .k-feat .wmore{color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.4)}
+.cbx #cb .k-feat>.wb{position:absolute;inset:0;margin:0;padding:0;display:block}
+.cbx #cb .fw{position:absolute;inset:0;display:block;color:#fff;isolation:isolate;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cbx #cb .fwi{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:var(--fx,50%) var(--fy,30%);transform:scale(var(--fz,1));transform-origin:var(--fx,50%) var(--fy,30%);z-index:-2;opacity:0;transition:opacity .45s ease}
+.cbx #cb .fw.in .fwi{opacity:1}
+.cbx #cb .fw::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(rgba(0,0,0,.12),rgba(0,0,0,.12)),linear-gradient(180deg,rgba(0,0,0,.42) 0%,rgba(0,0,0,.08) 22%,rgba(0,0,0,.12) 40%,rgba(0,0,0,calc(var(--shade,.86)*.72)) 66%,rgba(0,0,0,var(--shade,.86)) 100%)}
+.cbx #cb .fwt{position:absolute;left:18px;right:18px;bottom:16px}
+.cbx #cb .fn{margin:0;font-size:clamp(17px,7cqw,24px);font-weight:800;letter-spacing:-.02em;line-height:1.15;text-shadow:0 1px 12px rgba(0,0,0,.4);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cbx #cb .fl{margin:3px 0 0;font-size:12.5px;font-weight:600;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cbx #cb .fbig{font-size:clamp(26px,11cqw,40px);font-weight:800;letter-spacing:-.035em;line-height:1;margin-top:10px;color:#fff;text-shadow:0 1px 14px rgba(0,0,0,.4);display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px}
+.cbx #cb .fbig.g{color:#b9f08f}.cbx #cb .fbig.r{color:#ffb3bf}
+.cbx #cb .fpc{font-size:12.5px;font-weight:800;letter-spacing:0;color:#fff;text-shadow:none;background:rgba(255,255,255,.2);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:3px 10px;white-space:nowrap}
+/* wide tiles: the words sit on the left over a sideways shade */
+.cbx #cb .k-feat.eM .fw::after,.cbx #cb .k-feat.eB .fw::after{background:linear-gradient(90deg,rgba(0,0,0,var(--shade,.86)) 0%,rgba(0,0,0,calc(var(--shade,.86)*.45)) 46%,rgba(0,0,0,0) 74%),linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,0) 30%)}
+.cbx #cb .k-feat.eM .fwt,.cbx #cb .k-feat.eB .fwt{right:auto;max-width:60%;bottom:auto;top:50%;transform:translateY(-38%)}
+.cbx #cb .k-feat.eM .fbig,.cbx #cb .k-feat.eB .fbig{font-size:clamp(22px,6cqw,34px)}
+/* small tiles: just the number */
+.cbx #cb .k-feat.eS .fwt{left:12px;right:12px;bottom:10px}
+.cbx #cb .k-feat.eS .fbig{font-size:clamp(20px,16cqw,28px);margin-top:0}
+.cbx #cb .k-feat.eS .ttl{font-size:10.5px;padding:3px 9px}
+/* nothing to feature, or no art: the regular widget look */
+.cbx #cb .k-feat:has(>.wb>.fwnone),.cbx #cb .k-feat:has(>.wb>.fwcard){background:linear-gradient(180deg,var(--card) 55%,color-mix(in srgb,var(--card) 97%,#e9e2d8))}
+.cbx #cb .k-feat:has(>.wb>.fwnone) .ttl,.cbx #cb .k-feat:has(>.wb>.fwcard) .ttl{color:var(--text);background:none;border:0;padding:0;-webkit-backdrop-filter:none;backdrop-filter:none;font-size:15px}
+.cbx #cb .k-feat:has(>.wb>.fwnone) .wmore,.cbx #cb .k-feat:has(>.wb>.fwcard) .wmore{color:var(--muted);text-shadow:none}
+.cbx #cb .fwnone,.cbx #cb .fwcard{position:absolute;inset:0;padding:52px 20px 18px;color:var(--text);display:flex;flex-direction:column;justify-content:center}
+.cbx #cb .fwnone p{margin:0;color:var(--muted);font-weight:600;font-size:13.5px}
+/* ---- card and details (Biggest win, Priciest card, and Featured when there's no art) ---- */
+.cbx #cb .xhero{display:grid;grid-template-columns:clamp(70px,34%,170px) minmax(0,1fr);gap:clamp(12px,4cqw,22px);align-items:center;cursor:pointer;min-width:0}
+.cbx #cb .xart,.cbx #cb .xsart{display:block;width:100%;aspect-ratio:5/7;object-fit:cover;border-radius:7px;box-shadow:0 2px 4px rgba(0,0,0,.12),0 14px 28px -12px rgba(0,0,0,.35);background:var(--cb-trk)}
+.cbx #cb .ph{display:grid;place-items:center;background:linear-gradient(160deg,#b45a72,#6d1d33);color:#fff;font-weight:800}
+.cbx #cb .xart.ph i,.cbx #cb .xsart.ph i{font-style:normal;font-size:clamp(20px,9cqw,40px)}
+.cbx #cb .xtx{min-width:0}
+.cbx #cb .xn{margin:0;font-size:clamp(15px,5.4cqw,21px);font-weight:800;line-height:1.2;letter-spacing:-.02em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-wrap:balance}
+.cbx #cb .xm{margin:3px 0 0;font-size:12.5px;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cbx #cb .xl{margin:8px 0 0;font-size:12.5px;color:var(--muted);font-weight:600}
+.cbx #cb .x2{display:flex;gap:20px;margin-top:12px}
+.cbx #cb .x2 b{display:block;font-size:14.5px;font-weight:800;margin-top:1px}
+.cbx #cb .lab{display:block;margin:0;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--cb-mut2)}
+.cbx #cb .xbig{font-size:clamp(24px,10cqw,38px);font-weight:800;letter-spacing:-.035em;line-height:1;margin-top:12px}
+.cbx #cb .xbig.g{color:var(--pos)}.cbx #cb .xbig.r{color:var(--cb-neg)}
+.cbx #cb .xpc{margin-top:5px;font-size:12px;font-weight:700;color:var(--muted)}
+.cbx #cb .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.cbx #cb .chips span{font-size:11px;font-weight:800;background:var(--cb-trk);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.cbx #cb .chips span.g{color:var(--pos);background:color-mix(in srgb,var(--pos) 13%,transparent)}
+.cbx #cb .xcol{display:flex;flex-direction:column;gap:12px;height:100%;min-height:0}
+.cbx #cb .xalso{margin-top:auto;min-width:0}
+.cbx #cb .xar{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px dotted var(--cb-dot);font-weight:700;font-size:13px}
+.cbx #cb .xai{width:18px;flex:none;aspect-ratio:5/7;border-radius:3px;object-fit:cover}
+.cbx #cb .xai.ph i{display:none}
+.cbx #cb .xar span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cbx #cb .xar b{color:var(--pos)}
+.cbx #cb .xsplit{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:24px;align-items:center;height:100%}
+.cbx #cb .eM .xhero{grid-template-columns:clamp(46px,17%,78px) minmax(0,1fr);gap:14px}
+.cbx #cb .eM .x2,.cbx #cb .eM .xm,.cbx #cb .eM .chips{display:none}
+.cbx #cb .eM .xbig{margin-top:6px;font-size:clamp(22px,6cqw,30px)}
+.cbx #cb .xs{display:flex;gap:12px;align-items:center;flex:1;min-height:0;cursor:pointer}
+.cbx #cb .xsart{width:36%;max-width:64px;flex:none}
+.cbx #cb .xs .nm{display:block;font-size:12.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.cbx #cb .xs>div{min-width:0}
+/* ---- Best sellers: the podium ---- */
+.cbx #cb .wq.k-best>.wb{display:flex;flex-direction:column;min-height:0}
+.cbx #cb .pod{display:flex;gap:10px;align-items:stretch;flex:1;min-height:150px}
+.cbx #cb .pc{flex:1;min-width:0;display:flex;flex-direction:column;cursor:pointer}
+/* the cards fill the height; #2 and #3 start lower, so #1 stands tallest */
+.cbx #cb .pcrop{flex:1;min-height:0;margin-top:14%;border-radius:8px 8px 0 0;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,.12),0 14px 28px -12px rgba(0,0,0,.35);background:var(--cb-trk)}
+.cbx #cb .pc.r1 .pcrop{margin-top:0}
+.cbx #cb .pimg{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 0}
+.cbx #cb .pimg.ph{height:100%}
+.cbx #cb .pimg.ph i{font-style:normal;font-size:28px}
+.cbx #cb .prk{display:block;margin-top:8px;font-size:11px;font-weight:800;color:var(--cb-mut2)}
+.cbx #cb .pnm{display:block;font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cbx #cb .pv{font-size:clamp(14px,4.4cqw,18px);font-weight:800;letter-spacing:-.02em;color:var(--pos)}
+.cbx #cb .eS .pod{min-height:0}
+/* Featuring picker in the widget menu */
+.cbx #cb .mfeat{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:2px 4px 6px}
+.cbx #cb .mfeat button{justify-content:flex-start;padding:8px 10px;border-radius:10px;font-size:13px;font-weight:700;white-space:nowrap}
+.cbx #cb .mfeat button[aria-pressed="true"]{background:var(--cb-hl)}
+.cbx #cb .fshow{display:grid;grid-template-columns:repeat(3,auto)}
+.cbx #cb .fshow button{padding:5px 12px;border-radius:999px;font-size:12px;font-weight:800;color:var(--muted)}
+.cbx #cb .fshow button[aria-checked="true"]{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+@media(prefers-reduced-motion:reduce){.cbx #cb .fwi{transition:none}}
+
+/* while editing, and in the Add widgets gallery, the frosted pills go flat: blur recalculated on moving tiles costs frames */
+.cbx #cb.editing .k-feat .ttl,.cbx #cb.editing .fpc,#aw .k-feat .ttl,#aw .fpc{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(0,0,0,.38)}

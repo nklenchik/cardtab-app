@@ -299,6 +299,8 @@
   const xset = o => { xp.hidden = !o; xb.setAttribute('aria-expanded', o ? 'true' : 'false'); clearTimeout(xt); if (o) xt = setTimeout(() => xset(false), 6000); };
   xb.addEventListener('click', e => {
     e.stopPropagation();
+    // Premium: the real Card Board grows out of this panel. (Free gets its own limited board in stage 2.)
+    if (premium() && window.CTBoardLoader) { xset(false); window.CTBoardLoader.open(); return; }
     $('ct-prem-pop-t').innerHTML = premium() ? 'Full-screen Card Board is coming in a later update.' : 'Full-screen Card Board is part of Premium. <a href="#" data-upgrade>Upgrade &rarr;</a>';
     xset(xp.hidden);
   });

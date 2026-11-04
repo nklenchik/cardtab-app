@@ -416,3 +416,18 @@ Tests: tools/t87-app-nav.js, tools/t88-board-nav.js, tools/t84.js (still passes)
 - Every pill, switch and tag keeps clear space either side of its words (tools/tpad.js measures it at 320, 390 and 1280 wide, with the menu, Add a card and the editor open). Tags 10px; the Add a card Purchase / Sale switch sizes itself to its longest word (equal halves) and the platform pill gives way; editor buttons never squeeze (Save drops to its own row under 360px).
 - Header icons: Export and Add New use drawn icons at 17px with a 1.9 stroke, the same weight as the board's; the search icon too. On phones the + is the same drawn plus at 20px.
 - Add a card on phones opens without the keyboard (Tap to type). Focus goes to the sheet itself, so no ring appears on the close button. 'together' stays behind ct.kbmode.
+
+### v26 — Stage 1: Card Board inside the app, on real entries, with card-art widgets
+How it fits together:
+- python3 tools/build-cb.py app -> app/board/board.css + app/board/board.js (copy sources next to it; it reads dash-parts.json, cb-data2.json, stories2.tpl.html like the main build). The bundle puts the board inside one div.cbroot; every :root token rule is rewritten to .cbroot, so the board can't change the app's look. The four profile-menu ids the app also uses get cb- prefixes.
+- js/board-loader.js: CTBoardData() maps app entries (cents) to board entries (name split from "Name - number - set", art kept). The board files load in idle time after start for Premium, or on the first open. CTBoard.refresh() on every store change keeps it live. Back gesture: the board uses the app's CTNav, so app, board and Stories share one history.
+- Insights ⤢ (Premium) and the profile menu's Go to rows open it (Go to Card Stories opens the board, then Stories). The board's Go to Entries closes it. Free still gets the Premium note until stage 2.
+- TODAY is the real date. Stories still run on the sample data (stage 3).
+New widgets (tools/board15.js / board15.css, slotted in before board5.js in both builds):
+- One cost matching for all: purchases up to the end of the period are a card's cost; sales inside the period (net of fees and shipping) are what came back. Profit only counts for cards with a known cost.
+- Featured card (feat): full-art wallpaper (art.wall if present, else the whole card with a layout-guess crop and zoom; art.focus = framing point). Treatment A: art darkened 12% plus a deep fade behind the words; the depth (--shade) is set per picture from its measured brightness, decoded first and remembered. If the picture has too few pixels for its tile it shows the card-and-details layout instead; no art or nothing to feature gets the regular widget look. Eight metrics from the ••• menu (Biggest win, Best return, Priciest card, Best seller = most copies sold, Biggest loss, Fastest flip, Held the longest, Most money in) and Show: Both / $ / %.
+- Best sellers (best): podium of the top three by profit, top halves of the cards. Priciest card (pricey): card and details with chips. Biggest win (win) redesigned: bigger whole card, name as a heading, Bought / Sold labels, profit hero, Also up with thumbnails.
+- Default board now leads with Featured card (Large). Add widgets previews use small thumbnails; the frosted pills go flat while editing and in the gallery (blur on moving tiles cost frames).
+- Sample entries include three HD cards (Mega Gengar ex, Articuno ex, Magby) with -sm, full and -wall copies.
+Speed (4x slower CPU, 250 entries): opening the board ~115–165ms when prefetched; scrolling clean; Add widgets 4 slow frames (was 13), closing a sheet 1 (was 10).
+Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-app.js; t87 still passes.
