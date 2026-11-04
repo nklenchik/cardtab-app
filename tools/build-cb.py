@@ -1,6 +1,6 @@
 import json,base64
 P=json.load(open('dash-parts.json'))
-board_css=open('board-part.html').read().replace('__SITECSS__',open('site-cb.css').read())+open('board4.css').read()+open('board5.css').read()+open('board6.css').read()+open('board7.css').read()+open('board8.css').read()+open('board9.css').read()+open('board10.css').read()+open('board11.css').read()
+board_css=open('board-part.html').read().replace('__SITECSS__',open('site-cb.css').read())+open('board4.css').read()+open('board5.css').read()+open('board6.css').read()+open('board7.css').read()+open('board8.css').read()+open('board9.css').read()+open('board10.css').read()+open('board11.css').read()+open('board12.css').read()
 markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
 <section class="cbx off" id="cbx" inert aria-hidden="true" role="dialog" aria-modal="true" aria-label="Card Board">
 <div id="cb"><div class="frame">
@@ -14,6 +14,7 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
     <span class="ehint">Drag to move · drag a corner to resize</span>
     
     </div>
+    <button type="button" class="iconb" id="cb-stories" aria-label="Card Stories"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="7" height="15" rx="2"/><rect x="13.5" y="4.5" width="7" height="15" rx="2"/></svg><span>Stories</span></button>
     <button type="button" class="iconb" id="cb-ask" aria-label="Ask about your numbers"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2 5.3 5.5 1.9-5.5 2-2 5.3-2-5.3-5.5-2 5.5-1.9z"/><path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg><span>Ask</span></button>
     <button type="button" class="iconb" id="cb-share" aria-label="Share Card Board"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3L10.5 13.5"/><path d="M21 3l-6.5 18-4-7.5L3 9.5z"/></svg><span>Share</span></button>
     <div class="perwrap acctw"><button type="button" class="acct" id="cb-acct" aria-haspopup="true" aria-expanded="false" aria-label="Account"><span class="av" id="cb-av">N</span></button>
@@ -106,6 +107,7 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
 </div></dialog>
 </div>
 </section>
+<div class="csx" id="csx" aria-hidden="true" inert></div>
 <div class="tip" id="tip" role="tooltip"></div>
 <div class="note" id="note">Preview with your real entries · click ⤢ on Insights</div>
 '''
@@ -114,6 +116,7 @@ tipcss='''.tip{position:fixed;z-index:60;pointer-events:none;background:var(--te
 .note{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--text);color:var(--bg);border-radius:999px;padding:8px 14px;font-size:12px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 '''
 data=open('cb-data2.json').read()
+stories_js=json.dumps('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body style="margin:0">'+open('stories2.tpl.html').read().replace('__DATA__',data)+'</body></html>').replace('</','<\\/')
 head_js='''<script>
 (function(){
 'use strict';
@@ -130,7 +133,8 @@ const mLabel=(k,o)=>new Date(k+'-15T12:00:00').toLocaleString('en-US',o);
 function monthsBack(n){const t=new Date(TODAY+'T12:00:00'),out=[];for(let i=n-1;i>=0;i--){const d=new Date(t.getFullYear(),t.getMonth()-i,1);out.push(d.getFullYear()+'-'+pad(d.getMonth()+1))}return out}
 function totals(list){let sales=0,after=0,spent=0,ref=0,fees=0;list.forEach(e=>{if(e.type==='sale'){sales+=e.amount;after+=e.net;fees+=e.amount-e.net}else if(e.type==='purchase')spent+=e.amount;else ref+=e.amount});after-=ref;return{sales,after,spent,profit:after-spent,fees,n:list.length}}
 const calm=matchMedia('(prefers-reduced-motion: reduce)');
-'''.replace('__DATA__',data)
+const STORIES_HTML=__STORIES__;
+'''.replace('__DATA__',data).replace('__STORIES__',stories_js)
 page=P['css']+board_css+tipcss+'</style>\n\n'+P['html']+markup+head_js+P['js']+open('board5.js').read()+'\n})();\n</script>\n'
 logo='data:image/webp;base64,'+base64.b64encode(open('/home/claude/cardtab-app/app/assets/logo-128.webp','rb').read()).decode()
 open('card-board-preview.html','w').write(page.replace('__LOGO__',logo))

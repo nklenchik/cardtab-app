@@ -142,7 +142,7 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 </style>
 
 <div class="wrap">
-  <div class="top"><div class="tl2"><button class="back" type="button" aria-label="Back to Card Board"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span>Card Board</span></button><h1 class="ttl">Nick’s Card Stories</h1></div>
+  <div class="top"><div class="tl2"><button class="back" type="button" aria-label="Back to Card Board"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span>Card Board</span></button><h1 class="ttl">Card Stories</h1></div>
     <div class="perw"><button class="pill" id="perb" aria-haspopup="true" aria-expanded="false"><span id="perl">Last 12 months</span><i>▾</i></button><div class="menu" id="perm" hidden role="menu"></div></div></div>
   <div class="controls">
     <div class="thm" id="thm" role="group" aria-label="Story theme"></div>
@@ -247,6 +247,7 @@ const TH=[
  ['Holo',[P('linear-gradient(135deg,#a1c4fd,#c2e9fb,#fbc2eb)','#1d1d3a','#5b3fd1'),P('linear-gradient(135deg,#fbc2eb,#a6c1ee)','#1d1d3a','#d6336c'),P('linear-gradient(135deg,#84fab0,#8fd3f4)','#0b2a2a','#0b5f8a'),P('linear-gradient(135deg,#f6d365,#fda085)','#3a1d0b','#c2185b'),P('linear-gradient(135deg,#d4fc79,#96e6a1)','#13261b','#2f6b3e')]],
  ['Matcha',[P('#c8d8a8','#22301a','#4f6b2b'),P('#eef3e2','#22301a','#4f6b2b'),P('#4f6b2b','#f3f8e8','#e5efc9'),P('#22301a','#e5efc9','#a9c47a'),P('#a9c47a','#22301a','#22301a')]],
  ['Retro',[P('#f2e3c6','#2b2118','#e4572e'),P('#2b2118','#f2e3c6','#f3a712'),P('#e4572e','#fff4e6','#f2e3c6'),P('#29335c','#f2e3c6','#f3a712'),P('#f3a712','#2b2118','#29335c')]]];
+let NAME='';const EMB=(()=>{try{return window.parent!==window&&typeof parent.cbStoriesBack==='function'}catch(e){return false}})(),foot=()=>NAME?NAME+' · Card Tab':'Card Tab';
 let th=0,mi=[0,0,0,0,0];
 const sw=t=>t[1].slice(0,3).map(p=>'<span style="background:'+(p.bg.startsWith('#')?p.bg:p.bg.match(/#\w{6}/)[0])+'"></span>').join('');
 const FEW=5;
@@ -259,7 +260,7 @@ $('tgrid').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(
 const ARROWS='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 20V5M3 9l4-4 4 4"/><path d="M17 4v15M13 15l4 4 4-4"/></svg>';
 let D=null;
 function paintStory(el,n){const p=TH[th][1][n%TH[th][1].length],s=el.style;s.setProperty('--sbg',p.bg);['ink','acc','chip','chipink','chip2','trk','o','dash','stk','stki'].forEach(k=>s.setProperty('--'+k,p[k]))}
-function storyHTML(n){const st=D.stories[n],o=st.opts[mi[n]%st.opts.length];return '<div class="in"><div><div class="lab">'+st.name+'</div>'+o.top+'</div><div class="vis">'+o.vis+'</div></div><div class="ft"><span>Card Tab</span><span>'+esc(D.lab)+'</span></div>'}
+function storyHTML(n){const st=D.stories[n],o=st.opts[mi[n]%st.opts.length];return '<div class="in"><div><div class="lab">'+st.name+'</div>'+o.top+'</div><div class="vis">'+o.vis+'</div></div><div class="ft"><span>'+esc(foot())+'</span><span>'+esc(D.lab)+'</span></div>'}
 function render(){D=model();$('track').innerHTML=D.stories.map((st,n)=>'<div class="cell"><button class="sl" data-n="'+n+'" aria-label="'+st.name+'. Tap to enlarge">'+storyHTML(n)+'</button><button class="mb" data-mb="'+n+'"><span class="k">Showing</span><span>'+st.opts[mi[n]%st.opts.length].k+'</span>'+ARROWS+'</button></div>').join('');
   document.querySelectorAll('#track .sl').forEach(el=>paintStory(el,+el.dataset.n));$('dots').innerHTML=D.stories.map((_,i)=>'<i class="'+(i?'':'on')+'"></i>').join('')}
 render();
@@ -287,7 +288,18 @@ $('track').addEventListener('scroll',()=>{const tr=$('track'),c=tr.querySelector
 const lb=$('lb');function enlarge(n){const c=document.createElement('div');c.className='sl';c.setAttribute('role','img');c.setAttribute('aria-label',D.stories[n].name);c.innerHTML=storyHTML(n);paintStory(c,n);$('lbc').innerHTML='';$('lbc').appendChild(c);$('lbn').textContent='';lb.hidden=false;lb.classList.remove('out');lb.querySelector('[data-a="close"]').focus()}
 function shut(){lb.classList.add('out');setTimeout(()=>{lb.hidden=true},190)}
 lb.addEventListener('click',e=>{if(e.target===lb){shut();return}const b=e.target.closest('[data-a]');if(!b)return;if(b.dataset.a==='close')shut();else $('lbn').textContent=b.dataset.a==='save'?'In the app this saves the story as an image, sized for Instagram and TikTok.':'In the app this opens your phone’s share sheet.'});
-document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!lb.hidden)shut();else{const w=document.querySelector('.sheetw:not([hidden])');if(w)closeSheet(w.id);else closeMenu()}});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!lb.hidden)shut();else{const w=document.querySelector('.sheetw:not([hidden])');if(w)closeSheet(w.id);else if(!$('perm').hidden)closeMenu();else if(EMB)goBack()}});
 try{const t=+localStorage.getItem('cs.theme');if(t>0&&t<TH.length)setTheme(t)}catch(e){}
+// ---- linked to Card Board: same name, light/dark and time range; the back arrow returns to the board ----
+function goBack(){if(!lb.hidden)shut();closeMenu();try{parent.cbStoriesBack()}catch(e){}}
+document.querySelector('.top .back').addEventListener('click',()=>{if(EMB)goBack()});
+window.csSync=function(){
+  try{NAME=EMB&&parent.cbName?parent.cbName():((JSON.parse(localStorage.getItem('cb.profile')||'null')||{}).first||'').trim()}catch(e){}
+  try{const t=localStorage.getItem('cb.theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;else delete document.documentElement.dataset.theme}catch(e){}
+  let np='l12',nc=null;
+  try{const v=JSON.parse(localStorage.getItem('cb.view')||'null');if(v){if(['l12','ytd','ly','all'].includes(v.period))np=v.period;else if(v.period==='custom'&&v.custom&&v.custom.from){const a=v.custom.from.slice(0,7),b=v.custom.to.slice(0,7);if(allMonths.includes(a)||allMonths.includes(b)){np='custom';nc=[a<allMonths[0]?allMonths[0]:a,b]}}}}catch(e){}
+  if(nc)cust=nc;per=np;$('perl').textContent=per==='custom'?customLab():PER.find(x=>x[0]===per)[1];render()};
+csSync();
+if(EMB)document.querySelector('.foot').hidden=true;
 })();
 </script>

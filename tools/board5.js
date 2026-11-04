@@ -505,7 +505,7 @@ const NAME='Nick',SWATCH=['#a50e37','#c2410c','#b45309','#15803d','#0f766e','#1d
 let avatar=(()=>{try{return JSON.parse(localStorage.getItem('cb.avatar'))||{}}catch(e){return {}}})();
 function paintAvatar(){const c=avatar.color||SWATCH[0];['cb-av','cb-av2'].forEach(id=>{const el=$(id);if(!el)return;el.style.background=avatar.photo?'url('+avatar.photo+') center/cover':c;el.style.color=inkFor(c);el.textContent=avatar.photo?'':initial();el.classList.add('set')});$('am-name').textContent=shownName();paintTitle()}
 // the board carries your first name: "Nick's Card Board" (usernames can take its place later)
-function paintTitle(){const f=(profile.first||'').trim(),t=f?f+'’s Card Board':'Card Board';$('cbtn').textContent=t;document.title=t}
+function paintTitle(){const f=(profile.first||'').trim(),t=viewing&&f?f+'’s Card Board':'Card Board';$('cbtn').textContent=t;document.title=t}
 function toast(msg){const t=$('cbtoast');t.textContent=msg;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2200)}
 // appearance
 function applyTheme(th){if(th==='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=th;try{localStorage.setItem('cb.theme',th)}catch(e){}
@@ -621,7 +621,7 @@ shd.addEventListener('click',async e=>{if(e.target===shd){shd.close();return}con
 function addEmail(){const i=$('sh-email'),v=i.value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){$('sh-emsg').textContent='Enter an email address like name@example.com.';return}
   if(!share.emails.includes(v))share.emails.push(v);if(!share.on)share.on=true;i.value='';$('sh-emsg').textContent='They’ll get the link by email once sharing goes live in the app.';saveShare();paintShare();buzz('tick')}
 $('sh-email').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addEmail()}});
-function setViewing(on){viewing=on;if(on&&editing)setEditing(false);$('cb').classList.toggle('viewing',on);$('vbar').hidden=!on;hideTip();render(false);if(on)cbx.scrollTop=0}
+function setViewing(on){viewing=on;paintTitle();if(on&&editing)setEditing(false);$('cb').classList.toggle('viewing',on);$('vbar').hidden=!on;hideTip();render(false);if(on)cbx.scrollTop=0}
 $('vbar-x').addEventListener('click',()=>setViewing(false));
 $('cb-share').addEventListener('click',openShare);
 
@@ -686,3 +686,17 @@ $('simple').addEventListener('keydown',e=>{const d=e.target.closest('.drill[data
 document.querySelectorAll('dialog.sheet').forEach(d=>{const nat=HTMLDialogElement.prototype.close;
   d.close=function(v){if(!this.open||this.classList.contains('closing'))return;if(calm.matches){nat.call(this,v);return}this.classList.add('closing');setTimeout(()=>{this.classList.remove('closing');nat.call(this,v)},190)};
   d.addEventListener('cancel',e=>{e.preventDefault();d.close()})});
+
+// ---------- Card Stories: its own page, slid in over the board. Back returns here. ----------
+// The page loads quietly in the background once the board is open, so the first slide-in already has the stories on it.
+;(()=>{const csx=$('csx');let csf=null,open=false;
+function load(){if(csf)return;csf=document.createElement('iframe');csf.title='Card Stories';csf.srcdoc=STORIES_HTML;csx.appendChild(csf)}
+function openStories(){if(open)return;open=true;load();try{csf.contentWindow.csSync()}catch(e){}
+  csx.classList.remove('out');void csx.offsetWidth;csx.classList.add('in');csx.removeAttribute('aria-hidden');csx.inert=false;
+  setTimeout(()=>{try{csf.contentWindow.focus()}catch(e){}},calm.matches?0:420)}
+window.cbStoriesBack=function(){if(!open)return;open=false;csx.classList.remove('in');csx.classList.add('out');csx.setAttribute('aria-hidden','true');csx.inert=true;
+  setTimeout(()=>{csx.classList.remove('out');try{$('cb-stories').focus({preventScroll:true})}catch(e){}},calm.matches?0:300)};
+window.cbName=()=>(profile.first||'').trim();
+$('cb-stories').addEventListener('click',openStories);
+['pointerenter','touchstart','focus'].forEach(ev=>$('cb-stories').addEventListener(ev,load,{passive:true,once:true}));
+$('expand').addEventListener('click',()=>setTimeout(()=>(window.requestIdleCallback||setTimeout)(load),1500))})();

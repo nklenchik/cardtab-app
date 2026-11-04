@@ -265,3 +265,11 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 ### Stories v2.3
 - Fixed: enlarged story was invisible on phones (0 width); now sized to its space with container units.
 - Themes sheet mirrors Card Board sheets: title + hint line that confirms the pick, own scroll, Done pinned. Same circle swatches as the chips, roomier 64px tiles. Picking no longer closes the sheet.
+
+### Card Board v14 + Stories v2.4 — linked
+- Own screens say "Card Board" / "Card Stories"; shared views ("See what they’ll see") keep "Nick’s Card Board"; story images keep the name in the footer ("Nick · Card Tab").
+- Stories button (two-card icon) sits before Ask and Share; same icon-only rules; hidden while editing and in the shared view.
+- Stories is its own page in an iframe (srcdoc, built from stories2.tpl.html), preloaded in the background, sliding in with a GPU transform. Back arrow or Escape returns to the board.
+- Shared: name (parent.cbName), light/dark (cb.theme), time range (cb.view; 7/30 days fall back to Last 12 months, custom dates become months). Range changes inside Stories stay in Stories.
+- Sources stay separate: edit stories2.tpl.html or board files independently; build-cb.py bundles Stories in.
+- Test: tools/t70.js.

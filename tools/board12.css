@@ -1,0 +1,12 @@
+/* ---- v14: the Stories button sits with Ask and Share; Stories slides in as its own page ---- */
+@media(max-width:760px){
+  .cbx #cb .topbar .tctl{flex-basis:calc(100% - 160px)}
+  .cbx #cb .topbar #cb-stories{order:4}
+}
+.cbx #cb.editing #cb-stories,.cbx #cb.viewing #cb-stories{display:none!important}
+.csx{position:fixed;inset:0;z-index:90;background:var(--bg,#faf9f5);transform:translate3d(100%,0,0);visibility:hidden;box-shadow:-24px 0 60px rgba(0,0,0,.18);will-change:transform;contain:strict}
+.csx.in,.csx.out{visibility:visible}
+.csx.in{transform:none;transition:transform .42s cubic-bezier(.2,.9,.25,1)}
+.csx.out{transform:translate3d(100%,0,0);transition:transform .28s cubic-bezier(.4,0,.8,.6)}
+.csx iframe{border:0;width:100%;height:100%;display:block;background:transparent}
+@media(prefers-reduced-motion:reduce){.csx.in,.csx.out{transition:none}}
