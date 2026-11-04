@@ -261,3 +261,7 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - Theme chips are one swipeable row on phones (All themes at the end).
 - Enlarged story is full-screen on phones with a bottom bar: round ✕, Save image, Share (never wraps, 48px).
 - Test: tools/t69.js at 375/390/430.
+
+### Stories v2.3
+- Fixed: enlarged story was invisible on phones (0 width); now sized to its space with container units.
+- Themes sheet mirrors Card Board sheets: title + hint line that confirms the pick, own scroll, Done pinned. Same circle swatches as the chips, roomier 64px tiles. Picking no longer closes the sheet.

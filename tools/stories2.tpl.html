@@ -97,17 +97,28 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 .sl .tl div{display:grid;grid-template-columns:3.6cqmin 1fr auto;gap:3cqmin;align-items:center;font-weight:800;font-size:4.2cqmin}
 .sl .tl i{width:3.6cqmin;height:3.6cqmin;border-radius:50%;background:var(--acc)}.sl .tl small{display:block;font-weight:650;font-size:3.2cqmin;opacity:.7}
 /* enlarged */
-.lb{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:rgba(8,8,8,.72);padding:20px;animation:fade .25s ease both}
+.lb{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:rgba(8,8,8,.86);padding:20px;animation:fade .25s ease both}
 .lb.out{animation:fadeo .2s ease both}
 @keyframes fade{from{opacity:0}}@keyframes fadeo{to{opacity:0}}
 .lb .box{display:grid;gap:14px;justify-items:center;animation:rise .4s cubic-bezier(.18,.89,.32,1.08) both}
 @keyframes rise{from{opacity:0;transform:translateY(16px) scale(.94)}}
-.lb .sl{width:min(380px,calc((100dvh - 150px)*9/16),calc(100vw - 40px));cursor:default;box-shadow:0 30px 60px rgba(0,0,0,.4)}
+.lb .sl{width:min(380px,calc((100dvh - 200px)*9/16),calc(100vw - 40px));cursor:default;box-shadow:0 30px 60px rgba(0,0,0,.4)}
 .lb .acts{display:flex;gap:10px}
 .lb .acts button{border:0;border-radius:999px;padding:12px 20px;font-weight:800;font-size:14.5px;cursor:pointer;background:#fff;color:#1d1d1b}.lb .acts button.g{background:rgba(255,255,255,.16);color:#fff}
 .lb .note{color:rgba(255,255,255,.75);font-size:12.5px;font-weight:650;min-height:18px;margin:0}
 .foot{margin:26px auto 0;text-align:center;color:var(--muted);font-size:13px;font-weight:650;max-width:560px}
 @media(max-width:420px){#per button{padding:8px 11px;font-size:13px}}
+/* ---- themes sheet, roomier ---- */
+.shs{margin:4px 0 0;font-size:13.5px;font-weight:650;color:var(--muted);min-height:1.4em}
+.shs.msg{color:var(--text);font-weight:800}
+.tgrid{gap:12px;padding:4px 4px 8px}
+.topt{gap:14px;padding:16px;border-radius:18px;min-height:64px;font-size:15px;--ring:var(--card)}
+.tsw.big{flex:none}
+.tsw.big span{width:20px;height:20px;box-shadow:0 0 0 2px var(--ring),inset 0 0 0 1px rgba(128,128,128,.4)}
+.tsw.big span+span{margin-left:-6px}
+#ths .go{flex:none}
+@media(max-width:420px){.topt{gap:12px;padding:14px 13px;font-size:14.5px}.tsw.big span{width:18px;height:18px}}
+#lbc{display:grid;place-items:center}
 /* ---- phones ---- */
 .lb .acts button{white-space:nowrap}
 .lb .acts .xb{width:48px;padding:0;display:grid;place-items:center}
@@ -119,9 +130,10 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
   /* themes: one row you can swipe, with All themes at the end */
   .thm{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:2px max(16px,env(safe-area-inset-left,0px)) 6px;scroll-padding:0 16px}
   /* enlarged story: fills the screen, actions in a calm bar at the bottom */
-  .lb{padding:0;background:rgba(10,10,10,.94);place-items:stretch}
+  .lb{padding:0;background:rgba(10,10,10,.97);place-items:stretch}
   .lb .box{height:100%;width:100%;grid-template-rows:1fr auto auto;align-items:center;justify-items:center;gap:12px;padding:max(64px,env(safe-area-inset-top,0px)) 16px max(18px,env(safe-area-inset-bottom,0px))}
-  .lb .sl{width:min(100%,calc((100dvh - 190px)*9/16));border-radius:20px}
+  #lbc{width:100%;height:100%;min-height:0;container-type:size}
+  .lb .sl{width:min(100cqw,100cqh*9/16);border-radius:20px}
   .lb .acts{width:100%;max-width:420px;display:grid;grid-template-columns:48px 1fr 1fr;gap:10px}
   .lb .acts button{height:48px;padding:0 12px;font-size:15px}
   .lb .note{text-align:center;padding:0 8px}
@@ -139,7 +151,7 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
   <div class="dots" id="dots" aria-hidden="true"></div>
   <p class="foot">On your board, a “Stories” button next to Ask and Share opens this page. Tap a story to make it bigger, then save or share it. “Showing” changes what a story says. Card art fills in once the art service is running.</p>
 </div>
-<div class="sheetw" id="ths" hidden><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ths-h"><div class="shh"><h2 id="ths-h">Themes</h2><button class="xx" data-close aria-label="Close">✕</button></div><div class="tgrid" id="tgrid"></div></div></div>
+<div class="sheetw" id="ths" hidden><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ths-h"><div class="shh"><div><h2 id="ths-h">Themes</h2><p class="shs" id="ths-s"></p></div></div><div class="tgrid" id="tgrid"></div><button class="go" data-close>Done</button></div></div>
 <div class="sheetw" id="crs" hidden><div class="sheet sm" role="dialog" aria-modal="true" aria-labelledby="crs-h"><div class="shh"><h2 id="crs-h">Custom range</h2><button class="xx" data-close aria-label="Close">✕</button></div>
   <div class="mrow2"><label>From<select id="cr-a"></select></label><label>To<select id="cr-b"></select></label></div><p class="crn" id="cr-n"></p><button class="go" id="cr-go">Show these months</button></div></div>
 <div class="lb" id="lb" hidden><div class="box"><div id="lbc"></div><p class="note" id="lbn"></p><div class="acts"><button class="g xb" data-a="close" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><button data-a="save">Save image</button><button data-a="share">Share</button></div></div></div>
@@ -239,10 +251,10 @@ let th=0,mi=[0,0,0,0,0];
 const sw=t=>t[1].slice(0,3).map(p=>'<span style="background:'+(p.bg.startsWith('#')?p.bg:p.bg.match(/#\w{6}/)[0])+'"></span>').join('');
 const FEW=5;
 function paintChips(){const show=[...Array(FEW).keys()];if(th>=FEW)show[FEW-1]=th;$('thm').innerHTML=show.map(i=>'<button class="tchip" aria-pressed="'+(i===th)+'" data-i="'+i+'"><span class="tsw">'+sw(TH[i])+'</span>'+TH[i][0]+'</button>').join('')+'<button class="tchip more" data-all>All '+TH.length+' themes ›</button>'}
-function paintGrid(){const pal=p=>p.bg.startsWith('#')?p.bg:p.bg.match(/#\w{6}/)[0];$('tgrid').innerHTML=TH.map((t,i)=>'<button class="topt" aria-pressed="'+(i===th)+'" data-i="'+i+'"><span class="mini">'+t[1].slice(0,5).map(p=>'<i style="background:'+p.bg+'"></i>').join('')+'</span>'+t[0]+'</button>').join('')}
+function paintGrid(){$('tgrid').innerHTML=TH.map((t,i)=>'<button class="topt" aria-pressed="'+(i===th)+'" data-i="'+i+'"><span class="tsw big">'+sw(t)+'</span><span>'+t[0]+'</span></button>').join('')}
 function setTheme(i){th=i;paintChips();document.querySelectorAll('#track .sl').forEach(el=>paintStory(el,+el.dataset.n));try{localStorage.setItem('cs.theme',th)}catch(err){}}
 paintChips();
-$('tgrid').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(!b)return;setTheme(+b.dataset.i);closeSheet('ths')});
+$('tgrid').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(!b)return;setTheme(+b.dataset.i);paintGrid();$('ths-s').textContent=TH[th][0]+' is on. Pick another or '+(matchMedia('(hover:none)').matches?'tap':'click')+' Done.';$('ths-s').classList.add('msg')});
 
 const ARROWS='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 20V5M3 9l4-4 4 4"/><path d="M17 4v15M13 15l4 4 4-4"/></svg>';
 let D=null;
@@ -265,7 +277,7 @@ function checkCr(){const a=$('cr-a').value,b=$('cr-b').value,ok=a<=b;$('cr-go').
 ['cr-a','cr-b'].forEach(id=>$(id).addEventListener('change',checkCr));
 $('cr-go').addEventListener('click',()=>{cust=[$('cr-a').value,$('cr-b').value];closeSheet('crs');setPer('custom')});
 // sheets
-function openSheet(id){const w=$(id);if(id==='crs'){const M0=months(per);$('cr-a').value=M0[0]<allMonths[0]?allMonths[0]:M0[0];$('cr-b').value=M0[M0.length-1];checkCr()}if(id==='ths')paintGrid();w.hidden=false;w.classList.remove('out')}
+function openSheet(id){const w=$(id);if(id==='crs'){const M0=months(per);$('cr-a').value=M0[0]<allMonths[0]?allMonths[0]:M0[0];$('cr-b').value=M0[M0.length-1];checkCr()}if(id==='ths'){paintGrid();$('ths-s').textContent=TH.length+' looks for your stories. '+(matchMedia('(hover:none)').matches?'Tap':'Click')+' one to try it.';$('ths-s').classList.remove('msg')}w.hidden=false;w.classList.remove('out')}
 function closeSheet(id){const w=$(id);w.classList.add('out');setTimeout(()=>{w.hidden=true},190)}
 document.querySelectorAll('.sheetw').forEach(w=>w.addEventListener('click',e=>{if(e.target===w||e.target.closest('[data-close]'))closeSheet(w.id)}));
 $('track').addEventListener('click',e=>{const mb=e.target.closest('[data-mb]');if(mb){const n=+mb.dataset.mb;mi[n]=(mi[n]+1)%D.stories[n].opts.length;const sl=$('track').querySelector('.sl[data-n="'+n+'"]');sl.innerHTML=storyHTML(n);sl.classList.remove('swap');void sl.offsetWidth;sl.classList.add('swap');mb.children[1].textContent=D.stories[n].opts[mi[n]].k;return}

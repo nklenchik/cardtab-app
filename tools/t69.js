@@ -5,6 +5,11 @@ for(const [vw,vh,sc] of [[390,844,'dark'],[375,667,'light'],[430,932,'dark']]){c
   await p.tap('#perb');await p.waitForTimeout(300);log.push(vw+' menu on screen: '+(await p.evaluate(()=>{const r=document.getElementById('perm').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth})));await p.screenshot({path:'shots/s4-'+vw+'-menu.png'});await p.tap('#perb');
   log.push(vw+' theme row one line: '+(await p.evaluate(()=>{const t=[...document.querySelectorAll('#thm .tchip')].map(x=>x.getBoundingClientRect().top);return Math.max(...t)-Math.min(...t)<2})));
   await p.tap('.sl[data-n="0"]');await p.waitForTimeout(600);await p.screenshot({path:'shots/s4-'+vw+'-lb.png'});
-  log.push(vw+' lightbox fits: '+(await p.evaluate(()=>{const s=document.querySelector('#lb .sl').getBoundingClientRect(),a=document.querySelector('#lb .acts').getBoundingClientRect();const one=[...document.querySelectorAll('#lb .acts button')].every(x=>x.getBoundingClientRect().height<=50);return s.bottom<=a.top&&a.bottom<=innerHeight&&s.right<=innerWidth&&one})));
+  log.push(vw+' lightbox fits: '+(await p.evaluate(()=>{const s=document.querySelector('#lb .sl').getBoundingClientRect(),a=document.querySelector('#lb .acts').getBoundingClientRect();const one=[...document.querySelectorAll('#lb .acts button')].every(x=>x.getBoundingClientRect().height<=50);return s.width>150&&s.height>250&&s.bottom<=a.top&&a.bottom<=innerHeight&&s.right<=innerWidth&&one})));
   await p.tap('#lb [data-a="close"]');await p.waitForTimeout(300)}
 console.log(log.join('\n'));console.log('ERR',JSON.stringify(errs));await b.close()})();
+;(async()=>{const b=await pw.chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,colorScheme:'dark'})).newPage();
+await p.goto('file://'+require('path').resolve('stories-t.html'));await p.waitForTimeout(400);await p.tap('[data-all]');await p.waitForTimeout(500);await p.screenshot({path:'shots/s5-th.png'});
+await p.tap('#tgrid [data-i="7"]');await p.waitForTimeout(300);await p.screenshot({path:'shots/s5-th2.png'});await p.tap('#ths .go');await p.waitForTimeout(300);
+await p.setViewportSize({width:1280,height:800});await p.tap('[data-all]');await p.waitForTimeout(500);await p.screenshot({path:'shots/s5-thd.png'});
+await p.tap('#ths .go');await p.waitForTimeout(300);await p.click('.sl[data-n="0"]');await p.waitForTimeout(500);await p.screenshot({path:'shots/s5-lbd.png'});await b.close()})();
