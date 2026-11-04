@@ -354,3 +354,8 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - Page #f8f7f4 (dark #121110), white cards (dark #1f1d1b) with a hairline 1px border (same width, so nothing moves) and a faint shadow; buttons and the bottom bar get hairline edges; fine dotted row dividers; chart guide lines quieter; bars unchanged from the main board.
 - tools/t82.js proves every widget and every child element sits at the same position and size as the main board, for all 10 kinds x 5 sizes on desktop and phone. Sheet timing matches the main board.
 - Design preview: tools/soft-style.html.
+
+### v23
+- Share icon: an outlined, compact curved arrow (2px stroke, like the other icons) everywhere, including Stories.
+- Add widgets previews: the mini widget's own border is hidden inside its tile, so the tile edge is clean (no second border, no clipped right edge).
+- Soft skin: a little more shade (card fades to a hint of warm cream at the bottom, shadow .17), and Add widgets uses the same look (hairline tiles, same shade, softer badges, search, footer fade). Layout still identical (t82).

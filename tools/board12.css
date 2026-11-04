@@ -131,3 +131,7 @@ dialog.drawer .awh{align-items:center}
   dialog.drawer.pop.closing .askp{animation:askShrink .2s cubic-bezier(.4,0,1,1) both}
   dialog.drawer.pop::backdrop{background:rgba(10,10,10,.18)}
 }
+
+/* Add widgets: previews show the widget cleanly inside its tile (no second border, nothing clipped on the right) */
+#aw .tbox{background:var(--card);border:1px solid var(--line);box-sizing:border-box}
+#aw .tbox .w{border-color:transparent!important;box-shadow:none!important}
