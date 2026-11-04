@@ -1572,13 +1572,13 @@ dialog.sheet .awp{background:var(--cb-alt)}
 .cbx #cb .wq.k-feat{padding:0;overflow:hidden;position:relative;background:#1d1b19;isolation:isolate}
 .cbx #cb .k-feat>.wh{position:absolute;left:0;right:0;top:0;z-index:3;padding:12px 10px 0 12px;margin:0;pointer-events:none}
 .cbx #cb .k-feat>.wh>*{pointer-events:auto}
-.cbx #cb .k-feat .ttl{display:inline-block;max-width:100%;color:#fff;font-size:11.5px;font-weight:800;letter-spacing:0;background:rgba(255,255,255,.18);-webkit-backdrop-filter:blur(10px) saturate(1.4);backdrop-filter:blur(10px) saturate(1.4);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:5px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cbx #cb .wq.k-feat .ttl{display:inline-block;max-width:100%;color:#fff!important;font-size:11.5px;font-weight:800;letter-spacing:0;background:rgba(18,14,12,.46);-webkit-backdrop-filter:blur(12px) saturate(1.3);backdrop-filter:blur(12px) saturate(1.3);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:5px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cbx #cb .k-feat .wmore{color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.4)}
 .cbx #cb .k-feat>.wb{position:absolute;inset:0;margin:0;padding:0;display:block}
 .cbx #cb .fw{position:absolute;inset:0;display:block;color:#fff;isolation:isolate;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .cbx #cb .fwi{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:var(--fx,50%) var(--fy,30%);transform:scale(var(--fz,1));transform-origin:var(--fx,50%) var(--fy,30%);z-index:-2;opacity:0;transition:opacity .45s ease}
 .cbx #cb .fw.in .fwi{opacity:1}
-.cbx #cb .fw::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(rgba(0,0,0,.12),rgba(0,0,0,.12)),linear-gradient(180deg,rgba(0,0,0,.42) 0%,rgba(0,0,0,.08) 22%,rgba(0,0,0,.12) 40%,rgba(0,0,0,calc(var(--shade,.86)*.72)) 66%,rgba(0,0,0,var(--shade,.86)) 100%)}
+.cbx #cb .fw::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(rgba(0,0,0,.12),rgba(0,0,0,.12)),linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,.08) 22%,rgba(0,0,0,.12) 40%,rgba(0,0,0,calc(var(--shade,.86)*.72)) 66%,rgba(0,0,0,var(--shade,.86)) 100%)}
 .cbx #cb .fwt{position:absolute;left:18px;right:18px;bottom:16px}
 .cbx #cb .fn{margin:0;font-size:clamp(17px,7cqw,24px);font-weight:800;letter-spacing:-.02em;line-height:1.15;text-shadow:0 1px 12px rgba(0,0,0,.4);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .cbx #cb .fl{margin:3px 0 0;font-size:12.5px;font-weight:600;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1590,12 +1590,15 @@ dialog.sheet .awp{background:var(--cb-alt)}
 .cbx #cb .k-feat.eM .fwt,.cbx #cb .k-feat.eB .fwt{right:auto;max-width:60%;bottom:auto;top:50%;transform:translateY(-38%)}
 .cbx #cb .k-feat.eM .fbig,.cbx #cb .k-feat.eB .fbig{font-size:clamp(22px,6cqw,34px)}
 /* small tiles: just the number */
-.cbx #cb .k-feat.eS .fwt{left:12px;right:12px;bottom:10px}
-.cbx #cb .k-feat.eS .fbig{font-size:clamp(20px,16cqw,28px);margin-top:0}
-.cbx #cb .k-feat.eS .ttl{font-size:10.5px;padding:3px 9px}
+.cbx #cb .k-feat.eS .fwt{left:14px;right:14px;bottom:12px}
+.cbx #cb .k-feat.eS .fn{font-size:clamp(13px,7cqw,16px);-webkit-line-clamp:1}
+.cbx #cb .k-feat.eS .fbig{font-size:clamp(22px,15cqw,32px);margin-top:4px}
+.cbx #cb .wq.k-feat.eS .ttl{font-size:10.5px;padding:4px 10px}
+/* small tiles: a touch more shade, since the words cover more of the picture */
+.cbx #cb .k-feat.eS .fw::after{background:linear-gradient(rgba(0,0,0,.14),rgba(0,0,0,.14)),linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,.06) 26%,rgba(0,0,0,.18) 44%,rgba(0,0,0,calc(var(--shade,.86)*.8)) 70%,rgba(0,0,0,var(--shade,.86)) 100%)}
 /* nothing to feature, or no art: the regular widget look */
 .cbx #cb .k-feat:has(>.wb>.fwnone),.cbx #cb .k-feat:has(>.wb>.fwcard){background:linear-gradient(180deg,var(--card) 55%,color-mix(in srgb,var(--card) 97%,#e9e2d8))}
-.cbx #cb .k-feat:has(>.wb>.fwnone) .ttl,.cbx #cb .k-feat:has(>.wb>.fwcard) .ttl{color:var(--text);background:none;border:0;padding:0;-webkit-backdrop-filter:none;backdrop-filter:none;font-size:15px}
+.cbx #cb .wq.k-feat:has(>.wb>.fwnone) .ttl,.cbx #cb .wq.k-feat:has(>.wb>.fwcard) .ttl{color:var(--text)!important;background:none;border:0;padding:0;-webkit-backdrop-filter:none;backdrop-filter:none;font-size:15px}
 .cbx #cb .k-feat:has(>.wb>.fwnone) .wmore,.cbx #cb .k-feat:has(>.wb>.fwcard) .wmore{color:var(--muted);text-shadow:none}
 .cbx #cb .fwnone,.cbx #cb .fwcard{position:absolute;inset:0;padding:52px 20px 18px;color:var(--text);display:flex;flex-direction:column;justify-content:center}
 .cbx #cb .fwnone p{margin:0;color:var(--muted);font-weight:600;font-size:13.5px}

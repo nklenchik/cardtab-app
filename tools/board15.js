@@ -55,7 +55,7 @@ function featBody(ctx,s,w){const m=FEAT[w.metric]?w.metric:'win',F=FEAT[m],L=car
   const onlyPc=show==='%'?'<div class="fbig num'+(F.good?' g':F.bad?' r':'')+'">'+esc(F.pc(c,ctx,L))+'</div>':'';
   return '<div class="fw drill"'+dd({t:c.e.name,sub:'Every entry for this card',card:c.k})+' role="button" tabindex="0" data-fw data-lk="'+esc(lk)+'">'+
     '<img class="fwi" src="'+esc(src)+'" alt="" decoding="async" style="--fx:'+f[0]+'%;--fy:'+f[1]+'%;--fz:'+z+'" data-wall="'+(c.art.wall?1:0)+'">'+
-    '<div class="fwt">'+(s==='S'?'':'<h4 class="fn">'+esc(nameOf(c))+'</h4><p class="fl">'+esc(F.line(c,ctx,L))+'</p>')+big+onlyPc+'</div></div>'}
+    '<div class="fwt"><h4 class="fn">'+esc(nameOf(c))+'</h4>'+(s==='S'?'':'<p class="fl">'+esc(F.line(c,ctx,L))+'</p>')+big+onlyPc+'</div></div>'}
 // ---- Best sellers: a podium of the top three, shown as the top halves of the cards ----
 function bestBody(ctx,s,w){const L=cardStats(ctx).filter(c=>c.sold&&c.b>0&&c.g>0).sort((a,b)=>b.g-a.g),n=s==='S'?1:s==='M'||s==='B'?2:3,top=L.slice(0,n);
   if(!top.length)return '<p class="eg">No card bought and sold in this period yet.</p>';
