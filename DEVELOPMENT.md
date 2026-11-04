@@ -411,3 +411,8 @@ Tests: tools/t87-app-nav.js, tools/t88-board-nav.js, tools/t84.js (still passes)
 - Phones: logo left, profile alone top right; under it a long search pill and a round crimson + (44px) on the same center line as the profile. Export lives in the profile menu on phones.
 - Desktop sheets (app and board): a slower, softer rise, .52s cubic-bezier(.16,1,.3,1), 22px up from 97% scale, opacity done by 45%; close .24s; backdrop .45s.
 - Add a card on phones: no page lock on open (switching the page's overflow forced a full relayout on iPhone). Two keyboard modes behind ct.kbmode for testing: 'together' (focus in the tap; the sheet starts at the remembered height above the keyboard, ct.kbh) and 'after' (sheet slides up untouched; tap search to type). The sheet enters from 100vh.
+
+### v25.4 — breathing room in every pill, matching icons, Tap to type
+- Every pill, switch and tag keeps clear space either side of its words (tools/tpad.js measures it at 320, 390 and 1280 wide, with the menu, Add a card and the editor open). Tags 10px; the Add a card Purchase / Sale switch sizes itself to its longest word (equal halves) and the platform pill gives way; editor buttons never squeeze (Save drops to its own row under 360px).
+- Header icons: Export and Add New use drawn icons at 17px with a 1.9 stroke, the same weight as the board's; the search icon too. On phones the + is the same drawn plus at 20px.
+- Add a card on phones opens without the keyboard (Tap to type). Focus goes to the sheet itself, so no ring appears on the close button. 'together' stays behind ct.kbmode.

@@ -129,3 +129,5 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 }
 /* sheets keep touches to themselves (no page lock: switching the page's overflow on open forced a full relayout on iPhone) */
 #as,.ed{overscroll-behavior:contain;touch-action:pan-y}
+
+#as .sheet:focus{outline:none}

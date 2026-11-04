@@ -71,8 +71,9 @@ html,body,.ct-demo{background:var(--s-bg)}
   .ct-demo .ct-demo-top .app-avatar{grid-area:av;justify-self:center;order:0;margin:0;width:38px;height:38px}
   .ct-demo .ct-demo-top .ct-search{grid-area:search;width:auto!important;min-width:0;margin:0;order:0;flex:none;height:44px;padding:0 16px}
   .ct-demo .ct-demo-top .ct-export{display:none!important}
-  .ct-demo .ct-demo-top .ct-add{grid-area:add;order:0;margin:0;width:44px;height:44px;min-width:0;padding:0!important;display:flex;align-items:center;justify-content:center;font-size:0;line-height:0;box-shadow:0 1px 2px rgba(40,30,20,.08),0 6px 14px -8px rgba(165,14,55,.45)!important}
-  .ct-demo .ct-demo-top .ct-add::before{content:"";display:block;width:16px;height:16px;background:linear-gradient(#fff 0 0) center/16px 2.4px no-repeat,linear-gradient(#fff 0 0) center/2.4px 16px no-repeat}
+  .ct-demo .ct-demo-top .ct-add{grid-area:add;order:0;margin:0;width:44px;height:44px;min-width:0;padding:0!important;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(40,30,20,.08),0 6px 14px -8px rgba(165,14,55,.45)!important}
+  .ct-demo .ct-demo-top .ct-add .ct-add-label{display:none}
+  .ct-demo .ct-demo-top .ct-add .ct-ic{width:20px;height:20px;stroke-width:2}
 }
 /* ===== Every screen size: the phone's rounded look leads. Pills for search, buttons, filters and sort; light shadows ===== */
 .ct-demo .ct-search,.ct-demo .ct-export,.ct-demo .ct-add,.ct-demo select,.ct-demo .ct-earlier-btn,.ct-demo .ct-ask-input,.ct-demo .ct-ask-input+button,.ct-demo .ct-expand{border-radius:999px!important}
@@ -83,3 +84,27 @@ html,body,.ct-demo{background:var(--s-bg)}
 .ct-demo .ct-search,.ct-demo .ct-search input{background:var(--s-card)!important;color:var(--ct-text)!important}
 .ct-demo .ct-search{border-color:var(--s-hair)!important}
 .ct-demo .ct-export{background:var(--s-card)!important;color:var(--ct-text)!important;border-color:var(--s-hair)!important}
+
+/* icons in the header buttons: one size and weight, matching the board's icons */
+.ct-demo .ct-export,.ct-demo .ct-add{display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.ct-demo .ct-ic{flex:none;display:block}
+/* every pill and tag keeps clear space either side of its text */
+.ct-demo .ct-tag{border-radius:999px;padding:3px 10px}
+.ed-del{padding-left:14px!important;padding-right:14px!important;border-radius:999px!important}
+.ed .ed-actions button,.ed-form button.ct-add,.ed-form .ed-cancel{border-radius:999px}
+/* Add a card: the Purchase / Sale switch takes the room its words need; the platform pill gives way first */
+#as .ctx{gap:8px}
+#as .ctx>.seg.n2{flex:none;width:max-content;grid-template-columns:1fr 1fr}
+#as #as-type button{padding:0 16px}
+#as .sel{flex:1 1 auto;min-width:96px}
+.ed-save,.ed-cancel{padding-left:18px!important;padding-right:18px!important;white-space:nowrap;border-radius:999px!important}
+.ed-save{min-width:0!important}
+.ed-del{padding-left:12px!important;padding-right:12px!important}
+.ed-del+.ed-cancel{margin-left:auto}
+/* the editor's buttons never squeeze their words: on very narrow screens Save drops to its own full-width row */
+.ed-foot{flex-wrap:wrap}
+.ed-foot>button{flex:none}
+@media(max-width:360px){.ed-foot .ed-save{flex:1 1 100%;order:3}}
+@media(max-width:350px){#as #as-type button{padding:0 12px;font-size:14px}#as .sel{min-width:86px}#as .sel select{padding-left:12px;padding-right:26px}}
+#as .ctx{min-width:0}#as .sel{min-width:0}
+@media(min-width:761px){.ct-demo .ct-export{padding-left:16px!important;padding-right:18px!important}.ct-demo .ct-add{padding-left:16px!important;padding-right:18px!important}}

@@ -192,17 +192,19 @@
     st.type = d.type === 'sale' ? 'sale' : 'purchase'; setSeg('as-type', st.type === 'sale' ? 1 : 0);
     st.cond = 0; setSeg('as-cond', 0);
     inp.value = ''; inp.disabled = false; $('as-toast').classList.remove('on'); show(1); render();
-    // Two ways to bring up the keyboard on phones (the preview lets you feel both; one ships):
+    // Phones default to 'after' (Nick's call, Nov 4): the sheet slides up untouched and you tap search to type.
+    // 'together' stays available behind ct.kbmode in case the extra tap becomes a hurdle:
     //  'together': focus inside the tap so the keyboard rises with the sheet. The sheet starts at the height it will have
     //              above the keyboard (remembered from last time), so nothing resizes after the slide.
     //  'after':    the sheet slides up on its own, untouched; tap the search to type.
     const touch = matchMedia('(hover:none)').matches;
-    let mode = 'together'; try { mode = localStorage.getItem('ct.kbmode') || 'together'; } catch (e) {}
+    let mode = 'after'; try { mode = localStorage.getItem('ct.kbmode') || 'after'; } catch (e) {}
     dlg.style.top = ''; dlg.style.height = '';
     if (touch && mode === 'together') { const k = kbMem(); if (k) dlg.style.height = k + 'px'; }
     moving = true; dlg.classList.add('moving');
     dlg.showModal();
     if (!touch || mode === 'together') inp.focus({ preventScroll: true });
+    else { const sh = dlg.querySelector('.sheet'); sh.tabIndex = -1; sh.focus({ preventScroll: true }); } // no stray focus ring on the close button
     clearTimeout(settle); settle = setTimeout(() => { moving = false; dlg.classList.remove('moving'); fit(); kbSave(); }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 440);
   }
   function close() { if (dlg.open) dlg.close(); }
