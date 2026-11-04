@@ -255,3 +255,9 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
   - No Board | Stories switch. Stories is its own page ("Nick's Card Stories", with "‹ Card Board" back); the board gets a "Stories" button next to Ask and Share.
   - The time range is a dropdown: Last 12 months, This year, Last year, All time, then "Custom range…" (pick a first and last month).
   - Themes: five chips plus "All 24 themes ›", which opens a two-column list with color strips. A picked theme outside the first five takes the last chip's place.
+
+### Stories v2.2 — phones
+- Range menu anchors left on phones and flips back on screen if it would overflow.
+- Theme chips are one swipeable row on phones (All themes at the end).
+- Enlarged story is full-screen on phones with a bottom bar: round ✕, Save image, Share (never wraps, 48px).
+- Test: tools/t69.js at 375/390/430.

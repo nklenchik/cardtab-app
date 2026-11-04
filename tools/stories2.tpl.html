@@ -108,6 +108,24 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 .lb .note{color:rgba(255,255,255,.75);font-size:12.5px;font-weight:650;min-height:18px;margin:0}
 .foot{margin:26px auto 0;text-align:center;color:var(--muted);font-size:13px;font-weight:650;max-width:560px}
 @media(max-width:420px){#per button{padding:8px 11px;font-size:13px}}
+/* ---- phones ---- */
+.lb .acts button{white-space:nowrap}
+.lb .acts .xb{width:48px;padding:0;display:grid;place-items:center}
+@media(max-width:600px){
+  /* the header: back and name on one line, the time range under it on the left */
+  .top{margin-bottom:14px}
+  .controls{justify-items:stretch;margin-bottom:16px}
+  .perw .menu{left:0;right:auto;transform-origin:top left}
+  /* themes: one row you can swipe, with All themes at the end */
+  .thm{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:2px max(16px,env(safe-area-inset-left,0px)) 6px;scroll-padding:0 16px}
+  /* enlarged story: fills the screen, actions in a calm bar at the bottom */
+  .lb{padding:0;background:rgba(10,10,10,.94);place-items:stretch}
+  .lb .box{height:100%;width:100%;grid-template-rows:1fr auto auto;align-items:center;justify-items:center;gap:12px;padding:max(64px,env(safe-area-inset-top,0px)) 16px max(18px,env(safe-area-inset-bottom,0px))}
+  .lb .sl{width:min(100%,calc((100dvh - 190px)*9/16));border-radius:20px}
+  .lb .acts{width:100%;max-width:420px;display:grid;grid-template-columns:48px 1fr 1fr;gap:10px}
+  .lb .acts button{height:48px;padding:0 12px;font-size:15px}
+  .lb .note{text-align:center;padding:0 8px}
+}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
@@ -124,7 +142,7 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 <div class="sheetw" id="ths" hidden><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ths-h"><div class="shh"><h2 id="ths-h">Themes</h2><button class="xx" data-close aria-label="Close">✕</button></div><div class="tgrid" id="tgrid"></div></div></div>
 <div class="sheetw" id="crs" hidden><div class="sheet sm" role="dialog" aria-modal="true" aria-labelledby="crs-h"><div class="shh"><h2 id="crs-h">Custom range</h2><button class="xx" data-close aria-label="Close">✕</button></div>
   <div class="mrow2"><label>From<select id="cr-a"></select></label><label>To<select id="cr-b"></select></label></div><p class="crn" id="cr-n"></p><button class="go" id="cr-go">Show these months</button></div></div>
-<div class="lb" id="lb" hidden><div class="box"><div id="lbc"></div><p class="note" id="lbn"></p><div class="acts"><button class="g" data-a="close">Close</button><button data-a="save">Save image</button><button data-a="share">Share</button></div></div></div>
+<div class="lb" id="lb" hidden><div class="box"><div id="lbc"></div><p class="note" id="lbn"></p><div class="acts"><button class="g xb" data-a="close" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><button data-a="save">Save image</button><button data-a="share">Share</button></div></div></div>
 
 <script>
 (function(){'use strict';
@@ -236,7 +254,7 @@ render();
 $('thm').addEventListener('click',e=>{if(e.target.closest('[data-all]')){openSheet('ths');return}const b=e.target.closest('[data-i]');if(!b)return;setTheme(+b.dataset.i)});
 const allMonths=months('all'),mLab=m=>mName(m,{month:'short',year:'numeric'}),customLab=()=>cust[0]===cust[1]?mLab(cust[0]):mLab(cust[0])+' – '+mLab(cust[1]);
 function setPer(p){per=p;$('perl').textContent=p==='custom'?customLab():PER.find(x=>x[0]===p)[1];render();document.querySelectorAll('#track .sl').forEach(el=>{el.classList.add('swap');setTimeout(()=>el.classList.remove('swap'),450)})}
-function openMenu(){const m=$('perm');m.innerHTML=PER.map(p=>'<button role="menuitemradio" aria-checked="'+(p[0]===per)+'" data-p="'+p[0]+'">'+p[1]+'</button>').join('')+'<hr><button role="menuitemradio" aria-checked="'+(per==='custom')+'" data-p="custom">Custom range…</button>';m.hidden=false;$('perb').setAttribute('aria-expanded','true')}
+function openMenu(){const m=$('perm');m.innerHTML=PER.map(p=>'<button role="menuitemradio" aria-checked="'+(p[0]===per)+'" data-p="'+p[0]+'">'+p[1]+'</button>').join('')+'<hr><button role="menuitemradio" aria-checked="'+(per==='custom')+'" data-p="custom">Custom range…</button>';m.hidden=false;$('perb').setAttribute('aria-expanded','true');m.style.left='';m.style.right='';const r=m.getBoundingClientRect();if(r.left<8){m.style.left='0';m.style.right='auto'}else if(r.right>innerWidth-8){m.style.right='0';m.style.left='auto'}}
 function closeMenu(){$('perm').hidden=true;$('perb').setAttribute('aria-expanded','false')}
 $('perb').addEventListener('click',e=>{e.stopPropagation();$('perm').hidden?openMenu():closeMenu()});
 $('perm').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(!b)return;closeMenu();if(b.dataset.p==='custom')openSheet('crs');else setPer(b.dataset.p)});
