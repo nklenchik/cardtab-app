@@ -100,3 +100,14 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - On release: ghost glides into its final spot, other widgets move once (FLIP), content fades back in.
 - No dimming of other widgets during resize; it caused dropped frames on throttled CPUs.
 - Top bar: "‹ Dashboard" back button and the account avatar menu.
+
+### Card Board v6: every widget at every size (Nov 3)
+- Grid of squares: 4 across on desktop and tablet, 2 across on phones. Rows are fixed height (184px; phones about a square).
+- Sizes: Small 1×1, Wide 2×1, Large 2×2, Extra large full width × 2 (desktop/tablet only; on phones it shows as Large).
+- All 10 metrics have a hand-made layout for each size (`body(k, ctx, size)` in `tools/board5.js`). Small sizes use short titles (Fees, Best month, Sold, Buy from, Top fees, Biggest win, Budget).
+- Big numbers size themselves to their box (`.bn`, font from container width ÷ character count), so they never clip.
+- Charts are drawn at the exact pixel size of their box after layout (`cv()` + `fillCharts()`).
+- Corner resize now changes width and height together and snaps to the nearest size, measured in cells, with a small bias toward the current size to prevent flicker. The page scrolls when you drag near the top or bottom edge.
+- Customize: remove badge on the top-left corner, drag the card itself to move (mouse: after 5px; touch: press and hold for 280ms so the page still scrolls), grip to resize. The ⋯ menu has sizes, move earlier/later and remove for keyboard users. Arrow keys on the grip step through the sizes.
+- Layout entries now have ids (`{id,k,size}`, key `cb.layout.v3`), so the same metric can appear more than once.
+- The Add widget panel lists all 10 metrics at any size, with a preview at the real size.
