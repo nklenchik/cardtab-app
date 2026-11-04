@@ -23,3 +23,11 @@ dialog #aw-cats button{transition:background .2s,color .2s}
   .cbx.csret{transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .3s ease-out}
 }
 @media(prefers-reduced-motion:reduce){.cbx.csback{transform:none;opacity:1}}
+
+/* sheets wait on their first frame until laid out, then move */
+dialog.sheet.prep .awp,dialog.sheet.prep .askp,dialog.sheet.prep::backdrop,dialog.sheet.prep .awbody>*,dialog.sheet.prep .avc,dialog.prep .askic svg{animation-play-state:paused!important}
+/* phones: every sheet (Share, Ask, dates, profile, Add widgets) rises on the same soft iOS-style curve */
+@media(max-width:760px){
+  dialog.sheet[open] .awp,dialog.drawer[open] .askp{animation:shUp .48s cubic-bezier(.32,.72,0,1) both;will-change:transform}
+  dialog.sheet.closing .awp,dialog.drawer.closing .askp{animation:shDown .24s cubic-bezier(.4,0,.8,.4) both}
+}

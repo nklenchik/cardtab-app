@@ -1,0 +1,10 @@
+const pw=require('playwright');(async()=>{const b=await pw.chromium.launch();
+for(const sel of ['#cb-share','#cb-per']){const ctx=await b.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});const p=await ctx.newPage();
+await p.goto('file://'+require('path').resolve('cbt.html'));await p.evaluate(()=>localStorage.clear());await p.reload();await p.evaluate(()=>document.getElementById('expand').click());await p.waitForTimeout(1500);
+await b.startTracing(p,{path:'trace.json',categories:['devtools.timeline','disabled-by-default-devtools.timeline']});
+await p.evaluate(s=>document.querySelector(s).click(),sel);await p.waitForTimeout(800);await b.stopTracing();
+const ev=JSON.parse(require('fs').readFileSync('trace.json')).traceEvents.filter(e=>e.dur);const agg={};
+ev.forEach(e=>{if(['Layout','UpdateLayoutTree','Paint','EvaluateScript','FunctionCall','RasterTask','CompositeLayers','PrePaint','Layerize','HitTest','TimerFire','EventDispatch','ParseHTML','Decode Image','ImageDecodeTask','Commit','UpdateLayer','PaintImage','DecodeImage'].includes(e.name)){agg[e.name]=agg[e.name]||{n:0,t:0,max:0};agg[e.name].n++;agg[e.name].t+=e.dur/1000;agg[e.name].max=Math.max(agg[e.name].max,e.dur/1000)}});
+console.log(sel,JSON.stringify(Object.entries(agg).sort((a,b)=>b[1].t-a[1].t).slice(0,8).map(([k,v])=>k+' n'+v.n+' t'+v.t.toFixed(1)+' max'+v.max.toFixed(1))));
+const big=ev.filter(e=>e.name==='Layout'||e.name==='UpdateLayoutTree').sort((a,b)=>b.dur-a.dur).slice(0,3).map(e=>e.name+' '+(e.dur/1000).toFixed(1)+' '+JSON.stringify(e.args&&e.args.beginData?{nodes:e.args.beginData.dirtyObjects,total:e.args.beginData.totalObjects}:(e.args&&e.args.elementCount?{el:e.args.elementCount}:{})));console.log(big.join(' | '));
+await ctx.close()}await b.close()})();

@@ -303,3 +303,9 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 ### Stories v2.8
 - Theme dots match the site: each theme shows its three most distinct colors (story backgrounds, then accents), skipping pale creams/whites. Jewel = green, crimson, navy; Voltage = blue, yellow, navy.
 - Phones fit as many theme chips as one line allows (at least two), then All themes; slightly tighter chips under 600px.
+
+### v17 — smoother sheets
+- Cause of the jank: (1) the Stories page was preloading (about 100ms of parsing at 4x slowdown) right when people tapped Share or Ask; (2) a sheet's first layout landed in the middle of its animation; (3) Ask focused its input, so the iPhone keyboard popped up mid-slide.
+- Fixes: sheets open held on their first frame (class prep, animations paused) and start moving on the next frame; Stories preloads only when idle and no sheet is open; Ask focuses its input only on desktop, after the drawer settles; the phone thumb bar hides while a sheet is open.
+- Phones: every sheet rises on the same soft curve, cubic-bezier(.32,.72,0,1), .48s; closes in .24s.
+- Measured (tools/t74.js, 4x CPU slowdown): Share/Ask/dates/profile move with no frames over 33ms; the one heavier frame happens before motion starts.

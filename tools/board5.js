@@ -642,7 +642,7 @@ function paintAskLeft(){const left=Math.max(0,ASK_LIMIT-askUsed()),el=$('ask-lef
 if(window.claude&&claude.use)claude.use('sample').then(f=>{sampleFn=f;paintAskAvail()},()=>{});
 function paintAskAvail(){$('ask-off').hidden=!!sampleFn;$('ask-form').hidden=!sampleFn;$('ask-starts').hidden=!sampleFn||askTurns.length>0;$('ask-left').hidden=!sampleFn;if(sampleFn)paintAskLeft()}
 const STARTS=['Which platform costs me the most in fees?','Why was profit down the last few months?','What was my best flip, and why did it work?','Am I buying more than I’m selling?'];
-function openAsk(){closeMenus();$('ask-starts').innerHTML=STARTS.map(q=>'<button type="button" data-q="'+esc(q)+'">'+esc(q)+'</button>').join('');$('ask-scope').textContent=$('cb-perl').textContent+' · '+$('cb-platl').textContent;paintAskAvail();askd.showModal();setTimeout(()=>$('ask-in').focus(),60)}
+function openAsk(){closeMenus();$('ask-starts').innerHTML=STARTS.map(q=>'<button type="button" data-q="'+esc(q)+'">'+esc(q)+'</button>').join('');$('ask-scope').textContent=$('cb-perl').textContent+' · '+$('cb-platl').textContent;paintAskAvail();askd.showModal();if(matchMedia('(hover:hover) and (pointer:fine)').matches)setTimeout(()=>{if(askd.open)$('ask-in').focus({preventScroll:true})},420)}
 // everything Claude sees: the period you picked, with exact cents
 function askData(){const ctx=ctxNow(),t=totals(ctx.inP),d=c=>(c/100).toFixed(2),pt={};
   ctx.inP.forEach(e=>{const o=pt[e.platform]||(pt[e.platform]={bought:0,sold:0,fees:0,sales:0,n:0});if(e.type==='purchase')o.bought+=e.amount;if(e.type==='sale'){o.sales+=e.amount;o.fees+=e.amount-e.net;o.n++}});
@@ -693,6 +693,10 @@ $('simple').addEventListener('keydown',e=>{const d=e.target.closest('.drill[data
 document.querySelectorAll('dialog.sheet').forEach(d=>{const nat=HTMLDialogElement.prototype.close;
   d.close=function(v){if(!this.open||this.classList.contains('closing'))return;if(calm.matches){nat.call(this,v);return}this.classList.add('closing');setTimeout(()=>{this.classList.remove('closing');nat.call(this,v)},190)};
   d.addEventListener('cancel',e=>{e.preventDefault();d.close()})});
+// opening: the sheet is laid out first while held on its first frame, then the motion starts on the next frame.
+// The heavy first-layout work happens before anything moves, so the slide itself never stutters.
+document.querySelectorAll('dialog.sheet').forEach(d=>{const nat=HTMLDialogElement.prototype.showModal;
+  d.showModal=function(){if(this.open)return;if(calm.matches){nat.call(this);return}this.classList.add('prep');nat.call(this);void this.offsetHeight;requestAnimationFrame(()=>requestAnimationFrame(()=>this.classList.remove('prep')))}});
 
 // ---------- Card Stories: its own page, slid in over the board. Back returns here. ----------
 // The page loads quietly in the background once the board is open, so the first slide-in already has the stories on it.
@@ -706,4 +710,5 @@ window.cbStoriesBack=function(){if(!open)return;open=false;csx.classList.remove(
 window.cbName=()=>(profile.first||'').trim();
 $('cb-stories').addEventListener('click',openStories);
 ['pointerenter','touchstart','focus'].forEach(ev=>$('cb-stories').addEventListener(ev,load,{passive:true,once:true}));
-$('expand').addEventListener('click',()=>setTimeout(()=>(window.requestIdleCallback||setTimeout)(load),1500))})();
+const quiet=()=>{if(csf)return;if(document.querySelector('dialog[open]')||document.hidden){setTimeout(quiet,1500);return}(window.requestIdleCallback||(f=>setTimeout(f,1)))(()=>{if(document.querySelector('dialog[open]')){setTimeout(quiet,1500);return}load()},{timeout:4000})};
+$('expand').addEventListener('click',()=>setTimeout(quiet,3000))})();
