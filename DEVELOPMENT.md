@@ -134,3 +134,13 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
   - the board as PNG, JPG or WebP (html-to-image, loaded only when needed)
 - Escape no longer closes the whole board when a dialog is open.
 - In the claude.ai preview, files go through the viewer's save prompt (`downloads` capability). Elsewhere a normal download link is used. The real app will use normal downloads.
+
+### Card Board v8: motion pass (Nov 4)
+- Decisions (Nick): add Banner 4×1; no spacers; keep the desktop top bar; names now, usernames later with Stories.
+- Open/close: the board is built ahead of time while you're on the dashboard (idle callback) and kept invisible (`.cbx.off`, opacity 0, inert). A background panel grows from the Insights panel using transform only (GPU), then the content fades in. Close reverses this. No clip-path animation any more.
+  - At 4× CPU slowdown, worst open frame went from 467ms to about 33–50ms.
+- Move: a floating copy follows the pointer and the widget's own spot becomes a dashed landing slot. Other widgets slide out of the way live (FLIP), and a widget can't swap back until the pointer has left it. On release the copy glides into the slot.
+- Resize: the widget itself is the landing slot. On each snap, the board makes room live (only on snap, not every pixel). The ghost moves with transform and is size-contained.
+- `flip()` cancels in-progress moves before measuring, so a reshuffle mid-animation starts from where things are on screen.
+- Wiggle in Edit mode: rotate-only keyframes, smaller on bigger widgets, each widget out of step. Off while dragging or resizing, and for reduced motion.
+- Headless tests have no GPU, so composited rotation shows up as slower there than it will on real hardware.

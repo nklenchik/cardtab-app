@@ -1,0 +1,29 @@
+/* ================= v8: motion pass — GPU-only open/close, live slots, wiggle ================= */
+/* the board is built ahead of time and kept out of sight until you open it */
+.cbx{will-change:auto}
+.cbx.off{opacity:0;pointer-events:none;will-change:opacity}
+.cbxbg{position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:49;background:#f6f5f0;transform-origin:0 0;visibility:hidden;pointer-events:none;will-change:transform;contain:strict}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cbxbg{background:#1b1b1a}}
+:root[data-theme="dark"] .cbxbg{background:#1b1b1a}
+.cbxbg.on{visibility:visible}
+.cbx.anim,.cbx.anim #cb{background:transparent!important}
+.cbx.anim{overflow:hidden}
+/* the landing slot: where the widget will be, with the board already making room */
+.cbx #cb .simple>.w.slot{background:color-mix(in srgb,var(--brand) 5%,transparent)!important;border:2px dashed color-mix(in srgb,var(--brand) 55%,transparent)!important;box-shadow:none!important;outline:none!important;animation:none!important}
+.cbx #cb .simple>.w.slot>*{display:none!important}
+/* the copy that follows your finger or cursor */
+.cbx #cb .simple>.w.floating{z-index:8;pointer-events:none;box-shadow:0 24px 50px rgba(0,0,0,.24);outline:none!important;animation:none!important;will-change:transform;transform-origin:center}
+/* resize ghost moves with transform; only its own small box is resized */
+.cbx #cb .rzg{left:0;top:0;contain:strict;will-change:transform,width,height}
+.cbx #cb .rzg.settle{transition:transform .28s cubic-bezier(.2,.7,.2,1),width .28s cubic-bezier(.2,.7,.2,1),height .28s cubic-bezier(.2,.7,.2,1)}
+/* a very slight wiggle while editing, each widget a little out of step; big widgets move less */
+@keyframes cbwig{0%,100%{rotate:calc(var(--wa) * -1)}50%{rotate:var(--wa)}}
+.cbx #cb .simple>.w{--wa:.32deg}
+.cbx #cb .simple>.w.szM,.cbx #cb .simple>.w.szL{--wa:.16deg}
+.cbx #cb .simple>.w.szX,.cbx #cb .simple>.w.szB{--wa:.07deg}
+.cbx #cb.editing .simple>.w{animation:cbwig .3s ease-in-out infinite}
+.cbx #cb.editing .simple>.w:nth-child(2n){animation-duration:.33s;animation-delay:-.12s}
+.cbx #cb.editing .simple>.w:nth-child(3n){animation-duration:.28s;animation-delay:-.2s}
+.cbx #cb.editing .simple>.w:nth-child(5n){animation-duration:.35s;animation-delay:-.07s}
+.cbx #cb.rzing .simple>.w,.cbx #cb.dragging .simple>.w{animation:none}
+@media (prefers-reduced-motion:reduce){.cbx #cb.editing .simple>.w{animation:none}}
