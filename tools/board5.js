@@ -178,12 +178,14 @@ function body(k,ctx,s,w){
     const rows=Object.keys(g).filter(x=>g[x].s>0).map(x=>({k:x,pct:g[x].f/g[x].s*100,f:g[x].f,n:g[x].n})).sort((a,b)=>b.pct-a.pct),mx=Math.max(1,...rows.map(r=>r.pct));
     if(!rows.length)return '<p class="eg">No sales in this period.</p>';
     const det=x=>kshort(x.f)+' in fees and shipping on '+cnt(x.n,'sale','sales');
-    const list=(m,open,cls)=>'<div class="lr kl '+(cls||'')+'">'+rows.slice(0,m).map(x=>row(chip(x.k)+'<span class="n">'+esc(x.k)+'<small><i class="kb2"><b style="width:'+(x.pct/mx*100).toFixed(1)+'%"></b></i></small></span><span class="v">'+x.pct.toFixed(1)+'%</span>',det(x),open,{t:'Sold on '+x.k,a:ctx.a,b:ctx.b,types:['sale'],plat:x.k,fees:true})).join('')+'</div>';
+    const list=(m,open,cls)=>'<div class="lr kl '+(cls||'')+'">'+rows.slice(0,m).map(x=>row(chip(x.k)+'<span class="n">'+esc(x.k)+'<small><i class="kb2"><b style="width:'+(x.pct/mx*100).toFixed(1)+'%;background:'+segCol(x.k)+'"></b></i></small></span><span class="v">'+x.pct.toFixed(1)+'%</span>',det(x),open,{t:'Sold on '+x.k,a:ctx.a,b:ctx.b,types:['sale'],plat:x.k,fees:true})).join('')+'</div>';
     if(s==='S'){const x=rows[0];return '<div class="wS"><div class="who">'+chip(x.k)+'<b>'+esc(x.k)+'</b></div><div class="cq">'+bn(x.pct.toFixed(1)+'%','',34)+'</div><small class="cap">of each '+esc(x.k)+' sale</small></div>'}
     if(s==='M')return list(3,false);
-    if(s==='B')return list(6,false,'three');
+    // Banner and Extra large match "Where you buy": the overall number on the left, the platforms listed on the right
+    const allS=rows.reduce((a2,x)=>a2+g[x.k].s,0),allF=rows.reduce((a2,x)=>a2+x.f,0),sum=fz=>'<div class="hz"><small class="cap">Platforms kept, on average</small><div class="cq">'+bn((allS?allF/allS*100:0).toFixed(1)+'%','',fz)+'</div><small class="cap">'+kshort(allF)+' of '+kshort(allS)+' in sales</small></div>';
+    if(s==='B')return '<div class="split wide">'+sum(36)+list(3,false)+'</div>';
     if(s==='L')return list(5,true);
-    return list(6,true,'two')}
+    return '<div class="split wide">'+sum(44)+list(6,true)+'</div>'}
   if(k==='win'){const key=e=>e.name.toLowerCase().replace(/[^a-z0-9]/g,'')+'|'+e.no,buys={},sells={};p.filter(e=>e.type==='purchase').forEach(e=>{(buys[key(e)]=buys[key(e)]||[]).push(e)});inP.filter(e=>e.type==='sale').forEach(e=>{(sells[key(e)]=sells[key(e)]||[]).push(e)});
     const wins=Object.keys(sells).filter(x=>buys[x]).map(x=>{const b=buys[x].reduce((a,e)=>a+e.amount,0),sv=sells[x].reduce((a,e)=>a+e.net,0);return {g:sv-b,b,s:sv,e:sells[x][0]}}).filter(w=>w.g>0).sort((a,b)=>b.g-a.g);
     if(!wins.length)return '<p class="eg">No card bought and sold in this period yet.</p>';const w=wins[0];

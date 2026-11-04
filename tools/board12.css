@@ -26,10 +26,19 @@ dialog #aw-cats button{transition:background .2s,color .2s}
 
 /* sheets wait on their first frame until laid out, then move */
 dialog.sheet.prep .awp,dialog.sheet.prep .askp,dialog.sheet.prep::backdrop,dialog.sheet.prep .awbody>*,dialog.sheet.prep .avc,dialog.prep .askic svg{animation-play-state:paused!important}
-/* phones: every sheet (Share, Ask, dates, profile, Add widgets) rises on the same soft iOS-style curve */
+/* one motion language for every sheet. The panel moves as one solid piece (no contents fading in bit by bit), on one calm curve with no bounce.
+   Desktop: sheets fade and settle from 96%; Ask slides in from the right. Phones: everything rises from the bottom. Closing is quick and quiet. */
+@keyframes sheetIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes sheetOut{to{opacity:0;transform:translateY(6px) scale(.98)}}
+dialog.sheet[open] .awp{animation:sheetIn .32s cubic-bezier(.2,.8,.2,1) both;will-change:transform,opacity}
+dialog.sheet.closing .awp{animation:sheetOut .18s cubic-bezier(.4,0,1,1) both}
+dialog.drawer[open] .askp{animation:drin .42s cubic-bezier(.2,.8,.2,1) both;will-change:transform}
+dialog.drawer.closing .askp{animation:drout .22s cubic-bezier(.4,0,1,1) both}
+dialog.sheet[open] .awbody>*,dialog.sheet[open] .avc{animation:none}
+dialog.sheet[open]::backdrop{animation:bdIn .3s ease-out both}
 @media(max-width:760px){
-  dialog.sheet[open] .awp,dialog.drawer[open] .askp{animation:shUp .48s cubic-bezier(.32,.72,0,1) both;will-change:transform}
-  dialog.sheet.closing .awp,dialog.drawer.closing .askp{animation:shDown .24s cubic-bezier(.4,0,.8,.4) both}
+  dialog.sheet[open] .awp,dialog.drawer[open] .askp{animation:shUp .42s cubic-bezier(.2,.8,.2,1) both;will-change:transform}
+  dialog.sheet.closing .awp,dialog.drawer.closing .askp{animation:shDown .22s cubic-bezier(.4,0,1,1) both}
 }
 
 /* ---- touch: scrub the chart, flip the tile ---- */
@@ -75,3 +84,26 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 @media(prefers-reduced-motion:reduce){.cbx #cb .scr,.cbx #cb .kback,.cbx #cb svg.pc path.bar{transition:none}}
 /* phones: the entries list is a proper bottom sheet with its header showing */
 @media(max-width:760px){dialog.sheet .entp{width:100%!important;height:min(82dvh,720px)!important;max-height:none;border-radius:22px 22px 0 0}}
+
+/* ---- consistency pass ---- */
+/* list rows: straight hairline dividers inset to the content (no curved ends, nothing poking past the padding) */
+.cbx #cb .wq .lr .r{border-top:0!important;position:relative}
+.cbx #cb .wq .lr .r+.r::before{content:"";position:absolute;left:8px;right:8px;top:0;height:1px;background:var(--line);transition:opacity .2s}
+.cbx #cb .wq .lr .r:hover::before,.cbx #cb .wq .lr .r[aria-expanded="true"]::before,.cbx #cb .wq .lr .r:hover+.r::before,.cbx #cb .wq .lr .r[aria-expanded="true"]+.r::before{opacity:0}
+.cbx #cb .wq .lr.two .r:nth-child(2)::before,.cbx #cb .wq .lr.three .r:nth-child(-n+3)::before{display:none}
+/* What each platform kept: names in one column, bars start on the same line, in each platform's own color (like its chip) */
+.cbx #cb .wq .kl .n{display:grid!important;grid-template-columns:minmax(0,7.5em) minmax(0,1fr);align-items:center;column-gap:12px}
+.cbx #cb .wq .kl .n small{display:block!important;margin:0!important}
+.cbx #cb .wq .kl .kb2{max-width:none;width:100%}
+.cbx #cb .wq:not(.eM) .kl .n{grid-template-columns:1fr;row-gap:6px}
+/* How much of it sold: the caption may use two lines instead of being cut off */
+.cbx #cb .k-sell .cap{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+/* same widget kinds, same structure: banners list in one column; big tiles start at the top instead of floating mid-tile */
+.cbx #cb .k-where .split.wide,.cbx #cb .k-kept .split.wide{grid-template-columns:minmax(0,1fr) minmax(0,1.6fr)}
+.cbx #cb .eB .split.wide .lr{grid-template-columns:minmax(0,1fr)!important;margin:auto 0}
+.cbx #cb .eL .lr{margin:0 0 auto!important}
+.cbx #cb .eX .split.wide{align-items:start}
+.cbx #cb .eX .split.wide .lr{margin:0!important}
+.cbx #cb .eX.k-where .split.wide .lr,.cbx #cb .eX.k-kept .split.wide .lr{grid-template-columns:minmax(0,1fr)}
+/* biggest win in a banner: real card art, sized like the other sizes */
+.cbx #cb .eB .bestc .art{height:auto!important;width:76px!important;max-height:none!important;aspect-ratio:63/88;font-size:30px}

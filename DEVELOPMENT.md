@@ -329,3 +329,11 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - Checked on phone (390, 375) and iPad (1024), sizes S/M/L/X/B: everything fits; small tiles fill about 82% of their height.
 - Long-press a widget for 480ms on touch (no more than 10px of movement, cancelled by scrolling) to enter Edit; it suppresses the click that follows and blocks the iPhone callout and text selection on widgets.
 - Test: tools/t77.js.
+
+### v20 — one motion language + consistency pass
+- Recorded the sheets frame by frame (and at 12x slow-motion): Ask on desktop jumped about 60% of the way in the first two frames (springy curve .18,.89,.32,1.05), and on phones the contents of Share/Ask faded in piece by piece while the panel was still moving.
+- Now every sheet moves as one solid piece on cubic-bezier(.2,.8,.2,1) with no bounce. Desktop: centered sheets fade and settle from 96% (.32s), Ask slides in from the right (.42s). Phones: everything rises from the bottom (.42s). Closing .18–.22s. The staggered item fade-in is gone. Traced at 4x slowdown: even steps, no jumps.
+- List rows: straight hairline dividers inset to the content (they were row borders with rounded ends that poked past the padding).
+- What each platform kept: names in one column so the bars line up, and each bar uses its platform's chip color (it was blue for all). Banner and Extra large now mirror Where you buy: the overall % on the left, the platforms on the right.
+- Banners list in one column; Large and Extra large list tiles start at the top instead of floating mid-tile; Biggest win art in banners is full size (it was a 24px sliver); the How much of it sold caption may use two lines.
+- Tests: tools/t78.js (video), t79.js (slow-motion frames), t80.js (every widget × every size, overflow check).
