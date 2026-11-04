@@ -55,7 +55,8 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 .tchip{flex:none;font-weight:800;font-size:13px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 13px 8px 9px;cursor:pointer;display:inline-flex;gap:8px;align-items:center;white-space:nowrap;--ring:var(--card);transition:transform .2s cubic-bezier(.2,.8,.2,1)}
 .tchip:hover{transform:translateY(-1px)}
 .tchip[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text);--ring:var(--text)}
-.tsw{display:inline-flex}.tsw span{width:12px;height:12px;border-radius:50%;display:block;box-shadow:0 0 0 1.5px var(--ring),inset 0 0 0 1px rgba(128,128,128,.4)}.tsw span+span{margin-left:-4px}
+.tsw{display:inline-flex}.tsw span{width:12px;height:12px;border-radius:50%;display:block;box-shadow:0 0 0 1.5px var(--ring),inset 0 0 0 1px rgba(128,128,128,.4)}
+@media(max-width:600px){.tchip{gap:7px;padding:8px 12px 8px 9px}.tsw span{width:11px;height:11px}}.tsw span+span{margin-left:-4px}
 /* the strip of stories */
 .track{display:flex;gap:22px;justify-content:center;flex-wrap:wrap}
 @media(max-width:760px){.track{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:4px max(16px,env(safe-area-inset-left,0px)) 14px;scrollbar-width:none;scroll-padding:0 16px}.track::-webkit-scrollbar{display:none}}
@@ -306,9 +307,15 @@ const TH=[
 const PHT=matchMedia('(max-width:600px)');PHT.addEventListener&&PHT.addEventListener('change',()=>paintChips());
 let NAME='';const EMB=(()=>{try{return window.parent!==window&&typeof parent.cbStoriesBack==='function'}catch(e){return false}})(),foot=()=>NAME?NAME+' · Card Tab':'Card Tab';
 let th=0,mi=[0,0,0,0,0];
-const sw=t=>t[1].slice(0,3).map(p=>'<span style="background:'+(p.bg.startsWith('#')?p.bg:p.bg.match(/#\w{6}/)[0])+'"></span>').join('');
+const hexRGB=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),cdist=(a,b)=>{const x=hexRGB(a),z=hexRGB(b);return Math.hypot(x[0]-z[0],x[1]-z[1],x[2]-z[2])};
+const SWC=new Map();function swCols(t){if(SWC.has(t[0]))return SWC.get(t[0]);const all=[];t[1].forEach(p=>(p.bg.match(/#[0-9a-fA-F]{6}/g)||[]).forEach(c=>all.push(c)));
+  t[1].forEach(p=>(String(p.acc).match(/#[0-9a-fA-F]{6}/g)||[]).forEach(c=>all.push(c)));const pale=c=>{const v=hexRGB(c);return lum(c)>.8&&Math.max(...v)-Math.min(...v)<70};
+  const pick=[];const add=ok=>all.forEach(c=>{if(pick.length<3&&ok(c)&&pick.every(q=>cdist(q,c)>40))pick.push(c)});add(c=>!pale(c));add(()=>true);SWC.set(t[0],pick);return pick}
+const sw=t=>swCols(t).map(c=>'<span style="background:'+c+'"></span>').join('');
 const FEW=5;
-function paintChips(){const F=PHT.matches?2:FEW,show=[...Array(F).keys()];if(th>=F)show[F-1]=th;$('thm').innerHTML=show.map(i=>'<button class="tchip" aria-pressed="'+(i===th)+'" data-i="'+i+'"><span class="tsw">'+sw(TH[i])+'</span>'+TH[i][0]+'</button>').join('')+'<button class="tchip more" data-all><span class="rbw" aria-hidden="true"></span>All themes</button>'}
+function paintChips(){const el=$('thm');const draw=F=>{const show=[...Array(F).keys()];if(th>=F)show[F-1]=th;el.innerHTML=show.map(i=>'<button class="tchip" aria-pressed="'+(i===th)+'" data-i="'+i+'"><span class="tsw">'+sw(TH[i])+'</span>'+TH[i][0]+'</button>').join('')+'<button class="tchip more" data-all><span class="rbw" aria-hidden="true"></span>All themes</button>'};
+  let F=FEW;draw(F);if(PHT.matches){while(F>2&&el.scrollWidth>el.clientWidth+1){F--;draw(F)}}}
+addEventListener('resize',()=>{clearTimeout(paintChips.t);paintChips.t=setTimeout(paintChips,120)});
 function paintGrid(){$('tgrid').innerHTML=TH.map((t,i)=>'<button class="topt" aria-pressed="'+(i===th)+'" data-i="'+i+'"><span class="tsw big">'+sw(t)+'</span><span>'+t[0]+'</span></button>').join('')}
 function setTheme(i){th=i;paintChips();document.querySelectorAll('#track .sl').forEach(el=>paintStory(el,+el.dataset.n));try{localStorage.setItem('cs.theme',th)}catch(err){}}
 paintChips();

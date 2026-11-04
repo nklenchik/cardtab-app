@@ -299,3 +299,7 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - Last month added: Last month · This year · Last 12 months · Last year · All time · Custom dates (months only).
 - Any single-month range (Last month or one custom month): money line by day; Staying accountable becomes Budget (to spare/over) · Avg week · Lightest week; Busiest month becomes Busiest week (weeks are 1–7, 8–14, 15–21, 22–28, 29–end). If a month has no flips, Biggest win shows the biggest sale.
 - Test: tools/t73.js.
+
+### Stories v2.8
+- Theme dots match the site: each theme shows its three most distinct colors (story backgrounds, then accents), skipping pale creams/whites. Jewel = green, crimson, navy; Voltage = blue, yellow, navy.
+- Phones fit as many theme chips as one line allows (at least two), then All themes; slightly tighter chips under 600px.
