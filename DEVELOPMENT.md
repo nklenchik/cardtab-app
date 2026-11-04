@@ -251,3 +251,7 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
   5. Your collection: Sold % / Still holding / Busiest month (fan of cards)
 - Tap a story to enlarge it, with Save image / Share (preview notes say these work in the app). Headlines use short card names (text before the first comma).
 - Themes: Jewel, Voltage, Dusk, Cranberry, Mint, Ocean, Sunset, Mono, Paper, Neon, Forest, Grape, Citrus, Rose, Slate, Midnight, Sand, Lava, Ice, Bubblegum, Gold, Holo, Matcha, Retro.
+- Stories v2.1 (Nick):
+  - No Board | Stories switch. Stories is its own page ("Nick's Card Stories", with "‹ Card Board" back); the board gets a "Stories" button next to Ask and Share.
+  - The time range is a dropdown: Last 12 months, This year, Last year, All time, then "Custom range…" (pick a first and last month).
+  - Themes: five chips plus "All 24 themes ›", which opens a two-column list with color strips. A picked theme outside the first five takes the last chip's place.

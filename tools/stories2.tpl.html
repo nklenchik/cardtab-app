@@ -18,7 +18,38 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 .seg button{white-space:nowrap;border:0;background:none;padding:8px 16px;font-weight:800;font-size:14px;color:var(--muted);border-radius:999px;cursor:pointer;transition:background .2s,color .2s}
 .seg button[aria-pressed="true"],.seg button[aria-selected="true"]{background:var(--card);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.12)}
 .controls{display:grid;gap:14px;justify-items:center;margin-bottom:22px}
-.thm{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;max-width:100%;padding:2px 2px 6px}
+.tl2{display:flex;align-items:center;gap:14px;min-width:0}.tl2 .ttl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.back{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px 8px 9px;font-weight:750;font-size:13.5px;cursor:pointer;flex:none}
+@media(max-width:600px){.back span{display:none}.back{padding:9px}.ttl{font-size:20px}}
+.perw{position:relative}
+.pill{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:999px;background:var(--text);color:var(--bg);font-weight:800;font-size:13.5px;padding:10px 16px;cursor:pointer;white-space:nowrap}.pill i{font-style:normal;font-size:10px;opacity:.7}
+.menu{position:absolute;right:0;top:calc(100% + 6px);z-index:30;min-width:220px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px;box-shadow:0 14px 34px rgba(0,0,0,.16);display:grid;animation:mIn .22s cubic-bezier(.18,.89,.32,1.12) both;transform-origin:top right}
+@keyframes mIn{from{opacity:0;transform:translateY(-6px) scale(.96)}}
+.menu button{display:flex;justify-content:space-between;align-items:center;gap:12px;border:0;background:none;text-align:left;padding:10px 12px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer}
+.menu button:hover{background:var(--hl)}.menu button[aria-checked="true"]::after{content:"✓";color:var(--brand);font-weight:800}
+.menu hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
+.tchip.more{padding:8px 14px;color:var(--text)}
+.sheetw{position:fixed;inset:0;z-index:45;display:grid;place-items:center;background:rgba(8,8,8,.5);padding:20px;animation:fade .25s ease both}
+.sheetw.out{animation:fadeo .2s ease both}
+.sheet{width:min(560px,100%);max-height:calc(100dvh - 40px);background:var(--bg);border:1px solid var(--line);border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:14px;animation:rise .36s cubic-bezier(.18,.89,.32,1.08) both;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+.sheet.sm{width:min(400px,100%)}
+@media(max-width:600px){.sheetw{place-items:end stretch;padding:0}.sheet{width:100%!important;border-radius:22px 22px 0 0;max-height:88dvh;animation:up .38s cubic-bezier(.2,.9,.25,1) both;padding-bottom:max(20px,env(safe-area-inset-bottom,0px))}}
+@keyframes up{from{transform:translateY(100%)}}
+.shh{display:flex;justify-content:space-between;align-items:center}.shh h2{margin:0;font-size:20px;font-weight:800;letter-spacing:-.02em}
+.xx{width:34px;height:34px;border-radius:50%;border:0;background:var(--card);color:var(--muted);font-size:14px;cursor:pointer}
+.tgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;overflow-y:auto;overscroll-behavior:contain;margin:0 -4px;padding:2px 4px 4px}
+.topt{display:flex;align-items:center;gap:12px;border:1px solid var(--line);background:var(--card);border-radius:16px;padding:10px 12px;cursor:pointer;text-align:left;font-weight:800;font-size:14px;transition:border-color .15s,transform .2s cubic-bezier(.2,.8,.2,1)}
+.topt:hover{transform:translateY(-1px);border-color:var(--muted)}
+.topt[aria-pressed="true"]{border-color:var(--text);box-shadow:inset 0 0 0 1px var(--text)}
+.mini{display:flex;gap:3px;flex:none}.mini i{width:14px;height:24px;border-radius:4px;display:block;box-shadow:inset 0 0 0 1px rgba(128,128,128,.25)}
+.topt{min-width:0}.topt>span:last-child,.topt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:420px){.mini i:nth-child(n+4){display:none}.topt{gap:9px;padding:9px 10px;font-size:13.5px}}
+.mrow2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mrow2 label{display:grid;gap:6px;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.mrow2 select{font:inherit;font-size:15px;font-weight:700;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 10px;text-transform:none;letter-spacing:0}
+.crn{margin:0;font-size:13px;font-weight:650;color:var(--muted);min-height:18px}
+.go{border:0;border-radius:14px;background:var(--brand);color:#fff;font-weight:800;font-size:15px;padding:14px;cursor:pointer}.go:disabled{opacity:.45;cursor:not-allowed}
+.thm{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;overflow-x:visible;scrollbar-width:none;max-width:100%;padding:2px 2px 6px}
 .thm::-webkit-scrollbar{display:none}
 .tchip{flex:none;font-weight:800;font-size:13px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 13px 8px 9px;cursor:pointer;display:inline-flex;gap:8px;align-items:center;white-space:nowrap;--ring:var(--card);transition:transform .2s cubic-bezier(.2,.8,.2,1)}
 .tchip:hover{transform:translateY(-1px)}
@@ -81,15 +112,18 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 </style>
 
 <div class="wrap">
-  <div class="top"><h1 class="ttl">Nick’s Card Board</h1><div class="seg" role="tablist"><button role="tab" aria-selected="false">Board</button><button role="tab" aria-selected="true">Stories</button></div></div>
+  <div class="top"><div class="tl2"><button class="back" type="button" aria-label="Back to Card Board"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span>Card Board</span></button><h1 class="ttl">Nick’s Card Stories</h1></div>
+    <div class="perw"><button class="pill" id="perb" aria-haspopup="true" aria-expanded="false"><span id="perl">Last 12 months</span><i>▾</i></button><div class="menu" id="perm" hidden role="menu"></div></div></div>
   <div class="controls">
-    <div class="seg" id="per" role="group" aria-label="Time range"></div>
     <div class="thm" id="thm" role="group" aria-label="Story theme"></div>
   </div>
   <div class="track" id="track"></div>
   <div class="dots" id="dots" aria-hidden="true"></div>
-  <p class="foot">Tap a story to make it bigger, then save or share it. “Showing” changes what a story says. Card art fills in once the art service is running.</p>
+  <p class="foot">On your board, a “Stories” button next to Ask and Share opens this page. Tap a story to make it bigger, then save or share it. “Showing” changes what a story says. Card art fills in once the art service is running.</p>
 </div>
+<div class="sheetw" id="ths" hidden><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ths-h"><div class="shh"><h2 id="ths-h">Themes</h2><button class="xx" data-close aria-label="Close">✕</button></div><div class="tgrid" id="tgrid"></div></div></div>
+<div class="sheetw" id="crs" hidden><div class="sheet sm" role="dialog" aria-modal="true" aria-labelledby="crs-h"><div class="shh"><h2 id="crs-h">Custom range</h2><button class="xx" data-close aria-label="Close">✕</button></div>
+  <div class="mrow2"><label>From<select id="cr-a"></select></label><label>To<select id="cr-b"></select></label></div><p class="crn" id="cr-n"></p><button class="go" id="cr-go">Show these months</button></div></div>
 <div class="lb" id="lb" hidden><div class="box"><div id="lbc"></div><p class="note" id="lbn"></p><div class="acts"><button class="g" data-a="close">Close</button><button data-a="save">Save image</button><button data-a="share">Share</button></div></div></div>
 
 <script>
@@ -108,12 +142,13 @@ const key=e=>e.name.toLowerCase().replace(/[^a-z0-9]/g,'')+'|'+e.no;
 const cnt=(n,a,b)=>n+' '+(n===1?a:b),BUDGET=15000,sn=n=>n.split(',')[0].trim();
 function tot(l){let s=0,k=0,sp=0,f=0,r=0,nb=0,ns=0;l.forEach(e=>{if(e.type==='sale'){s+=e.amount;k+=e.net;f+=e.amount-e.net;ns+=e.qty}else if(e.type==='purchase'){sp+=e.amount;nb+=e.qty}else r+=e.amount});return {sales:s,kept:k-r,spent:sp,fees:f,profit:k-r-sp,nb,ns,n:l.length}}
 // ---------- time ranges ----------
-const y=+TODAY.slice(0,4),PER=[['l12','Last 12 months'],['ytd',String(y)],['ly',String(y-1)],['all','All time']];let per='l12';
+const y=+TODAY.slice(0,4),PER=[['l12','Last 12 months'],['ytd','This year'],['ly','Last year · '+(y-1)],['all','All time']];let per='l12',cust=null;
 function months(p){const out=[];let a,b;if(p==='l12'){const t=new Date(TODAY+'T12:00:00');for(let i=11;i>=0;i--){const d=new Date(t.getFullYear(),t.getMonth()-i,1);out.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'))}}
   else if(p==='ytd'){for(let m=1;m<=+TODAY.slice(5,7);m++)out.push(y+'-'+String(m).padStart(2,'0'))}else if(p==='ly'){for(let m=1;m<=12;m++)out.push((y-1)+'-'+String(m).padStart(2,'0'))}
+  else if(p==='custom'&&cust){let d=new Date(cust[0]+'-15T12:00:00');while(true){const k=d.toISOString().slice(0,7);out.push(k);if(k>=cust[1])break;d.setMonth(d.getMonth()+1)}}
   else{const f=E.reduce((a,e)=>e.date<a?e.date:a,TODAY).slice(0,7);let d=new Date(f+'-15T12:00:00');while(true){const k=d.toISOString().slice(0,7);out.push(k);if(k>=TODAY.slice(0,7))break;d.setMonth(d.getMonth()+1)}}return out}
 // ---------- the five stories, each with three things it can show ----------
-function model(){const M=months(per),set=new Set(M),L=E.filter(e=>set.has(e.date.slice(0,7))),t=tot(L),lab=PER.find(x=>x[0]===per)[1];
+function model(){const M=months(per),set=new Set(M),L=E.filter(e=>set.has(e.date.slice(0,7))),t=tot(L),lab=per==='custom'?customLab():per==='ytd'?String(y):per==='ly'?String(y-1):PER.find(x=>x[0]===per)[1];
   const by=M.map(m=>tot(L.filter(e=>e.date.slice(0,7)===m)));
   const buys={},sells={};E.forEach(e=>{const k=key(e);if(e.type==='purchase')(buys[k]=buys[k]||[]).push(e)});L.forEach(e=>{if(e.type==='sale')(sells[key(e)]=sells[key(e)]||[]).push(e)});
   const flips=Object.keys(sells).filter(k=>buys[k]).map(k=>{const b=buys[k].slice().sort((x,z)=>x.date<z.date?-1:1)[0],s=sells[k][sells[k].length-1],c=buys[k].reduce((a,e)=>a+e.amount,0),kept=sells[k].reduce((a,e)=>a+e.net,0),g=sells[k].reduce((a,e)=>a+e.amount,0);return {name:b.name,b,s,cost:c,kept,gross:g,gain:kept-c,held:Math.max(0,days(b.date,s.date))}}).sort((a,b)=>b.gain-a.gain);
@@ -184,8 +219,13 @@ const TH=[
  ['Retro',[P('#f2e3c6','#2b2118','#e4572e'),P('#2b2118','#f2e3c6','#f3a712'),P('#e4572e','#fff4e6','#f2e3c6'),P('#29335c','#f2e3c6','#f3a712'),P('#f3a712','#2b2118','#29335c')]]];
 let th=0,mi=[0,0,0,0,0];
 const sw=t=>t[1].slice(0,3).map(p=>'<span style="background:'+(p.bg.startsWith('#')?p.bg:p.bg.match(/#\w{6}/)[0])+'"></span>').join('');
-$('thm').innerHTML=TH.map((t,i)=>'<button class="tchip" aria-pressed="'+(i===th)+'" data-i="'+i+'"><span class="tsw">'+sw(t)+'</span>'+t[0]+'</button>').join('');
-$('per').innerHTML=PER.map(p=>'<button aria-pressed="'+(p[0]===per)+'" data-p="'+p[0]+'">'+p[1]+'</button>').join('');
+const FEW=5;
+function paintChips(){const show=[...Array(FEW).keys()];if(th>=FEW)show[FEW-1]=th;$('thm').innerHTML=show.map(i=>'<button class="tchip" aria-pressed="'+(i===th)+'" data-i="'+i+'"><span class="tsw">'+sw(TH[i])+'</span>'+TH[i][0]+'</button>').join('')+'<button class="tchip more" data-all>All '+TH.length+' themes ›</button>'}
+function paintGrid(){const pal=p=>p.bg.startsWith('#')?p.bg:p.bg.match(/#\w{6}/)[0];$('tgrid').innerHTML=TH.map((t,i)=>'<button class="topt" aria-pressed="'+(i===th)+'" data-i="'+i+'"><span class="mini">'+t[1].slice(0,5).map(p=>'<i style="background:'+p.bg+'"></i>').join('')+'</span>'+t[0]+'</button>').join('')}
+function setTheme(i){th=i;paintChips();document.querySelectorAll('#track .sl').forEach(el=>paintStory(el,+el.dataset.n));try{localStorage.setItem('cs.theme',th)}catch(err){}}
+paintChips();
+$('tgrid').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(!b)return;setTheme(+b.dataset.i);closeSheet('ths')});
+
 const ARROWS='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 20V5M3 9l4-4 4 4"/><path d="M17 4v15M13 15l4 4 4-4"/></svg>';
 let D=null;
 function paintStory(el,n){const p=TH[th][1][n%TH[th][1].length],s=el.style;s.setProperty('--sbg',p.bg);['ink','acc','chip','chipink','chip2','trk','o','dash','stk','stki'].forEach(k=>s.setProperty('--'+k,p[k]))}
@@ -193,8 +233,23 @@ function storyHTML(n){const st=D.stories[n],o=st.opts[mi[n]%st.opts.length];retu
 function render(){D=model();$('track').innerHTML=D.stories.map((st,n)=>'<div class="cell"><button class="sl" data-n="'+n+'" aria-label="'+st.name+'. Tap to enlarge">'+storyHTML(n)+'</button><button class="mb" data-mb="'+n+'"><span class="k">Showing</span><span>'+st.opts[mi[n]%st.opts.length].k+'</span>'+ARROWS+'</button></div>').join('');
   document.querySelectorAll('#track .sl').forEach(el=>paintStory(el,+el.dataset.n));$('dots').innerHTML=D.stories.map((_,i)=>'<i class="'+(i?'':'on')+'"></i>').join('')}
 render();
-$('thm').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(!b)return;th=+b.dataset.i;$('thm').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));document.querySelectorAll('.sl').forEach(el=>paintStory(el,+el.dataset.n));try{localStorage.setItem('cs.theme',th)}catch(err){}});
-$('per').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(!b)return;per=b.dataset.p;$('per').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));render();document.querySelectorAll('#track .sl').forEach(el=>{el.classList.add('swap');setTimeout(()=>el.classList.remove('swap'),450)})});
+$('thm').addEventListener('click',e=>{if(e.target.closest('[data-all]')){openSheet('ths');return}const b=e.target.closest('[data-i]');if(!b)return;setTheme(+b.dataset.i)});
+const allMonths=months('all'),mLab=m=>mName(m,{month:'short',year:'numeric'}),customLab=()=>cust[0]===cust[1]?mLab(cust[0]):mLab(cust[0])+' – '+mLab(cust[1]);
+function setPer(p){per=p;$('perl').textContent=p==='custom'?customLab():PER.find(x=>x[0]===p)[1];render();document.querySelectorAll('#track .sl').forEach(el=>{el.classList.add('swap');setTimeout(()=>el.classList.remove('swap'),450)})}
+function openMenu(){const m=$('perm');m.innerHTML=PER.map(p=>'<button role="menuitemradio" aria-checked="'+(p[0]===per)+'" data-p="'+p[0]+'">'+p[1]+'</button>').join('')+'<hr><button role="menuitemradio" aria-checked="'+(per==='custom')+'" data-p="custom">Custom range…</button>';m.hidden=false;$('perb').setAttribute('aria-expanded','true')}
+function closeMenu(){$('perm').hidden=true;$('perb').setAttribute('aria-expanded','false')}
+$('perb').addEventListener('click',e=>{e.stopPropagation();$('perm').hidden?openMenu():closeMenu()});
+$('perm').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(!b)return;closeMenu();if(b.dataset.p==='custom')openSheet('crs');else setPer(b.dataset.p)});
+document.addEventListener('click',e=>{if(!e.target.closest('.perw'))closeMenu()});
+// custom range: pick the first and last month
+const opts=allMonths.map(m=>'<option value="'+m+'">'+mLab(m)+'</option>').join('');$('cr-a').innerHTML=opts;$('cr-b').innerHTML=opts;
+function checkCr(){const a=$('cr-a').value,b=$('cr-b').value,ok=a<=b;$('cr-go').disabled=!ok;const n=allMonths.indexOf(b)-allMonths.indexOf(a)+1;$('cr-n').textContent=ok?cnt(n,'month','months'):'The first month needs to come before the last.'}
+['cr-a','cr-b'].forEach(id=>$(id).addEventListener('change',checkCr));
+$('cr-go').addEventListener('click',()=>{cust=[$('cr-a').value,$('cr-b').value];closeSheet('crs');setPer('custom')});
+// sheets
+function openSheet(id){const w=$(id);if(id==='crs'){const M0=months(per);$('cr-a').value=M0[0]<allMonths[0]?allMonths[0]:M0[0];$('cr-b').value=M0[M0.length-1];checkCr()}if(id==='ths')paintGrid();w.hidden=false;w.classList.remove('out')}
+function closeSheet(id){const w=$(id);w.classList.add('out');setTimeout(()=>{w.hidden=true},190)}
+document.querySelectorAll('.sheetw').forEach(w=>w.addEventListener('click',e=>{if(e.target===w||e.target.closest('[data-close]'))closeSheet(w.id)}));
 $('track').addEventListener('click',e=>{const mb=e.target.closest('[data-mb]');if(mb){const n=+mb.dataset.mb;mi[n]=(mi[n]+1)%D.stories[n].opts.length;const sl=$('track').querySelector('.sl[data-n="'+n+'"]');sl.innerHTML=storyHTML(n);sl.classList.remove('swap');void sl.offsetWidth;sl.classList.add('swap');mb.children[1].textContent=D.stories[n].opts[mi[n]].k;return}
   const sl=e.target.closest('.sl');if(sl)enlarge(+sl.dataset.n)});
 $('track').addEventListener('scroll',()=>{const tr=$('track'),c=tr.querySelector('.cell');if(!c)return;const i=Math.round(tr.scrollLeft/(c.offsetWidth+22));$('dots').querySelectorAll('i').forEach((d,k)=>d.classList.toggle('on',k===i))},{passive:true});
@@ -202,7 +257,7 @@ $('track').addEventListener('scroll',()=>{const tr=$('track'),c=tr.querySelector
 const lb=$('lb');function enlarge(n){const c=document.createElement('div');c.className='sl';c.setAttribute('role','img');c.setAttribute('aria-label',D.stories[n].name);c.innerHTML=storyHTML(n);paintStory(c,n);$('lbc').innerHTML='';$('lbc').appendChild(c);$('lbn').textContent='';lb.hidden=false;lb.classList.remove('out');lb.querySelector('[data-a="close"]').focus()}
 function shut(){lb.classList.add('out');setTimeout(()=>{lb.hidden=true},190)}
 lb.addEventListener('click',e=>{if(e.target===lb){shut();return}const b=e.target.closest('[data-a]');if(!b)return;if(b.dataset.a==='close')shut();else $('lbn').textContent=b.dataset.a==='save'?'In the app this saves the story as an image, sized for Instagram and TikTok.':'In the app this opens your phone’s share sheet.'});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!lb.hidden)shut()});
-try{const t=+localStorage.getItem('cs.theme');if(t>0&&t<TH.length){$('thm').querySelector('[data-i="'+t+'"]').click()}}catch(e){}
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!lb.hidden)shut();else{const w=document.querySelector('.sheetw:not([hidden])');if(w)closeSheet(w.id);else closeMenu()}});
+try{const t=+localStorage.getItem('cs.theme');if(t>0&&t<TH.length)setTheme(t)}catch(e){}
 })();
 </script>
