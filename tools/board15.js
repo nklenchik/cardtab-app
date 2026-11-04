@@ -1,3 +1,8 @@
+// ---------- free plan (stage 2): 4 widgets, last 3 months, a lock on everything else ----------
+const cbFree=()=>!!(window.CTBoardPlan&&window.CTBoardPlan()==='free');
+const FREE_K=['profit','sales','spent','month'],FREE_P=['d7','d30','l3'];
+let PM_OPEN=null;function cbPremium(c){if(PM_OPEN)PM_OPEN(c)}
+const LOCK_I='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 
 // ---------- v26: card-art widgets (Featured card, Best sellers, Priciest card) and the redesigned Biggest win ----------
 // Every card's numbers come from the same matching: purchases up to the end of the period are its cost, sales inside

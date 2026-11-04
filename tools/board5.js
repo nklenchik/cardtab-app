@@ -2,7 +2,7 @@
 // The board is a grid of square-ish cells: 4 across on desktop and tablets, 2 across on phones.
 // Small = 1 cell, Wide = 2 across, Large = 2 across x 2 tall, Extra large = the full width x 2 tall (desktop/tablet).
 // Each metric has its own hand-made layout for each size. Charts are drawn at the exact pixel size of their box.
-const PERIODS=[['d7','Last 7 days'],['d30','Last 30 days'],['ytd','This year'],['l12','Last 12 months'],['ly','Last year'],['all','All time'],['custom','Custom dates…']];
+const PERIODS=[['d7','Last 7 days'],['d30','Last 30 days'],['l3','Last 3 months'],['ytd','This year'],['l12','Last 12 months'],['ly','Last year'],['all','All time'],['custom','Custom dates…']];
 const SIZES=['S','M','B','L','X'],SIZE_NAMES={S:'Small',M:'Wide',B:'Banner',L:'Large',X:'Extra large'},DIM={S:[1,1],M:[2,1],B:[4,1],L:[2,2],X:[4,2]};
 const CATALOG={
   profit:{t:'Profit',s:'Profit',d:'What you kept after fees, minus what you spent'},
@@ -19,11 +19,14 @@ const CATALOG={
   best:{t:'Best sellers',s:'Best sellers',d:'Your top three cards by profit'},
   pricey:{t:'Priciest card',s:'Priciest',d:'The most you paid for a single card'}};
 const DEFAULT=[['feat','L'],['profit','S'],['sales','S'],['spent','S'],['month','B']].map(([k,size],i)=>({id:'d'+i,k,size}));
+// Free keeps its own arrangement of its 4 widgets, so going Premium (or back) never scrambles either board
+const DEFAULT_FREE=[['profit','S'],['sales','S'],['month','M'],['spent','S']].map(([k,size],i)=>({id:'f'+i,k,size}));
+let FREEMODE=cbFree();const defL=()=>FREEMODE?DEFAULT_FREE:DEFAULT;
 // phone and desktop each keep their own arrangement (order and sizes). The phone starts as a copy of desktop.
 // Widgets you add land on both boards; removing, moving, resizing and Reset only touch the screen you're on.
-const LKEY='cb.layout.v3',LKEYP='cb.layout.phone.v1',clone=x=>JSON.parse(JSON.stringify(x));
-const loadL=k=>{try{const s=JSON.parse(localStorage.getItem(k));if(Array.isArray(s)&&s.every(w=>w.id&&CATALOG[w.k]&&DIM[w.size]))return s}catch(e){}return null};
-const phoneQ=matchMedia('(max-width:600px)');let onPhone=phoneQ.matches,layoutD=loadL(LKEY)||clone(DEFAULT),layoutP=loadL(LKEYP);
+const LKEY0='cb.layout.v3',LKEYP0='cb.layout.phone.v1',clone=x=>JSON.parse(JSON.stringify(x));let LKEY=LKEY0+(FREEMODE?'.free':''),LKEYP=LKEYP0+(FREEMODE?'.free':'');
+const loadL=k=>{try{const s=JSON.parse(localStorage.getItem(k));if(Array.isArray(s)&&s.every(w=>w.id&&CATALOG[w.k]&&DIM[w.size]&&(!FREEMODE||FREE_K.includes(w.k))))return s}catch(e){}return null};
+const phoneQ=matchMedia('(max-width:600px)');let onPhone=phoneQ.matches,layoutD=loadL(LKEY)||clone(defL()),layoutP=loadL(LKEYP);
 let layout=onPhone?(layoutP||(layoutP=clone(layoutD))):layoutD;
 const save=()=>{try{if(onPhone)layoutP=layout;else layoutD=layout;localStorage.setItem(onPhone?LKEYP:LKEY,JSON.stringify(layout));localStorage.setItem('cb.custom','1')}catch(e){}};
 const otherLayout=()=>onPhone?layoutD:layoutP;
@@ -32,6 +35,9 @@ function swapLayout(){const p=phoneQ.matches;if(p===onPhone)return;if(onPhone)la
 const customized=()=>{try{return localStorage.getItem('cb.custom')==='1'}catch(e){return true}};
 const newId=()=>'w'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 let period='l12',plat='all',editing=false;
+function applyPlan(){const f=cbFree();if(f===FREEMODE)return false;FREEMODE=f;LKEY=LKEY0+(f?'.free':'');LKEYP=LKEYP0+(f?'.free':'');
+  layoutD=loadL(LKEY)||clone(defL());layoutP=loadL(LKEYP);layout=onPhone?(layoutP||(layoutP=clone(layoutD))):layoutD;if(editing)setEditing(false);fitFreePeriod();return true}
+function fitFreePeriod(){if(cbFree()&&!FREE_P.includes(period)){period='l3';const l=$('cb-perl');if(l)l.textContent='Last 3 months'}}
 const VKEY='cb.view',saveView=()=>{try{localStorage.setItem(VKEY,JSON.stringify({period,plat,custom}))}catch(e){}};
 const BUDGET=15000; // example monthly budget ($150) until the budget setting exists
 const phone=matchMedia('(max-width:600px)');
@@ -64,7 +70,7 @@ const lastDay=m=>iso(new Date(+m.slice(0,4),+m.slice(5,7),0,12));
 const startDate=()=>E.reduce((a,e)=>e.date<a?e.date:a,TODAY);
 function rangeFor(p){const t=TODAY,y=+t.slice(0,4);
   if(p==='d7')return [dPlus(t,-6),t];if(p==='d30')return [dPlus(t,-29),t];if(p==='ytd')return [y+'-01-01',t];
-  if(p==='l12')return [monthsBack(12)[0]+'-01',t];if(p==='ly')return [(y-1)+'-01-01',(y-1)+'-12-31'];
+  if(p==='l12')return [monthsBack(12)[0]+'-01',t];if(p==='l3')return [monthsBack(3)[0]+'-01',t];if(p==='ly')return [(y-1)+'-01-01',(y-1)+'-12-31'];
   if(p==='custom'&&custom.from)return [custom.from,custom.to];return [startDate(),t]}
 const dFmt=(d,o)=>new Date(d+'T12:00:00').toLocaleDateString('en-US',o);
 function buckets(a,b){const n=days(a,b),unit=n<=31?'day':n<=124?'week':'month',out=[];
@@ -80,7 +86,7 @@ const KPI={profit:t=>t.profit,sales:t=>t.sales,spent:t=>t.spent,fees:t=>t.fees};
 const GOOD={profit:'up',sales:'up',spent:'down',fees:'down'};
 const KCOL={sales:'var(--cb-pos)',spent:'var(--cb-bl)',fees:'var(--cb-gry)'};
 function ctxNow(){const [a,b]=rangeFor(period),p=pool(),bk=buckets(a,b),n=days(a,b);
-  return {a,b,unit:bk.unit,p,inP:inR(p,a,b),prevP:compare==='off'?null:compare==='year'?inR(p,yBack(a),yBack(b)):inR(p,dPlus(a,-n),dPlus(a,-1)),mt:bk.list.map(x=>Object.assign({},x,{list:inR(p,x.from,x.to)})),cv:[]}}
+  return {a,b,unit:bk.unit,p,inP:inR(p,a,b),prevP:(compare==='off'||cbFree())?null:compare==='year'?inR(p,yBack(a),yBack(b)):inR(p,dPlus(a,-n),dPlus(a,-1)),mt:bk.list.map(x=>Object.assign({},x,{list:inR(p,x.from,x.to)})),cv:[]}}
 const mShort=k=>mLabel(k,{month:'short',year:'numeric'});
 const mLong=k=>mLabel(k,{month:'long',year:'numeric'});
 // a big number that always fits its box: the font size comes from the box width and the number of characters
@@ -287,7 +293,7 @@ function closeMenus(){document.querySelectorAll('.cbx .cb-menu,#cb-amenu').forEa
 function pickMenu(btn,menuEl,items,cur,onPick,foot){
   btn.addEventListener('click',e=>{e.stopPropagation();hideTip();const o=menuEl.hidden;closeMenus();if(!o)return;menuEl.innerHTML=items().map(([k,l])=>'<button type="button" role="menuitemradio" aria-checked="'+(k===cur())+'" data-k="'+esc(k)+'">'+esc(l)+'</button>').join('')+(foot?foot():'');menuEl.hidden=false;btn.setAttribute('aria-expanded','true');placeMenu(btn,menuEl)});
   menuEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.cmp){setCompare(b.dataset.cmp);b.parentNode.querySelectorAll('button').forEach(x=>x.setAttribute('aria-checked',x===b));return}onPick(b.dataset.k,b.textContent);closeMenus()})}
-pickMenu($('cb-per'),$('cb-menu'),()=>PERIODS,()=>period,(k,l)=>{if(k==='custom'){openCustom();return}period=k;$('cb-perl').textContent=l;saveView();render(false);grow()},()=>'<div class="mcmp"><span>Compare to</span><div class="seg">'+COMPARE.map(([c,l])=>'<button type="button" data-cmp="'+c+'" aria-checked="'+(compare===c)+'">'+l.replace('Previous period','Previous')+'</button>').join('')+'</div></div>');
+pickMenu($('cb-per'),$('cb-menu'),()=>PERIODS,()=>period,(k,l)=>{if(cbFree()&&!FREE_P.includes(k)){cbPremium('range');return}if(k==='custom'){openCustom();return}period=k;$('cb-perl').textContent=l;saveView();render(false);grow()},()=>cbFree()?'':'<div class="mcmp"><span>Compare to</span><div class="seg">'+COMPARE.map(([c,l])=>'<button type="button" data-cmp="'+c+'" aria-checked="'+(compare===c)+'">'+l.replace('Previous period','Previous')+'</button>').join('')+'</div></div>');
 // custom dates: a range calendar. First tap sets the start, second tap the end; tap From or To to change just that one.
 const cr=$('cr'),COMPARE=[['prev','Previous period'],['year','Last year'],['off','Off']];let cal=null;
 function setCompare(c){compare=c;try{localStorage.setItem('cb.compare',c)}catch(e){}render(false)}
@@ -295,6 +301,7 @@ const dLong=d=>dFmt(d,{month:'short',day:'numeric',year:'numeric'});
 const customLabel=()=>{const sameY=custom.from.slice(0,4)===custom.to.slice(0,4);return dFmt(custom.from,sameY?{month:'short',day:'numeric'}:{month:'short',day:'numeric',year:'numeric'})+' – '+dLong(custom.to)};
 (function restoreView(){try{const v=JSON.parse(localStorage.getItem(VKEY));if(!v)return;if(v.custom&&v.custom.from)custom=v.custom;if(PERIODS.some(p=>p[0]===v.period)&&(v.period!=='custom'||custom.from)){period=v.period;$('cb-perl').textContent=period==='custom'?customLabel():PERIODS.find(p=>p[0]===period)[1]}
   if(v.plat&&(v.plat==='all'||E.some(e=>e.platform===v.plat))){plat=v.plat;$('cb-platl').textContent=plat==='all'?'All platforms':plat}}catch(e){}})();
+fitFreePeriod();
 function openCustom(){cr.classList.remove('pre','cust');$('cr-h').textContent='Custom dates';const [a,b]=rangeFor(period);cal={from:custom.from||a,to:custom.to||b,pick:'from',cmp:compare};cal.view=cal.to.slice(0,7);drawCal();cr.showModal()}
 function drawCal(){const mn=startDate(),mx=TODAY,v=cal.view,dow=new Date(v+'-01T12:00:00').getDay(),nd=+lastDay(v).slice(8);
   $('cr-title').textContent=mLabel(v,{month:'long',year:'numeric'});$('cr-prev').disabled=v<=mn.slice(0,7);$('cr-next').disabled=v>=mx.slice(0,7);
@@ -350,7 +357,7 @@ $('cb-edit').addEventListener('click',()=>setEditing(!editing));
 // reset asks first, and sits far from Done
 const rs=$('rs');$('cb-reset').addEventListener('click',()=>{buzz('tap');rs.showModal()});
 rs.addEventListener('click',e=>{if(e.target===rs){rs.close();return}const b=e.target.closest('button');if(!b)return;
-  if(b.id==='rs-yes'){rs.close();layout=JSON.parse(JSON.stringify(DEFAULT));save();try{localStorage.removeItem('cb.custom')}catch(err){}buzz('warn');render(true)}else rs.close()});
+  if(b.id==='rs-yes'){rs.close();layout=JSON.parse(JSON.stringify(defL()));save();try{localStorage.removeItem('cb.custom')}catch(err){}buzz('warn');render(true)}else rs.close()});
 $('addw').addEventListener('click',()=>openAdd());
 let undoT=0;function showUndo(msg,fn){const u=$('undo');$('undo-t').textContent=msg;u.hidden=false;u.classList.remove('out');$('undo-b').onclick=()=>{clearTimeout(undoT);hideUndo();fn()};clearTimeout(undoT);undoT=setTimeout(hideUndo,5000)}
 function hideUndo(){const u=$('undo');if(u.hidden)return;u.classList.add('out');setTimeout(()=>{u.hidden=true;u.classList.remove('out')},200)}
@@ -485,13 +492,13 @@ const PLUS_I='<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"
 const CHECK_I='<svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.4l2.6 2.5L11 4.4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 let added={},awCat='all';
 // The gallery is built ahead of time (when you start editing) and reused, so tapping Add widgets only has to show it
-let awSig='';const awSigNow=()=>{const g=gridSpec();return [period,plat,compare,E.length,g.col,g.row,maskAmt()?1:0,JSON.stringify(typeof custom!=='undefined'?custom:'')].join('|')};
+let awSig='';const awSigNow=()=>{const g=gridSpec();return [cbFree()?'f':'p',period,plat,compare,E.length,g.col,g.row,maskAmt()?1:0,JSON.stringify(typeof custom!=='undefined'?custom:'')].join('|')};
 function prebuildAdd(){if(aw.open||awSig===awSigNow())return;const st=aw.style.cssText;aw.style.cssText='display:block;position:fixed;left:-10000px;top:0;visibility:hidden;pointer-events:none';added={};awCat='all';$('aw-q').value='';try{drawThumbs()}finally{aw.style.cssText=st}awSig=awSigNow()}
 function openAdd(){$('aw-hint').textContent=AW_TIP;$('aw-hint').classList.remove('msg');const fresh=awCat==='all'&&!$('aw-q').value&&!Object.keys(added).length&&awSig===awSigNow();
   added={};awCat='all';$('aw-q').value='';$('aw-cats').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c==='all'));aw.showModal();if(!fresh){drawThumbs();awSig=awSigNow()}}
 function drawThumbs(){const g=gridSpec(),W=g.col,H=g.row,ctx=ctxNow(),q=$('aw-q').value.trim().toLowerCase(),host=$('aw-list');
   const keys=Object.keys(CATALOG).filter(k=>(awCat==='all'||CATS[k]===awCat)&&(!q||(CATALOG[k].t+' '+CATALOG[k].d).toLowerCase().includes(q)));
-  PVMODE=true;try{host.innerHTML=keys.length?keys.map(k=>'<div role="button" tabindex="0" class="thumb'+(added[k]?' added':'')+'" data-k="'+k+'" aria-pressed="'+!!added[k]+'" aria-label="'+(added[k]?'Remove ':'Add ')+CATALOG[k].t+'"><span class="tbox"><span class="tin">'+widgetHTML({id:'pv'+k,k,size:'S'},ctx,'pv')+'</span></span><span class="badge">'+(added[k]?CHECK_I:PLUS_I)+'</span></div>').join(''):'<p class="awnone">No widgets match “'+esc(q)+'”.</p>'}finally{PVMODE=false}
+  PVMODE=true;try{host.innerHTML=keys.length?keys.map(k=>{const lk=cbFree()&&!FREE_K.includes(k);return '<div role="button" tabindex="0" class="thumb'+(added[k]?' added':'')+(lk?' lockd':'')+'" data-k="'+k+'" aria-pressed="'+!!added[k]+'" aria-label="'+(lk?CATALOG[k].t+', Premium':(added[k]?'Remove ':'Add ')+CATALOG[k].t)+'"><span class="tbox"><span class="tin">'+widgetHTML({id:'pv'+k,k,size:'S'},ctx,'pv')+'</span></span><span class="badge">'+(lk?LOCK_I:added[k]?CHECK_I:PLUS_I)+'</span></div>'}).join(''):'<p class="awnone">No widgets match “'+esc(q)+'”.</p>'}finally{PVMODE=false}
   const bxs=[...host.querySelectorAll('.tbox')],ws=bxs.map(bx=>bx.clientWidth);bxs.forEach((bx,i)=>{const sc=ws[i]/W,inn=bx.firstChild,el=inn.firstChild;el.style.width=W+'px';el.style.height=H+'px';inn.style.transform='scale('+sc+')';bx.style.height=(H*sc)+'px'});
   wire(host,ctx)}
 // the tip line under the gallery briefly becomes the confirmation, then goes back; nothing floats over anything

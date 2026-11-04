@@ -64,12 +64,14 @@ place();
 // ---------- phones: one bottom sheet for dates. Quick picks on top, Custom dates opens the calendar right inside it. ----------
 ;(()=>{const PHD=matchMedia('(max-width:760px)'),pre=$('cr-pre');
 const CHEV='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
-function paintPre(){pre.innerHTML=PERIODS.filter(p=>p[0]!=='custom').map(([k,l])=>'<button type="button" class="crrow" role="radio" data-pk="'+k+'" aria-checked="'+(k===period&&!cr.classList.contains('cust'))+'">'+l+'<span class="ck" aria-hidden="true">✓</span></button>').join('')
-  +'<button type="button" class="crrow" data-pk="custom" aria-expanded="'+cr.classList.contains('cust')+'" aria-checked="'+cr.classList.contains('cust')+'">Custom dates<span class="cv">'+CHEV+'</span></button>'}
+function paintPre(){const fr=cbFree();let sep=false;pre.innerHTML=PERIODS.filter(p=>p[0]!=='custom').map(([k,l])=>{const lk=fr&&!FREE_P.includes(k);const h=(lk&&!sep?(sep=true,'<div class="msep">With Premium</div>'):'');
+    return h+'<button type="button" class="crrow'+(lk?' lockd':'')+'" role="radio" data-pk="'+k+'" aria-checked="'+(k===period&&!cr.classList.contains('cust'))+'"'+(lk?' aria-label="'+l+', Premium"':'')+'>'+l+(lk?'<span class="mlock">'+LOCK_I+'</span>':'<span class="ck" aria-hidden="true">✓</span>')+'</button>'}).join('')
+  +(fr?'<button type="button" class="crrow lockd" data-pk="custom" aria-label="Custom dates, Premium">Custom dates<span class="mlock">'+LOCK_I+'</span></button>':'<button type="button" class="crrow" data-pk="custom" aria-expanded="'+cr.classList.contains('cust')+'" aria-checked="'+cr.classList.contains('cust')+'">Custom dates<span class="cv">'+CHEV+'</span></button>')}
 function openSheet(){closeMenus();const [a,b]=rangeFor(period);cal={from:period==='custom'&&custom.from||a,to:period==='custom'&&custom.to||b,pick:'from',cmp:compare};cal.view=cal.to.slice(0,7);
   cr.classList.add('pre');cr.classList.toggle('cust',period==='custom');$('cr-h').textContent='Dates';paintPre();drawCal();cr.showModal()}
 $('cb-per').addEventListener('click',e=>{if(!PHD.matches)return;e.stopImmediatePropagation();e.preventDefault();hideTip();buzz('tap');openSheet()},true);
 pre.addEventListener('click',e=>{const b=e.target.closest('[data-pk]');if(!b)return;e.stopPropagation();const k=b.dataset.pk;
+  if(b.classList.contains('lockd')){cr.close();setTimeout(()=>cbPremium('range'),calm.matches?0:260);return}
   if(k==='custom'){const on=!cr.classList.contains('cust');cr.classList.toggle('cust',on);paintPre();buzz('tick');if(on){const c=cr.querySelector('.cal');if(c&&!calm.matches)c.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:280,easing:'cubic-bezier(.2,.8,.2,1)'});setTimeout(()=>{const g=$('cr-go');g&&g.scrollIntoView({block:'nearest',behavior:calm.matches?'auto':'smooth'})},60)}return}
   if(compare!==cal.cmp)setCompare(cal.cmp);period=k;$('cb-perl').textContent=PERIODS.find(p=>p[0]===k)[1];saveView();buzz('firm');paintPre();setTimeout(()=>{cr.close();render(false);grow()},140)});
 // tapping Compare in the quick-pick view applies right away to the current range

@@ -449,3 +449,12 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 
 ## v26.6: Done from anywhere
 - In edit mode on phones, once the top Done scrolls away, the slim bar shows a crimson Done pill in place of the time-range pill.
+
+## v27: free Card Board (stage 2)
+- Free opens Card Board from Insights ⤢ too (the old "part of Premium" note is gone). Free gets Profit, Sales, Spent and Profit by month on the last 3 months, with its own saved arrangement (`cb.layout.*.free`), so switching plans never scrambles either board. Free can move and resize its 4.
+- Time range: Last 7 days, Last 30 days and the new Last 3 months; everything else sits under "With Premium" with a lock (desktop menu and the phone Dates sheet). Compare is off on Free.
+- Locks open one Premium sheet (board16.js/.css; markup in build-cb.py): Stories, Ask, Share, locked widgets in Add widgets, Import/Export/Plan in the board menu, locked ranges, and the quiet line's See Premium.
+- Premium sheet: art header (the user's own `art.wall` images first, then `window.CTPremiumArt`), rotating headlines (3 general ones in turn from a random start per device) plus matching headlines for specific locks (range, stories, ask, share, import). Views and Get Premium taps per headline are counted in `cb.pm`; `CTPremiumStats()` prints the tap rates. Move these counts to the server after the Cloudflare move.
+- Get Premium calls `window.CTBoardUpgrade` (for now it switches the plan; checkout comes with payments). Price pill shows $4 founding / $6.
+- Quiet line ("Free shows your last 3 months · See Premium") shows the first 3 times a free user opens the board.
+- Fixes found on the way: the sheet's art class clashed with the board's `.art`; CSS custom-property URLs resolved against board/ (404), so the art is set inline with an absolute URL.

@@ -5,7 +5,7 @@ args=[a for a in sys.argv[1:] if a not in ('soft','nosoft','app')]
 MAIN=not args
 VAR=args[0] if args else 'A'  # the main board uses phone layout A
 P=json.load(open('dash-parts.json'))
-board_css=open('board-part.html').read().replace('__SITECSS__',open('site-cb.css').read())+open('board4.css').read()+open('board5.css').read()+open('board6.css').read()+open('board7.css').read()+open('board8.css').read()+open('board9.css').read()+open('board10.css').read()+open('board11.css').read()+open('board12.css').read()+(open('board13.css').read() if VAR else '')+(open('board14-soft.css').read() if SOFT else '')+open('board15.css').read()
+board_css=open('board-part.html').read().replace('__SITECSS__',open('site-cb.css').read())+open('board4.css').read()+open('board5.css').read()+open('board6.css').read()+open('board7.css').read()+open('board8.css').read()+open('board9.css').read()+open('board10.css').read()+open('board11.css').read()+open('board12.css').read()+(open('board13.css').read() if VAR else '')+(open('board14-soft.css').read() if SOFT else '')+open('board15.css').read()+open('board16.css').read()
 markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
 <section class="cbx off" id="cbx" inert aria-hidden="true" role="dialog" aria-modal="true" aria-label="Card Board">
 <div id="cb"><div class="frame">
@@ -69,6 +69,7 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
   <div class="entlist" id="ent-list"></div>
 </div></dialog>
 <div class="undo" id="undo" role="status" aria-live="polite" hidden><span id="undo-t"></span><button type="button" id="undo-b">Undo</button></div>
+<dialog id="pms" class="sheet pms" aria-labelledby="pm-h"><div class="awp pmp"><div class="pmhero" id="pm-art"><span class="pmtag">Card Tab Premium</span><button type="button" class="pmx" data-close aria-label="Close">✕</button></div><div class="pmb"><h2 id="pm-h">Your whole collection, front and center.</h2><div class="pmf"><div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span>All your history</span></div><div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="18" height="8" rx="2"/></svg><span>All 13 widgets</span></div><div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="2.5"/><path d="M9 7h6"/></svg><span>Card Stories</span></div><div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg><span>Ask your board</span></div><div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M5 21h14"/></svg><span>Import a sheet</span></div><div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/><path d="M9 12h11"/></svg><span>Share &amp; export</span></div></div><div class="pmpill"><div><small>Founding member</small><b>Early price</b></div><div class="pmp2"><s>$6</s><b>$4</b><span>/mo</span></div></div><button type="button" class="pmcta" id="pm-go">Get Premium</button><button type="button" class="pmlater" data-close>Not now</button></div></div></dialog>
 <dialog id="rs" class="sheet" aria-labelledby="rs-h"><div class="awp rsp">
   <h2 id="rs-h">Reset the board?</h2><p>Your widgets go back to the starting layout. Your entries aren’t touched.</p>
   <div class="rsb"><button type="button" class="tbtn" id="rs-no">No</button><button type="button" class="go danger" id="rs-yes">Yes, reset</button></div>
@@ -143,7 +144,7 @@ function totals(list){let sales=0,after=0,spent=0,ref=0,fees=0;list.forEach(e=>{
 const calm=matchMedia('(prefers-reduced-motion: reduce)');
 const STORIES_HTML=__STORIES__;
 '''.replace('__DATA__',data).replace('__STORIES__',stories_js)
-page=P['css']+board_css+tipcss+'</style>\n\n'+P['html']+markup+head_js+P['js']+open('board15.js').read()+open('board5.js').read()+(open('board13.js').read() if VAR else '')+'\n})();\n</script>\n'
+page=P['css']+board_css+tipcss+'</style>\n\n'+P['html']+markup+head_js+P['js']+open('board15.js').read()+open('board5.js').read()+(open('board13.js').read() if VAR else '')+open('board16.js').read()+'\n})();\n</script>\n'
 logo='data:image/webp;base64,'+base64.b64encode(open('/home/claude/cardtab-app/app/assets/logo-128.webp','rb').read()).decode()
 out=page.replace('__LOGO__',logo)
 if not MAIN:out=out.replace('<title>Card Board Preview</title>','<title>Card Board Phone '+VAR+'</title>',1)
@@ -172,7 +173,7 @@ if APP:
     b13=b13.replace("document.body.appendChild(dock)","CBROOT.appendChild(dock)").replace("document.body.appendChild(slim)","CBROOT.appendChild(slim)")
     b5=b5.replace("if(a==='go-app'){toast('Opens your entries in the app');return}","if(a==='go-app'){close();return}")
     assert "CBROOT.appendChild(mhost)" in b5 and "CBROOT.appendChild(dock)" in b13 and "if(a==='go-app'){close();return}" in b5
-    js='/* Card Board for the Card Tab app. Built by tools/build-cb.py app; loaded on demand by js/board-loader.js. */\n(function(){\nif(window.CTBoard)return;\nconst CBROOT=document.createElement("div");CBROOT.className="cbroot";CBROOT.innerHTML='+json.dumps(markup)+';document.body.appendChild(CBROOT);\n'+("document.documentElement.dataset.cbv='"+VAR+"';\n")+hj.split("(function(){",1)[1]+b5+b13+open('board-app-tail.js').read()+'\n})();\n'
+    js='/* Card Board for the Card Tab app. Built by tools/build-cb.py app; loaded on demand by js/board-loader.js. */\n(function(){\nif(window.CTBoard)return;\nconst CBROOT=document.createElement("div");CBROOT.className="cbroot";CBROOT.innerHTML='+json.dumps(markup)+';document.body.appendChild(CBROOT);\n'+("document.documentElement.dataset.cbv='"+VAR+"';\n")+hj.split("(function(){",1)[1]+b5+b13+open('board16.js').read()+open('board-app-tail.js').read()+'\n})();\n'
     # the app's own menu already uses these ids; the board's copies get their own names
     idfix=lambda x:re.sub(r'\bam-(name|theme|hapr|hap)\b',r'cb-am-\1',x)
     js=idfix(js);css=idfix(css).replace('#cb,:root{--hair-l:1;}','#cb{--hair-l:1;}')
