@@ -239,3 +239,15 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - `tools/t57.js` sweep: no overflow at any size, compare mode or range.
 - Next: rebuild the Card Stories preview to match the original site design: 4–5 story cards, a Showing switch per card, 20+ themes, tap to enlarge, save or share as an image, Year in Cards. The month-recap player is retired; its best parts become card options.
 - Add gallery: the confirmation ("Sales added to the top of your board") now replaces the tip line in place for 1.8 seconds instead of floating over it (it overlapped on phones and desktop).
+
+### Card Stories preview v2: the original design (Nov 4)
+- Rebuilt to match the site's original Card Stories (`tools/stories2.tpl.html`). The month-recap player is retired.
+- A Board | Stories switch, a time range (Last 12 months, this year, last year as the Year in Cards, All time), and a theme row with 24 themes. Themes give each story its own colors and are remembered (`cs.theme`).
+- Five 9:16 story cards, all sized in container units, so they read the same small or enlarged. Each has a "Showing" switch with three choices:
+  1. The money: Profit / Sales / ROI (area line of cumulative profit)
+  2. Your biggest win: Biggest win / Its journey / Biggest sale (card art with a sticker)
+  3. Where you buy: Top platform / Per card / Runner-up (bars)
+  4. Staying accountable: Months under / Avg spend / Lightest month (budget bars)
+  5. Your collection: Sold % / Still holding / Busiest month (fan of cards)
+- Tap a story to enlarge it, with Save image / Share (preview notes say these work in the app). Headlines use short card names (text before the first comma).
+- Themes: Jewel, Voltage, Dusk, Cranberry, Mint, Ocean, Sunset, Mono, Paper, Neon, Forest, Grape, Citrus, Rose, Slate, Midnight, Sand, Lava, Ice, Bubblegum, Gold, Holo, Matcha, Retro.
