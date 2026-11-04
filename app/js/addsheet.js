@@ -181,6 +181,10 @@
   $('as-newplat').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); savePlat(); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); $('as-addplat').hidden = true; } });
   $('as-cancelplat').addEventListener('click', () => { $('as-addplat').hidden = true; });
 
+  // The visible height with the keyboard up, remembered per screen height, so the next open starts at the right size
+  function kbMem() { try { const m = JSON.parse(localStorage.getItem('ct.kbh') || 'null'); return m && m.ih === innerHeight ? m.h : 0; } catch (e) { return 0; } }
+  function kbSave() { if (!vv || vv.height > innerHeight * .85) return; try { localStorage.setItem('ct.kbh', JSON.stringify({ ih: innerHeight, h: Math.round(vv.height) })); } catch (e) {} }
+  if (vv) vv.addEventListener('resize', () => { if (dlg.open && !moving) kbSave(); });
   function open(onDone) {
     st.onDone = onDone || null; st.rows = []; st.total = 0; st.shown = 0; st.sig = '~'; st.sel = -1;
     const d = mem.get();
@@ -188,10 +192,18 @@
     st.type = d.type === 'sale' ? 'sale' : 'purchase'; setSeg('as-type', st.type === 'sale' ? 1 : 0);
     st.cond = 0; setSeg('as-cond', 0);
     inp.value = ''; inp.disabled = false; $('as-toast').classList.remove('on'); show(1); render();
-    // Focus right away (still inside your tap) so the keyboard starts rising together with the sheet, not after it
-    dlg.style.height = ''; dlg.style.top = ''; moving = true; dlg.classList.add('moving');
-    dlg.showModal(); inp.focus({ preventScroll: true });
-    clearTimeout(settle); settle = setTimeout(() => { moving = false; dlg.classList.remove('moving'); fit(); }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 440);
+    // Two ways to bring up the keyboard on phones (the preview lets you feel both; one ships):
+    //  'together': focus inside the tap so the keyboard rises with the sheet. The sheet starts at the height it will have
+    //              above the keyboard (remembered from last time), so nothing resizes after the slide.
+    //  'after':    the sheet slides up on its own, untouched; tap the search to type.
+    const touch = matchMedia('(hover:none)').matches;
+    let mode = 'together'; try { mode = localStorage.getItem('ct.kbmode') || 'together'; } catch (e) {}
+    dlg.style.top = ''; dlg.style.height = '';
+    if (touch && mode === 'together') { const k = kbMem(); if (k) dlg.style.height = k + 'px'; }
+    moving = true; dlg.classList.add('moving');
+    dlg.showModal();
+    if (!touch || mode === 'together') inp.focus({ preventScroll: true });
+    clearTimeout(settle); settle = setTimeout(() => { moving = false; dlg.classList.remove('moving'); fit(); kbSave(); }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 440);
   }
   function close() { if (dlg.open) dlg.close(); }
 

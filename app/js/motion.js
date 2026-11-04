@@ -19,7 +19,7 @@
   ['as', 'ed', 'imp'].forEach(id => {
     const d = document.getElementById(id); if (!d) return;
     const realClose = d.close.bind(d), realShow = d.showModal.bind(d);
-    d.showModal = function () { clearTimeout(d._ct); d.classList.remove('closing'); document.documentElement.classList.add('ct-lock'); if (!d.open) realShow(); push('dlg:' + id, () => d.close()); };
+    d.showModal = function () { clearTimeout(d._ct); d.classList.remove('closing'); if (!d.open) realShow(); push('dlg:' + id, () => d.close()); };
     d.close = function (v) {
       if (!d.open || d.classList.contains('closing')) return;
       done('dlg:' + id);
@@ -28,10 +28,8 @@
       d.dispatchEvent(new Event('closing'));
       if (calm.matches) { realClose(v); return; }
       d.classList.add('closing');
-      d._ct = setTimeout(() => { d.classList.remove('closing'); if (d.open) realClose(v); }, phone.matches ? 270 : 190);
+      d._ct = setTimeout(() => { d.classList.remove('closing'); if (d.open) realClose(v); }, phone.matches ? 270 : 250);
     };
     d.addEventListener('cancel', e => { e.preventDefault(); d.close(); });
-    // the page under a sheet can't scroll or be nudged by the keyboard
-    d.addEventListener('close', () => { if (!document.querySelector('dialog[open]')) document.documentElement.classList.remove('ct-lock'); });
   });
 })();

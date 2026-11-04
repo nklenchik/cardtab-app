@@ -405,3 +405,9 @@ Tests: tools/t87-app-nav.js, tools/t88-board-nav.js, tools/t84.js (still passes)
 - Closing drops the keyboard as the sheet starts to leave and slides it fully off (100vh, .26s), even when it was shortened above the keyboard.
 - The page under any sheet is locked (html.ct-lock), so the keyboard can't nudge it.
 - Older months behind "Show ..." are only built when opened (and dropped again after closing), so the page stays light: opening a sheet re-checks far fewer elements (showModal 114 -> 67ms at 4x slower CPU, 240 entries) and filters redraw faster (~85ms).
+
+### v25.3 — rounded everywhere, softer desktop sheets, phone header
+- The phone's rounded look leads on every screen: search, Export, Add New, filters, sort, "Show earlier", Ask input and the expand button are all pills; light shadows only.
+- Phones: logo left, profile alone top right; under it a long search pill and a round crimson + (44px) on the same center line as the profile. Export lives in the profile menu on phones.
+- Desktop sheets (app and board): a slower, softer rise, .52s cubic-bezier(.16,1,.3,1), 22px up from 97% scale, opacity done by 45%; close .24s; backdrop .45s.
+- Add a card on phones: no page lock on open (switching the page's overflow forced a full relayout on iPhone). Two keyboard modes behind ct.kbmode for testing: 'together' (focus in the tap; the sheet starts at the remembered height above the keyboard, ct.kbh) and 'after' (sheet slides up untouched; tap search to type). The sheet enters from 100vh.

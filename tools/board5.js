@@ -820,7 +820,7 @@ new MutationObserver(lockScroll).observe($('cb'),{subtree:true,attributes:true,a
 
 // ---------- motion for menus and sheets: GPU-only (transform and opacity), springy in, quick out ----------
 document.querySelectorAll('dialog.sheet').forEach(d=>{const nat=HTMLDialogElement.prototype.close;
-  d.close=function(v){if(!this.open||this.classList.contains('closing'))return;navDone('dlg:'+this.id);if(calm.matches){nat.call(this,v);return}this.classList.add('closing');setTimeout(()=>{this.classList.remove('closing');nat.call(this,v)},190)};
+  d.close=function(v){if(!this.open||this.classList.contains('closing'))return;navDone('dlg:'+this.id);if(calm.matches){nat.call(this,v);return}this.classList.add('closing');setTimeout(()=>{this.classList.remove('closing');nat.call(this,v)},matchMedia('(max-width:760px)').matches?230:250)};
   d.addEventListener('cancel',e=>{e.preventDefault();d.close()})});
 // opening: the sheet is laid out first while held on its first frame, then the motion starts on the next frame.
 // The heavy first-layout work happens before anything moves, so the slide itself never stutters.

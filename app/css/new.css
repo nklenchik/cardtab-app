@@ -100,13 +100,14 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 /* ===== Sheets move exactly like the board's: up from the bottom on phones, a soft rise on desktop, and they slide away on close ===== */
 @keyframes ct-shUp{from{transform:translateY(100%)}to{transform:none}}
 @keyframes ct-shDown{to{transform:translateY(100%)}}
-@keyframes ct-sheetIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes ct-sheetIn{from{opacity:0;transform:translateY(22px) scale(.97)}45%{opacity:1}to{opacity:1;transform:none}}
 @keyframes ct-sheetOut{to{opacity:0;transform:translateY(6px) scale(.98)}}
 @keyframes ct-bdIn{from{opacity:0}}
 @keyframes ct-bdOut{to{opacity:0}}
-#as .phone,.ed .ed-form{animation:ct-sheetIn .32s cubic-bezier(.2,.8,.2,1) both}
-#as.closing .phone,.ed.closing .ed-form{animation:ct-sheetOut .18s cubic-bezier(.4,0,1,1) both}
-#as[open]::backdrop,.ed[open]::backdrop{animation:ct-bdIn .3s ease-out both}
+/* desktop: a slower, softer rise (opacity eases in quicker than the movement, so it never looks like a pop) */
+#as .phone,.ed .ed-form{animation:ct-sheetIn .52s cubic-bezier(.16,1,.3,1) both}
+#as.closing .phone,.ed.closing .ed-form{animation:ct-sheetOut .24s cubic-bezier(.4,0,1,1) both}
+#as[open]::backdrop,.ed[open]::backdrop{animation:ct-bdIn .45s ease-out both}
 #as.closing::backdrop,.ed.closing::backdrop{animation:ct-bdOut .19s ease both}
 #as.closing,.ed.closing{pointer-events:none}
 @media(max-width:760px){
@@ -118,10 +119,13 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 /* ===== Add a card on phones: anchored to the top so the keyboard only ever changes the hidden bottom edge;
    it slides as one layer, and slides fully off screen on close even when it's been shortened above the keyboard ===== */
 @keyframes ct-shDownFar{to{transform:translateY(100vh)}}
+@keyframes ct-shUpFar{from{transform:translateY(100vh)}to{transform:none}}
 @media(max-width:760px){
   #as[open]{align-items:flex-start}
   #as .phone{margin-top:12px;height:calc(100% - 12px)}
+  #as .phone{animation:ct-shUpFar .42s cubic-bezier(.2,.8,.2,1) both}
   #as.moving .phone,#as.closing .phone{will-change:transform}
   #as.closing .phone{animation:ct-shDownFar .26s cubic-bezier(.4,0,1,1) both}
 }
-html.ct-lock,html.ct-lock body{overflow:hidden;overscroll-behavior:none}
+/* sheets keep touches to themselves (no page lock: switching the page's overflow on open forced a full relayout on iPhone) */
+#as,.ed{overscroll-behavior:contain;touch-action:pan-y}
