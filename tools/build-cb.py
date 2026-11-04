@@ -1,6 +1,7 @@
-import json,base64
+import json,base64,sys
+VAR=sys.argv[1] if len(sys.argv)>1 else ''
 P=json.load(open('dash-parts.json'))
-board_css=open('board-part.html').read().replace('__SITECSS__',open('site-cb.css').read())+open('board4.css').read()+open('board5.css').read()+open('board6.css').read()+open('board7.css').read()+open('board8.css').read()+open('board9.css').read()+open('board10.css').read()+open('board11.css').read()+open('board12.css').read()
+board_css=open('board-part.html').read().replace('__SITECSS__',open('site-cb.css').read())+open('board4.css').read()+open('board5.css').read()+open('board6.css').read()+open('board7.css').read()+open('board8.css').read()+open('board9.css').read()+open('board10.css').read()+open('board11.css').read()+open('board12.css').read()+(open('board13.css').read() if VAR else '')
 markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
 <section class="cbx off" id="cbx" inert aria-hidden="true" role="dialog" aria-modal="true" aria-label="Card Board">
 <div id="cb"><div class="frame">
@@ -14,7 +15,7 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
     <span class="ehint">Drag to move · drag a corner to resize</span>
     
     </div>
-    <button type="button" class="iconb" id="cb-stories" aria-label="Card Stories"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="7" height="15" rx="2"/><rect x="13.5" y="4.5" width="7" height="15" rx="2"/></svg><span>Stories</span></button>
+    <button type="button" class="iconb" id="cb-stories" aria-label="Card Stories"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="3"/><path d="M8.2 6.2h3.3M13.5 6.2h2.3"/><path d="M8.5 16.5l2.4-2.8 2 1.8 2.8-3.6"/></svg><span>Stories</span></button>
     <button type="button" class="iconb" id="cb-ask" aria-label="Ask about your numbers"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2 5.3 5.5 1.9-5.5 2-2 5.3-2-5.3-5.5-2 5.5-1.9z"/><path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg><span>Ask</span></button>
     <button type="button" class="iconb" id="cb-share" aria-label="Share Card Board"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3L10.5 13.5"/><path d="M21 3l-6.5 18-4-7.5L3 9.5z"/></svg><span>Share</span></button>
     <div class="perwrap acctw"><button type="button" class="acct" id="cb-acct" aria-haspopup="true" aria-expanded="false" aria-label="Account"><span class="av" id="cb-av">N</span></button>
@@ -116,9 +117,9 @@ tipcss='''.tip{position:fixed;z-index:60;pointer-events:none;background:var(--te
 .note{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--text);color:var(--bg);border-radius:999px;padding:8px 14px;font-size:12px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 '''
 data=open('cb-data2.json').read()
-stories_js=json.dumps('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body style="margin:0">'+open('stories2.tpl.html').read().replace('__DATA__',data)+'</body></html>').replace('</','<\\/')
+stories_js=json.dumps('<!doctype html><html'+(' class="v'+VAR+'"' if VAR else '')+'><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body style="margin:0">'+open('stories2.tpl.html').read().replace('__DATA__',data)+'</body></html>').replace('</','<\\/')
 head_js='''<script>
-(function(){
+'''+("document.documentElement.dataset.cbv='"+VAR+"';\n" if VAR else '')+'''(function(){
 'use strict';
 // Nick's 199 entries from Card_Collection.xlsx (Cash Flow), as Card Tab's import read them: [date, type, platform, card, amount¢, net¢, qty, number, set]
 const RAW=__DATA__;
@@ -135,7 +136,9 @@ function totals(list){let sales=0,after=0,spent=0,ref=0,fees=0;list.forEach(e=>{
 const calm=matchMedia('(prefers-reduced-motion: reduce)');
 const STORIES_HTML=__STORIES__;
 '''.replace('__DATA__',data).replace('__STORIES__',stories_js)
-page=P['css']+board_css+tipcss+'</style>\n\n'+P['html']+markup+head_js+P['js']+open('board5.js').read()+'\n})();\n</script>\n'
+page=P['css']+board_css+tipcss+'</style>\n\n'+P['html']+markup+head_js+P['js']+open('board5.js').read()+(open('board13.js').read() if VAR else '')+'\n})();\n</script>\n'
 logo='data:image/webp;base64,'+base64.b64encode(open('/home/claude/cardtab-app/app/assets/logo-128.webp','rb').read()).decode()
-open('card-board-preview.html','w').write(page.replace('__LOGO__',logo))
+out=page.replace('__LOGO__',logo)
+if VAR:out=out.replace('<title>Card Board Preview</title>','<title>Card Board Phone '+VAR+'</title>',1)
+open(('card-board-'+VAR.lower()+'.html') if VAR else 'card-board-preview.html','w').write(out)
 print(len(page))

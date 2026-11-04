@@ -119,6 +119,22 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 #ths .go{flex:none}
 @media(max-width:420px){.topt{gap:12px;padding:14px 13px;font-size:14.5px}.tsw.big span{width:18px;height:18px}}
 #lbc{display:grid;place-items:center}
+/* ---- v2.5 phone variants (set by the board build: html.vA / html.vB) ---- */
+.csdock,.cstoast{display:none}
+@media(max-width:600px){
+  html.vA .top .back,html.vB .top .back{border:0;background:transparent;width:36px;height:40px;padding:0;margin-left:-10px;justify-content:center}
+  html.vA .top .back svg,html.vB .top .back svg{width:22px;height:22px}
+  html.vA .top{display:grid;gap:2px;justify-items:start}
+  html.vA .tl2{display:grid;gap:4px}
+  html.vA .ttl{font-size:34px;line-height:1.05;letter-spacing:-.03em}
+  html.vA #perb{background:transparent;border:0;color:var(--text);padding:0;height:34px;font-size:15.5px;box-shadow:none}
+  html.vA .wrap,html.vB .wrap{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}
+  html.vA .csdock,html.vB .csdock{display:flex;position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:30;transform:translateX(-50%);gap:4px;padding:5px;background:color-mix(in srgb,var(--card) 88%,transparent);-webkit-backdrop-filter:blur(16px) saturate(1.4);backdrop-filter:blur(16px) saturate(1.4);border:1px solid var(--line);border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.16)}
+  .csdock button{display:inline-flex;align-items:center;gap:7px;height:46px;padding:0 16px;border:0;border-radius:999px;background:transparent;color:var(--text);font:inherit;font-weight:800;font-size:14.5px;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .csdock button.p{background:var(--text);color:var(--bg)}
+  .cstoast{display:block;position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom,0px));z-index:31;transform:translate(-50%,8px);max-width:calc(100vw - 40px);background:var(--text);color:var(--bg);border-radius:14px;padding:10px 14px;font-size:13px;font-weight:700;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s,transform .25s}
+  .cstoast.on{opacity:1;transform:translate(-50%,0)}
+}
 /* ---- phones ---- */
 .lb .acts button{white-space:nowrap}
 .lb .acts .xb{width:48px;padding:0;display:grid;place-items:center}
@@ -154,6 +170,7 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 <div class="sheetw" id="ths" hidden><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ths-h"><div class="shh"><div><h2 id="ths-h">Themes</h2><p class="shs" id="ths-s"></p></div></div><div class="tgrid" id="tgrid"></div><button class="go" data-close>Done</button></div></div>
 <div class="sheetw" id="crs" hidden><div class="sheet sm" role="dialog" aria-modal="true" aria-labelledby="crs-h"><div class="shh"><h2 id="crs-h">Custom range</h2><button class="xx" data-close aria-label="Close">✕</button></div>
   <div class="mrow2"><label>From<select id="cr-a"></select></label><label>To<select id="cr-b"></select></label></div><p class="crn" id="cr-n"></p><button class="go" id="cr-go">Show these months</button></div></div>
+<div class="csdock" id="csdock"><button type="button" data-d="save"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 14.5V19h14v-4.5"/></svg>Save</button><button type="button" class="p" data-d="share"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3L10.5 13.5"/><path d="M21 3l-6.5 18-4-7.5L3 9.5z"/></svg>Share this story</button></div><div class="cstoast" id="cstoast" role="status"></div>
 <div class="lb" id="lb" hidden><div class="box"><div id="lbc"></div><p class="note" id="lbn"></p><div class="acts"><button class="g xb" data-a="close" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><button data-a="save">Save image</button><button data-a="share">Share</button></div></div></div>
 
 <script>
@@ -301,5 +318,9 @@ window.csSync=function(){
   if(nc)cust=nc;per=np;$('perl').textContent=per==='custom'?customLab():PER.find(x=>x[0]===per)[1];render()};
 csSync();
 if(EMB)document.querySelector('.foot').hidden=true;
+// thumb bar on phones: save or share the story you're looking at
+let toastT=0;$('csdock').addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(!b)return;const dots=[...$('dots').querySelectorAll('i')],n=Math.max(0,dots.findIndex(d=>d.classList.contains('on'))),nm=D.stories[n].name;
+  const m=b.dataset.d==='save'?'In the app this saves “'+nm+'” as an image, sized for Instagram and TikTok.':'In the app this opens your phone’s share sheet for “'+nm+'”.';
+  const t=$('cstoast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600)});
 })();
 </script>

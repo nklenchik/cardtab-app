@@ -273,3 +273,12 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - Shared: name (parent.cbName), light/dark (cb.theme), time range (cb.view; 7/30 days fall back to Last 12 months, custom dates become months). Range changes inside Stories stay in Stories.
 - Sources stay separate: edit stories2.tpl.html or board files independently; build-cb.py bundles Stories in.
 - Test: tools/t70.js.
+
+### v15 phone layouts A and B (separate previews; main board unchanged except the new Stories icon)
+- Build: python3 build-cb.py A|B -> card-board-a.html / card-board-b.html (sets html[data-cbv], adds board13.css/js, Stories gets html.vA/vB).
+- Both: bare ‹ back on phones; Stories/Ask/Share move into a floating thumb bar (hides while editing, in the shared view and when Stories is open; tucks away while scrolling down).
+- A: Edit as a word top right, big "Card Board" title, range and platform as text under it; slim bar with the range appears after the title scrolls away.
+- B: title row with ••• (sheet: Edit board + platform list) and avatar; range row 7D/30D/12M/YTD/All plus a calendar segment that opens the full range menu.
+- Stories on phones (both): bottom bar to Save or Share the story in view; A also gets the big title.
+- Stories icon is now the story card with progress bars (main board too).
+- Test: tools/t71.js.
