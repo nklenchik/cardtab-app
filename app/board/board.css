@@ -1660,6 +1660,10 @@ dialog.sheet .awp{background:var(--cb-alt)}
 
 /* while editing, and in the Add widgets gallery, the frosted pills go flat: blur recalculated on moving tiles costs frames */
 .cbx #cb.editing .k-feat .ttl,.cbx #cb.editing .fpc,#aw .k-feat .ttl,#aw .fpc{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(0,0,0,.38)}
+/* pictures in widgets never start the phone's own image gestures (save/preview/drag): presses go to the tile,
+   so long-press to edit works on art-heavy widgets too */
+.cbx #cb .w img,#aw img{pointer-events:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none}
+.cbx #cb .fw,.cbx #cb .xhero,.cbx #cb .pc,.cbx #cb .xs{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .tip{position:fixed;z-index:60;pointer-events:none;background:var(--text);color:var(--bg);border-radius:10px;padding:8px 11px;font-size:12.5px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;text-align:left}
 .tip.on{opacity:1}
 .note{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--text);color:var(--bg);border-radius:999px;padding:8px 14px;font-size:12px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}

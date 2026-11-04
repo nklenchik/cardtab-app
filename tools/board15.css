@@ -92,3 +92,7 @@
 
 /* while editing, and in the Add widgets gallery, the frosted pills go flat: blur recalculated on moving tiles costs frames */
 .cbx #cb.editing .k-feat .ttl,.cbx #cb.editing .fpc,#aw .k-feat .ttl,#aw .fpc{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(0,0,0,.38)}
+/* pictures in widgets never start the phone's own image gestures (save/preview/drag): presses go to the tile,
+   so long-press to edit works on art-heavy widgets too */
+.cbx #cb .w img,#aw img{pointer-events:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none}
+.cbx #cb .fw,.cbx #cb .xhero,.cbx #cb .pc,.cbx #cb .xs{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}

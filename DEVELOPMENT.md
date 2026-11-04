@@ -432,3 +432,4 @@ New widgets (tools/board15.js / board15.css, slotted in before board5.js in both
 Speed (4x slower CPU, 250 entries): opening the board ~115–165ms when prefetched; scrolling clean; Add widgets 4 slow frames (was 13), closing a sheet 1 (was 10).
 Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-app.js; t87 still passes.
 - v26.1: Featured card at Small shows the card name above the number; the label pill is dark glass at every size (the light one vanished on bright art), with a slightly deeper top shade; Small gets a touch more shade overall. The label color now wins over the board's Small-title rule.
+- v26.2: pictures inside widgets ignore presses (pointer-events:none, no callout/drag), so on iPhone a long-press on art-heavy widgets starts editing instead of the phone's image gesture cancelling it and the release opening the card's entries. tools/t91-longpress-art.js.

@@ -37,7 +37,7 @@ const FEAT_ORDER=['win','roi','pricey','seller','loss','flip','held','money'];
 let PVMODE=false; // Add widgets previews are tiny: they always use the small thumbnail
 const artSrc=(c,mode)=>!c||!c.art?'':PVMODE?(c.art.list||c.art.detail):mode==='wall'?(c.art.wall||c.art.detail||c.art.list):mode==='card'?(c.art.detail||c.art.list):(c.art.list||c.art.detail);
 const letter=c=>esc(((c&&c.e.name)||'?').match(/[A-Za-z0-9]/)?(c.e.name.match(/[A-Za-z0-9]/)[0].toUpperCase()):'?');
-function cardImg(c,cls,mode){const src=maskNames()?'':artSrc(c,mode);return src?'<img class="'+cls+'" src="'+esc(src)+'" alt="" decoding="async" loading="lazy">':'<span class="'+cls+' ph" aria-hidden="true"><i>'+(maskNames()?'':letter(c))+'</i></span>'}
+function cardImg(c,cls,mode){const src=maskNames()?'':artSrc(c,mode);return src?'<img class="'+cls+'" src="'+esc(src)+'" alt="" decoding="async" loading="lazy" draggable="false">':'<span class="'+cls+' ph" aria-hidden="true"><i>'+(maskNames()?'':letter(c))+'</i></span>'}
 const nameOf=c=>maskNames()?'A card from your collection':c.e.name;
 // the card-and-details layout: big card, name as a heading, labeled numbers, one hero number
 function cardHero(c,F,ctx,L,w,s){const show=(w&&w.show)||'both',nm=nameOf(c);
@@ -54,7 +54,7 @@ function featBody(ctx,s,w){const m=FEAT[w.metric]?w.metric:'win',F=FEAT[m],L=car
   const big=show==='%'?'':'<div class="fbig num'+(F.good?' g':F.bad?' r':'')+'">'+F.num(c,ctx,L)+(show==='both'&&s!=='S'?'<span class="fpc">'+esc(F.pc(c,ctx,L))+'</span>':'')+'</div>';
   const onlyPc=show==='%'?'<div class="fbig num'+(F.good?' g':F.bad?' r':'')+'">'+esc(F.pc(c,ctx,L))+'</div>':'';
   return '<div class="fw drill"'+dd({t:c.e.name,sub:'Every entry for this card',card:c.k})+' role="button" tabindex="0" data-fw data-lk="'+esc(lk)+'">'+
-    '<img class="fwi" src="'+esc(src)+'" alt="" decoding="async" style="--fx:'+f[0]+'%;--fy:'+f[1]+'%;--fz:'+z+'" data-wall="'+(c.art.wall?1:0)+'">'+
+    '<img class="fwi" src="'+esc(src)+'" alt="" decoding="async" draggable="false" style="--fx:'+f[0]+'%;--fy:'+f[1]+'%;--fz:'+z+'" data-wall="'+(c.art.wall?1:0)+'">'+
     '<div class="fwt"><h4 class="fn">'+esc(nameOf(c))+'</h4>'+(s==='S'?'':'<p class="fl">'+esc(F.line(c,ctx,L))+'</p>')+big+onlyPc+'</div></div>'}
 // ---- Best sellers: a podium of the top three, shown as the top halves of the cards ----
 function bestBody(ctx,s,w){const L=cardStats(ctx).filter(c=>c.sold&&c.b>0&&c.g>0).sort((a,b)=>b.g-a.g),n=s==='S'?1:s==='M'||s==='B'?2:3,top=L.slice(0,n);
