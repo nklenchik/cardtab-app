@@ -111,3 +111,25 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - Customize: remove badge on the top-left corner, drag the card itself to move (mouse: after 5px; touch: press and hold for 280ms so the page still scrolls), grip to resize. The ⋯ menu has sizes, move earlier/later and remove for keyboard users. Arrow keys on the grip step through the sizes.
 - Layout entries now have ids (`{id,k,size}`, key `cb.layout.v3`), so the same metric can appear more than once.
 - The Add widget panel lists all 10 metrics at any size, with a preview at the real size.
+
+### Card Board v7: haptics, account menu, avatar, export (Nov 4)
+- Haptics (`buzz()` in `tools/board5.js`), touch devices only, with a switch in the account menu:
+  - tick (6ms): grab a resize corner, each snap to a new size, hovering a new drop spot, picking a color
+  - tap (12ms): enter Customize, pick a widget up to move it
+  - firm (20ms): a widget lands at a new size or place, a widget is added, a save or export finishes
+  - warn (14·70·14ms): remove a widget
+  - Nothing while scrolling or between snaps; ticks are spaced at least 45ms apart.
+  - Android uses `navigator.vibrate`. iPhone Safari can't vibrate from web pages, so it clicks a hidden `<input type="checkbox" switch>`, which gives the system's light tick on iOS 18+ (unofficial, may change). The native app should use real haptics later.
+- Account menu with line icons:
+  - Edit profile, Plan and billing
+  - Import entries, Export
+  - Platforms and fees, Budget and goals
+  - Appearance (Light / Dark / Auto), Haptics switch (touch devices only)
+  - Help and feedback, Sign out
+  - Items that need the real app show a toast in the preview.
+- Avatar: your first initial on one of 8 colors, or a photo uploaded or taken with the camera (Take photo shows on touch devices only). Photos are shrunk to 1024px on the way in, positioned with drag plus a zoom slider or the scroll wheel, and saved as a 256px WebP (JPEG fallback).
+- Export:
+  - entries as CSV, or Excel (SheetJS, loaded only when needed)
+  - the board as a PDF (print styles)
+  - the board as PNG, JPG or WebP (html-to-image, loaded only when needed)
+- Escape no longer closes the whole board when a dialog is open.

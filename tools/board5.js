@@ -28,6 +28,17 @@ const sizesNow=()=>phone.matches?['S','M','L']:SIZES;
 const eff=s=>phone.matches&&s==='X'?'L':s; // on phones Extra large is the same as Large
 const byId=id=>layout.find(w=>w.id===id);
 
+// ---------- haptics ----------
+// Rare and meaningful: a tiny tick when something snaps, a tap when you pick a widget up, a firm tap when it lands,
+// a double pulse when you remove one. Nothing while scrolling or between snaps. Android vibrates; iPhone Safari has no
+// vibration for web pages, so it uses the system switch's own light tick (iOS 18+). The native app will get full haptics.
+const HAP={tick:[6],tap:[12],firm:[20],warn:[14,70,14]};
+let hapOn=(()=>{try{return localStorage.getItem('cb.haptics')!=='0'}catch(e){return true}})(),hapLast=0,iosSw=null;
+const canVibrate=typeof navigator.vibrate==='function',touchDev=matchMedia('(pointer:coarse)').matches;
+function iosTick(){if(!iosSw){iosSw=document.createElement('label');iosSw.className='hapsw';iosSw.setAttribute('aria-hidden','true');iosSw.innerHTML='<input type="checkbox" switch tabindex="-1">';iosSw.addEventListener('click',e=>e.stopPropagation());document.body.appendChild(iosSw)}iosSw.click()}
+function buzz(kind){if(!hapOn||!touchDev)return;const now=performance.now();if(kind==='tick'&&now-hapLast<45)return;hapLast=now;
+  try{if(canVibrate){navigator.vibrate(HAP[kind]);return}iosTick();if(kind==='warn')setTimeout(iosTick,90)}catch(e){}}
+
 // ---------- data ----------
 function keysFor(p){
   if(p==='l12')return monthsBack(12);
@@ -215,10 +226,10 @@ $('cb-acct').addEventListener('click',e=>{e.stopPropagation();hideTip();const m=
 document.addEventListener('click',e=>{if(!e.target.closest('.perwrap')&&!e.target.closest('#wmenu'))closeMenus();if(!e.target.closest('#cb [data-tip]'))hideTip()});
 
 // ---------- customize ----------
-function setEditing(on){editing=on;$('cb-edit').textContent=on?'Done':'Customize';$('cb-edit').classList.toggle('on',on);$('cb-reset').hidden=!on;render(true)}
+function setEditing(on){if(on)buzz('tap');editing=on;$('cb-edit').textContent=on?'Done':'Customize';$('cb-edit').classList.toggle('on',on);$('cb-reset').hidden=!on;render(true)}
 $('cb-edit').addEventListener('click',()=>setEditing(!editing));
 $('cb-reset').addEventListener('click',()=>{layout=JSON.parse(JSON.stringify(DEFAULT));save();render(true)});
-function removeWidget(id){const el=$('simple').querySelector('.w[data-id="'+id+'"]'),i=layout.findIndex(w=>w.id===id);if(i<0)return;layout.splice(i,1);save();
+function removeWidget(id){buzz('warn');const el=$('simple').querySelector('.w[data-id="'+id+'"]'),i=layout.findIndex(w=>w.id===id);if(i<0)return;layout.splice(i,1);save();
   if(!el||calm.matches){render(true);return}
   el.style.pointerEvents='none';el.animate([{opacity:1,transform:'none'},{opacity:0,transform:'scale(.9)'}],{duration:180,easing:'ease-in',fill:'forwards'}).onfinish=()=>render(true)}
 function moveWidget(id,d){const i=layout.findIndex(w=>w.id===id),j=i+d;if(i<0||j<0||j>=layout.length)return;layout.splice(j,0,layout.splice(i,1)[0]);save();render(true)}
@@ -231,7 +242,7 @@ $('simple').addEventListener('click',e=>{
 });
 // swap one widget's content for its layout at a new size, in place
 function rebuild(id){const w=byId(id),el=$('simple').querySelector('.w[data-id="'+id+'"]');if(!w||!el)return null;const ctx=ctxNow(),tmp=document.createElement('div');tmp.innerHTML=widgetHTML(w,ctx);const nw=tmp.firstChild;el.replaceWith(nw);wire(nw,ctx);return nw}
-function setSize(id,s){const w=byId(id);if(!w||w.size===s)return;const before=rects();w.size=s;save();const el=rebuild(id);flip(before);
+function setSize(id,s){const w=byId(id);if(!w||w.size===s)return;buzz('tick');const before=rects();w.size=s;save();const el=rebuild(id);flip(before);
   if(el&&!calm.matches)el.animate([{opacity:.4},{opacity:1}],{duration:260,easing:'ease-out'})}
 // widget menu (⋯): size, move, remove
 function openWidgetMenu(btn,w){closeMenus();hideTip();const m=$('wmenu'),cur=eff(w.size);
@@ -256,7 +267,7 @@ function rzLayers(g,rowsNeeded){const sim=$('simple');let ov=$('rzgrid');if(!ov)
 function placeRz(){if(!rz)return;rz.raf=0;const g=rz.g,W=g.r.width,x=rz.x,y=rz.y,s=snap(g,x,y,rz.s||rz.s0),[sw,sh]=box(g,s);
   rz.c.style.width=x+'px';rz.c.style.height=y+'px';rz.c.style.left=Math.max(0,Math.min(rz.left,W-x))+'px';
   rz.o.style.width=sw+'px';rz.o.style.height=sh+'px';rz.o.style.left=Math.max(0,Math.min(rz.left,W-sw))+'px';
-  if(rz.s!==s){rz.s=s;rz.c.querySelector('.rzs').textContent=SIZE_NAMES[s]}}
+  if(rz.s!==s){if(rz.s)buzz('tick');rz.s=s;rz.c.querySelector('.rzs').textContent=SIZE_NAMES[s]}}
 // keep the page scrolling when a finger or cursor nears the top or bottom edge
 function edgeScroll(clientY){const z=56,sp=clientY>innerHeight-z?Math.min(14,(clientY-(innerHeight-z))/3):clientY<z+60?-Math.min(14,(z+60-clientY)/3):0;return sp}
 function scrollLoop(){const st=rz||drag;if(!st)return;if(st.vy){cbx.scrollTop+=st.vy;if(rz){rz.y=clampH(rz.h0+(rz.cy-rz.sy)+(cbx.scrollTop-rz.st0));if(!rz.raf)rz.raf=requestAnimationFrame(placeRz)}if(drag)moveDrag(drag.cx,drag.cy)}st.loop=requestAnimationFrame(scrollLoop)}
@@ -269,7 +280,7 @@ $('simple').addEventListener('pointerdown',e=>{
     const {o,c}=rzLayers(g,rowsNeeded);c.innerHTML='<span class="ttl">'+CATALOG[sec.dataset.k].t+'</span><span class="rzs"></span>';[o,c].forEach(el=>{el.style.top=top+'px'});
     const w=byId(sec.dataset.id);
     rz={id:sec.dataset.id,el:sec,g,o,c,left,top,sx:e.clientX,sy:e.clientY,cy:e.clientY,st0:cbx.scrollTop,w0:r.width,h0:r.height,x:r.width,y:r.height,s:null,s0:eff(w.size),raf:0,vy:0,f:Math.max(1,(g.r.width-r.width)/room)};
-    placeRz();sec.classList.add('rz-src');$('cb').classList.add('rzing');rz.loop=requestAnimationFrame(scrollLoop);return}
+    placeRz();buzz('tick');sec.classList.add('rz-src');$('cb').classList.add('rzing');rz.loop=requestAnimationFrame(scrollLoop);return}
   // move: drag the widget itself. Mouse: start after a few pixels. Touch: press and hold, so the page still scrolls.
   const sec=e.target.closest('.w[data-id]');if(!sec||e.target.closest('.rm,.grip'))return;
   const pend={id:sec.dataset.id,el:sec,x:e.clientX,y:e.clientY,cx:e.clientX,cy:e.clientY,pid:e.pointerId,touch:e.pointerType!=='mouse',t:0};
@@ -277,10 +288,10 @@ $('simple').addEventListener('pointerdown',e=>{
   pending=pend});
 let pending=null;
 function startDrag(pd){pending=null;try{$('simple').setPointerCapture(pd.pid)}catch(e){}hideTip();const r=pd.el.getBoundingClientRect();
-  drag={id:pd.id,el:pd.el,x:pd.x,y:pd.y,cx:pd.cx,cy:pd.cy,st0:cbx.scrollTop,vy:0,over:null};pd.el.classList.add('lifted');$('cb').classList.add('dragging');moveDrag(pd.cx,pd.cy);drag.loop=requestAnimationFrame(scrollLoop)}
+  drag={id:pd.id,el:pd.el,x:pd.x,y:pd.y,cx:pd.cx,cy:pd.cy,st0:cbx.scrollTop,vy:0,over:null};pd.el.classList.add('lifted');$('cb').classList.add('dragging');buzz('tap');moveDrag(pd.cx,pd.cy);drag.loop=requestAnimationFrame(scrollLoop)}
 function moveDrag(cx,cy){if(!drag)return;drag.cx=cx;drag.cy=cy;const dy=cy-drag.y+(cbx.scrollTop-drag.st0);drag.el.style.transform='translate('+(cx-drag.x)+'px,'+dy+'px) scale(1.03)';
   const over=[...$('simple').querySelectorAll('.w[data-id]')].find(el=>{if(el===drag.el)return false;const r=el.getBoundingClientRect();return cx>r.left&&cx<r.right&&cy>r.top&&cy<r.bottom});
-  const id=over?over.dataset.id:null;if(id!==drag.over){$('simple').querySelectorAll('.drop').forEach(el=>el.classList.remove('drop'));if(over)over.classList.add('drop');drag.over=id}}
+  const id=over?over.dataset.id:null;if(id!==drag.over){$('simple').querySelectorAll('.drop').forEach(el=>el.classList.remove('drop'));if(over){over.classList.add('drop');buzz('tick')}drag.over=id}}
 // stop the page from scrolling under a finger once a widget is lifted
 document.addEventListener('touchmove',e=>{if(drag||rz)e.preventDefault()},{passive:false});
 $('simple').addEventListener('pointermove',e=>{
@@ -293,12 +304,12 @@ function endPointer(){
   if(rz){const r=rz;rz=null;if(r.raf)cancelAnimationFrame(r.raf);cancelAnimationFrame(r.loop);placeRzFinal(r);return}
   if(!drag)return;const d=drag;drag=null;cancelAnimationFrame(d.loop);justDragged=true;setTimeout(()=>{justDragged=false},0);
   $('cb').classList.remove('dragging');$('simple').querySelectorAll('.drop').forEach(el=>el.classList.remove('drop'));
-  if(d.over){const before=rects();const from=layout.findIndex(w=>w.id===d.id),to=layout.findIndex(w=>w.id===d.over);const [w]=layout.splice(from,1);layout.splice(to,0,w);save();
+  if(d.over){const before=rects();const from=layout.findIndex(w=>w.id===d.id),to=layout.findIndex(w=>w.id===d.over);const [w]=layout.splice(from,1);layout.splice(to,0,w);save();buzz('firm');
     const at=d.el.getBoundingClientRect();before[d.id]=at;d.el.classList.remove('lifted');d.el.style.transform='';render(false);flip(before)}
   else{d.el.style.transition='transform .3s cubic-bezier(.2,.7,.2,1)';d.el.style.transform='';d.el.classList.remove('lifted');setTimeout(()=>{d.el.style.transition=''},320)}}
 function placeRzFinal(r){
   const g=r.g,size=r.s||r.s0,w=byId(r.id),before=rects();$('cb').classList.remove('rzing');
-  if(eff(w.size)!==size)w.size=size;save();
+  buzz(size!==r.s0?'firm':'tick');if(eff(w.size)!==size)w.size=size;save();
   const el=rebuild(r.id);if(!el){r.c.remove();r.o.remove();return}el.classList.add('rz-src');
   const gr=$('simple').getBoundingClientRect(),f=el.getBoundingClientRect();flip(before,r.id);
   const finish=()=>{r.c.remove();r.o.remove();el.classList.remove('rz-src');if(!calm.matches){el.classList.add('rz-in');setTimeout(()=>el.classList.remove('rz-in'),320)}};
@@ -325,7 +336,7 @@ function drawPreview(){const g=gridSpec(),[W,H]=box(g,draft.size),host=$('aw-pre
   const avail=host.clientWidth||W,sc=Math.min(1,avail/W),inn=host.querySelector('.pvin'),el=inn.firstChild;el.style.width=W+'px';el.style.height=H+'px';inn.style.transform='scale('+sc+')';inn.style.left=Math.max(0,(avail-W*sc)/2)+'px';host.querySelector('.pvbox').style.height=(H*sc)+'px';wire(inn,ctx)}
 aw.addEventListener('click',e=>{if(e.target===aw){aw.close();return}const b=e.target.closest('button');if(!b)return;
   if(b.dataset.pick){draft.k=b.dataset.pick;drawAdd();drawPreview()}else if(b.dataset.s){draft.size=b.dataset.s;drawAdd();drawPreview()}
-  else if(b.id==='aw-go'){const w={id:newId(),k:draft.k,size:draft.size};layout.push(w);save();aw.close();render(true);const el=$('simple').querySelector('.w[data-id="'+w.id+'"]');if(el)setTimeout(()=>el.scrollIntoView({behavior:calm.matches?'auto':'smooth',block:'nearest'}),60)}
+  else if(b.id==='aw-go'){const w={id:newId(),k:draft.k,size:draft.size};layout.push(w);save();buzz('firm');aw.close();render(true);const el=$('simple').querySelector('.w[data-id="'+w.id+'"]');if(el)setTimeout(()=>el.scrollIntoView({behavior:calm.matches?'auto':'smooth',block:'nearest'}),60)}
   else if(b.hasAttribute('data-close'))aw.close()});
 
 // ---------- the morph: Insights panel grows into the full page, and shrinks back into it ----------
@@ -356,4 +367,75 @@ function close(){
 xb.addEventListener('click',open);$('close').addEventListener('click',close);
 document.addEventListener('click',e=>{const wm=$('wmenu');if(!wm.hidden&&!e.target.closest('#wmenu')&&!e.target.closest('.wmore'))wm.hidden=true});
 cbx.addEventListener('scroll',hideTip,{passive:true});
-document.addEventListener('keydown',e=>{if(e.key!=='Escape'||cbx.hidden||aw.open)return;if(!$('wmenu').hidden){$('wmenu').hidden=true;return}if(!$('cb-menu').hidden||!$('cb-pmenu').hidden||!$('cb-amenu').hidden){closeMenus();return}if(editing){setEditing(false);return}close()});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape'||cbx.hidden||aw.open||$('av').open||$('ex').open)return;if(!$('wmenu').hidden){$('wmenu').hidden=true;return}if(!$('cb-menu').hidden||!$('cb-pmenu').hidden||!$('cb-amenu').hidden){closeMenus();return}if(editing){setEditing(false);return}close()});
+
+// ---------- account menu: profile, plan, import/export, settings, sign out ----------
+const NAME='Nick',SWATCH=['#a50e37','#c2410c','#b45309','#15803d','#0f766e','#1d4ed8','#6d28d9','#3f3f46'];
+let avatar=(()=>{try{return JSON.parse(localStorage.getItem('cb.avatar'))||{}}catch(e){return {}}})();
+function paintAvatar(){['cb-av','cb-av2'].forEach(id=>{const el=$(id);if(!el)return;el.style.background=avatar.photo?'url('+avatar.photo+') center/cover':(avatar.color||SWATCH[0]);el.textContent=avatar.photo?'':NAME[0];el.classList.add('set')})}
+function toast(msg){const t=$('cbtoast');t.textContent=msg;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2200)}
+// appearance
+function applyTheme(th){if(th==='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=th;try{localStorage.setItem('cb.theme',th)}catch(e){}
+  $('am-theme').querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',b.dataset.th===th))}
+applyTheme((()=>{try{return localStorage.getItem('cb.theme')||'auto'}catch(e){return 'auto'}})());
+$('am-theme').addEventListener('click',e=>{const b=e.target.closest('button');if(b){applyTheme(b.dataset.th);buzz('tick');if(!cbx.hidden)setTimeout(()=>render(false),30)}});
+// haptics switch; hidden on computers, where there is nothing to feel
+function paintHap(){$('am-hap').setAttribute('aria-checked',hapOn)}paintHap();
+if(!touchDev)$('am-hapr').hidden=true;
+$('am-hap').addEventListener('click',()=>{hapOn=!hapOn;try{localStorage.setItem('cb.haptics',hapOn?'1':'0')}catch(e){}paintHap();buzz('tap')});
+$('cb-amenu').addEventListener('click',e=>{const b=e.target.closest('[data-am]');if(!b)return;closeMenus();const a=b.dataset.am;
+  if(a==='profile')openAvatar();else if(a==='export')openExport();
+  else toast({plan:'Plan and billing opens here in the app',import:'Import opens from the dashboard in the app',plat:'Platforms and fees open here in the app',goal:'Budget and goals open here in the app',help:'Help and feedback open here in the app',out:'Sign out works in the app'}[a])});
+// avatar editor: your initial on a color, or a photo you upload or take, positioned in a circle
+const av=$('av');let ad=null;const AVC=180;
+function openAvatar(){ad={color:avatar.color||SWATCH[0],photo:null,src:avatar.src||null,x:avatar.x||0,y:avatar.y||0,z:avatar.z||1,img:null};
+  $('av-sw').innerHTML=SWATCH.map(c=>'<button type="button" role="radio" data-c="'+c+'" style="--c:'+c+'" aria-label="Color '+c+'" aria-checked="'+(c===ad.color)+'"></button>').join('');
+  $('av-camw').hidden=!touchDev;$('av-l').textContent=NAME[0];
+  if(ad.src)loadImg(ad.src,true);else drawAv();av.showModal()}
+function drawAv(){const c=$('av-c'),img=$('av-img'),has=!!ad.img;c.style.background=has?'#111':ad.color;$('av-l').hidden=has;img.hidden=!has;$('av-zw').hidden=!has;$('av-hint').hidden=!has;$('av-rm').hidden=!has;$('av-colw').hidden=has;
+  $('av-sw').querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',b.dataset.c===ad.color));
+  if(has){const s0=Math.max(AVC/ad.img.naturalWidth,AVC/ad.img.naturalHeight),s=s0*ad.z,w=ad.img.naturalWidth*s,h=ad.img.naturalHeight*s;
+    ad.x=Math.min(0,Math.max(AVC-w,ad.x));ad.y=Math.min(0,Math.max(AVC-h,ad.y));img.style.width=w+'px';img.style.height=h+'px';img.style.transform='translate('+ad.x+'px,'+ad.y+'px)'}}
+function loadImg(src,keep){const im=new Image();im.onload=()=>{ad.img=im;ad.src=src;$('av-img').src=src;if(!keep){const s0=Math.max(AVC/im.naturalWidth,AVC/im.naturalHeight);ad.z=1;ad.x=(AVC-im.naturalWidth*s0)/2;ad.y=(AVC-im.naturalHeight*s0)/2;$('av-zoom').value=1}else $('av-zoom').value=ad.z;drawAv()};im.src=src}
+// big photos are shrunk on the way in, so nothing huge is kept
+function readPhoto(file){if(!file||!/^image\//.test(file.type))return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const m=1024,k=Math.min(1,m/Math.max(im.naturalWidth,im.naturalHeight)),cv=document.createElement('canvas');cv.width=Math.round(im.naturalWidth*k);cv.height=Math.round(im.naturalHeight*k);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);loadImg(cv.toDataURL('image/jpeg',.88),false)};im.src=r.result};r.readAsDataURL(file)}
+['av-up','av-cam'].forEach(id=>$(id).addEventListener('change',e=>{readPhoto(e.target.files[0]);e.target.value=''}));
+$('av-zoom').addEventListener('input',e=>{if(!ad.img)return;const z=+e.target.value,c=AVC/2,s0=Math.max(AVC/ad.img.naturalWidth,AVC/ad.img.naturalHeight),k=z/ad.z;ad.x=c-(c-ad.x)*k;ad.y=c-(c-ad.y)*k;ad.z=z;drawAv()});
+$('av-c').addEventListener('wheel',e=>{if(!ad.img)return;e.preventDefault();const z=Math.min(3,Math.max(1,ad.z-e.deltaY*.002));$('av-zoom').value=z;$('av-zoom').dispatchEvent(new Event('input'))},{passive:false});
+let pan=null;$('av-c').addEventListener('pointerdown',e=>{if(!ad.img)return;e.preventDefault();$('av-c').setPointerCapture(e.pointerId);pan={x:e.clientX,y:e.clientY,ox:ad.x,oy:ad.y}});
+$('av-c').addEventListener('pointermove',e=>{if(!pan)return;ad.x=pan.ox+(e.clientX-pan.x);ad.y=pan.oy+(e.clientY-pan.y);drawAv()});
+['pointerup','pointercancel'].forEach(t=>$('av-c').addEventListener(t,()=>{pan=null}));
+av.addEventListener('click',e=>{if(e.target===av){av.close();return}const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.c){ad.color=b.dataset.c;buzz('tick');drawAv()}
+  else if(b.id==='av-rm'){ad.img=null;ad.src=null;drawAv()}
+  else if(b.id==='av-save'){if(ad.img){const out=256,k=out/AVC,cv=document.createElement('canvas');cv.width=cv.height=out;const s=Math.max(AVC/ad.img.naturalWidth,AVC/ad.img.naturalHeight)*ad.z;
+      cv.getContext('2d').drawImage(ad.img,ad.x*k,ad.y*k,ad.img.naturalWidth*s*k,ad.img.naturalHeight*s*k);let url=cv.toDataURL('image/webp',.9);if(!url.startsWith('data:image/webp'))url=cv.toDataURL('image/jpeg',.9);
+      avatar={color:ad.color,photo:url,src:ad.src,x:ad.x,y:ad.y,z:ad.z}}else avatar={color:ad.color};
+    try{localStorage.setItem('cb.avatar',JSON.stringify(avatar))}catch(e){try{localStorage.setItem('cb.avatar',JSON.stringify({color:avatar.color,photo:avatar.photo}))}catch(e2){}}
+    paintAvatar();buzz('firm');av.close();toast('Picture saved')}
+  else if(b.hasAttribute('data-close'))av.close()});
+paintAvatar();
+// export: entries as CSV or Excel, the board as a PDF or an image
+const ex=$('ex');
+function openExport(){$('ex-s').textContent='';ex.showModal()}
+function download(name,blobOrUrl){const a=document.createElement('a');a.download=name;a.href=typeof blobOrUrl==='string'?blobOrUrl:URL.createObjectURL(blobOrUrl);document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();if(typeof blobOrUrl!=='string')URL.revokeObjectURL(a.href)},1500)}
+function loadScript(src){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=()=>no(new Error('Could not load '+src));document.head.appendChild(s)})}
+const stamp=()=>TODAY;
+function rowsOut(){return E.slice().sort((a,b)=>a.date<b.date?-1:1).map(e=>{const fs=e.type==='sale'?e.amount-e.net:0;return {Date:e.date,Type:e.type[0].toUpperCase()+e.type.slice(1),Card:e.name,Number:e.no,Set:e.set,Platform:e.platform,Qty:e.qty,Amount:(e.amount/100).toFixed(2),'Fees and shipping':(fs/100).toFixed(2),'You kept':e.type==='sale'?(e.net/100).toFixed(2):''}})}
+async function doExport(kind){const st=$('ex-s');st.textContent='Preparing…';
+  try{
+    if(kind==='csv'){const rows=rowsOut(),cols=Object.keys(rows[0]),q=v=>/[",\n]/.test(String(v))?'"'+String(v).replace(/"/g,'""')+'"':String(v);
+      download('card-tab-entries-'+stamp()+'.csv',new Blob([cols.join(',')+'\n'+rows.map(r=>cols.map(c=>q(r[c])).join(',')).join('\n')],{type:'text/csv'}))}
+    else if(kind==='xlsx'){if(!window.XLSX)await loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+      const rows=rowsOut().map(r=>Object.assign({},r,{Amount:+r.Amount,'Fees and shipping':+r['Fees and shipping'],'You kept':r['You kept']===''?'':+r['You kept']})),ws=XLSX.utils.json_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Entries');XLSX.writeFile(wb,'card-tab-entries-'+stamp()+'.xlsx')}
+    else if(kind==='pdf'){ex.close();if(editing)setEditing(false);setTimeout(()=>window.print(),250);st.textContent='';return}
+    else{if(!window.htmlToImage)await loadScript('https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js');
+      if(editing)setEditing(false);hideTip();const node=$('cb').querySelector('.frame'),bg=getComputedStyle($('cb')).backgroundColor;
+      const opt={pixelRatio:2,backgroundColor:bg,style:{padding:'24px'},width:node.offsetWidth+48,height:node.offsetHeight+48,filter:n=>!(n.classList&&(n.classList.contains('tctl')||n.classList.contains('back')||n.classList.contains('acctw')||n.classList.contains('wmore')))};
+      const name='card-board-'+stamp()+'.'+kind;
+      if(kind==='png')download(name,await htmlToImage.toPng(node,opt));
+      else if(kind==='jpg')download(name,await htmlToImage.toJpeg(node,Object.assign({quality:.92},opt)));
+      else{const cv=await htmlToImage.toCanvas(node,opt);download(name,cv.toDataURL('image/webp',.92))}}
+    st.textContent='Done. Check your downloads.';buzz('firm')
+  }catch(err){st.textContent='That didn’t work here. Try again in the app.';console.warn(err)}}
+ex.addEventListener('click',e=>{if(e.target===ex){ex.close();return}const b=e.target.closest('button');if(!b)return;if(b.dataset.ex)doExport(b.dataset.ex);else if(b.hasAttribute('data-close'))ex.close()});
