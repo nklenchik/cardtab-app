@@ -96,3 +96,6 @@
    so long-press to edit works on art-heavy widgets too */
 .cbx #cb .w img,#aw img{pointer-events:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none}
 .cbx #cb .fw,.cbx #cb .xhero,.cbx #cb .pc,.cbx #cb .xs{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+
+/* touch screens: a long press on any widget belongs to the board (edit mode), never to the phone's text selection or callout */
+@media (hover:none),(pointer:coarse){.cbx #cb #simple,.cbx #cb #simple *,.cbdock,.cbdock *,.cbslim,.cbslim *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}}

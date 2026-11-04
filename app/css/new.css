@@ -131,3 +131,6 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #as,.ed{overscroll-behavior:contain;touch-action:pan-y}
 
 #as .sheet:focus{outline:none}
+
+/* preview-only helper chip (?preview) */
+.pv-chip{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:45;height:40px;padding:0 18px;border-radius:999px;border:1px solid var(--s-hair);background:var(--s-card);color:var(--ct-text);font:inherit;font-weight:800;font-size:13px;box-shadow:0 8px 22px -12px rgba(0,0,0,.35);white-space:nowrap;cursor:pointer}

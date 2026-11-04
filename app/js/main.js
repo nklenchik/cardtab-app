@@ -97,6 +97,13 @@
   });
 
   // Sample entries for testing, dated around today so every view has something to show (art from the site demo)
+  // Preview helper (local mode + ?preview only): one tap loads the sample entries as Premium
+  if (Sess.LOCAL_MODE && /[?&]preview\b/.test(location.search)) {
+    const pv = document.createElement('button'); pv.type = 'button'; pv.className = 'pv-chip'; pv.textContent = 'Load sample entries (Premium)';
+    pv.addEventListener('click', async () => { await S.setPlan('premium'); await S._loadSample(sampleEntries()); clearInterval(pvT); pv.remove(); Dash.toast('Sample entries loaded. Tap ⤢ on Insights for Card Board.'); });
+    const show = () => { if (!document.querySelector('.pv-chip') && !$('view-app').hidden) document.body.appendChild(pv); };
+    const pvT = setInterval(show, 800); show();
+  }
   function sampleEntries() {
     const now = new Date(), Y = now.getFullYear(), M = now.getMonth(), D = now.getDate();
     const at = (mBack, day) => { const last = new Date(Y, M - mBack + 1, 0).getDate(); const d = mBack === 0 ? Math.min(day, D) : Math.min(day, last); return S.ymd(new Date(Y, M - mBack, d)); };

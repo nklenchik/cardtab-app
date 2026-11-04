@@ -932,7 +932,9 @@ new MutationObserver(lockScroll).observe($('cb'),{subtree:true,attributes:true,a
   $('simple').addEventListener('pointermove',e=>{if(xy&&Math.hypot(e.clientX-xy[0],e.clientY-xy[1])>10)stop()},{passive:true});
   ['pointerup','pointercancel','scroll'].forEach(ev=>$('simple').addEventListener(ev,stop,{passive:true}));cbx.addEventListener('scroll',stop,{passive:true});
   $('simple').addEventListener('click',e=>{if(fired){fired=false;e.stopPropagation();e.preventDefault()}},true);
-  $('simple').addEventListener('contextmenu',e=>{if(TOUCH.matches&&e.target.closest('.w[data-id]'))e.preventDefault()})})();
+  $('simple').addEventListener('contextmenu',e=>{if(TOUCH.matches&&e.target.closest('.w[data-id]'))e.preventDefault()});
+  // no text selection starts from a widget on touch screens (iOS would take over the press and scroll the board away)
+  $('simple').addEventListener('selectstart',e=>{if(TOUCH.matches)e.preventDefault()})})();
 
 // ---------- motion for menus and sheets: GPU-only (transform and opacity), springy in, quick out ----------
 document.querySelectorAll('dialog.sheet').forEach(d=>{const nat=HTMLDialogElement.prototype.close;
@@ -1016,7 +1018,7 @@ function place(){const ph=PH.matches;
 let lastY=0,tuckT=0;
 function sync(){const open=!cbx.classList.contains('off')&&!cbx.inert,ok=PH.matches&&open&&!document.querySelector('#cb dialog[open]')&&!document.querySelector('#cb .cb-menu:not([hidden])')&&!cbEl.classList.contains('editing')&&!cbEl.classList.contains('viewing')&&!csx.classList.contains('in');
   dock.classList.toggle('on',ok);if(!ok)dock.classList.remove('tuck');
-  if(slim){const t=$('cbtn').getBoundingClientRect();const show=PH.matches&&open&&!csx.classList.contains('in')&&t.bottom<8;slim.classList.toggle('on',show);slim.querySelector('.spill span').textContent=$('cb-perl').textContent;
+  if(slim){const t=$('cbtn').getBoundingClientRect(),top0=cbx.getBoundingClientRect().top;const show=PH.matches&&open&&!csx.classList.contains('in')&&cbx.scrollTop>40&&t.bottom-top0<8;slim.classList.toggle('on',show);slim.querySelector('.spill span').textContent=$('cb-perl').textContent;
     const s=cbEl.classList.contains('editing');slim.classList.toggle('ed',s)}}
 cbx.addEventListener('scroll',()=>{const y=cbx.scrollTop,dy=y-lastY;lastY=y;
   if(dock.classList.contains('on')){if(dy>6&&y>60)dock.classList.add('tuck');else if(dy<-6)dock.classList.remove('tuck');clearTimeout(tuckT);tuckT=setTimeout(()=>dock.classList.remove('tuck'),700)}

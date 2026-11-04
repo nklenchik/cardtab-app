@@ -823,7 +823,9 @@ new MutationObserver(lockScroll).observe($('cb'),{subtree:true,attributes:true,a
   $('simple').addEventListener('pointermove',e=>{if(xy&&Math.hypot(e.clientX-xy[0],e.clientY-xy[1])>10)stop()},{passive:true});
   ['pointerup','pointercancel','scroll'].forEach(ev=>$('simple').addEventListener(ev,stop,{passive:true}));cbx.addEventListener('scroll',stop,{passive:true});
   $('simple').addEventListener('click',e=>{if(fired){fired=false;e.stopPropagation();e.preventDefault()}},true);
-  $('simple').addEventListener('contextmenu',e=>{if(TOUCH.matches&&e.target.closest('.w[data-id]'))e.preventDefault()})})();
+  $('simple').addEventListener('contextmenu',e=>{if(TOUCH.matches&&e.target.closest('.w[data-id]'))e.preventDefault()});
+  // no text selection starts from a widget on touch screens (iOS would take over the press and scroll the board away)
+  $('simple').addEventListener('selectstart',e=>{if(TOUCH.matches)e.preventDefault()})})();
 
 // ---------- motion for menus and sheets: GPU-only (transform and opacity), springy in, quick out ----------
 document.querySelectorAll('dialog.sheet').forEach(d=>{const nat=HTMLDialogElement.prototype.close;

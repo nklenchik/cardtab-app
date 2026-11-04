@@ -433,3 +433,8 @@ Speed (4x slower CPU, 250 entries): opening the board ~115–165ms when prefetch
 Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-app.js; t87 still passes.
 - v26.1: Featured card at Small shows the card name above the number; the label pill is dark glass at every size (the light one vanished on bright art), with a slightly deeper top shade; Small gets a touch more shade overall. The label color now wins over the board's Small-title rule.
 - v26.2: pictures inside widgets ignore presses (pointer-events:none, no callout/drag), so on iPhone a long-press on art-heavy widgets starts editing instead of the phone's image gesture cancelling it and the release opening the card's entries. tools/t91-longpress-art.js.
+
+## v26.3: long-press on phones
+- Widgets, the dock and the slim bar take no text selection or callout on touch screens (CSS + selectstart), so iOS can't take over a long press and scroll the board away.
+- The slim "‹ Card Board" bar shows only when the board itself has scrolled past its title (measured against the board, not the window).
+- Preview helper: `?preview` in local mode shows a "Load sample entries (Premium)" chip.
