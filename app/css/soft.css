@@ -60,3 +60,20 @@ html,body,.ct-demo{background:var(--s-bg)}
 .app-scope button,.am-plan .up,.app-toast button{color:var(--s-brand)!important}
 .app-first-ic,.imp-ic{background:color-mix(in srgb,var(--s-brand) 10%,transparent)!important;color:var(--s-brand)!important}
 .imp-pills button.on{border-color:var(--s-brand)!important;background:color-mix(in srgb,var(--s-brand) 9%,transparent)!important;color:var(--s-brand)!important}
+
+/* ===== Phones: profile alone in the top right (like the board and Stories); search, Export and Add New share one row ===== */
+@media(max-width:760px){
+  .ct-demo .ct-demo-top{display:grid!important;grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"brand brand av" "search export add";align-items:center;gap:12px 8px}
+  .ct-demo .ct-demo-top .ct-top-actions{display:contents}
+  .ct-demo .ct-demo-top .ct-brand{grid-area:brand;min-width:0}
+  .ct-demo .ct-demo-top .app-avatar{grid-area:av;justify-self:end;order:0;margin:0}
+  .ct-demo .ct-demo-top .ct-search{grid-area:search;width:auto!important;min-width:0;margin:0;order:0;flex:none}
+  .ct-demo .ct-demo-top .ct-export{grid-area:export;order:0;margin:0}
+  .ct-demo .ct-demo-top .ct-add{grid-area:add;order:0;margin:0;width:42px;height:42px;min-width:0;padding:0!important;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0;line-height:0}
+  .ct-demo .ct-demo-top .ct-add::before{content:"";width:16px;height:16px;background:linear-gradient(#fff 0 0) center/16px 2.4px no-repeat,linear-gradient(#fff 0 0) center/2.4px 16px no-repeat;border-radius:2px}
+}
+@media(max-width:760px){.ct-demo .ct-demo-top .ct-add::before{display:block}}
+/* search and Export keep the soft look in dark mode too (old dark rules were winning) */
+.ct-demo .ct-search,.ct-demo .ct-search input{background:var(--s-card)!important;color:var(--ct-text)!important}
+.ct-demo .ct-search{border-color:var(--s-hair)!important}
+.ct-demo .ct-export{background:var(--s-card)!important;color:var(--ct-text)!important;border-color:var(--s-hair)!important}

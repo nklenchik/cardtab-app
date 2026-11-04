@@ -396,3 +396,6 @@ Board and Stories:
 - Stories has its own avatar; it opens the board's menu (moved into a top-level holder above the Stories layer) with Save all stories and Story themes in the middle. Account rows chosen from Stories slide back to the board first.
 - The board always covers the page beneath it (its background fills any gap when the phone's view grows or bounces), and the page beneath can't scroll while it's open.
 Tests: tools/t87-app-nav.js, tools/t88-board-nav.js, tools/t84.js (still passes).
+
+### v25.1 — phone header
+- Phones: the profile sits alone in the top right (logo left), matching the board and Stories. Search, Export and a round crimson + (Add New, aria-label kept) share the row under it. Desktop unchanged. Search and Export keep the soft look in dark mode.
