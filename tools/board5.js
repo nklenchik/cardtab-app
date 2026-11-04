@@ -198,22 +198,26 @@ function kpiBody(k,ctx,s,t,w){const T=!(w&&w.trend===false);
   const {inP,mt,unit}=ctx,v=KPI[k](t),pv=ctx.prevP?KPI[k](totals(ctx.prevP)):0,chg=pv?((v-pv)/Math.abs(pv))*100:null,up=chg!=null&&chg>=0,good=chg==null?null:(GOOD[k]==='up'?up:!up);
   const series=mt.map(x=>KPI[k](totals(x.list))),bi=series.reduce((a,x,i)=>x>series[a]?i:a,0);
   const sub=k==='profit'?cnt(t.n,'entry','entries'):k==='sales'?cnt(inP.filter(e=>e.type==='sale').length,'sale','sales'):k==='spent'?cnt(inP.filter(e=>e.type==='purchase').length,'purchase','purchases'):(t.sales?(t.fees/t.sales*100).toFixed(1):'0.0')+'% of sales';
-  const cls=k==='profit'?(v>=0?'g':'r'):'',dl=chg==null?'<span class="sm">'+sub+'</span>':'<span class="dl '+(good?'up':'dn')+'">'+(up?'▲':'▼')+' '+Math.abs(chg).toFixed(0)+'%</span><span class="sm">'+(compare==='year'?'vs last year':'vs previous period')+'</span>';
+  // the change now sits beside the widget's name; under the number only the count shows, and only when there's nothing to compare
+  const cls=k==='profit'?(v>=0?'g':'r'):'',dl=chg==null?'<span class="sm">'+sub+'</span>':'',kdv=dl?kdv:'';
   const spk='<div class="kspk'+(k==='profit'?(v<0?' r':''):' mu')+'">'+spark(series)+'</div>';
   const nm=CATALOG[k].t.toLowerCase(),tipf=i=>{const tt=totals(mt[i].list);return '<b>'+mt[i].l+'</b>'+CATALOG[k].t+' <span class="'+(k==='profit'?(tt.profit>=0?'p':'l'):'')+'">'+kshort(KPI[k](tt))+'</span>'};
   const bars=o=>cv(ctx,Object.assign({data:mt.map((x,i)=>Object.assign({},x,{v:series[i],on:x.list.length>0})),color:KCOL[k],tip:tipf,aria:CATALOG[k].t+' by '+unit,unit:nm},o));
   const avg=money(Math.round(series.reduce((a,x)=>a+x,0)/Math.max(1,series.length)));
   // with the trend hidden, the number gets the room and the count takes the chart's place
-  if(s==='S')return '<div class="kS"><div class="cq">'+bn(money(v),cls,T?34:40)+'</div><div class="kd">'+dl+'</div>'+(T?spk:'<small class="cap kfoot">'+sub+'</small>')+'</div>';
-  if(s==='M'){const hz='<div class="hz"><div class="cq">'+bn(money(v),cls,T?40:48)+'</div><div class="kd">'+dl+'</div><small class="cap">'+sub+'</small></div>';return T?'<div class="split">'+hz+spk+'</div>':hz}
-  if(s==='B'){const hz='<div class="hz"><div class="cq">'+bn(money(v),cls,44)+'</div><div class="kd">'+dl+'</div><small class="cap">'+sub+'</small></div>';return T?'<div class="split wide">'+hz+bars({labels:true,maxW:30,r:6})+'</div>':hz}
+  if(s==='S')return '<div class="kS"><div class="cq">'+bn(money(v),cls,T?34:40)+'</div>'+kdv+''+(T?spk:'<small class="cap kfoot">'+sub+'</small>')+'</div>';
+  if(s==='M'){const hz='<div class="hz"><div class="cq">'+bn(money(v),cls,T?40:48)+'</div>'+kdv+'<small class="cap">'+sub+'</small></div>';return T?'<div class="split">'+hz+spk+'</div>':hz}
+  if(s==='B'){const hz='<div class="hz"><div class="cq">'+bn(money(v),cls,44)+'</div>'+kdv+'<small class="cap">'+sub+'</small></div>';return T?'<div class="split wide">'+hz+bars({labels:true,maxW:30,r:6})+'</div>':hz}
   const facts='<div class="facts"><span><small>Average '+unit+'</small><b class="num">'+avg+'</b></span><span><small>Best '+unit+'</small><b class="num">'+mt[bi].m+'</b></span>'+(s==='X'?'<span><small>'+(k==='fees'?'Share of sales':'Count')+'</small><b class="num">'+(k==='fees'?sub.replace(' of sales',''):sub)+'</b></span>':'')+'</div>';
-  if(s==='L')return '<div class="col'+(T?'':' notrend')+'"><div class="cq">'+bn(money(v),cls,T?48:60)+'</div><div class="kd">'+dl+'</div>'+(T?bars({labels:true,maxW:26,r:6}):'')+facts+'</div>';
-  const hz='<div class="hz"><div class="cq">'+bn(money(v),cls,56)+'</div><div class="kd">'+dl+'</div>'+facts+'</div>';return T?'<div class="split wide">'+hz+bars({labels:true,maxW:40,r:8})+'</div>':hz}
+  if(s==='L')return '<div class="col'+(T?'':' notrend')+'"><div class="cq">'+bn(money(v),cls,T?48:60)+'</div>'+kdv+''+(T?bars({labels:true,maxW:26,r:6}):'')+facts+'</div>';
+  const hz='<div class="hz"><div class="cq">'+bn(money(v),cls,56)+'</div>'+kdv+''+facts+'</div>';return T?'<div class="split wide">'+hz+bars({labels:true,maxW:40,r:8})+'</div>':hz}
 
+function kpiDelta(k,ctx){if(!KPI[k]||!ctx.prevP)return '';const v=KPI[k](totals(ctx.inP)),pv=KPI[k](totals(ctx.prevP));if(!pv)return '';
+  const chg=(v-pv)/Math.abs(pv)*100,up=chg>=0,good=GOOD[k]==='up'?up:!up,vs=compare==='year'?'vs last year':'vs previous period';
+  return '<span class="dl hd '+(good?'up':'dn')+'" title="'+vs+'" aria-label="'+(up?'Up ':'Down ')+Math.abs(chg).toFixed(0)+'% '+vs+'">'+(up?'▲':'▼')+'\u2009'+Math.abs(chg).toFixed(0)+'%</span>'}
 const GRIP='<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M13 5L5 13M13 9.5L9.5 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 function widgetHTML(w,ctx,extra){const s=eff(w.size),t=w.name||(w.k==='month'?'Profit by '+ctx.unit:CATALOG[w.k].t),tt=w.name||(s==='S'?(w.k==='month'?'Best '+ctx.unit:CATALOG[w.k].s):t);
-  return '<section class="w wq sz'+w.size+' e'+s+(s==='B'?' eM':'')+' k-'+w.k+(extra?' '+extra:'')+'" data-id="'+w.id+'" data-k="'+w.k+'" aria-label="'+esc(t)+', '+SIZE_NAMES[s]+'"><div class="wh"><h3 class="ttl" title="'+esc(t)+'">'+esc(tt)+'</h3><button type="button" class="wmore" aria-label="Options for '+t+'" aria-haspopup="true">⋯</button></div><div class="wb">'+hideMoney(body(w.k,ctx,s,w))+'</div>'+
+  return '<section class="w wq sz'+w.size+' e'+s+(s==='B'?' eM':'')+' k-'+w.k+(extra?' '+extra:'')+'" data-id="'+w.id+'" data-k="'+w.k+'" aria-label="'+esc(t)+', '+SIZE_NAMES[s]+'"><div class="wh"><div class="wtl"><h3 class="ttl" title="'+esc(t)+'">'+esc(tt)+'</h3>'+kpiDelta(w.k,ctx)+'</div><button type="button" class="wmore" aria-label="Options for '+t+'" aria-haspopup="true">⋯</button></div><div class="wb">'+hideMoney(body(w.k,ctx,s,w))+'</div>'+
     '<button type="button" class="rm" aria-label="Remove '+t+'"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 2l6 6M8 2L2 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>'+
     '<button type="button" class="grip" aria-label="Resize '+t+'. Now '+SIZE_NAMES[s]+'. Arrow keys change the size." title="Drag to resize">'+GRIP+'</button></section>'}
 
