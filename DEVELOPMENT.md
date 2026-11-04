@@ -144,3 +144,18 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - `flip()` cancels in-progress moves before measuring, so a reshuffle mid-animation starts from where things are on screen.
 - Wiggle in Edit mode: rotate-only keyframes, smaller on bigger widgets, each widget out of step. Off while dragging or resizing, and for reduced motion.
 - Headless tests have no GPU, so composited rotation shows up as slower there than it will on real hardware.
+
+### Card Board v9: time ranges, Banner, toolbar, profile (Nov 4)
+- Time ranges, shortest to longest: Last 7 days, Last 30 days, This year, Last 12 months, Last year, All time, then Custom dates…
+  - "2025" became "Last year".
+  - Custom dates go back to the account start, or the first entry if older entries were imported.
+  - Ranges work in days. Up to 31 days charts by day, up to about 4 months by week, longer by month. Titles and labels follow ("Profit by week", "Best day").
+  - "vs previous period" compares against the same number of days just before.
+- All bars are one color; hover darkens the bar. No special color for the best month (its label stays).
+- Banner size (4×1, desktop/tablet; shows as Wide on phones), with a layout for each metric.
+- "Show trend" switch per number widget in the ⋯ menu. Hiding it gives the number more room.
+- ⋯ menu: size picker with small shape icons that fit in one row, Show trend, Move up / Move down, Remove. Available in Edit mode too.
+- Resize precision: the corner follows the pointer 1:1 from where you grabbed it (no more amplification near the right edge). Widgets touching the right edge put their grip on the bottom-left and grow leftward. Stronger hysteresis (0.3 cell), so small trackpad wobbles don't change the size.
+- Toolbar: Edit (pencil) first, then time range, then platforms. Reset is at the far end (far right on phones, scroll the row) and asks "Reset the board?" with No / Yes, reset. Add widget is a bar at the top of the board in Edit mode.
+- Edit profile: first and last name, "Show my name as" First name / Full name, 8 colors plus a full color picker (native) and a hex field. The letter switches between dark and white for readability.
+- Real app: the dashboard's account menu (app/js/main.js) should be replaced by this same menu when Card Board moves into the app, so it's identical everywhere.

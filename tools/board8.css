@@ -1,0 +1,78 @@
+/* ================= v9: Banner, toolbar, menus, custom dates, profile ================= */
+.cbx #cb .simple>.szB{grid-column:1/-1;grid-row:span 1}
+.cbx #cb .split.banner{grid-template-columns:minmax(0,1fr) 170px;gap:28px}
+.cbx #cb .msum.v{grid-template-columns:1fr;margin:0;padding:0 0 0 22px;border-top:0;border-left:1px solid var(--line);align-content:center;gap:10px}
+.cbx #cb .lr.three{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:24px;align-content:center}
+.cbx #cb .lr.three .r:nth-child(-n+3){border-top-color:transparent}
+.cbx #cb .eB .split.wide{grid-template-columns:minmax(0,1fr) minmax(0,2.2fr)}
+.cbx #cb .eB.k-win .split.wide{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}
+.cbx #cb .eB .alsoup{align-self:center}
+.cbx #cb .kfoot{margin-top:auto}
+.cbx #cb .col.notrend{justify-content:center}
+.cbx #cb .wb>.hz{flex:1}
+/* grip on the bottom-left for widgets on the right edge */
+.cbx #cb.editing .wq.edgeR .grip{right:auto;left:7px;cursor:nesw-resize}
+.cbx #cb.editing .wq.edgeR .grip svg{transform:scaleX(-1)}
+.cbx #cb.rzing.rzl,.cbx #cb.rzing.rzl *{cursor:nesw-resize!important}
+/* ⋯ stays available while editing: it holds sizes, the trend switch and move up/down */
+.cbx #cb.editing .wmore{visibility:visible}
+.cbx #cb #wmenu{min-width:0;width:max-content;max-width:calc(100vw - 24px);padding:6px}
+.cbx #cb .msz2{display:grid;grid-template-columns:repeat(var(--n),58px);gap:4px;padding:2px 4px 6px}
+.cbx #cb #wmenu .msz2 button{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;height:62px;padding:8px 2px 7px;border-radius:12px;border:1px solid transparent;font-size:11px;font-weight:750;color:var(--muted);width:auto;white-space:nowrap}
+.cbx #cb #wmenu .msz2 button::after{content:none!important}
+.cbx #cb #wmenu .msz2 button:hover{background:var(--cb-hl);color:var(--text)}
+.cbx #cb #wmenu .msz2 button[aria-pressed="true"]{border-color:var(--text);color:var(--text);background:var(--card)}
+.cbx #cb .sg{display:block;border-radius:3px;background:currentColor;opacity:.85}
+.cbx #cb .sgS{width:12px;height:12px}.cbx #cb .sgM{width:26px;height:12px}.cbx #cb .sgB{width:40px;height:9px}.cbx #cb .sgL{width:26px;height:26px}.cbx #cb .sgX{width:40px;height:22px}
+.cbx #cb .mrow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 10px;font-weight:650;font-size:14px}
+.cbx #cb #wmenu .swt{width:42px;height:26px;padding:2px;border-radius:999px;background:var(--line);flex:none;display:block;border:0;transition:background .2s}
+.cbx #cb #wmenu .swt i{display:block;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s cubic-bezier(.2,.7,.2,1)}
+.cbx #cb #wmenu .swt[aria-checked="true"]{background:var(--cb-pos)}.cbx #cb #wmenu .swt[aria-checked="true"] i{transform:translateX(16px)}
+.cbx #cb #wmenu .swt::after{content:none!important}
+.cbx #cb .msep{height:1px;background:var(--line);margin:4px 2px}
+.cbx #cb #wmenu>button{border-radius:10px;padding:9px 10px}
+/* toolbar: Edit first, then time range and platforms; Reset at the far end */
+.cbx .tbtn.edit{display:inline-flex;align-items:center;gap:7px;padding:9px 14px 9px 12px}
+.cbx #cb .tctl .rst{display:inline-flex;align-items:center;gap:6px;margin-left:6px;color:var(--muted)}
+.cbx #cb .tctl .rst[hidden]{display:none}
+@media(max-width:760px){.cbx #cb .tctl .rst{margin-left:auto;padding-left:12px}}
+/* Add widget: at the top of the board while editing */
+.cbx #cb .addbar{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:52px;margin:0 0 14px;border:2px dashed color-mix(in srgb,var(--muted) 45%,transparent);border-radius:16px;background:transparent;color:var(--text);font-weight:800;font-size:14.5px;transition:border-color .2s,background .2s;animation:abin .25s ease}
+.cbx #cb .addbar span{font-size:20px;line-height:1;color:var(--brand)}
+.cbx #cb .addbar:hover{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 5%,transparent)}
+.cbx #cb .addbar[hidden]{display:none}
+@keyframes abin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media(max-width:600px){.cbx #cb .addbar{margin-bottom:12px}}
+/* hover on a bar darkens it a touch; every bar is the same color until then */
+.cbx #cb svg path.bar.hv{filter:brightness(.86)}
+/* reset confirmation */
+dialog.sheet .rsp{width:min(360px,calc(100vw - 32px));gap:10px;text-align:center}
+#cb dialog.sheet .rsp h2{font-size:19px}
+dialog.sheet .rsp p{margin:0 0 6px;color:var(--muted);font-size:14px;font-weight:600;line-height:1.4}
+dialog.sheet .rsb{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+dialog.sheet .rsb .tbtn{padding:13px;border-radius:14px;font-size:15px}
+dialog.sheet .rsb .go.danger{background:var(--err,#a32d2d)}
+/* custom dates */
+dialog.sheet .crf{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+dialog.sheet .crf label,dialog.sheet .nmf label{display:grid;gap:6px;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+dialog.sheet .crf input,dialog.sheet .nmf input,dialog.sheet .hexf input{font:inherit;font-size:15px;font-weight:650;text-transform:none;letter-spacing:0;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 12px;min-width:0;width:100%}
+dialog.sheet input:focus-visible{outline:2px solid var(--brand);outline-offset:1px;border-color:transparent}
+dialog.sheet .crn{margin:0;min-height:18px;font-size:13px;font-weight:650;color:var(--muted)}
+dialog.sheet .go:disabled{opacity:.45;cursor:not-allowed}
+/* profile: names, show-as, colors with a full picker and hex */
+dialog.sheet .nmf{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+dialog.sheet .shw{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:14px;font-weight:700}
+dialog.sheet .seg{display:flex;background:var(--cb-hl,#efede5);border-radius:999px;padding:2px;gap:2px}
+dialog.sheet .seg button{border:0;background:none;padding:6px 11px;font-size:12.5px;font-weight:750;border-radius:999px;color:var(--muted);white-space:nowrap}
+dialog.sheet .seg button[aria-checked="true"]{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.avsw .cust{position:relative;width:34px;height:34px;border-radius:50%;background:conic-gradient(#f43f5e,#f59e0b,#eab308,#22c55e,#06b6d4,#3b82f6,#8b5cf6,#ec4899,#f43f5e);cursor:pointer;flex:none;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
+.avsw .cust input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:0;padding:0}
+.avsw .cust.on{box-shadow:0 0 0 2px var(--cb-alt),0 0 0 4px var(--c)}
+.avsw .cust.on::after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--c);pointer-events:none}
+.hexf{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.hexf input{width:110px!important;font-family:ui-monospace,SFMono-Regular,Menlo,monospace!important;font-size:14px!important;padding:8px 10px!important}
+.avc{color:#fff}
+@media(max-width:400px){dialog.sheet .nmf,dialog.sheet .crf{grid-template-columns:1fr}}
+.cbx #cb .msum.v>span:nth-child(2){display:none}
+.cbx #cb .eB .hz .facts{margin-top:8px}
+.cbx #cb .eB .bh b{font-size:34px}
