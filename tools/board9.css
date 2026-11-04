@@ -1,0 +1,126 @@
+/* ================= v10: add gallery, range calendar, share, ask ================= */
+/* top bar: Ask and Share sit beside your picture */
+.cbx .iconb{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 14px 0 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--text);font-weight:750;font-size:13.5px;white-space:nowrap;flex:none;cursor:pointer;transition:border-color .2s}
+.cbx .iconb:hover{border-color:var(--muted)}
+.cbx #cb-ask svg{color:var(--brand)}
+@media(max-width:1100px){.cbx .iconb span{display:none}.cbx .iconb{width:40px;padding:0;justify-content:center}}
+@media(max-width:760px){.cbx #cb-ask,.cbx #cb-share{order:2}.cbx #cb .acctw{order:2}}
+/* while showing what viewers see: no editing, no Ask */
+.cbx #cb.viewing .tbtn.edit,.cbx #cb.viewing #cb-ask,.cbx #cb.viewing .ehint{display:none}
+.cbx #cb .vbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px;padding:10px 10px 10px 16px;border-radius:16px;background:var(--chip);color:var(--chip-ink);font-weight:750;font-size:14px}
+.cbx #cb .vbar[hidden]{display:none}
+.cbx #cb .vbar span{display:flex;align-items:center;gap:8px}
+/* add gallery */
+#aw.awg{border:0;padding:0;background:transparent;max-width:none;max-height:none;width:100%;height:100%;margin:0}
+#aw.awg .awp{width:min(660px,calc(100vw - 32px));max-height:calc(100dvh - 40px);gap:14px;position:relative}
+#aw .aws{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:0 13px;color:var(--muted)}
+#aw .aws input{flex:1;min-width:0;border:0;outline:none;background:none;font:inherit;font-size:15px;font-weight:650;color:var(--text);padding:12px 0}
+#aw .aws:focus-within{border-color:var(--brand)}
+#aw .awseg{align-self:stretch}#aw .awseg button{flex:1}
+#aw .thumbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 12px;padding:8px 6px 4px}
+@media(max-width:600px){#aw .thumbs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+#aw .thumb{position:relative;border:0;background:none;padding:0;text-align:left;cursor:pointer;display:block;border-radius:20px}
+#aw .tbox{display:block;position:relative;overflow:hidden;border-radius:20px;transition:transform .22s cubic-bezier(.2,.7,.2,1),box-shadow .22s}
+#aw .tin{position:absolute;left:0;top:0;transform-origin:0 0}
+#aw .tin .w{pointer-events:none;outline:none!important;animation:none!important}
+#aw .tin .wmore,#aw .tin .rm,#aw .tin .grip{display:none!important}
+#aw .thumb:hover .tbox{transform:translateY(-2px);box-shadow:0 10px 22px rgba(0,0,0,.09)}
+#aw .thumb.added .tbox{box-shadow:0 0 0 2px var(--cb-pos)}
+#aw .badge{position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;box-shadow:0 3px 8px rgba(0,0,0,.2),0 0 0 3px var(--cb-alt);z-index:2;transition:background .2s}
+#aw .thumb.added .badge{background:var(--cb-pos)}
+#aw .awhint{margin:0;font-size:12.5px;font-weight:650;color:var(--muted);text-align:center}
+#aw .awnone{grid-column:1/-1;margin:20px 0;text-align:center;color:var(--muted);font-weight:650}
+#aw .awt{position:absolute;left:50%;bottom:84px;transform:translate(-50%,8px);background:var(--text);color:var(--bg);border-radius:999px;padding:9px 15px;font-size:13px;font-weight:750;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s,transform .25s cubic-bezier(.2,.7,.2,1);z-index:3}
+#aw .awt.on{opacity:1;transform:translate(-50%,0)}
+/* range calendar */
+dialog.sheet .crp{width:min(420px,calc(100vw - 32px));gap:16px}
+.crsum{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;color:var(--muted)}
+.crb{display:grid;gap:3px;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:10px 13px;cursor:pointer;color:var(--text);transition:border-color .15s,box-shadow .15s}
+.crb small{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.crb b{font-size:15px;font-weight:800;white-space:nowrap}
+.crb.on{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
+.cal{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px 12px 12px}
+.calh{display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px}
+.calh b{font-size:16px;font-weight:800;letter-spacing:-.01em}
+.calh button{width:36px;height:36px;border-radius:50%;border:0;background:var(--cb-hl,#efede5);color:var(--text);font-size:20px;font-weight:700;line-height:1;cursor:pointer}
+.calh button:disabled{opacity:.3;cursor:default}
+.calw,.cald{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.calw span{text-align:center;font-size:11.5px;font-weight:800;color:var(--muted);padding:4px 0 8px}
+.cald{row-gap:4px}
+.cald .cd{position:relative;height:42px;border:0;background:none;padding:0;cursor:pointer;color:var(--text);font:inherit;font-weight:700;font-size:14.5px;font-variant-numeric:tabular-nums}
+.cald .cd span{position:relative;z-index:1;display:grid;place-items:center;width:38px;height:38px;margin:0 auto;border-radius:50%;transition:background .15s,color .15s}
+.cald .cd:hover:not(:disabled) span{background:var(--cb-hl,#efede5)}
+.cald .cd:disabled{color:var(--muted);opacity:.35;cursor:default}
+.cald .cd.today span{box-shadow:inset 0 0 0 1.5px var(--muted)}
+.cald .cd.in::before,.cald .cd.rs::before,.cald .cd.re::before{content:"";position:absolute;top:2px;bottom:2px;background:color-mix(in srgb,var(--brand) 14%,transparent)}
+.cald .cd.in::before{left:0;right:0}.cald .cd.rs::before{left:50%;right:0}.cald .cd.re::before{left:0;right:50%}
+.cald .cd.sel span,.cald .cd.sel:hover span{background:var(--brand);color:#fff;box-shadow:none}
+.crcmp{display:grid;gap:8px;font-size:14px;font-weight:750}
+.crcmp .seg button{flex:1}
+@media(max-width:400px){.crsum{grid-template-columns:1fr 1fr}.crsum svg{display:none}.cald .cd span{width:34px;height:34px}}
+/* compare row in the period menu */
+.cbx #cb .mcmp{border-top:1px solid var(--line);margin-top:4px;padding:10px 10px 6px;display:grid;gap:8px;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.cbx #cb .mcmp .seg{display:flex;background:var(--cb-hl);border-radius:999px;padding:2px;gap:2px;text-transform:none;letter-spacing:0}
+.cbx #cb .cb-menu .mcmp .seg button{flex:1;width:auto;justify-content:center;padding:6px 8px;font-size:12px;font-weight:750;border-radius:999px;color:var(--muted)}
+.cbx #cb .cb-menu .mcmp .seg button[aria-checked="true"]{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.cbx #cb .cb-menu .mcmp .seg button::after{content:none!important}
+/* share */
+dialog.sheet .shp{width:min(480px,calc(100vw - 32px));gap:12px}
+.shcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;display:grid;gap:12px}
+.shrow{display:flex;align-items:center;gap:12px}
+.shtx{flex:1;min-width:0;display:grid;gap:2px}.shtx b{font-size:14.5px;font-weight:800}.shtx small{font-size:12.5px;color:var(--muted);font-weight:600}
+.shic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--cb-hl,#efede5);color:var(--muted);flex:none;transition:background .2s,color .2s}
+.shic.on{background:var(--brand-soft,#fbe3ea);color:var(--brand)}
+dialog.sheet .swt{width:46px;height:28px;padding:2px;border-radius:999px;background:var(--line);flex:none;border:0;cursor:pointer;transition:background .2s}
+dialog.sheet .swt i{display:block;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s cubic-bezier(.2,.7,.2,1)}
+dialog.sheet .swt[aria-checked="true"]{background:var(--cb-pos)}dialog.sheet .swt[aria-checked="true"] i{transform:translateX(18px)}
+.shlink,.shmail{display:flex;gap:8px}
+.shlink input,.shmail input{flex:1;min-width:0;font:inherit;font-size:14px;font-weight:650;color:var(--text);background:var(--cb-alt);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.shlink.off{opacity:.4;pointer-events:none}
+.shcard .tlink{justify-self:start;padding:0}
+.shmsg{margin:-4px 0 0;font-size:12.5px;font-weight:650;color:var(--muted);min-height:0}.shmsg:empty{display:none}
+.echips{display:flex;flex-wrap:wrap;gap:6px}.echips:empty{display:none}
+.echip{display:inline-flex;align-items:center;gap:6px;background:var(--cb-hl,#efede5);border-radius:999px;padding:5px 6px 5px 11px;font-size:13px;font-weight:700}
+.echip button{border:0;background:none;color:var(--muted);font-size:11px;width:20px;height:20px;border-radius:50%;cursor:pointer}
+.shcard .seg{flex:none}
+@media(max-width:460px){.shrow:has(.seg){flex-wrap:wrap}.shrow .seg{width:100%}.shrow .seg button{flex:1}}
+dialog.sheet .go.ghost{background:var(--card);color:var(--text);border:1px solid var(--line)}
+.shnote{margin:0;text-align:center;font-size:12px;color:var(--muted);font-weight:600}
+/* ask: a side panel on computers, a tall sheet on phones */
+dialog.drawer[open]{justify-content:flex-end;align-items:stretch}
+dialog.drawer .askp{width:min(420px,100vw);max-height:none;height:100%;border-radius:24px 0 0 24px;animation:drin .3s var(--ease);padding:20px;gap:12px}
+@keyframes drin{from{transform:translateX(100%)}to{transform:none}}
+@media(max-width:760px){dialog.drawer[open]{align-items:flex-end}dialog.drawer .askp{width:100%;height:calc(100dvh - 40px);border-radius:22px 22px 0 0;animation:awup .3s var(--ease)}}
+.askscope{display:block;font-size:12.5px;color:var(--muted);font-weight:650;margin-top:2px}
+.askh{display:flex;align-items:center;gap:6px}
+.asklog{flex:1;overflow:auto;display:flex;flex-direction:column;gap:10px;min-height:0;padding:4px 2px}
+.bub{max-width:88%;border-radius:18px;padding:10px 14px;font-size:14.5px;line-height:1.45;font-weight:550}
+.bub.me{align-self:flex-end;background:var(--text);color:var(--bg);border-bottom-right-radius:6px;font-weight:650}
+.bub.ai{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-bottom-left-radius:6px}
+.bub p{margin:0 0 6px}.bub p:last-child{margin:0}.bub ul{margin:4px 0;padding-left:18px}.bub b{font-weight:800}
+.bub .think{color:var(--muted);animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.45}}
+.bub .err{color:var(--muted);font-size:13px}
+.askstarts{display:grid;gap:8px}.askstarts[hidden]{display:none}
+.askstarts button{text-align:left;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:14px;padding:11px 14px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:border-color .15s}
+.askstarts button:hover{border-color:var(--brand)}
+.askoff{margin:0;padding:14px;border-radius:14px;background:var(--card);border:1px solid var(--line);color:var(--muted);font-weight:650;font-size:14px}.askoff[hidden]{display:none}
+.askform{display:flex;gap:8px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 5px 5px 16px}
+.askform[hidden]{display:none}
+.askform:focus-within{border-color:var(--brand)}
+.askform input{flex:1;min-width:0;border:0;outline:none;background:none;font:inherit;font-size:15px;font-weight:600;color:var(--text)}
+.askgo{width:38px;height:38px;border-radius:50%;border:0;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none;cursor:pointer}
+.askgo[hidden]{display:none}
+.askgo.stop i{width:12px;height:12px;border-radius:3px;background:#fff}
+.askfine{margin:0;font-size:11.5px;color:var(--muted);font-weight:600;text-align:center}
+@media(prefers-reduced-motion:reduce){dialog.drawer .askp{animation:none}.bub .think{animation:none}}
+#aw .thumb:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
+/* keep the top bar on one line: the hint only shows on wide screens, Ask and Share go icon-only sooner */
+.cbx #cb.editing .ehint{display:none}
+@media(min-width:1440px){.cbx #cb.editing .ehint{display:inline}}
+@media(max-width:1340px){.cbx .iconb span{display:none}.cbx .iconb{width:40px;padding:0;justify-content:center}}
+.cbx #cb .topbar{flex-wrap:nowrap}
+@media(max-width:760px){.cbx #cb .topbar{flex-wrap:wrap}}
+/* share cards never grow wider than the sheet */
+.shcard{grid-template-columns:minmax(0,1fr);min-width:0}
+.shp>*{min-width:0}

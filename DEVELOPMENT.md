@@ -159,3 +159,23 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - Toolbar: Edit (pencil) first, then time range, then platforms. Reset is at the far end (far right on phones, scroll the row) and asks "Reset the board?" with No / Yes, reset. Add widget is a bar at the top of the board in Edit mode.
 - Edit profile: first and last name, "Show my name as" First name / Full name, 8 colors plus a full color picker (native) and a hex field. The letter switches between dark and white for readability.
 - Real app: the dashboard's account menu (app/js/main.js) should be replaced by this same menu when Card Board moves into the app, so it's identical everywhere.
+
+### Card Board v10: add gallery, range calendar, compare, Share, Ask (Nov 4)
+- Add widgets (Nick picked option 3 of 6 from `tools/add-widget-options.html`, plus search):
+  - search box, All / Numbers / Charts / Lists, and a gallery of real small widgets
+  - tap adds the widget to the top of the board at its usual size; tap again removes it; the badge changes from + to a rounded ✓
+  - thumbs are `div role=button`, because widgets contain buttons and buttons can't be nested
+- Custom dates:
+  - a range calendar: From and To fields, month grid with 42px days, rounded selection, the range in a soft cranberry band, limited to the account start through today
+  - Compare to: Previous period, Last year or Off. It applies to every range and is also in the time-range menu. KPI deltas read "vs previous period" or "vs last year".
+- Share (preview; needs the Worker to be real):
+  - link on/off with copy and "make a new link"
+  - email invites (chips)
+  - privacy switches: dollar amounts (off shows $•••), card names, details on hover and tap
+  - Live or Today's snapshot; link stops working Never / 7 days / 30 days
+  - "See what they'll see" shows the board with those choices applied and a banner to return
+  - Real app: an unguessable ID per board, served read-only by the Worker, with masking done on the server (never send hidden values to viewers)
+- Ask: a side panel on desktop, a tall sheet on phones; starter questions plus free text; streams answers
+  - In the preview it uses Claude through the artifact `sample` capability, sending a compact text summary of the board: totals, comparison, per bucket, per platform, the last 40 entries
+  - Real app: an Anthropic API call from the Worker with the same data shape. Premium-only with a monthly cap, because each question costs money.
+- Google Drive import (Nick, when ready): use Google Picker with the drive.file scope (access only to the file the user picks). Avoid drive.readonly (a restricted scope with a yearly security assessment). Export the Sheet as .xlsx through the Drive API, then run it through CTImport. Ask for the permission only when they tap "Import from Google Drive".

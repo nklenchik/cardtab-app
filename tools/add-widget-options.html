@@ -1,0 +1,310 @@
+<title>Add Widget Options</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap">
+<style>
+/* Layout: six phone-width sheets in a grid, each a working mock of the Add widget panel in Card Tab's own style */
+:root{--bg:#ecebe5;--sheet:#f6f5f0;--card:#ffffff;--text:#1d1d1b;--muted:#6f6e68;--line:#e2e0d8;--brand:#a50e37;--brand-soft:#fbe3ea;--pos:#3b6d11;--bar:#7dbb57;--neg:#e0536f;--hl:#efede5;--blue:#1765a5;--gry:#cfcdc2;
+  --f:Manrope,-apple-system,"Segoe UI",sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121211;--sheet:#1b1b1a;--card:#262624;--text:#f1efe8;--muted:#a4a4a0;--line:#383836;--brand:#c7234f;--brand-soft:#3d1220;--pos:#6cb83a;--bar:#6cb83a;--neg:#ef6b86;--hl:#31312e;--blue:#7ab4e6;--gry:#5d5c56;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121211;--sheet:#1b1b1a;--card:#262624;--text:#f1efe8;--muted:#a4a4a0;--line:#383836;--brand:#c7234f;--brand-soft:#3d1220;--pos:#6cb83a;--bar:#6cb83a;--neg:#ef6b86;--hl:#31312e;--blue:#7ab4e6;--gry:#5d5c56;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--text);font-family:var(--f);font-size:14px;line-height:1.4;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding-block:32px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{max-width:640px;margin-bottom:28px}
+h1{font-size:28px;font-weight:800;letter-spacing:-.03em;margin:0 0 8px;text-wrap:balance}
+header p{margin:0;color:var(--muted);font-weight:600;font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:28px 24px}
+.opt{display:flex;flex-direction:column;gap:12px;min-width:0}
+.opt h2{margin:0;font-size:17px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
+.opt h2 b{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--text);color:var(--sheet);font-size:13px;flex:none}
+.opt>p{margin:0;color:var(--muted);font-weight:600;font-size:13.5px}
+.rec{font-size:11px;font-weight:800;background:var(--brand);color:#fff;border-radius:999px;padding:3px 9px;letter-spacing:0}
+.verdict{display:grid;gap:4px;font-size:13px;font-weight:600;color:var(--muted)}
+.verdict span::before{content:"+ ";color:var(--pos);font-weight:800}.verdict span.c::before{content:"– ";color:var(--neg)}
+/* the sheet */
+.sheet{background:var(--sheet);border:1px solid var(--line);border-radius:26px;height:600px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.08);position:relative}
+.sh{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 10px}
+.sh h3{margin:0;font-size:19px;font-weight:800;letter-spacing:-.02em}
+.x{width:32px;height:32px;border-radius:50%;border:0;background:var(--card);color:var(--muted);font:700 14px var(--f);cursor:pointer}
+.back{border:0;background:none;color:var(--muted);font:750 14px var(--f);cursor:pointer;padding:6px 0;display:flex;align-items:center;gap:4px}
+.body{flex:1;overflow:auto;padding:4px 18px 18px;display:flex;flex-direction:column;gap:14px;min-height:0}
+.foot{padding:12px 18px 18px;border-top:1px solid var(--line);background:var(--sheet)}
+.go{width:100%;border:0;border-radius:14px;background:var(--brand);color:#fff;font:800 15px var(--f);padding:14px;cursor:pointer}
+.lab{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0}
+button{font-family:var(--f)}
+button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+/* mini widgets: the real look, small */
+.w{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 13px;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.w .t{font-size:11.5px;font-weight:800;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.w .n{font-weight:800;letter-spacing:-.035em;font-size:20px;line-height:1.05;margin-top:6px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.w .n.g{color:var(--pos)}
+.w .d{font-size:10.5px;font-weight:800;color:var(--pos);margin-top:3px}
+.w svg{display:block;width:100%;margin-top:auto}
+.w .cap{font-size:10.5px;font-weight:700;color:var(--muted);margin-top:3px}
+/* shape icons for sizes */
+.sizes{display:flex;gap:6px}
+.sizes button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;height:62px;border:1px solid var(--line);background:var(--card);border-radius:12px;color:var(--muted);font:750 11px var(--f);cursor:pointer;padding:8px 2px 7px}
+.sizes button[aria-pressed="true"]{border-color:var(--text);color:var(--text);box-shadow:inset 0 0 0 1px var(--text)}
+.sg{display:block;border-radius:3px;background:currentColor;opacity:.85}
+.sgS{width:12px;height:12px}.sgM{width:26px;height:12px}.sgL{width:26px;height:26px}
+/* 1: list then sizes */
+.rows{display:grid;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.rows button{display:flex;align-items:center;gap:12px;border:0;border-top:1px solid var(--line);background:none;padding:12px 14px;text-align:left;color:var(--text);font:750 14.5px var(--f);cursor:pointer}
+.rows button:first-child{border-top:0}
+.rows button:hover{background:var(--hl)}
+.rows .ic{width:30px;height:30px;border-radius:9px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;flex:none}
+.rows .chev{margin-left:auto;color:var(--muted)}
+.stage{flex:1;display:grid;place-items:center;min-height:0}
+.dots{display:flex;justify-content:center;gap:6px}.dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}.dots i.on{background:var(--text)}
+.carousel{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 0 10px;scrollbar-width:none}
+.carousel::-webkit-scrollbar{display:none}
+.slide{flex:0 0 100%;scroll-snap-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}
+.slide .lbl{font-weight:800;font-size:14px}.slide .sub{font-size:12px;color:var(--muted);font-weight:650;margin-top:-8px}
+/* 2: preview first + chips */
+.pv{background:var(--hl);border-radius:18px;padding:18px;display:grid;place-items:center;min-height:200px}
+.chips{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;margin:0 -18px;padding:2px 18px}
+.chips::-webkit-scrollbar{display:none}
+.chips button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:8px 13px;font:750 13px var(--f);white-space:nowrap;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--text);color:var(--sheet);border-color:var(--text)}
+/* 3: tap a thumbnail to add */
+.seg{display:flex;background:var(--hl);border-radius:999px;padding:3px;gap:2px}
+.seg button{flex:1;border:0;background:none;border-radius:999px;padding:7px 8px;font:750 12.5px var(--f);color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.thumbs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.thumb{position:relative;border:0;background:none;padding:0;text-align:left;cursor:pointer;display:grid}
+.thumb .w{height:118px;transition:transform .2s cubic-bezier(.2,.7,.2,1),box-shadow .2s}
+.thumb:hover .w{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.08)}
+.thumb .plus{position:absolute;top:-7px;right:-7px;width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font:800 16px/1 var(--f);box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.thumb.added .plus{background:var(--pos)}
+.toastm{position:absolute;left:50%;bottom:18px;transform:translate(-50%,10px);background:var(--text);color:var(--sheet);border-radius:999px;padding:9px 14px;font:750 12.5px var(--f);opacity:0;transition:opacity .2s,transform .25s;pointer-events:none;white-space:nowrap}
+.toastm.on{opacity:1;transform:translate(-50%,0)}
+.hint{font-size:12.5px;font-weight:650;color:var(--muted);margin:0}
+/* 4: tray over the board */
+.board{flex:1;padding:14px 14px 0;display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:84px;gap:8px;opacity:.55}
+.board .w{height:auto;padding:9px 11px}.board .w .n{font-size:17px;margin-top:3px}
+.board .slotm{grid-column:1/-1;border:2px dashed var(--brand);border-radius:16px;background:color-mix(in srgb,var(--brand) 6%,transparent);opacity:1;display:grid;place-items:center;font:750 12px var(--f);color:var(--brand)}
+.tray{background:var(--card);border-top:1px solid var(--line);border-radius:22px 22px 0 0;padding:10px 14px 16px;box-shadow:0 -10px 30px rgba(0,0,0,.08)}
+.grab{width:38px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 10px}
+.trayrow{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.trayrow::-webkit-scrollbar{display:none}
+.trayrow .w{flex:0 0 116px;height:96px;cursor:grab;background:var(--sheet)}
+/* 5: search + expanding rows */
+.search{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 13px;color:var(--muted)}
+.search input{border:0;background:none;outline:none;font:650 15px var(--f);color:var(--text);flex:1;min-width:0}
+.acc{display:grid;gap:6px}
+.acc .it{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.acc .hd{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:12px 14px;font:750 14.5px var(--f);color:var(--text);text-align:left;cursor:pointer}
+.acc .hd small{display:block;font-size:12px;color:var(--muted);font-weight:600}
+.acc .pl{margin-left:auto;color:var(--muted);transition:transform .2s}
+.acc .it.open .pl{transform:rotate(45deg)}
+.acc .bd{display:none;padding:0 14px 14px;gap:10px;flex-direction:column}
+.acc .it.open .bd{display:flex}
+.acc .bd .w{height:110px}
+.mini-go{border:0;border-radius:12px;background:var(--brand);color:#fff;font:800 13.5px var(--f);padding:11px;cursor:pointer}
+/* 6: names left, preview right */
+.two{display:grid;grid-template-columns:118px 1fr;flex:1;min-height:0}
+.names{border-right:1px solid var(--line);overflow:auto;padding:4px 8px 10px 14px;display:grid;align-content:start;gap:2px}
+.names button{border:0;background:none;text-align:left;padding:9px 10px;border-radius:10px;font:750 13px var(--f);color:var(--muted);cursor:pointer;line-height:1.2}
+.names button[aria-pressed="true"]{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.side{padding:6px 14px 14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.side .pv{min-height:170px;padding:14px}
+.desc{font-size:12.5px;color:var(--muted);font-weight:600;margin:0}
+.sizes.v{flex-direction:row}
+@media(max-width:400px){.grid{grid-template-columns:1fr}.sheet{height:580px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>Six ways to add a widget</h1>
+  <p>Each one is a working mock with your real numbers. Tap around, then tell me which feels right. They're shown at phone width; on a computer the same sheet sits in the middle of the screen.</p>
+</header>
+<div class="grid">
+
+<!-- 1 -->
+<section class="opt" id="o1">
+  <h2><b>1</b>Pick, then swipe sizes</h2>
+  <p>Like adding a widget on iPhone. A short list of names first. Tap one and swipe through its sizes, each shown for real.</p>
+  <div class="sheet">
+    <div class="sh"><h3 data-s1t>Add a widget</h3><button class="x" aria-label="Close">✕</button></div>
+    <div class="body" data-s1a>
+      <div class="rows" data-list1></div>
+    </div>
+    <div class="body" data-s1b hidden>
+      <button class="back" data-back1>‹ All widgets</button>
+      <div class="stage"><div class="carousel" data-car1></div></div>
+      <div class="dots" data-dots1></div>
+    </div>
+    <div class="foot" data-f1 hidden><button class="go" data-go1>Add widget</button></div>
+  </div>
+  <div class="verdict"><span>Very familiar to iPhone users</span><span>One decision per screen</span><span class="c">Two steps instead of one</span></div>
+</section>
+
+<!-- 2 -->
+<section class="opt" id="o2">
+  <h2><b>2</b>Preview first</h2>
+  <p>One screen. The widget is the biggest thing; names scroll sideways underneath, sizes are three shapes.</p>
+  <div class="sheet">
+    <div class="sh"><h3>Add a widget</h3><button class="x" aria-label="Close">✕</button></div>
+    <div class="body">
+      <div class="pv" data-pv2></div>
+      <div class="chips" data-chips2></div>
+      <p class="lab">Size</p>
+      <div class="sizes" data-sz2></div>
+    </div>
+    <div class="foot"><button class="go" data-go2>Add Profit</button></div>
+  </div>
+  <div class="verdict"><span>You see exactly what you'll get</span><span>Fits on one screen</span><span class="c">Names hidden off to the side</span></div>
+</section>
+
+<!-- 3 -->
+<section class="opt" id="o3">
+  <h2><b>3</b>Tap to add <span class="rec">My pick</span></h2>
+  <p>A gallery of small widgets. One tap adds it to the top of your board at its usual size. Resize it on the board like any other.</p>
+  <div class="sheet">
+    <div class="sh"><h3>Add a widget</h3><button class="x" aria-label="Close">✕</button></div>
+    <div class="body">
+      <div class="seg" data-seg3><button aria-pressed="true" data-c="all">All</button><button aria-pressed="false" data-c="num">Numbers</button><button aria-pressed="false" data-c="chart">Charts</button><button aria-pressed="false" data-c="list">Lists</button></div>
+      <div class="thumbs" data-th3></div>
+      <p class="hint">Resize anything from its corner once it's on your board.</p>
+    </div>
+    <div class="toastm" data-t3></div>
+  </div>
+  <div class="verdict"><span>No size decision at all</span><span>Fastest: one tap</span><span>Add several in a row</span><span class="c">You resize after adding</span></div>
+</section>
+
+<!-- 4 -->
+<section class="opt" id="o4">
+  <h2><b>4</b>Tray over your board</h2>
+  <p>Your board stays visible. A tray slides up from the bottom; drag a widget to where you want it, or tap to drop it in the slot.</p>
+  <div class="sheet">
+    <div class="board" data-bd4></div>
+    <div class="tray">
+      <div class="grab"></div>
+      <p class="lab" style="margin-bottom:8px">Drag onto your board</p>
+      <div class="trayrow" data-tr4></div>
+    </div>
+  </div>
+  <div class="verdict"><span>You place it exactly</span><span>Never leaves the board</span><span class="c">Dragging is harder on small phones</span></div>
+</section>
+
+<!-- 5 -->
+<section class="opt" id="o5">
+  <h2><b>5</b>Search and open</h2>
+  <p>A search box and a plain list. Tap a row and it opens in place, like your FAQs, with a preview, sizes and Add.</p>
+  <div class="sheet">
+    <div class="sh"><h3>Add a widget</h3><button class="x" aria-label="Close">✕</button></div>
+    <div class="body">
+      <label class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="q5" placeholder="Search widgets" autocomplete="off"></label>
+      <div class="acc" data-acc5></div>
+    </div>
+  </div>
+  <div class="verdict"><span>Scales when there are 30+ metrics later</span><span>Feels like the rest of the site</span><span class="c">Previews only after you open one</span></div>
+</section>
+
+<!-- 6 -->
+<section class="opt" id="o6">
+  <h2><b>6</b>Names and preview side by side</h2>
+  <p>A slim list of names on the left, the live preview and sizes on the right. Best on a computer; on a phone the names become a row.</p>
+  <div class="sheet">
+    <div class="sh"><h3>Add a widget</h3><button class="x" aria-label="Close">✕</button></div>
+    <div class="two">
+      <div class="names" data-n6></div>
+      <div class="side">
+        <div class="pv" data-pv6></div>
+        <p class="desc" data-d6></p>
+        <div class="sizes" data-sz6></div>
+        <button class="go" data-go6 style="margin-top:auto">Add Profit</button>
+      </div>
+    </div>
+  </div>
+  <div class="verdict"><span>Everything visible at once, calmly</span><span>Great on desktop</span><span class="c">Cramped on narrow phones</span></div>
+</section>
+
+</div>
+</div>
+
+<script>
+(function(){
+'use strict';
+// Nick's real numbers (Last 12 months) from the Card Board preview
+const M={
+ profit:{t:'Profit',d:'What you kept after fees, minus what you spent',c:'num',n:'$833.14',g:1,dl:'▲ 261%',sp:[3,5,5,2,4,3,2,2,1,-1,-4,-2]},
+ sales:{t:'Sales',d:'Everything you sold, before fees',c:'num',n:'$2,206.89',dl:'▼ 12%',sp:[4,9,7,2,7,4,2,2,2,1,2,0]},
+ spent:{t:'Spent',d:'Everything you bought',c:'num',n:'$945.90',dl:'▼ 49%',sp:[0,3,0,1,2,1,0,1,2,4,7,4]},
+ fees:{t:'Fees and shipping',d:'What platforms and postage took',c:'num',n:'$427.85',dl:'▲ 10%',sp:[2,6,7,2,6,3,2,1,2,1,1,0]},
+ month:{t:'Profit by month',d:'Your best and worst months',c:'chart',bars:[3,5,5,1,4,2.5,1,1,.2,-1.3,-3.5,-2.3]},
+ budget:{t:'Spend vs budget',d:'Months you stayed under budget',c:'chart',n:'11 of 12',bars:[0,1.2,0,.6,1,.4,.3,.4,.7,1.3,3.2,1.6],lim:1.5},
+ sell:{t:'How much of it sold',d:'Cards you bought that have sold',c:'num',n:'94%',g:1,cap:'of cards sold'},
+ where:{t:'Where you buy',d:'Where most of your money goes',c:'list',rows:[['eBay','$740'],['TCGplayer','$164'],['Other','$22']]},
+ kept:{t:'What each platform kept',d:'Fees as a share of each sale',c:'list',rows:[['eBay','23.8%'],['TCGplayer','19.9%'],['Mercari','11.2%']]},
+ win:{t:'Your biggest win',d:'The card that made you the most',c:'num',n:'+$44.13',g:1,cap:'Supreme Kai of Time'}};
+const K=Object.keys(M);
+const ICON={num:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 19V9M12 19V5M19 19v-7"/></svg>',chart:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l5-5 4 3 7-7"/></svg>',list:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01"/></svg>'};
+const SZ=[['S','Small'],['M','Wide'],['L','Large']];
+function spark(v,col){const mx=Math.max(...v),mn=Math.min(0,...v),r=(mx-mn)||1;return '<svg viewBox="0 0 100 30" preserveAspectRatio="none" style="height:26px"><path d="M'+v.map((y,i)=>(i/(v.length-1)*100).toFixed(1)+' '+(28-(y-mn)/r*26).toFixed(1)).join('L')+'" fill="none" stroke="'+col+'" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/></svg>'}
+function bars(v,lim,h){const mx=Math.max(...v.map(Math.abs),lim||0),pos=Math.max(...v,lim||0),neg=Math.max(0,...v.map(x=>-x)),W=100,sc=(h-2)/(pos+neg||1),base=pos*sc,slot=W/v.length,bw=slot*.6;
+  let s='<svg viewBox="0 0 100 '+h+'" preserveAspectRatio="none" style="height:'+h+'px"><line x1="0" x2="100" y1="'+base+'" y2="'+base+'" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>';
+  v.forEach((y,i)=>{const hh=Math.abs(y)*sc,x=i*slot+(slot-bw)/2,f=lim?(y>lim?'var(--neg)':'var(--gry)'):(y>=0?'var(--bar)':'var(--neg)');s+='<rect x="'+x.toFixed(2)+'" y="'+(y>=0?base-hh:base).toFixed(2)+'" width="'+bw.toFixed(2)+'" height="'+Math.max(hh,.01).toFixed(2)+'" rx="1" fill="'+f+'"/>'});
+  if(lim){const y=base-lim*sc;s+='<line x1="0" x2="100" y1="'+y+'" y2="'+y+'" stroke="var(--text)" stroke-opacity=".5" stroke-dasharray="3 3" stroke-width="1" vector-effect="non-scaling-stroke"/>'}
+  return s+'</svg>'}
+// a widget at a size; w/h set by the caller
+function widget(k,size,style){const m=M[k];let inner='<div class="t">'+m.t+'</div>';const big=size!=='S';
+  if(m.c==='num'){inner+='<div class="n'+(m.g?' g':'')+'" style="font-size:'+(size==='L'?30:size==='M'?24:20)+'px">'+m.n+'</div>'+(m.dl?'<div class="d" style="'+(m.dl[0]==='▼'&&k==='sales'?'color:var(--neg)':'')+'">'+m.dl+(big?' <span style="color:var(--muted)">vs previous period</span>':'')+'</div>':'')+(m.cap?'<div class="cap">'+m.cap+'</div>':'')+(m.sp?spark(m.sp,k==='profit'?'var(--bar)':'var(--muted)'):'');
+    if(size==='L'&&m.sp)inner=inner.replace(spark(m.sp,k==='profit'?'var(--bar)':'var(--muted)'),'')+bars(m.sp,0,70)}
+  else if(m.c==='chart'){if(m.n)inner+='<div class="n g" style="font-size:'+(size==='S'?18:22)+'px">'+m.n+'</div>';inner+=bars(m.bars,m.lim,size==='L'?110:size==='M'?48:40)}
+  else{inner+='<div style="display:grid;gap:5px;margin-top:8px">'+m.rows.slice(0,size==='S'?1:3).map(r=>'<div style="display:flex;justify-content:space-between;font-weight:800;font-size:'+(size==='S'?16:12.5)+'px"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>').join('')+'</div>'}
+  return '<div class="w" style="'+(style||'')+'">'+inner+'</div>'}
+const dim=(s,u)=>s==='S'?'width:'+u+'px;height:'+u+'px':s==='M'?'width:'+(u*2+8)+'px;height:'+u+'px':'width:'+(u*2+8)+'px;height:'+(u*2+8)+'px';
+const press=(wrap,btn)=>wrap.querySelectorAll('[aria-pressed]').forEach(b=>b.setAttribute('aria-pressed',b===btn));
+const q=(id,sel)=>document.querySelector('#'+id+' '+sel);
+
+// 1 — list, then swipe sizes
+(function(){let cur='profit';const list=q('o1','[data-list1]');
+  list.innerHTML=K.map(k=>'<button data-k="'+k+'"><span class="ic">'+ICON[M[k].c]+'</span>'+M[k].t+'<span class="chev">›</span></button>').join('');
+  const show=b=>{q('o1','[data-s1a]').hidden=b;q('o1','[data-s1b]').hidden=!b;q('o1','[data-f1]').hidden=!b;q('o1','[data-s1t]').textContent=b?M[cur].t:'Add a widget'};
+  const car=q('o1','[data-car1]'),dots=q('o1','[data-dots1]');
+  function fill(){car.innerHTML=SZ.map(([s,l])=>'<div class="slide">'+widget(cur,s,dim(s,s==='L'?120:130))+'<div class="lbl">'+l+'</div><div class="sub">'+(s==='S'?'1 square':s==='M'?'2 squares wide':'2 × 2 squares')+'</div></div>').join('');car.scrollLeft=0;dots.innerHTML='<i class="on"></i><i></i><i></i>'}
+  car.addEventListener('scroll',()=>{const i=Math.round(car.scrollLeft/car.clientWidth);dots.querySelectorAll('i').forEach((d,j)=>d.classList.toggle('on',i===j));q('o1','[data-go1]').textContent='Add '+SZ[i][1].toLowerCase()+' widget'},{passive:true});
+  list.addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(!b)return;cur=b.dataset.k;fill();show(true);q('o1','[data-go1]').textContent='Add small widget'});
+  q('o1','[data-back1]').addEventListener('click',()=>show(false));
+  q('o1','[data-go1]').addEventListener('click',e=>{e.target.textContent='Added ✓';setTimeout(()=>show(false),700)})})();
+
+// 2 — preview first
+(function(){let cur='profit',sz='S';const pv=q('o2','[data-pv2]'),ch=q('o2','[data-chips2]'),s2=q('o2','[data-sz2]'),go=q('o2','[data-go2]');
+  ch.innerHTML=K.map(k=>'<button aria-pressed="'+(k===cur)+'" data-k="'+k+'">'+M[k].t+'</button>').join('');
+  s2.innerHTML=SZ.map(([s,l])=>'<button aria-pressed="'+(s===sz)+'" data-s="'+s+'"><i class="sg sg'+s+'"></i>'+l+'</button>').join('');
+  const draw=()=>{pv.innerHTML=widget(cur,sz,dim(sz,sz==='L'?88:120));go.textContent='Add '+M[cur].t};
+  ch.addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(!b)return;cur=b.dataset.k;press(ch,b);draw()});
+  s2.addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(!b)return;sz=b.dataset.s;press(s2,b);draw()});draw()})();
+
+// 3 — tap to add
+(function(){const th=q('o3','[data-th3]'),seg=q('o3','[data-seg3]'),t=q('o3','[data-t3]');let cat='all';
+  const draw=()=>{th.innerHTML=K.filter(k=>cat==='all'||M[k].c===cat).map(k=>'<button class="thumb" data-k="'+k+'" aria-label="Add '+M[k].t+'">'+widget(k,'S')+'<span class="plus" aria-hidden="true">+</span></button>').join('')};
+  seg.addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;cat=b.dataset.c;press(seg,b);draw()});
+  th.addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(!b)return;b.classList.add('added');b.querySelector('.plus').textContent='✓';t.textContent=M[b.dataset.k].t+' added to your board';t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),1500)});draw()})();
+
+// 4 — tray over the board
+(function(){const bd=q('o4','[data-bd4]'),tr=q('o4','[data-tr4]');
+  bd.innerHTML=widget('profit','S')+widget('sales','S')+'<div class="slotm" data-slot>Drop here</div>'+widget('month','M','grid-column:1/-1')+widget('spent','S')+widget('fees','S');
+  tr.innerHTML=K.slice(4).map(k=>'<div data-k="'+k+'" role="button" tabindex="0" aria-label="Add '+M[k].t+'">'+widget(k,'S','height:96px;flex:0 0 116px;background:var(--sheet)')+'</div>').join('');
+  tr.addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(!b)return;const sl=bd.querySelector('[data-slot]');sl.outerHTML='<div style="grid-column:1/-1;opacity:1">'+widget(b.dataset.k,'M','height:84px')+'</div>'})})();
+
+// 5 — search and open
+(function(){const acc=q('o5','[data-acc5]'),inp=document.getElementById('q5');
+  const draw=f=>{acc.innerHTML=K.filter(k=>!f||(M[k].t+' '+M[k].d).toLowerCase().includes(f)).map(k=>'<div class="it" data-k="'+k+'"><button class="hd" aria-expanded="false"><span>'+M[k].t+'<small>'+M[k].d+'</small></span><span class="pl" aria-hidden="true">+</span></button><div class="bd">'+widget(k,'M')+'<div class="sizes">'+SZ.map(([s,l])=>'<button aria-pressed="'+(s==='S')+'"><i class="sg sg'+s+'"></i>'+l+'</button>').join('')+'</div><button class="mini-go">Add '+M[k].t+'</button></div></div>').join('')||'<p class="hint">No widgets match “'+f+'”.</p>'};
+  acc.addEventListener('click',e=>{const hd=e.target.closest('.hd');if(hd){const it=hd.parentNode,o=it.classList.contains('open');acc.querySelectorAll('.it').forEach(x=>{x.classList.remove('open');x.querySelector('.hd').setAttribute('aria-expanded','false')});if(!o){it.classList.add('open');hd.setAttribute('aria-expanded','true')}return}
+    const sb=e.target.closest('.sizes button');if(sb){press(sb.parentNode,sb);return}const g=e.target.closest('.mini-go');if(g)g.textContent='Added ✓'});
+  inp.addEventListener('input',()=>draw(inp.value.trim().toLowerCase()));draw('')})();
+
+// 6 — names and preview side by side
+(function(){let cur='profit',sz='S';const n=q('o6','[data-n6]'),pv=q('o6','[data-pv6]'),s6=q('o6','[data-sz6]'),d=q('o6','[data-d6]'),go=q('o6','[data-go6]');
+  n.innerHTML=K.map(k=>'<button aria-pressed="'+(k===cur)+'" data-k="'+k+'">'+M[k].t+'</button>').join('');
+  s6.innerHTML=SZ.map(([s,l])=>'<button aria-pressed="'+(s===sz)+'" data-s="'+s+'"><i class="sg sg'+s+'"></i>'+l+'</button>').join('');
+  const draw=()=>{pv.innerHTML=widget(cur,sz,sz==='S'?'width:118px;height:118px':sz==='M'?'width:100%;height:110px':'width:100%;height:150px');d.textContent=M[cur].d;go.textContent='Add '+M[cur].t};
+  n.addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(!b)return;cur=b.dataset.k;press(n,b);draw()});
+  s6.addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(!b)return;sz=b.dataset.s;press(s6,b);draw()});draw()})();
+})();
+</script>

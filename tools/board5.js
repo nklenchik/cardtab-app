@@ -41,7 +41,8 @@ function buzz(kind){if(!hapOn||!touchDev)return;const now=performance.now();if(k
 
 // ---------- data ----------
 // time ranges work in days: short ranges chart by day, a few months by week, longer ones by month
-let custom={from:null,to:null};
+let custom={from:null,to:null},compare=(()=>{try{return localStorage.getItem('cb.compare')||'prev'}catch(e){return 'prev'}})();
+const yBack=d=>(+d.slice(0,4)-1)+d.slice(4,10).replace('-02-29','-02-28');
 const iso=x=>x.getFullYear()+'-'+pad(x.getMonth()+1)+'-'+pad(x.getDate());
 const dPlus=(d,n)=>{const x=new Date(d+'T12:00:00');x.setDate(x.getDate()+n);return iso(x)};
 const days=(a,b)=>Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5)+1;
@@ -67,17 +68,23 @@ const KPI={profit:t=>t.profit,sales:t=>t.sales,spent:t=>t.spent,fees:t=>t.fees};
 const GOOD={profit:'up',sales:'up',spent:'down',fees:'down'};
 const KCOL={sales:'var(--cb-pos)',spent:'var(--cb-bl)',fees:'var(--cb-gry)'};
 function ctxNow(){const [a,b]=rangeFor(period),p=pool(),bk=buckets(a,b),n=days(a,b);
-  return {a,b,unit:bk.unit,p,inP:inR(p,a,b),prevP:inR(p,dPlus(a,-n),dPlus(a,-1)),mt:bk.list.map(x=>Object.assign({},x,{list:inR(p,x.from,x.to)})),cv:[]}}
+  return {a,b,unit:bk.unit,p,inP:inR(p,a,b),prevP:compare==='off'?null:compare==='year'?inR(p,yBack(a),yBack(b)):inR(p,dPlus(a,-n),dPlus(a,-1)),mt:bk.list.map(x=>Object.assign({},x,{list:inR(p,x.from,x.to)})),cv:[]}}
 const mShort=k=>mLabel(k,{month:'short',year:'numeric'});
 const mLong=k=>mLabel(k,{month:'long',year:'numeric'});
 // a big number that always fits its box: the font size comes from the box width and the number of characters
 const bn=(txt,cls,mx)=>'<div class="bn num '+(cls||'')+'" style="--len:'+Math.max(4,String(txt).length)+(mx?';--mx:'+mx+'px':'')+'">'+txt+'</div>';
 const cnt=(n,one,many)=>n+' '+(n===1?one:many);
 
+// ---------- sharing: a viewer's copy can hide amounts, card names and details ----------
+let share=(()=>{try{return Object.assign({on:false,amt:true,names:true,tips:true,live:true,exp:'never',id:Math.random().toString(36).slice(2,10),emails:[]},JSON.parse(localStorage.getItem('cb.share'))||{})}catch(e){return {on:false,amt:true,names:true,tips:true,live:true,exp:'never',id:'k3f9x2qa',emails:[]}}})();
+let viewing=false;const saveShare=()=>{try{localStorage.setItem('cb.share',JSON.stringify(share))}catch(e){}};
+const maskAmt=()=>viewing&&!share.amt,maskNames=()=>viewing&&!share.names,noTips=()=>viewing&&!share.tips;
+// dollar amounts become dots for people who shouldn't see them; percentages and counts stay
+const hideMoney=h=>maskAmt()?h.replace(/[−+-]?\$[\d,]+(?:\.\d\d)?/g,'$•••'):h;
 // ---------- the site's tooltip ----------
 let tipEl=null;
 function tip(){if(!tipEl){tipEl=document.createElement('div');tipEl.className='cb-tip';tipEl.setAttribute('role','status');$('cb').appendChild(tipEl)}return tipEl}
-function showTip(anchor,html){const t=tip(),host=$('cb').getBoundingClientRect(),r=anchor.getBoundingClientRect();t.innerHTML=html;const w=t.offsetWidth,h=t.offsetHeight;
+function showTip(anchor,html){if(noTips())return;html=hideMoney(html);const t=tip(),host=$('cb').getBoundingClientRect(),r=anchor.getBoundingClientRect();t.innerHTML=html;const w=t.offsetWidth,h=t.offsetHeight;
   let x=Math.max(8,Math.min(host.width-w-8,r.left-host.left+r.width/2-w/2)),y=r.top-host.top-h-10;if(r.top-h-10<70)y=r.bottom-host.top+10;t.style.left=x+'px';t.style.top=y+'px';t.classList.add('show')}
 function hideTip(){if(tipEl)tipEl.classList.remove('show')}
 function bindTip(ev,anchor,fn){ev.setAttribute('data-tip','');
@@ -105,7 +112,7 @@ function barsSVG(sp,W,H){
   if(lim){const y=(base-lim*sc).toFixed(1);s+='<line x1="0" x2="'+W+'" y1="'+y+'" y2="'+y+'" stroke="var(--text)" stroke-opacity=".55" stroke-width="1.5" stroke-dasharray="4 4"/>'}
   if(sp.best&&top>4&&best>-1&&bv>0){const c=Math.max(28,Math.min(W-28,best*slot+slot/2)),y=base-bv*sc;s+='<text x="'+c.toFixed(1)+'" y="'+Math.max(14,y-22).toFixed(1)+'" text-anchor="middle" fill="var(--green)" style="font:800 15px Manrope,-apple-system,Segoe UI,sans-serif">+'+kshort(bv)+'</text><text x="'+c.toFixed(1)+'" y="'+Math.max(28,y-8).toFixed(1)+'" text-anchor="middle" fill="var(--muted)" style="font:800 11.5px Manrope,-apple-system,Segoe UI,sans-serif">'+(sp.bestLabel||'best month')+'</text>'}
   return s+hit+'</svg>'}
-function fillCharts(root,ctx){root.querySelectorAll('.cv[data-cv]').forEach(el=>{const sp=ctx.cv[+el.dataset.cv];if(!sp)return;const W=Math.floor(el.clientWidth),H=Math.floor(el.clientHeight);el.innerHTML=barsSVG(sp,W,H);
+function fillCharts(root,ctx){root.querySelectorAll('.cv[data-cv]').forEach(el=>{const sp=ctx.cv[+el.dataset.cv];if(!sp)return;const W=Math.floor(el.clientWidth),H=Math.floor(el.clientHeight);el.innerHTML=hideMoney(barsSVG(sp,W,H));
   const svg=el.querySelector('svg');if(!svg||!sp.tip)return;
   svg.querySelectorAll('rect[data-i]').forEach(rc=>{const i=+rc.dataset.i,bar=svg.querySelector('path[data-i="'+i+'"]');
     ['pointerenter','focus'].forEach(ev=>rc.addEventListener(ev,e=>{if(bar&&!rz&&(ev==='focus'||e.pointerType==='mouse'))bar.classList.add('hv')}));
@@ -167,10 +174,10 @@ function body(k,ctx,s,w){
   if(k==='win'){const key=e=>e.name.toLowerCase().replace(/[^a-z0-9]/g,'')+'|'+e.no,buys={},sells={};p.filter(e=>e.type==='purchase').forEach(e=>{(buys[key(e)]=buys[key(e)]||[]).push(e)});inP.filter(e=>e.type==='sale').forEach(e=>{(sells[key(e)]=sells[key(e)]||[]).push(e)});
     const wins=Object.keys(sells).filter(x=>buys[x]).map(x=>{const b=buys[x].reduce((a,e)=>a+e.amount,0),sv=sells[x].reduce((a,e)=>a+e.net,0);return {g:sv-b,b,s:sv,e:sells[x][0]}}).filter(w=>w.g>0).sort((a,b)=>b.g-a.g);
     if(!wins.length)return '<p class="eg">No card bought and sold in this period yet.</p>';const w=wins[0];
-    const art='<span class="art" aria-hidden="true">'+esc(w.e.name[0])+'</span>',meta=esc([w.e.no,w.e.set].filter(Boolean).join(' · ')||w.e.platform);
-    const also=m=>wins.length>1?'<div class="alsoup"><p class="mh2">Also up</p>'+wins.slice(1,m+1).map(x=>'<div class="mr"><span>'+esc(x.e.name)+'</span><b class="num">'+ksigned(x.g)+'</b></div>').join('')+'</div>':'';
-    if(s==='S')return '<div class="winS">'+art+'<div class="wtx"><div class="cq">'+bn(ksigned(w.g),'g',28)+'</div><b class="nm">'+esc(w.e.name)+'</b><small>Bought '+kshort(w.b)+' · Sold '+kshort(w.s)+'</small></div></div>';
-    const hero='<div class="bestc">'+art+'<div class="wtx"><b class="nm">'+esc(w.e.name)+'</b><em class="no">'+meta+'</em><small>Bought '+kshort(w.b)+' · Sold '+kshort(w.s)+'</small><span class="amt num">'+ksigned(w.g)+'</span></div></div>';
+    const nmOf=x=>maskNames()?'A card from your collection':x.e.name;const art='<span class="art" aria-hidden="true">'+(maskNames()?'':esc(w.e.name[0]))+'</span>',meta=maskNames()?esc(w.e.platform):esc([w.e.no,w.e.set].filter(Boolean).join(' · ')||w.e.platform);
+    const also=m=>wins.length>1?'<div class="alsoup"><p class="mh2">Also up</p>'+wins.slice(1,m+1).map(x=>'<div class="mr"><span>'+esc(nmOf(x))+'</span><b class="num">'+ksigned(x.g)+'</b></div>').join('')+'</div>':'';
+    if(s==='S')return '<div class="winS">'+art+'<div class="wtx"><div class="cq">'+bn(ksigned(w.g),'g',28)+'</div><b class="nm">'+esc(nmOf(w))+'</b><small>Bought '+kshort(w.b)+' · Sold '+kshort(w.s)+'</small></div></div>';
+    const hero='<div class="bestc">'+art+'<div class="wtx"><b class="nm">'+esc(nmOf(w))+'</b><em class="no">'+meta+'</em><small>Bought '+kshort(w.b)+' · Sold '+kshort(w.s)+'</small><span class="amt num">'+ksigned(w.g)+'</span></div></div>';
     if(s==='M')return hero;
     if(s==='B')return '<div class="split wide">'+hero+also(3)+'</div>';
     if(s==='L')return '<div class="col">'+hero+also(3)+'</div>';
@@ -188,10 +195,10 @@ function body(k,ctx,s,w){
     return '<div class="split wide"><div class="hz">'+hero+thisM+note+'</div>'+ch({labels:true,maxW:36,r:7})+'</div>'}
   return ''}
 function kpiBody(k,ctx,s,t,w){const T=!(w&&w.trend===false);
-  const {inP,mt,unit}=ctx,v=KPI[k](t),pv=KPI[k](totals(ctx.prevP)),chg=pv?((v-pv)/Math.abs(pv))*100:null,up=chg!=null&&chg>=0,good=chg==null?null:(GOOD[k]==='up'?up:!up);
+  const {inP,mt,unit}=ctx,v=KPI[k](t),pv=ctx.prevP?KPI[k](totals(ctx.prevP)):0,chg=pv?((v-pv)/Math.abs(pv))*100:null,up=chg!=null&&chg>=0,good=chg==null?null:(GOOD[k]==='up'?up:!up);
   const series=mt.map(x=>KPI[k](totals(x.list))),bi=series.reduce((a,x,i)=>x>series[a]?i:a,0);
   const sub=k==='profit'?cnt(t.n,'entry','entries'):k==='sales'?cnt(inP.filter(e=>e.type==='sale').length,'sale','sales'):k==='spent'?cnt(inP.filter(e=>e.type==='purchase').length,'purchase','purchases'):(t.sales?(t.fees/t.sales*100).toFixed(1):'0.0')+'% of sales';
-  const cls=k==='profit'?(v>=0?'g':'r'):'',dl=chg==null?'<span class="sm">'+sub+'</span>':'<span class="dl '+(good?'up':'dn')+'">'+(up?'▲':'▼')+' '+Math.abs(chg).toFixed(0)+'%</span><span class="sm">vs previous period</span>';
+  const cls=k==='profit'?(v>=0?'g':'r'):'',dl=chg==null?'<span class="sm">'+sub+'</span>':'<span class="dl '+(good?'up':'dn')+'">'+(up?'▲':'▼')+' '+Math.abs(chg).toFixed(0)+'%</span><span class="sm">'+(compare==='year'?'vs last year':'vs previous period')+'</span>';
   const spk='<div class="kspk'+(k==='profit'?(v<0?' r':''):' mu')+'">'+spark(series)+'</div>';
   const nm=CATALOG[k].t.toLowerCase(),tipf=i=>{const tt=totals(mt[i].list);return '<b>'+mt[i].l+'</b>'+CATALOG[k].t+' <span class="'+(k==='profit'?(tt.profit>=0?'p':'l'):'')+'">'+kshort(KPI[k](tt))+'</span>'};
   const bars=o=>cv(ctx,Object.assign({data:mt.map((x,i)=>Object.assign({},x,{v:series[i],on:x.list.length>0})),color:KCOL[k],tip:tipf,aria:CATALOG[k].t+' by '+unit,unit:nm},o));
@@ -206,7 +213,7 @@ function kpiBody(k,ctx,s,t,w){const T=!(w&&w.trend===false);
 
 const GRIP='<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M13 5L5 13M13 9.5L9.5 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 function widgetHTML(w,ctx,extra){const s=eff(w.size),t=w.k==='month'?'Profit by '+ctx.unit:CATALOG[w.k].t,tt=s==='S'?(w.k==='month'?'Best '+ctx.unit:CATALOG[w.k].s):t;
-  return '<section class="w wq sz'+w.size+' e'+s+(s==='B'?' eM':'')+' k-'+w.k+(extra?' '+extra:'')+'" data-id="'+w.id+'" data-k="'+w.k+'" aria-label="'+esc(t)+', '+SIZE_NAMES[s]+'"><div class="wh"><h3 class="ttl" title="'+esc(t)+'">'+tt+'</h3><button type="button" class="wmore" aria-label="Options for '+t+'" aria-haspopup="true">⋯</button></div><div class="wb">'+body(w.k,ctx,s,w)+'</div>'+
+  return '<section class="w wq sz'+w.size+' e'+s+(s==='B'?' eM':'')+' k-'+w.k+(extra?' '+extra:'')+'" data-id="'+w.id+'" data-k="'+w.k+'" aria-label="'+esc(t)+', '+SIZE_NAMES[s]+'"><div class="wh"><h3 class="ttl" title="'+esc(t)+'">'+tt+'</h3><button type="button" class="wmore" aria-label="Options for '+t+'" aria-haspopup="true">⋯</button></div><div class="wb">'+hideMoney(body(w.k,ctx,s,w))+'</div>'+
     '<button type="button" class="rm" aria-label="Remove '+t+'"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 2l6 6M8 2L2 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>'+
     '<button type="button" class="grip" aria-label="Resize '+t+'. Now '+SIZE_NAMES[s]+'. Arrow keys change the size." title="Drag to resize">'+GRIP+'</button></section>'}
 
@@ -216,7 +223,7 @@ function wire(root,ctx){
   root.querySelectorAll('[data-tipd]').forEach(el=>{el.tabIndex=0;bindTip(el,el,()=>esc(el.dataset.tipd))});
   // tap-to-open rows, one open at a time per widget, like the site's FAQs
   (root.matches&&root.matches('.w')?[root]:[...root.querySelectorAll('.w')]).forEach(sec=>{const list=[...sec.querySelectorAll('[data-row]')];list.forEach(el=>{el.setAttribute('role','button');el.tabIndex=0;el.setAttribute('aria-expanded','false');
-    const tog=()=>{if(rz||drag||editing)return;const o=el.getAttribute('aria-expanded')==='true';list.forEach(x=>x.setAttribute('aria-expanded','false'));el.setAttribute('aria-expanded',!o)};
+    const tog=()=>{if(rz||drag||editing||noTips())return;const o=el.getAttribute('aria-expanded')==='true';list.forEach(x=>x.setAttribute('aria-expanded','false'));el.setAttribute('aria-expanded',!o)};
     el.addEventListener('click',tog);el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tog()}})})});
 }
 
@@ -241,25 +248,44 @@ let rsT=0,lastW=innerWidth;addEventListener('resize',()=>{if(!shown||rz||drag||M
 
 // ---------- period and platform pickers ----------
 function closeMenus(){document.querySelectorAll('.cbx .cb-menu').forEach(m=>{m.hidden=true});document.querySelectorAll('.cbx [aria-haspopup]').forEach(b=>b.setAttribute('aria-expanded','false'))}
-function pickMenu(btn,menuEl,items,cur,onPick){
-  btn.addEventListener('click',e=>{e.stopPropagation();hideTip();const o=menuEl.hidden;closeMenus();if(!o)return;menuEl.innerHTML=items().map(([k,l])=>'<button type="button" role="menuitemradio" aria-checked="'+(k===cur())+'" data-k="'+esc(k)+'">'+esc(l)+'</button>').join('');menuEl.hidden=false;btn.setAttribute('aria-expanded','true')});
-  menuEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;onPick(b.dataset.k,b.textContent);closeMenus()})}
-pickMenu($('cb-per'),$('cb-menu'),()=>PERIODS,()=>period,(k,l)=>{if(k==='custom'){openCustom();return}period=k;$('cb-perl').textContent=l;render(false);grow()});
-const cr=$('cr');
-function openCustom(){const mn=startDate(),[a,b]=rangeFor(period);['cr-from','cr-to'].forEach(id=>{$(id).min=mn;$(id).max=TODAY});$('cr-from').value=custom.from||a;$('cr-to').value=custom.to||b;checkCustom();cr.showModal()}
-function checkCustom(){const f=$('cr-from').value,t=$('cr-to').value,ok=f&&t&&f<=t&&f>=startDate()&&t<=TODAY;$('cr-go').disabled=!ok;
-  $('cr-n').textContent=!f||!t?'Pick both dates.':f>t?'The start date needs to be before the end date.':ok?cnt(days(f,t),'day','days')+' · back as far as '+dFmt(startDate(),{month:'short',day:'numeric',year:'numeric'}):'Pick dates between '+dFmt(startDate(),{month:'short',day:'numeric',year:'numeric'})+' and today.'}
-['cr-from','cr-to'].forEach(id=>$(id).addEventListener('input',checkCustom));
-cr.addEventListener('click',e=>{if(e.target===cr){cr.close();return}const b=e.target.closest('button');if(!b)return;
-  if(b.id==='cr-go'){custom={from:$('cr-from').value,to:$('cr-to').value};period='custom';const sameY=custom.from.slice(0,4)===custom.to.slice(0,4);
-    $('cb-perl').textContent=dFmt(custom.from,sameY?{month:'short',day:'numeric'}:{month:'short',day:'numeric',year:'numeric'})+' – '+dFmt(custom.to,{month:'short',day:'numeric',year:'numeric'});cr.close();render(false);grow()}
-  else if(b.hasAttribute('data-close'))cr.close()});
+function pickMenu(btn,menuEl,items,cur,onPick,foot){
+  btn.addEventListener('click',e=>{e.stopPropagation();hideTip();const o=menuEl.hidden;closeMenus();if(!o)return;menuEl.innerHTML=items().map(([k,l])=>'<button type="button" role="menuitemradio" aria-checked="'+(k===cur())+'" data-k="'+esc(k)+'">'+esc(l)+'</button>').join('')+(foot?foot():'');menuEl.hidden=false;btn.setAttribute('aria-expanded','true')});
+  menuEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.cmp){setCompare(b.dataset.cmp);b.parentNode.querySelectorAll('button').forEach(x=>x.setAttribute('aria-checked',x===b));return}onPick(b.dataset.k,b.textContent);closeMenus()})}
+pickMenu($('cb-per'),$('cb-menu'),()=>PERIODS,()=>period,(k,l)=>{if(k==='custom'){openCustom();return}period=k;$('cb-perl').textContent=l;render(false);grow()},()=>'<div class="mcmp"><span>Compare to</span><div class="seg">'+COMPARE.map(([c,l])=>'<button type="button" data-cmp="'+c+'" aria-checked="'+(compare===c)+'">'+l.replace('Previous period','Previous')+'</button>').join('')+'</div></div>');
+// custom dates: a range calendar. First tap sets the start, second tap the end; tap From or To to change just that one.
+const cr=$('cr'),COMPARE=[['prev','Previous period'],['year','Last year'],['off','Off']];let cal=null;
+function setCompare(c){compare=c;try{localStorage.setItem('cb.compare',c)}catch(e){}render(false)}
+const dLong=d=>dFmt(d,{month:'short',day:'numeric',year:'numeric'});
+function openCustom(){const [a,b]=rangeFor(period);cal={from:custom.from||a,to:custom.to||b,pick:'from',cmp:compare};cal.view=cal.to.slice(0,7);drawCal();cr.showModal()}
+function drawCal(){const mn=startDate(),mx=TODAY,v=cal.view,dow=new Date(v+'-01T12:00:00').getDay(),nd=+lastDay(v).slice(8);
+  $('cr-title').textContent=mLabel(v,{month:'long',year:'numeric'});$('cr-prev').disabled=v<=mn.slice(0,7);$('cr-next').disabled=v>=mx.slice(0,7);
+  let h='';for(let i=0;i<dow;i++)h+='<span class="pad"></span>';
+  for(let d=1;d<=nd;d++){const ds=v+'-'+pad(d),dis=ds<mn||ds>mx,f=ds===cal.from,t=ds===cal.to,span=cal.from&&cal.to&&cal.from!==cal.to,inr=span&&ds>cal.from&&ds<cal.to;
+    h+='<button type="button" class="cd'+(f?' sel':'')+(t?' sel':'')+(inr?' in':'')+(f&&span?' rs':'')+(t&&span?' re':'')+(ds===TODAY?' today':'')+'" data-d="'+ds+'"'+(dis?' disabled':'')+' aria-pressed="'+(f||t)+'" aria-label="'+dFmt(ds,{weekday:'long',month:'long',day:'numeric',year:'numeric'})+'"><span>'+d+'</span></button>'}
+  $('cr-days').innerHTML=h;
+  $('cr-f').textContent=cal.from?dLong(cal.from):'Pick a date';$('cr-t').textContent=cal.to?dLong(cal.to):'Pick a date';
+  $('cr-fb').classList.toggle('on',cal.pick==='from');$('cr-tb').classList.toggle('on',cal.pick==='to');
+  $('cr-cmp').querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',b.dataset.cmp===cal.cmp));
+  const ok=cal.from&&cal.to;$('cr-go').disabled=!ok;
+  $('cr-n').textContent=!ok?'Tap the last day of the range.':cnt(days(cal.from,cal.to),'day','days')+(cal.cmp==='off'?'':cal.cmp==='year'?' · compared with the same dates last year':' · compared with the '+cnt(days(cal.from,cal.to),'day','days')+' before')}
+cr.addEventListener('click',e=>{if(e.target===cr){cr.close();return}const b=e.target.closest('button');if(!b||b.disabled)return;
+  if(b.dataset.d){const ds=b.dataset.d;
+    if(cal.pick==='to'&&cal.from){if(ds<cal.from){cal.to=cal.from;cal.from=ds}else cal.to=ds;cal.pick='from'}
+    else{cal.from=ds;if(cal.to&&cal.to<ds||cal.pick==='from')cal.to=null;cal.pick='to'}
+    buzz('tick');drawCal();return}
+  if(b.id==='cr-prev'||b.id==='cr-next'){const x=new Date(cal.view+'-15T12:00:00');x.setMonth(x.getMonth()+(b.id==='cr-next'?1:-1));cal.view=iso(x).slice(0,7);drawCal();return}
+  if(b.id==='cr-fb'){cal.pick='from';if(cal.from)cal.view=cal.from.slice(0,7);drawCal();return}
+  if(b.id==='cr-tb'){cal.pick='to';if(cal.to)cal.view=cal.to.slice(0,7);drawCal();return}
+  if(b.dataset.cmp){cal.cmp=b.dataset.cmp;drawCal();return}
+  if(b.id==='cr-go'){custom={from:cal.from,to:cal.to};period='custom';compare=cal.cmp;try{localStorage.setItem('cb.compare',compare)}catch(e){}const sameY=custom.from.slice(0,4)===custom.to.slice(0,4);
+    $('cb-perl').textContent=dFmt(custom.from,sameY?{month:'short',day:'numeric'}:{month:'short',day:'numeric',year:'numeric'})+' – '+dLong(custom.to);buzz('firm');cr.close();render(false);grow();return}
+  if(b.hasAttribute('data-close'))cr.close()});
 pickMenu($('cb-plat'),$('cb-pmenu'),()=>[['all','All platforms']].concat([...new Set(E.map(e=>e.platform))].sort().map(p=>[p,p])),()=>plat,(k,l)=>{plat=k;$('cb-platl').textContent=l;render(false);grow()});
 $('cb-acct').addEventListener('click',e=>{e.stopPropagation();hideTip();const m=$('cb-amenu'),o=m.hidden;closeMenus();if(o){m.hidden=false;$('cb-acct').setAttribute('aria-expanded','true')}});
 document.addEventListener('click',e=>{if(!e.target.closest('.perwrap')&&!e.target.closest('#wmenu'))closeMenus();if(!e.target.closest('#cb [data-tip]'))hideTip()});
 
 // ---------- customize ----------
-const EDIT_I='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',DONE_I='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const DONE_UNUSED=0;const EDIT_I='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',DONE_I='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.8l4 3.9L18.5 7.8"/></svg>';
 function setEditing(on){if(on)buzz('tap');editing=on;$('cb-edit').innerHTML=(on?DONE_I:EDIT_I)+'<span>'+(on?'Done':'Edit')+'</span>';$('cb-edit').classList.toggle('on',on);$('cb-reset').hidden=!on;render(true)}
 $('cb-edit').addEventListener('click',()=>setEditing(!editing));
 // reset asks first, and sits far from Done
@@ -379,20 +405,30 @@ $('simple').addEventListener('keydown',e=>{const gp=e.target.closest('.grip');if
   let j=-1;if((e.key==='ArrowRight'||e.key==='ArrowDown')&&i<L.length-1)j=i+1;if((e.key==='ArrowLeft'||e.key==='ArrowUp')&&i>0)j=i-1;
   if(j>-1){e.preventDefault();setSize(id,L[j]);const ng=$('simple').querySelector('.w[data-id="'+id+'"] .grip');if(ng)ng.focus()}});
 
-// ---------- add a widget: any of the ten, at any size, with a live preview ----------
-const aw=$('aw');let draft=null;
-function openAdd(){draft={k:'profit',size:'S'};drawAdd();aw.showModal();drawPreview()}
-function drawAdd(){
-  $('aw-list').innerHTML=Object.keys(CATALOG).map(k=>'<button type="button" class="opt" data-pick="'+k+'" aria-pressed="'+(draft.k===k)+'"><b>'+CATALOG[k].t+'</b><span>'+CATALOG[k].d+'</span></button>').join('');
-  $('aw-sizes').innerHTML=sizesNow().map(s=>'<button type="button" data-s="'+s+'" aria-pressed="'+(draft.size===s)+'">'+SIZE_NAMES[s]+'</button>').join('');
-  $('aw-go').textContent='Add '+CATALOG[draft.k].t}
-// the preview is the real widget at its real size on this screen, scaled down only if the panel is narrower
-function drawPreview(){const g=gridSpec(),[W,H]=box(g,draft.size),host=$('aw-prev'),ctx=ctxNow();host.innerHTML='<div class="pvbox"><div class="pvin">'+widgetHTML({id:'pv',k:draft.k,size:draft.size},ctx,'pv')+'</div></div>';
-  const avail=host.clientWidth||W,sc=Math.min(1,avail/W),inn=host.querySelector('.pvin'),el=inn.firstChild;el.style.width=W+'px';el.style.height=H+'px';inn.style.transform='scale('+sc+')';inn.style.left=Math.max(0,(avail-W*sc)/2)+'px';host.querySelector('.pvbox').style.height=(H*sc)+'px';wire(inn,ctx)}
-aw.addEventListener('click',e=>{if(e.target===aw){aw.close();return}const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.pick){draft.k=b.dataset.pick;drawAdd();drawPreview()}else if(b.dataset.s){draft.size=b.dataset.s;drawAdd();drawPreview()}
-  else if(b.id==='aw-go'){const w={id:newId(),k:draft.k,size:draft.size};layout.push(w);save();buzz('firm');aw.close();render(true);const el=$('simple').querySelector('.w[data-id="'+w.id+'"]');if(el)setTimeout(()=>el.scrollIntoView({behavior:calm.matches?'auto':'smooth',block:'nearest'}),60)}
-  else if(b.hasAttribute('data-close'))aw.close()});
+// ---------- add widgets: a gallery of small widgets; tap to add to the top of the board, tap again to take it back ----------
+const aw=$('aw'),DEF_SIZE={profit:'S',sales:'S',spent:'S',fees:'S',month:'M',sell:'M',where:'S',kept:'M',win:'S',budget:'M'};
+const CATS={profit:'num',sales:'num',spent:'num',fees:'num',sell:'num',win:'num',month:'chart',budget:'chart',where:'list',kept:'list'};
+const PLUS_I='<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+const CHECK_I='<svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.4l2.6 2.5L11 4.4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+let added={},awCat='all';
+function openAdd(){added={};awCat='all';$('aw-q').value='';$('aw-cats').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c==='all'));aw.showModal();drawThumbs()}
+function drawThumbs(){const g=gridSpec(),W=g.col,H=g.row,ctx=ctxNow(),q=$('aw-q').value.trim().toLowerCase(),host=$('aw-list');
+  const keys=Object.keys(CATALOG).filter(k=>(awCat==='all'||CATS[k]===awCat)&&(!q||(CATALOG[k].t+' '+CATALOG[k].d).toLowerCase().includes(q)));
+  host.innerHTML=keys.length?keys.map(k=>'<div role="button" tabindex="0" class="thumb'+(added[k]?' added':'')+'" data-k="'+k+'" aria-pressed="'+!!added[k]+'" aria-label="'+(added[k]?'Remove ':'Add ')+CATALOG[k].t+'"><span class="tbox"><span class="tin">'+widgetHTML({id:'pv'+k,k,size:'S'},ctx,'pv')+'</span></span><span class="badge">'+(added[k]?CHECK_I:PLUS_I)+'</span></div>').join(''):'<p class="awnone">No widgets match “'+esc(q)+'”.</p>';
+  host.querySelectorAll('.tbox').forEach(bx=>{const sc=bx.clientWidth/W,inn=bx.firstChild,el=inn.firstChild;el.style.width=W+'px';el.style.height=H+'px';inn.style.transform='scale('+sc+')';bx.style.height=(H*sc)+'px'});
+  wire(host,ctx)}
+function awToast(m){const t=$('aw-t');t.textContent=m;t.classList.add('on');clearTimeout(awToast.h);awToast.h=setTimeout(()=>t.classList.remove('on'),1600)}
+$('aw-q').addEventListener('input',drawThumbs);
+$('aw-list').addEventListener('keydown',e=>{const th=e.target.closest('.thumb');if(th&&(e.key==='Enter'||e.key===' ')){e.preventDefault();th.click()}});
+$('aw-cats').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;awCat=b.dataset.c;$('aw-cats').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));drawThumbs()});
+aw.addEventListener('click',e=>{if(e.target===aw){aw.close();return}const th=e.target.closest('.thumb');
+  if(th){const k=th.dataset.k;
+    if(added[k]){const i=layout.findIndex(w=>w.id===added[k]);if(i>-1)layout.splice(i,1);delete added[k];save();buzz('warn');render(true);awToast(CATALOG[k].t+' removed')}
+    else{const id=newId();layout.unshift({id,k,size:DEF_SIZE[k]});added[k]=id;save();buzz('firm');render(true);awToast(CATALOG[k].t+' added to the top of your board')}
+    th.classList.toggle('added',!!added[k]);th.setAttribute('aria-pressed',!!added[k]);th.setAttribute('aria-label',(added[k]?'Remove ':'Add ')+CATALOG[k].t);th.querySelector('.badge').innerHTML=added[k]?CHECK_I:PLUS_I;
+    const bd=th.querySelector('.badge');if(!calm.matches)bd.animate([{transform:'scale(.6)'},{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:260,easing:'cubic-bezier(.2,.7,.2,1)'});return}
+  const b=e.target.closest('button');if(b&&b.hasAttribute('data-close'))aw.close()});
+aw.addEventListener('close',()=>{const first=Object.values(added)[0];if(first){const el=$('simple').querySelector('.w[data-id="'+first+'"]');if(el)el.scrollIntoView({behavior:calm.matches?'auto':'smooth',block:'nearest'})}});
 
 // ---------- the morph: Insights panel grows into the full page, and shrinks back into it ----------
 const cbx=$('cbx'),ins=$('ins'),xb=$('expand'),EASE='cubic-bezier(.2,.7,.2,1)';
@@ -429,7 +465,7 @@ function close(){
 xb.addEventListener('click',open);$('close').addEventListener('click',close);
 document.addEventListener('click',e=>{const wm=$('wmenu');if(!wm.hidden&&!e.target.closest('#wmenu')&&!e.target.closest('.wmore'))wm.hidden=true});
 cbx.addEventListener('scroll',hideTip,{passive:true});
-document.addEventListener('keydown',e=>{if(e.key!=='Escape'||!shown||aw.open||$('av').open||$('ex').open||$('cr').open||$('rs').open)return;if(!$('wmenu').hidden){$('wmenu').hidden=true;return}if(!$('cb-menu').hidden||!$('cb-pmenu').hidden||!$('cb-amenu').hidden){closeMenus();return}if(editing){setEditing(false);return}close()});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape'||!shown||aw.open||$('av').open||$('ex').open||$('cr').open||$('rs').open||$('shd').open||$('askd').open)return;if(!$('wmenu').hidden){$('wmenu').hidden=true;return}if(!$('cb-menu').hidden||!$('cb-pmenu').hidden||!$('cb-amenu').hidden){closeMenus();return}if(editing){setEditing(false);return}close()});
 
 // ---------- account menu: profile, plan, import/export, settings, sign out ----------
 let profile=(()=>{try{return Object.assign({first:'Nick',last:'',show:'first'},JSON.parse(localStorage.getItem('cb.profile'))||{})}catch(e){return {first:'Nick',last:'',show:'first'}}})();
@@ -520,3 +556,63 @@ async function doExport(kind){const st=$('ex-s');st.textContent='Preparing…';l
     st.textContent=res==='declined'?'Not saved.':res==='busy'?'One moment, a save is already open.':'Saved.';if(res==='saved')buzz('firm')
   }catch(err){st.textContent='That didn’t work here. Try again in the app.';console.warn(err)}}
 ex.addEventListener('click',e=>{if(e.target===ex){ex.close();return}const b=e.target.closest('button');if(!b)return;if(b.dataset.ex)doExport(b.dataset.ex);else if(b.hasAttribute('data-close'))ex.close()});
+
+// ---------- share: a private link, privacy choices, email invites, and a look at what viewers see ----------
+const shd=$('shd'),SH_URL=()=>'https://cardtab.app/b/'+share.id;
+function openShare(){closeMenus();paintShare();shd.showModal()}
+function paintShare(){$('sh-on').setAttribute('aria-checked',share.on);$('sh-state').textContent=share.on?'Anyone with the link can view':'Only you can see this board';
+  $('sh-linkrow').classList.toggle('off',!share.on);$('sh-link').value=SH_URL().replace('https://','');
+  [['sh-amt','amt'],['sh-names','names'],['sh-tips','tips']].forEach(([id,k])=>$(id).setAttribute('aria-checked',share[k]));
+  $('sh-live').querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',(b.dataset.v==='live')===share.live));
+  $('sh-exp').querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',b.dataset.v===share.exp));
+  $('sh-emails').innerHTML=share.emails.map((m,i)=>'<span class="echip">'+esc(m)+'<button type="button" data-rm="'+i+'" aria-label="Remove '+esc(m)+'">✕</button></span>').join('');
+  $('sh-acct').classList.toggle('on',share.on)}
+shd.addEventListener('click',async e=>{if(e.target===shd){shd.close();return}const b=e.target.closest('button');if(!b)return;
+  const sw={'sh-on':'on','sh-amt':'amt','sh-names':'names','sh-tips':'tips'}[b.id];
+  if(sw){share[sw]=!share[sw];saveShare();paintShare();buzz('tick');if(viewing)render(false);return}
+  if(b.dataset.v&&b.parentNode.id==='sh-live'){share.live=b.dataset.v==='live';saveShare();paintShare();return}
+  if(b.dataset.v&&b.parentNode.id==='sh-exp'){share.exp=b.dataset.v;saveShare();paintShare();return}
+  if(b.id==='sh-copy'){try{await navigator.clipboard.writeText(SH_URL());toast('Link copied')}catch(err){const i=$('sh-link');i.focus();i.select();toast('Press ⌘C or Ctrl+C to copy')}buzz('tick');return}
+  if(b.id==='sh-new'){share.id=Math.random().toString(36).slice(2,10);saveShare();paintShare();toast('New link made. The old one no longer works.');return}
+  if(b.id==='sh-add'){addEmail();return}
+  if(b.dataset.rm){share.emails.splice(+b.dataset.rm,1);saveShare();paintShare();return}
+  if(b.id==='sh-view'){shd.close();setViewing(true);return}
+  if(b.hasAttribute('data-close'))shd.close()});
+function addEmail(){const i=$('sh-email'),v=i.value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){$('sh-emsg').textContent='Enter an email address like name@example.com.';return}
+  if(!share.emails.includes(v))share.emails.push(v);if(!share.on)share.on=true;i.value='';$('sh-emsg').textContent='They’ll get the link by email once sharing goes live in the app.';saveShare();paintShare();buzz('tick')}
+$('sh-email').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addEmail()}});
+function setViewing(on){viewing=on;if(on&&editing)setEditing(false);$('cb').classList.toggle('viewing',on);$('vbar').hidden=!on;hideTip();render(false);if(on)cbx.scrollTop=0}
+$('vbar-x').addEventListener('click',()=>setViewing(false));
+$('cb-share').addEventListener('click',openShare);
+
+// ---------- Ask: questions about this board, answered by Claude from your numbers ----------
+const askd=$('askd');let sampleFn=null,askTurns=[],askCtl=null;
+if(window.claude&&claude.use)claude.use('sample').then(f=>{sampleFn=f;paintAskAvail()},()=>{});
+function paintAskAvail(){$('ask-off').hidden=!!sampleFn;$('ask-form').hidden=!sampleFn;$('ask-starts').hidden=!sampleFn||askTurns.length>0}
+const STARTS=['Which platform costs me the most in fees?','Why was profit down the last few months?','What was my best flip, and why did it work?','Am I buying more than I’m selling?'];
+function openAsk(){closeMenus();$('ask-starts').innerHTML=STARTS.map(q=>'<button type="button" data-q="'+esc(q)+'">'+esc(q)+'</button>').join('');$('ask-scope').textContent=$('cb-perl').textContent+' · '+$('cb-platl').textContent;paintAskAvail();askd.showModal();setTimeout(()=>$('ask-in').focus(),60)}
+// everything Claude sees: the period you picked, with exact cents
+function askData(){const ctx=ctxNow(),t=totals(ctx.inP),d=c=>(c/100).toFixed(2),pt={};
+  ctx.inP.forEach(e=>{const o=pt[e.platform]||(pt[e.platform]={bought:0,sold:0,fees:0,sales:0,n:0});if(e.type==='purchase')o.bought+=e.amount;if(e.type==='sale'){o.sales+=e.amount;o.fees+=e.amount-e.net;o.n++}});
+  const pv=ctx.prevP?totals(ctx.prevP):null;
+  return 'Period: '+$('cb-perl').textContent+' ('+ctx.a+' to '+ctx.b+'), platforms: '+$('cb-platl').textContent+'. Amounts in US dollars.\n'+
+   'Totals: sales '+d(t.sales)+', fees and shipping '+d(t.fees)+', kept after fees '+d(t.after)+', spent '+d(t.spent)+', profit '+d(t.profit)+', entries '+t.n+'.\n'+
+   (pv?'Comparison period ('+(compare==='year'?'same dates last year':'the same length just before')+'): sales '+d(pv.sales)+', spent '+d(pv.spent)+', fees '+d(pv.fees)+', profit '+d(pv.profit)+'.\n':'')+
+   'By '+ctx.unit+' (label | sales | spent | fees | profit):\n'+ctx.mt.map(x=>{const y=totals(x.list);return x.m+' | '+d(y.sales)+' | '+d(y.spent)+' | '+d(y.fees)+' | '+d(y.profit)}).join('\n')+'\n'+
+   'By platform (platform | bought | sales | fees and shipping | number of sales):\n'+Object.keys(pt).map(k=>k+' | '+d(pt[k].bought)+' | '+d(pt[k].sales)+' | '+d(pt[k].fees)+' | '+pt[k].n).join('\n')+'\n'+
+   'Recent entries (date | type | card | platform | amount | kept):\n'+ctx.inP.slice().sort((a,b)=>a.date<b.date?1:-1).slice(0,40).map(e=>e.date+' | '+e.type+' | '+e.name+(e.no?' '+e.no:'')+' | '+e.platform+' | '+d(e.amount)+' | '+(e.type==='sale'?d(e.net):'')).join('\n')}
+const ASK_RULES='You are the assistant inside Card Tab, an app where a trading card collector tracks what they buy and sell. Answer their question using only the data below. Keep it short: two to five plain sentences, or a short list. Quote exact dollar amounts to the cent from the data. If the data can\'t answer it, say what is missing. Talk to them as "you". No disclaimers. Format: plain text; you may use "- " bullets and **bold** for one or two key figures.\n\nDATA\n';
+function fmtAns(t){const lines=esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').split('\n');let h='',inl=false;
+  lines.forEach(l=>{if(/^\s*[-•]\s+/.test(l)){if(!inl){h+='<ul>';inl=true}h+='<li>'+l.replace(/^\s*[-•]\s+/,'')+'</li>'}else{if(inl){h+='</ul>';inl=false}if(l.trim())h+='<p>'+l+'</p>'}});return h+(inl?'</ul>':'')}
+function addBubble(role,html){const el=document.createElement('div');el.className='bub '+role;el.innerHTML=html;$('ask-log').appendChild(el);$('ask-log').scrollTop=1e6;return el}
+async function ask(q){if(!sampleFn||askCtl||!q.trim())return;$('ask-starts').hidden=true;addBubble('me',esc(q));const out=addBubble('ai','<p class="think">Thinking…</p>');
+  const input=askTurns.length?askTurns.concat([{role:'user',content:q}]):[{role:'user',content:ASK_RULES+askData()+'\n\nQUESTION\n'+q}];
+  askCtl=new AbortController();$('ask-go').hidden=true;$('ask-stop').hidden=false;
+  try{const {text}=await sampleFn(input,{signal:askCtl.signal,onText:({text})=>{out.innerHTML=fmtAns(text);$('ask-log').scrollTop=1e6}});out.innerHTML=fmtAns(text);
+    askTurns=input.concat([{role:'assistant',content:text}]).slice(-9);if(askTurns[0].role!=='user')askTurns.shift()}
+  catch(err){const c=err&&err.code;out.innerHTML=(err&&err.text?fmtAns(err.text):'')+'<p class="err">'+(c==='aborted'?'Stopped.':c==='not_granted'?'Ask needs your OK to use Claude. Open Ask again to allow it.':c==='rate_limited'?'Too many questions at once. Try again in a moment.':'That didn’t go through. Try asking again.')+'</p>'}
+  finally{askCtl=null;$('ask-go').hidden=false;$('ask-stop').hidden=true}}
+$('ask-form').addEventListener('submit',e=>{e.preventDefault();const v=$('ask-in').value;$('ask-in').value='';ask(v)});
+askd.addEventListener('click',e=>{if(e.target===askd){askd.close();return}const b=e.target.closest('button');if(!b)return;if(b.dataset.q){ask(b.dataset.q);return}
+  if(b.id==='ask-stop'&&askCtl){askCtl.abort();return}if(b.id==='ask-new'){askTurns=[];$('ask-log').innerHTML='';paintAskAvail();return}if(b.hasAttribute('data-close'))askd.close()});
+$('cb-ask').addEventListener('click',openAsk);
