@@ -460,3 +460,4 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 - Fixes found on the way: the sheet's art class clashed with the board's `.art`; CSS custom-property URLs resolved against board/ (404), so the art is set inline with an absolute URL.
 - v27.1: locked widgets in Add widgets are softly blurred (names stay sharp) instead of faded; Featured card's preview now shows its art in the gallery (it waited for a fade-in that never ran there).
 - v27.2: Premium sheet art now starts flush at the top (the shared sheet scroll wrapper was adding space; the Premium sheet opts out), no border line over the art, and no focus ring on ✕ when it opens.
+- v27.3: locked gallery widgets use a light blur (1.6px) plus a soft 30% veil, so they read clearly but still look locked.
