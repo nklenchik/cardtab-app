@@ -1,0 +1,10 @@
+// each sheet: is its main button on screen without scrolling, on a short laptop screen and a phone?
+const pw=require('playwright');(async()=>{const b=await pw.chromium.launch();const errs=[],out=[];
+for(const [vw,vh,mob] of [[1280,720,false],[390,700,true]]){const ctx=await b.newContext({viewport:{width:vw,height:vh},isMobile:mob,hasTouch:mob});const p=await ctx.newPage();p.on('pageerror',e=>errs.push(e.message));
+  await p.goto('file://'+require('path').resolve('cbt.html'));await p.evaluate(()=>localStorage.clear());await p.reload();await p.evaluate(()=>document.getElementById('expand').click());await p.waitForTimeout(1200);
+  const vis=sel=>p.evaluate(sel=>{const el=document.querySelector(sel);if(!el)return 'missing';const r=el.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;const t=document.elementFromPoint(x,y);return r.bottom<=innerHeight&&t&&(t===el||el.contains(t))?'visible':'hidden ('+Math.round(r.bottom)+' of '+innerHeight+')'},sel);
+  const sheets=[['add','#addw','#aw .awfoot .go',async()=>{await p.evaluate(()=>{document.getElementById('cb-edit').click()});await p.waitForTimeout(300)}],['profile',null,'#av-save',async()=>{await p.evaluate(()=>{document.getElementById('cb-acct').click();document.querySelector('[data-am="profile"].amh').click()})}],['dates',null,'#cr-go',async()=>{await p.evaluate(()=>{document.getElementById('cb-per').click();document.querySelector('#cb-menu [data-k="custom"]').click()})}],['share',null,'#sh-view',async()=>{await p.evaluate(()=>document.getElementById('cb-share').click())}]];
+  for(const [n,open,btn,pre] of sheets){await pre();if(open)await p.evaluate(s=>document.querySelector(s).click(),open);await p.waitForTimeout(500);out.push(vw+'x'+vh+' '+n+': '+(await vis(btn)));if(n==='add')await p.screenshot({path:'shots/v17-add-'+vw+'.png'});
+    await p.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(d=>d.close()));await p.waitForTimeout(200);if(n==='add')await p.evaluate(()=>document.getElementById('cb-edit').click())}
+  await ctx.close()}
+console.log(out.join('\n'));console.log('ERR',JSON.stringify(errs));await b.close()})();

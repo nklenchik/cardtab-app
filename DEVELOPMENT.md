@@ -198,3 +198,4 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
   - Edit-mode resize handles covered widget text. They're now small round handles on each widget's bottom edge, just inside its corner.
   - `tools/t57.js` sweeps every widget × size × Compare mode × range on phone and desktop for errors and overflow; it's clean.
 - Haptics: Nick can't feel them on his phone. iPhone web pages can't vibrate, and the switch workaround is unreliable (it needs iOS 18+, System Haptics on, and seems to fire only on taps, not drags). Real haptics need the native app wrapper (for example Capacitor).
+- Sheets (Add widgets, Edit profile, Custom dates, Share, Reset): the title stays pinned at the top and the main button (Done / Save / Show these dates / See what they'll see / Yes, reset) at the bottom, so only the middle scrolls and the action never needs scrolling to reach. `tools/t59.js` checks every main button is on screen at 1280×720 and 390×700.

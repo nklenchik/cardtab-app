@@ -197,3 +197,16 @@ dialog.drawer .askp{width:min(420px,100vw);max-height:none;height:100%;border-ra
 /* handles sit on the bottom edge, just inside each widget's own corner, so neighbours' handles never meet in the gap */
 .cbx #cb.editing .wq .grip{right:12px!important;bottom:-10px!important}
 .cbx #cb.editing .wq.edgeR .grip{left:12px!important;right:auto!important}
+/* every sheet: the title stays at the top and the main button stays at the bottom; only the middle scrolls */
+dialog.sheet .awp{overscroll-behavior:contain}
+dialog.sheet .awp>.awh,#aw .awtop{position:sticky;top:0;z-index:5;background:var(--cb-alt);margin:-22px -22px 0;padding:22px 22px 10px}
+#aw .awtop{display:grid;gap:12px;padding-bottom:12px;box-shadow:0 10px 14px -12px rgba(0,0,0,.25)}
+#aw .awtop .awh{position:static;margin:0;padding:0;background:none;box-shadow:none}
+dialog.sheet .awp>.go,dialog.sheet .awp>.rsb,#aw .awfoot{position:sticky;bottom:0;z-index:5;box-shadow:0 0 0 22px var(--cb-alt),0 -24px 22px 4px var(--cb-alt)}
+#aw .awfoot{display:grid;gap:10px;background:var(--cb-alt);margin:0 -22px -22px;padding:12px 22px 22px;box-shadow:0 -10px 14px -12px rgba(0,0,0,.25)}
+@media(max-width:760px){#aw .awfoot{padding-bottom:max(22px,env(safe-area-inset-bottom,0px))}}
+#aw.awg .awp{padding-bottom:0}
+#aw .awfoot{margin:0 -22px}
+dialog.sheet .awp:has(>.go:last-child),dialog.sheet .awp:has(>.rsb:last-child){padding-bottom:0}
+dialog.sheet .awp>.go:last-child,dialog.sheet .awp>.rsb:last-child{margin-bottom:22px}
+@media(max-width:760px){dialog.sheet .awp>.go:last-child{margin-bottom:max(22px,env(safe-area-inset-bottom,0px))}}

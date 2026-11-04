@@ -1,0 +1,28 @@
+const pw=require('playwright');(async()=>{const b=await pw.chromium.launch();const errs=[],log=[];
+let ctx=await b.newContext({viewport:{width:1280,height:950}});let p=await ctx.newPage();p.on('pageerror',e=>errs.push(e.message+' @ '+(e.stack||'').split('\n').slice(1,3).join(' ')));
+// stub Claude's sample capability so Ask can be exercised
+await p.addInitScript(()=>{window.claude={use:n=>Promise.resolve(n==='sample'?async(input,o)=>{const t='Your fees are highest on **eBay at 23.8%** of each sale.\n- eBay: $296.31 in fees\n- TCGplayer: 19.9%';window.__askIn=input;if(o&&o.onText)o.onText({text:t.slice(0,20),delta:''});return {text:t,truncated:false}}:null)}});
+await p.goto('file://'+require('path').resolve('cbt.html'));await p.evaluate(()=>localStorage.clear());await p.reload();await p.click('#expand');await p.waitForTimeout(1200);
+await p.screenshot({path:'shots/v12-top.png',clip:{x:0,y:0,width:1280,height:80}});
+await p.click('#cb-edit');await p.waitForTimeout(400);await p.click('#addw');await p.waitForTimeout(400);await p.screenshot({path:'shots/v12-add.png'});
+await p.click('#aw [data-k="month"]');await p.waitForTimeout(250);await p.screenshot({path:'shots/v12-add2.png'});
+log.push('after add first widget: '+(await p.evaluate(()=>document.querySelector('#simple>.w').dataset.k)));
+await p.click('#aw [data-k="month"]');await p.waitForTimeout(250);log.push('after tap again count month: '+(await p.evaluate(()=>document.querySelectorAll('#simple [data-k="month"]').length)));
+await p.fill('#aw-q','fee');await p.waitForTimeout(150);log.push('search "fee": '+(await p.evaluate(()=>[...document.querySelectorAll('#aw .thumb')].map(t=>t.dataset.k).join(','))));
+await p.click('#aw .go');await p.waitForTimeout(300);await p.click('#cb-edit');await p.waitForTimeout(300);
+await p.click('#cb-per');await p.waitForTimeout(150);await p.screenshot({path:'shots/v12-per.png',clip:{x:640,y:0,width:640,height:520}});await p.click('#cb-menu [data-k="custom"]');await p.waitForTimeout(300);
+await p.click('#cr-prev');await p.click('#cr-prev');await p.click('#cr-days [data-d="2026-09-08"]');await p.click('#cr-days [data-d="2026-09-21"]');await p.click('#cr-cmp [data-cmp="year"]');await p.waitForTimeout(150);await p.screenshot({path:'shots/v12-cal.png'});
+await p.click('#cr-go');await p.waitForTimeout(300);log.push('custom label: '+(await p.textContent('#cb-perl'))+' | kd: '+(await p.textContent('[data-k="profit"] .dl.hd')));
+await p.click('#cb-share');await p.waitForTimeout(300);await p.click('#sh-on');await p.click('#sh-amt');await p.click('#sh-names');await p.fill('#sh-email','sam@example.com');await p.click('#sh-add');await p.waitForTimeout(150);await p.screenshot({path:'shots/v12-share.png'});
+await p.click('#sh-view');await p.waitForTimeout(400);await p.screenshot({path:'shots/v12-viewing.png'});log.push('viewing: money hidden '+(await p.evaluate(()=>document.querySelector('[data-k="profit"] .bn').textContent))+' | win name '+(await p.evaluate(()=>{const e=document.querySelector('[data-k="win"] .nm');return e?e.textContent:'-'})));
+await p.click('#vbar-x');await p.waitForTimeout(300);
+await p.click('#cb-ask');await p.waitForTimeout(400);await p.click('#ask-starts button');await p.waitForTimeout(400);await p.screenshot({path:'shots/v12-ask.png'});
+log.push('ask sent data: '+(await p.evaluate(()=>/Totals: sales/.test(window.__askIn[0].content))));
+await ctx.close();
+ctx=await b.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});p=await ctx.newPage();p.on('pageerror',e=>errs.push(e.message+' @ '+(e.stack||'').split('\n').slice(1,3).join(' ')));
+await p.goto('file://'+require('path').resolve('cbt.html'));await p.evaluate(()=>localStorage.clear());await p.reload();await p.tap('#expand');await p.waitForTimeout(1200);await p.screenshot({path:'shots/v12-p.png'});
+await p.tap('#cb-edit');await p.waitForTimeout(300);await p.tap('#addw');await p.waitForTimeout(400);await p.screenshot({path:'shots/v12-padd.png'});await p.tap('#aw .go');await p.waitForTimeout(300);
+await p.tap('#cb-per');await p.tap('#cb-menu [data-k="custom"]');await p.waitForTimeout(300);await p.screenshot({path:'shots/v12-pcal.png'});await p.keyboard.press('Escape');await p.tap('#cb-edit');await p.waitForTimeout(300);
+await p.tap('#cb-share');await p.waitForTimeout(300);await p.screenshot({path:'shots/v12-pshare.png'});await p.keyboard.press('Escape');
+await p.tap('#cb-ask');await p.waitForTimeout(400);await p.screenshot({path:'shots/v12-pask.png'});
+console.log(log.join('\n'));console.log('ERR',JSON.stringify(errs));await b.close()})();
