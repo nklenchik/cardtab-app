@@ -114,3 +114,14 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   #as.closing .phone,.ed.closing .ed-form{animation:ct-shDown .22s ease-in both}
 }
 @media(prefers-reduced-motion:reduce){#as .phone,.ed .ed-form,#as::backdrop,.ed::backdrop{animation:none!important}}
+
+/* ===== Add a card on phones: anchored to the top so the keyboard only ever changes the hidden bottom edge;
+   it slides as one layer, and slides fully off screen on close even when it's been shortened above the keyboard ===== */
+@keyframes ct-shDownFar{to{transform:translateY(100vh)}}
+@media(max-width:760px){
+  #as[open]{align-items:flex-start}
+  #as .phone{margin-top:12px;height:calc(100% - 12px)}
+  #as.moving .phone,#as.closing .phone{will-change:transform}
+  #as.closing .phone{animation:ct-shDownFar .26s cubic-bezier(.4,0,1,1) both}
+}
+html.ct-lock,html.ct-lock body{overflow:hidden;overscroll-behavior:none}

@@ -85,7 +85,12 @@
   res.addEventListener('touchmove', () => { if (document.activeElement === inp) inp.blur(); }, { passive: true });
   // Keep the sheet above the on-screen keyboard: size the dialog to the visible part of the screen
   const vv = window.visualViewport;
-  function fit() { if (!dlg.open || !vv) return; dlg.style.height = vv.height + 'px'; dlg.style.top = vv.offsetTop + 'px'; }
+  // While the sheet is sliding in or out, nothing resizes it: the keyboard rises (or drops) under the moving sheet, and the
+  // sheet settles above the keyboard once, after the slide. Resizing on every keyboard step is what made it stutter.
+  let moving = false, settle = 0;
+  function fit() { if (!dlg.open || !vv || moving) return; dlg.style.height = vv.height + 'px'; dlg.style.top = vv.offsetTop + 'px'; }
+  dlg.addEventListener('closing', () => { moving = true; clearTimeout(settle); });
+  dlg.addEventListener('close', () => { moving = false; clearTimeout(settle); dlg.style.height = ''; dlg.style.top = ''; dlg.classList.remove('moving'); });
   if (vv) { vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
 
   function show(step) { $('as-s1').style.display = step === 1 ? 'flex' : 'none'; $('as-s2').style.display = step === 2 ? 'flex' : 'none'; }
@@ -183,8 +188,10 @@
     st.type = d.type === 'sale' ? 'sale' : 'purchase'; setSeg('as-type', st.type === 'sale' ? 1 : 0);
     st.cond = 0; setSeg('as-cond', 0);
     inp.value = ''; inp.disabled = false; $('as-toast').classList.remove('on'); show(1); render();
-    dlg.showModal(); fit();
-    requestAnimationFrame(() => inp.focus({ preventScroll: true }));
+    // Focus right away (still inside your tap) so the keyboard starts rising together with the sheet, not after it
+    dlg.style.height = ''; dlg.style.top = ''; moving = true; dlg.classList.add('moving');
+    dlg.showModal(); inp.focus({ preventScroll: true });
+    clearTimeout(settle); settle = setTimeout(() => { moving = false; dlg.classList.remove('moving'); fit(); }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 440);
   }
   function close() { if (dlg.open) dlg.close(); }
 

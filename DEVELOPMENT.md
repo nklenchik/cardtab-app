@@ -399,3 +399,9 @@ Tests: tools/t87-app-nav.js, tools/t88-board-nav.js, tools/t84.js (still passes)
 
 ### v25.1 — phone header
 - Phones: the profile sits alone in the top right (logo left), matching the board and Stories. Search, Export and a round crimson + (Add New, aria-label kept) share the row under it. Desktop unchanged. Search and Export keep the soft look in dark mode.
+
+### v25.2 — Add New, buttery on phones
+- The keyboard, the sheet's slide and the sheet's fit-above-keyboard used to fight: the sheet resized on every step of the keyboard animation while sliding. Now the search field is focused inside the tap (keyboard rises with the slide), nothing resizes the sheet while it moves, and it settles above the keyboard once after the slide (440ms). The sheet is anchored to the top on phones, so that settle only changes its hidden bottom edge.
+- Closing drops the keyboard as the sheet starts to leave and slides it fully off (100vh, .26s), even when it was shortened above the keyboard.
+- The page under any sheet is locked (html.ct-lock), so the keyboard can't nudge it.
+- Older months behind "Show ..." are only built when opened (and dropped again after closing), so the page stays light: opening a sheet re-checks far fewer elements (showModal 114 -> 67ms at 4x slower CPU, 240 entries) and filters redraw faster (~85ms).

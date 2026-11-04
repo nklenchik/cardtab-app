@@ -190,6 +190,8 @@
     sel.value = ps.includes(cur) ? cur : 'all';
   }
 
+  // Older months behind "Show ..." aren't built until you open them, so the page stays light (sheets open faster, filters redraw faster)
+  let earlierHTML = '';
   function render() {
     dates();
     const all = S.all(), empty = !all.length;
@@ -228,7 +230,7 @@
     endGroup();
     justAdded = null;
     let html = chunks.join('');
-    if (collapse) { const parts = html.split('\u0000'); html = parts[0] + '<button type="button" class="ct-earlier-btn" aria-expanded="' + showEarlier + '" data-names="' + esc(earlierNames) + '"><span>' + (showEarlier ? 'Hide ' : 'Show ') + esc(earlierNames) + '</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><div class="ct-earlier' + (showEarlier ? ' open' : '') + '"' + (showEarlier ? '' : ' inert') + '><div>' + parts[1] + '</div></div>'; }
+    if (collapse) { const parts = html.split('\u0000'); html = parts[0] + '<button type="button" class="ct-earlier-btn" aria-expanded="' + showEarlier + '" data-names="' + esc(earlierNames) + '"><span>' + (showEarlier ? 'Hide ' : 'Show ') + esc(earlierNames) + '</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><div class="ct-earlier' + (showEarlier ? ' open' : '') + '"' + (showEarlier ? '' : ' inert') + '><div>' + (showEarlier ? parts[1] : '') + '</div></div>'; earlierHTML = parts[1]; } else earlierHTML = '';
     const list = $('ct-rows'), keepScroll = list.scrollTop;
     list.innerHTML = html || '<div class="ct-empty"><p>No entries match.</p><button type="button" data-clear-filters>Clear filters</button></div>';
     list.scrollTop = keepScroll;
@@ -240,6 +242,8 @@
     const eb = e.target.closest('.ct-earlier-btn');
     if (eb) {
       const list = $('ct-rows'), box = list.querySelector('.ct-earlier'), opening = !showEarlier;
+      if (opening && box.firstElementChild && !box.firstElementChild.firstChild) box.firstElementChild.innerHTML = earlierHTML;
+      clearTimeout(box._empty); if (!opening) box._empty = setTimeout(() => { if (!showEarlier && box.isConnected && box.firstElementChild) box.firstElementChild.innerHTML = ''; }, 520);
       const inner = box.firstElementChild ? box.firstElementChild.scrollHeight : 0; pinList(opening ? inner : -inner, 420);
       showEarlier = opening; box.classList.toggle('open', opening); box.toggleAttribute('inert', !opening);
       eb.setAttribute('aria-expanded', String(opening)); eb.querySelector('span').textContent = (opening ? 'Hide ' : 'Show ') + eb.dataset.names;
