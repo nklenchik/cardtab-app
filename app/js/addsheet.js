@@ -66,25 +66,27 @@
     if (!t) { res.innerHTML = sessionHTML(); totals(); setGo(false, 'Pick a card'); return; }
     if (!st.list.length && st.busy) { res.innerHTML = '<div class="none">Looking it up…</div>'; setGo(false, 'Pick a card'); return; }
     if (!st.list.length) { res.innerHTML = '<div class="none">No match yet. Keep typing, or add the number.</div>' + typed; setGo(false, 'Pick a card'); return; }
-    if (st.list.length === 1) {
-      const c = st.list[0];
-      res.innerHTML = '<div class="pick" style="margin-top:12px"><span class="art" style="background:' + artBg(c) + '"></span><div><div class="n">' + esc(c.n) + '</div><div class="m">' + esc(c.s) + ' · ' + esc(c.num) + '</div><div class="m">' + esc(c.r) + '</div></div></div><div class="why"><b>One match.</b> Press Enter.</div>' + typed;
-      st.sel = 0; setGo(true, 'Continue to price'); return;
-    }
-    const pre = st.why && st.why !== 'one';
-    let h = '<div class="q">Which one is your card?<small>' + st.list.length + ' printings match.</small></div><div class="grid">';
+    // Results are a short list: tap the one that's yours and go straight to price ("Change" on the price step undoes a wrong tap)
+    const pre = st.list.length === 1 || (st.why && st.why !== 'one');
+    if (st.list.length === 1) st.sel = 0;
+    let h = '<div class="lsl">' + (st.list.length === 1 ? 'One match · tap it or press Enter' : st.list.length + ' printings · tap yours') + '</div><div class="lst">';
     st.list.forEach((c, i) => {
-      h += '<button type="button" class="tile" data-i="' + i + '" aria-pressed="' + (i === st.sel) + '">' + (pre && i === 0 ? '<span class="best">Best match</span>' : '') + CK + '<span class="art" style="background:' + artBg(c) + '">' + (c.art ? '' : 'ART') + '</span><span class="r">' + esc(c.r) + '</span><span class="s">' + esc(c.s) + '<br>' + esc(c.num) + '</span></button>';
+      h += '<button type="button" class="li" data-i="' + i + '"><span class="art" style="background:' + artBg(c) + '"></span><span class="t"><span class="n">' + esc(c.n) + (c.r ? ' · ' + esc(c.r) : '') + '</span><span class="m">' + esc([c.s, c.num].filter(Boolean).join(' · ')) + (pre && i === 0 ? '<b class="bm">' + (st.list.length === 1 ? 'Match' : 'Best match') + '</b>' : '') + '</span></span><span class="go" aria-hidden="true"></span></button>';
     });
-    h += '</div>' + (pre ? '<div class="why"><b>' + esc(st.why) + '</b> in what you typed, so it is pre-selected. Press Enter.</div>' : '<div class="why">Not enough to tell. ' + (matchMedia('(hover:hover) and (pointer:fine)').matches ? 'Click' : 'Tap') + ' the art that matches your card.</div>') + typed;
+    h += '</div>' + typed;
     res.innerHTML = h; setGo(st.sel > -1, st.sel < 0 ? 'Pick a card' : 'Continue to price');
   }
   res.addEventListener('click', e => {
-    const tile = e.target.closest('.tile');
-    if (tile) { st.sel = +tile.dataset.i; render(); const nb = res.querySelectorAll('.tile')[st.sel]; if (nb) nb.focus({ preventScroll: true }); return; }
+    const li = e.target.closest('.li');
+    if (li) { st.sel = +li.dataset.i; li.classList.add('on'); window.ctBuzz && window.ctBuzz(); toPrice(); return; }
     if (e.target.closest('[data-typed]')) toPrice(true);
   });
-  res.addEventListener('keydown', e => { if (e.key === 'Enter' && st.sel > -1 && e.target.classList.contains('tile')) { e.preventDefault(); toPrice(); } });
+  // Dragging the results drops the keyboard so the whole list is in view
+  res.addEventListener('touchmove', () => { if (document.activeElement === inp) inp.blur(); }, { passive: true });
+  // Keep the sheet above the on-screen keyboard: size the dialog to the visible part of the screen
+  const vv = window.visualViewport;
+  function fit() { if (!dlg.open || !vv) return; dlg.style.height = vv.height + 'px'; dlg.style.top = vv.offsetTop + 'px'; }
+  if (vv) { vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
 
   function show(step) { $('as-s1').style.display = step === 1 ? 'flex' : 'none'; $('as-s2').style.display = step === 2 ? 'flex' : 'none'; }
   function setSeg(id, i) { const el = $(id); el.setAttribute('data-i', i); el.querySelectorAll('button').forEach((b, k) => b.setAttribute('aria-pressed', k === i)); }
@@ -125,7 +127,7 @@
       const e = await S.add({ type: st.type, name, platform: $('as-plat').value, qty: st.qty, amount: v, fees: sale ? fe : null, ship: sale ? sh : null, condition: COND_FULL[CONDS[st.cond]], art: c.art || null, note: st.grade ? 'Graded ' + st.grade : '' });
       const amt = sale ? k : v;
       st.rows.unshift({ n: c.n, m: (c.typed ? '' : c.s + ' · ') + (st.qty > 1 ? '×' + st.qty + ' · ' : '') + CONDS[st.cond], h: c.h, art: c.art, sale, amt, qty: st.qty, isNew: true, id: e.id });
-      st.total += sale ? amt : -amt;
+      st.total += sale ? amt : -amt; window.ctBuzz && window.ctBuzz();
       show(1); inp.value = ''; st.sig = '~'; render(); tween(); inp.focus(); mem.set(sale ? { ship: sh } : null);
       const u = S.usage();
       flash(u.plan === 'free' && u.blocked ? 'Saved · that was your last free entry this month' : u.plan === 'free' && u.warn ? 'Saved · ' + u.left + (u.left === 1 ? ' free entry' : ' free entries') + ' left' : 'Saved · ready for the next card');
@@ -181,7 +183,7 @@
     st.type = d.type === 'sale' ? 'sale' : 'purchase'; setSeg('as-type', st.type === 'sale' ? 1 : 0);
     st.cond = 0; setSeg('as-cond', 0);
     inp.value = ''; inp.disabled = false; $('as-toast').classList.remove('on'); show(1); render();
-    dlg.showModal();
+    dlg.showModal(); fit();
     requestAnimationFrame(() => inp.focus({ preventScroll: true }));
   }
   function close() { if (dlg.open) dlg.close(); }

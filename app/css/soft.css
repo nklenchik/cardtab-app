@@ -1,0 +1,62 @@
+/* ================= Card Tab app — soft look (preview). Look only: layout, sizes, behavior untouched. ================= */
+:root{--s-bg:#f8f7f4;--s-card:#fff;--s-track:#f1efea;--s-hair:rgba(40,30,20,.075);--s-dot:#d9d6cb;--s-whisper:0 1px 2px rgba(40,30,20,.05),0 8px 22px -12px rgba(40,30,20,.17);--s-fade:color-mix(in srgb,#fff 97%,#e9e2d8);--s-brand:#bf1240}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--s-bg:#121110;--s-card:#1f1d1b;--s-track:#2a2725;--s-hair:rgba(255,255,255,.06);--s-dot:#4a4744;--s-whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6);--s-fade:#1c1a18;--s-brand:#e0285a}}
+:root[data-theme="dark"]{--s-bg:#121110;--s-card:#1f1d1b;--s-track:#2a2725;--s-hair:rgba(255,255,255,.06);--s-dot:#4a4744;--s-whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6);--s-fade:#1c1a18;--s-brand:#e0285a}
+html,body,.ct-demo{background:var(--s-bg)}
+.ct-demo{--ct-bg:var(--s-bg);--ct-line:var(--s-hair)}
+.ct-demo .ct-app{background:var(--s-bg)}
+/* the paper cards: stats, Insights, first-run card, sign-in card */
+.ct-demo .ct-stats>div,.ct-demo .ct-insight,.app-first,.auth-card{background:linear-gradient(180deg,var(--s-card) 55%,var(--s-fade));border:1px solid var(--s-hair);box-shadow:var(--s-whisper);border-radius:20px;background-clip:padding-box}
+.auth-card{border-color:transparent!important}
+/* profit reads like the board: green number on a white card */
+.ct-demo .ct-stats>div.ct-positive{background:linear-gradient(180deg,var(--s-card) 55%,var(--s-fade))!important}
+/* segmented controls look like the board's */
+.ct-demo .ct-insight-tabs,.auth-seg{background:var(--s-track);border-radius:12px}
+.ct-demo .ct-insight-tabs button.ct-selected{background:var(--s-card);border-color:transparent;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+/* fields, filters and quiet buttons: white with a hairline edge */
+.ct-demo .ct-search,.ct-demo .ct-filters select,.ct-demo #ct-sort,.ct-demo .ct-earlier-btn,.auth-g,.auth-f input,#auth-email{background:var(--s-card);border-color:var(--s-hair)!important;box-shadow:0 1px 2px rgba(40,30,20,.035);border-radius:14px}
+.ct-demo .ct-search{border-radius:14px}
+/* top bar: Add New is the one crimson button, like Done on the board; export is a quiet pill; your picture is a crimson circle */
+.ct-demo .ct-add:not(.app-big),.ct-demo .app-big,.auth-go{background:var(--s-brand)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 6px 14px -10px rgba(160,15,54,.6)}
+.ct-demo .ct-export{background:var(--s-card);color:var(--ct-text);border-color:var(--s-hair)!important;box-shadow:0 1px 2px rgba(40,30,20,.035)}
+.ct-demo .app-avatar{background:var(--s-brand);color:#fff;border-color:transparent}
+/* the entries list becomes a receipt: each month is one paper strip with dotted lines between entries and a torn edge at the bottom */
+.ct-demo .ct-month{border-top-color:transparent;border-bottom-color:transparent}
+.ct-demo .ct-row{background:var(--s-card);border-radius:0;border-bottom-style:dotted;border-bottom-color:var(--s-dot)}
+.ct-demo .ct-month+.ct-row{border-radius:18px 18px 0 0}
+.ct-demo .ct-row.ct-last{border-bottom:12px solid var(--s-card);margin-bottom:14px;
+  -webkit-mask:linear-gradient(#000 0 0) top/100% calc(100% - 8px) no-repeat,conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) bottom/16px 8px repeat-x;mask:linear-gradient(#000 0 0) top/100% calc(100% - 8px) no-repeat,conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) bottom/16px 8px repeat-x}
+.ct-demo .ct-month+.ct-row.ct-last{border-radius:18px 18px 0 0}
+/* add sheet: same light ground, white tiles with hairline edges */
+#as{--surface:var(--s-track);--raised:var(--s-card);--line:var(--s-hair)}
+#as .sheet{background:var(--s-bg)}
+#as .tile{box-shadow:var(--s-whisper)}
+#as .save{background:var(--s-brand)}
+/* menus and toasts */
+.app-menu{background:var(--s-card);border-color:var(--s-hair);box-shadow:0 18px 40px -16px rgba(40,30,20,.3)}
+
+/* filter and sort pills: the same inner padding on every pill, so text never sits against the left edge */
+.ct-demo select{padding-left:14px!important;padding-right:32px!important;background-position:right 12px center}
+@media(max-width:760px){.ct-demo .ct-filters select{padding-left:12px!important;padding-right:26px!important}}
+/* type tabs: one segmented control on the light track, like Monthly / Platform fees / Ask and the board */
+.ct-demo .ct-tabs{gap:2px;background:var(--s-track);border-radius:999px;padding:3px;align-self:center}
+.ct-demo .ct-tabs button{background:none!important;border:0!important;color:var(--ct-muted)!important;border-radius:999px;padding:7px 14px;font-weight:700;white-space:nowrap;transition:background .2s,color .2s}
+.ct-demo .ct-tabs button.ct-selected{background:var(--s-card)!important;color:var(--ct-text)!important;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+@media(hover:hover){.ct-demo .ct-tabs button:not(.ct-selected):hover{color:var(--ct-text)!important}}
+
+/* rows below the fold skip layout and paint until they scroll near the screen */
+.ct-demo .ct-row:not(.expanded){content-visibility:auto;contain-intrinsic-size:auto 96px}
+
+/* ===== Mirror the board: widget-style tiles, pill tabs, round icon buttons, crimson links, slimmer bars ===== */
+.ct-demo .ct-stats>div,.ct-demo .ct-insight{border-radius:22px}
+.ct-demo .ct-stats small{color:var(--ct-text);font-size:13.5px;font-weight:800;letter-spacing:-.01em}
+.ct-demo .ct-stats .ct-positive small{color:var(--ct-text)}
+.ct-demo .ct-stats strong{font-weight:800;letter-spacing:-.035em}
+@media(max-width:760px){.ct-demo .ct-stats strong{font-size:clamp(22px,6.2vw,28px)}}
+.ct-demo .ct-insight-tabs,.auth-seg{border-radius:999px}
+.ct-demo .ct-insight-tabs button,.auth-seg button{border-radius:999px}
+@media(max-width:760px){.ct-demo .ct-export{width:40px;height:40px;padding:0!important;border-radius:50%;display:grid;place-items:center}}
+.ct-demo .ct-chart-col button{max-width:36px!important}
+.app-scope button,.am-plan .up,.app-toast button{color:var(--s-brand)!important}
+.app-first-ic,.imp-ic{background:color-mix(in srgb,var(--s-brand) 10%,transparent)!important;color:var(--s-brand)!important}
+.imp-pills button.on{border-color:var(--s-brand)!important;background:color-mix(in srgb,var(--s-brand) 9%,transparent)!important;color:var(--s-brand)!important}

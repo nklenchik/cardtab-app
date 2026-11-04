@@ -8,7 +8,9 @@
   const root = document.getElementById('view-app');
   const $ = id => document.getElementById(id), $$ = sel => Array.from(root.querySelectorAll(sel));
   const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const money = c => (c < 0 ? '−' : '') + '$' + (Math.abs(c) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // One formatter reused for every amount (building a new one per row was the slowest part of redrawing the list); same output, to the cent
+  const NF = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const money = c => (c < 0 ? '−' : '') + '$' + NF.format(Math.abs(c) / 100);
   const pad = n => String(n).padStart(2, '0');
   const phone = matchMedia('(max-width:760px)'), calm = matchMedia('(prefers-reduced-motion: reduce)');
   const fine = () => matchMedia('(hover:hover) and (pointer:fine)').matches;
@@ -27,7 +29,8 @@
   }
   const inPeriod = (t, p) => p === 'all' || (p === 'month' ? t.date.startsWith(D.monthPrefix) : p === 'last' ? t.date.startsWith(D.prevPrefix) : t.date >= D.from30);
   const periodLabel = p => (p === 'all' ? 'All time' : p === 'month' ? D.monthLabel : p === 'last' ? D.prevLabel : 'Last 30 days');
-  const ymLabel = (k, fmt) => new Date(k + '-15T12:00:00').toLocaleString('en-US', fmt);
+  const YM = new Map();
+  const ymLabel = (k, fmt) => { const key = k + JSON.stringify(fmt); let v = YM.get(key); if (v == null) { v = new Date(k + '-15T12:00:00').toLocaleString('en-US', fmt); YM.set(key, v); } return v; };
   const shortDate = d => Number(d.slice(5, 7)) + '/' + Number(d.slice(8, 10)) + '/' + d.slice(0, 4);
   const premium = () => S.plan() === 'premium';
 
@@ -124,15 +127,18 @@
     return '<span class="ct-card-art ct-art-ph" aria-hidden="true"><i>' + esc(letter) + '</i></span>';
   }
   function detailsHtml(t) {
-    const bits = [];
+    // Small labeled stats, like the board's tiles: label on top, the number under it
+    let pctLine = '';
+    const st = [], cell = (l, v, sub) => st.push('<div><small>' + l + '</small><span>' + v + '</span>' + (sub ? '<em>' + sub + '</em>' : '') + '</div>');
     if (t.type === 'sale') {
       const fee = t.amount - t.net, pct = t.amount ? Math.round(fee / t.amount * 1000) / 10 : 0;
-      if (t.fees != null) bits.push('Fees <strong>' + money(t.fees) + '</strong> · Shipping <strong>' + money(t.ship || 0) + '</strong>' + (t.amount ? ' (' + pct + '% of the sale)' : ''));
-      else bits.push('Fees and shipping <strong>' + money(fee) + '</strong>' + (t.amount ? ' (' + pct + '% of the sale)' : ''));
+      if (t.fees != null) { cell('Fees', money(t.fees)); cell('Shipping', money(t.ship || 0)); }
+      else cell('Fees + ship', money(fee));
+      if (t.amount) pctLine = '<div class="ct-pct">Fees and shipping are ' + pct + '% of the sale</div>';
     }
-    if (t.qty > 1) bits.push('Quantity <strong>' + t.qty + '</strong> · ' + money(Math.round(t.amount / t.qty)) + ' each');
-    if (t.condition) bits.push('Condition <strong>' + esc(t.condition) + '</strong>');
-    return '<div class="ct-open-actions"><div class="ct-row-expanded-info">' + (bits.length ? '<div class="ct-market-note">' + bits.join(' · ') + '</div>' : '') + (t.note ? '<div class="ct-row-note">' + esc(t.note) + '</div>' : '') + '<div class="ct-demo-actions"><button type="button" data-act="edit">Edit</button><button type="button" data-act="dup">Duplicate</button><button type="button" data-act="del">Delete</button></div></div></div>';
+    if (t.qty > 1) cell('Quantity', String(t.qty), money(Math.round(t.amount / t.qty)) + ' each');
+    if (t.condition) cell('Condition', esc(t.condition));
+    return '<div class="ct-open-actions"><div class="ct-row-expanded-info">' + (st.length ? '<div class="ct-stats-row">' + st.join('') + '</div>' : '') + pctLine + (t.note ? '<div class="ct-row-note">' + esc(t.note) + '</div>' : '') + '<div class="ct-demo-actions"><button type="button" data-act="edit">Edit</button><button type="button" data-act="dup">Duplicate</button><button type="button" data-act="del">Delete</button></div></div></div>';
   }
   const fullArt = img => { if (!img || img.tagName !== 'IMG' || img.dataset.loaded) return; img.dataset.loaded = 1; const u = img.dataset.full, pre = new Image(), t0 = performance.now(); pre.src = u; (pre.decode ? pre.decode() : new Promise((r, j) => { pre.onload = r; pre.onerror = j; })).then(() => setTimeout(() => { if (img.isConnected) img.src = u; }, Math.max(0, 380 - (performance.now() - t0)))).catch(() => { delete img.dataset.loaded; }); };
   function setBtn(btn, open) { const t = S.get(btn.dataset.tx); if (!t) return; btn.setAttribute('aria-expanded', open); btn.setAttribute('aria-label', (open ? 'Collapse ' : 'Expand ') + t.name); btn.querySelector('.ct-row-chevron').textContent = open ? '−' : '+'; }
@@ -202,20 +208,24 @@
     const cur = t => t.date.startsWith(D.monthPrefix);
     const keepN = Math.max(3, rows.filter(cur).length);
     const collapse = phone.matches && period === 'all' && sort === 'new' && rows.length > keepN && !listFiltered;
-    const earlier = [...new Set(rows.slice(keepN).map(t => new Date(t.date + 'T12:00:00').toLocaleString('en-US', { month: 'long' })))];
+    const earlier = [...new Set(rows.slice(keepN).map(t => t.date.slice(0, 7)))].map(k => ymLabel(k, { month: 'long' })).filter((v, i, a) => a.indexOf(v) === i);
     const earlierNames = earlier.length > 3 ? 'earlier months' : earlier.length < 2 ? earlier.join('') : earlier.slice(0, -1).join(', ') + ' and ' + earlier[earlier.length - 1];
     const perMonth = {}; rows.forEach(t => { const k = t.date.slice(0, 7); perMonth[k] = (perMonth[k] || 0) + 1; });
-    let marked = false; const chunks = []; let current = '';
+    let marked = false; const chunks = []; let current = '', lastRow = -1;
+    // The last row of each month gets a class here (the torn receipt edge), so the browser never has to search for it
+    const endGroup = () => { if (lastRow > -1) { chunks[lastRow] = chunks[lastRow].replace('<div class="ct-row ', '<div class="ct-row ct-last '); lastRow = -1; } };
     if (expanded && !rows.some(t => t.id === expanded)) expanded = null;
     rows.forEach((t, i) => {
       const k = t.date.slice(0, 7), m = ymLabel(k, { month: 'long', year: 'numeric' });
-      if (collapse && !marked && i >= keepN) { marked = true; chunks.push('\u0000'); current = ''; }
-      if (sort !== 'high' && m !== current) { current = m; chunks.push('<div class="ct-month">' + m + ' <span>' + perMonth[k] + (perMonth[k] === 1 ? ' entry' : ' entries') + '</span></div>'); }
+      if (collapse && !marked && i >= keepN) { endGroup(); marked = true; chunks.push('\u0000'); current = ''; }
+      if (sort !== 'high' && m !== current) { endGroup(); current = m; chunks.push('<div class="ct-month">' + m + ' <span>' + perMonth[k] + (perMonth[k] === 1 ? ' entry' : ' entries') + '</span></div>'); }
       const open = expanded === t.id, badge = t.type === 'sale' ? 'Sale' : t.type === 'refund' ? 'Refund' : 'Purchase';
       const after = t.type === 'sale' ? ' &nbsp; After fees <em>' + money(t.net) + '</em>' : '';
       const verb = t.type === 'sale' ? 'Sold' : t.type === 'refund' ? 'Refunded to buyer' : 'Paid';
       chunks.push('<div class="ct-row ' + (open ? 'expanded' : '') + (t.id === justAdded ? ' ct-new' : '') + '"><button type="button" class="ct-row-toggle" data-tx="' + t.id + '" aria-expanded="' + open + '" aria-label="' + (open ? 'Collapse' : 'Expand') + ' ' + esc(t.name) + '">' + artHtml(t, open) + '<div class="ct-expanded-right"><div class="ct-row-meta">' + shortDate(t.date) + (t.platform ? ' · ' + esc(t.platform) : '') + '</div><div class="ct-row-name">' + esc(t.name) + (t.qty > 1 ? ' ×' + t.qty : '') + '</div><div class="ct-row-bottom">' + verb + ' <strong>' + money(t.amount) + '</strong>' + after + '</div></div><span class="ct-tag ' + t.type + '">' + badge + '</span><span class="ct-row-chevron" aria-hidden="true">' + (open ? '−' : '+') + '</span></button>' + (open ? detailsHtml(t) : '') + '</div>');
+      lastRow = chunks.length - 1;
     });
+    endGroup();
     justAdded = null;
     let html = chunks.join('');
     if (collapse) { const parts = html.split('\u0000'); html = parts[0] + '<button type="button" class="ct-earlier-btn" aria-expanded="' + showEarlier + '" data-names="' + esc(earlierNames) + '"><span>' + (showEarlier ? 'Hide ' : 'Show ') + esc(earlierNames) + '</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><div class="ct-earlier' + (showEarlier ? ' open' : '') + '"' + (showEarlier ? '' : ' inert') + '><div>' + parts[1] + '</div></div>'; }

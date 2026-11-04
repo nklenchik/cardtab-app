@@ -377,3 +377,22 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 
 ### v24.2 — entries list in batches
 - The entries sheet shows the newest 50 at once and adds 50 more whenever you get within about 800px of the end of the sheet's scroll area (it finds the element that actually scrolls). There is no cap (it used to stop silently at 300); the summary line always counts every entry. Month headers stay pinned while you scroll.
+
+### v25 — the main app in the soft look, one profile menu, smoother everywhere
+Look (app/css/soft.css; layout and behavior untouched):
+- Same ground, cards and edges as the board: #f8f7f4 page (dark #121110), white tiles with a real 1px hairline border and the board's whisper shadow, 22px corners, bold dark tile titles, pill segmented controls (Insights tabs, the type tabs All / Sales / Purchases / Refunds), white hairline fields and pills with 14px inner padding, crimson primary buttons and links, round icon buttons on phones.
+- Entries read as a receipt: white rows, dotted dividers, a torn edge under each month's last row (the row gets .ct-last while the list is built; no :has() selectors, which made every dialog open slower).
+New pieces (app/css/new.css, js changes):
+- Add a card: the sheet sizes itself to the space above the keyboard (visualViewport), results are a short list (tap one to go straight to price; "Change" undoes it), dragging the list drops the keyboard, slim white search, the board's close button, soft fade at the top of the results. text-size-adjust:100% stops iPhone enlarging text on its own.
+- Open entry: stays white; fees / shipping / condition as small labeled stats, the fee % on its own line, Edit and Duplicate as pills, Delete as red text.
+- Profile menu: the same menu as the board and Stories (header, Go to: Entries / Card Board / Card Stories with "You're here", the window's own middle group, Plan and billing, Platforms and fees, Appearance, Haptics, Help, Sign out). Appearance and haptics share the board's keys (cb.theme, cb.haptics). Centered with a backdrop on phones. Premium shows just the badge; Free keeps the usage bar.
+- js/motion.js: sheets (#as, #ed, #imp) open and close with the board's exact motion (phones shUp .42s cubic-bezier(.2,.8,.2,1) / shDown .22s; desktop sheetIn .32s / sheetOut .18s), and one history stack makes Back close the top layer. A layer opened while a back step is still settling (menu -> Import) waits for it, so Back never skips a layer or leaves the app. Same fix applied to the board and Stories.
+Speed (measured at 4x slower CPU with 240 entries, tools/perf-app.js and tools/perf-board.js):
+- Changing a filter: 405ms -> 128ms. The list built a new number formatter for every amount and every month label; one shared formatter now (identical output, checked across 2 million amounts).
+- Rows off screen skip layout and paint (content-visibility:auto).
+- Board Add widgets: ~390ms -> ~145ms. The gallery measured and resized tiles one at a time (a layout per tile); it now measures once, and it's built in idle time when editing starts and reused.
+- Board and Stories reuse their formatters too.
+Board and Stories:
+- Stories has its own avatar; it opens the board's menu (moved into a top-level holder above the Stories layer) with Save all stories and Story themes in the middle. Account rows chosen from Stories slide back to the board first.
+- The board always covers the page beneath it (its background fills any gap when the phone's view grows or bounces), and the page beneath can't scroll while it's open.
+Tests: tools/t87-app-nav.js, tools/t88-board-nav.js, tools/t84.js (still passes).

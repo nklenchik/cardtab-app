@@ -149,6 +149,13 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 .mtiles .mt.in:nth-child(4n+1),.mtiles .mt.re:nth-child(4n+1){border-top-left-radius:12px;border-bottom-left-radius:12px}
 .mtiles .mt.in:nth-child(4n),.mtiles .mt.rs:nth-child(4n){border-top-right-radius:12px;border-bottom-right-radius:12px}
 @media(hover:hover){.mt:not(:disabled):not(.sel):hover{background:color-mix(in srgb,var(--text) 7%,transparent)}}
+@media(min-width:601px){.cstoast{display:block;position:fixed;left:50%;bottom:28px;z-index:31;transform:translate(-50%,8px);background:var(--text);color:var(--bg);border-radius:14px;padding:10px 14px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s,transform .25s}.cstoast.on{opacity:1;transform:translate(-50%,0)}}
+/* ---- profile button: opens the same profile menu as the board ---- */
+.tr{display:flex;align-items:center;gap:10px}
+.acct{width:38px;height:38px;border-radius:50%;border:0;padding:0;background:none;cursor:pointer;flex:none;-webkit-tap-highlight-color:transparent;transition:transform .15s cubic-bezier(.2,.8,.2,1)}
+.acct:active{transform:scale(.94)}
+.acct .av{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:var(--brand,#bf1240);color:#fff;font-weight:800;font-size:15px;background-size:cover;background-position:center}
+@media(max-width:600px){.top{position:relative}.top .acct{position:absolute;top:0;right:0;width:36px;height:36px}}
 /* ---- v2.5 phone variants (set by the board build: html.vA / html.vB) ---- */
 .csdock,.cstoast{display:none}
 @media(max-width:600px){
@@ -189,7 +196,7 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 
 <div class="wrap">
   <div class="top"><div class="tl2"><button class="back" type="button" aria-label="Back to Card Board"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span>Card Board</span></button><h1 class="ttl">Card Stories</h1></div>
-    <div class="perw"><button class="pill" id="perb" aria-haspopup="true" aria-expanded="false"><span id="perl">Last 12 months</span><i>▾</i></button><div class="menu" id="perm" hidden role="menu"></div></div></div>
+    <div class="tr"><div class="perw"><button class="pill" id="perb" aria-haspopup="true" aria-expanded="false"><span id="perl">Last 12 months</span><i>▾</i></button><div class="menu" id="perm" hidden role="menu"></div></div><button type="button" class="acct" id="csacct" aria-haspopup="true" aria-label="Account" hidden><span class="av" id="csav">N</span></button></div></div>
   <div class="controls">
     <div class="thm" id="thm" role="group" aria-label="Story theme"></div>
   </div>
@@ -208,11 +215,12 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 const RAW=__DATA__,TODAY='2026-11-03';
 const E=RAW.map(r=>({date:r[0],type:r[1]==='s'?'sale':r[1]==='r'?'refund':'purchase',platform:r[2]||'Other',name:r[3],amount:r[4],net:r[5],qty:r[6]||1,no:r[7]||'',set:r[8]||''}));
 const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const money=c=>(c<0?'−':'')+'$'+(Math.abs(c)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-const short=c=>(c<0?'−':'')+'$'+Math.round(Math.abs(c)/100).toLocaleString('en-US');
-const signedS=c=>(c>=0?'+':'−')+'$'+Math.round(Math.abs(c)/100).toLocaleString('en-US');
+const NF2=new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}),NFR=new Intl.NumberFormat('en-US');
+const money=c=>(c<0?'−':'')+'$'+NF2.format(Math.abs(c)/100);
+const short=c=>(c<0?'−':'')+'$'+NFR.format(Math.round(Math.abs(c)/100));
+const signedS=c=>(c>=0?'+':'−')+'$'+NFR.format(Math.round(Math.abs(c)/100));
 const signed=c=>(c>=0?'+':'−')+money(Math.abs(c));
-const mName=(k,o)=>new Date(k+'-15T12:00:00').toLocaleString('en-US',o||{month:'long'});
+const MN=new Map();const mName=(k,o)=>{o=o||{month:'long'};const key=k+JSON.stringify(o);let v=MN.get(key);if(v==null){v=new Date(k+'-15T12:00:00').toLocaleString('en-US',o);MN.set(key,v)}return v};
 const dShort=d=>new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
 const days=(a,b)=>Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5);
 const key=e=>e.name.toLowerCase().replace(/[^a-z0-9]/g,'')+'|'+e.no;
@@ -365,10 +373,11 @@ $('track').addEventListener('click',e=>{const mb=e.target.closest('[data-mb]');i
 $('track').addEventListener('scroll',()=>{const tr=$('track'),c=tr.querySelector('.cell');if(!c)return;const i=Math.round(tr.scrollLeft/(c.offsetWidth+22));$('dots').querySelectorAll('i').forEach((d,k)=>d.classList.toggle('on',k===i))},{passive:true});
 // enlarged view
 // back gesture / back button closes the top layer here too (the enlarged story, then sheets)
-const NAV=[];let navSkip=0,navPopping=false;
-function navPush(k,fn){if(NAV.some(n=>n.k===k))return;NAV.push({k,fn});try{history.pushState({csn:k},'')}catch(e){}}
-function navDone(k){if(navPopping)return;const i=NAV.findIndex(n=>n.k===k);if(i<0)return;NAV.splice(i,1);navSkip++;try{history.back()}catch(e){navSkip--}}
-addEventListener('popstate',()=>{if(navSkip>0){navSkip--;return}const t=NAV.pop();if(!t)return;navPopping=true;try{t.fn()}catch(e){}navPopping=false});
+// a layer opened while a back step is still settling (menu -> Export) waits for it, so back never skips a layer or leaves the page
+const NAV=[];let navSkip=0,navPopping=false,navWait=0;const navStep=k=>{try{history.pushState({csn:k},'')}catch(e){}};
+function navPush(k,fn){if(NAV.some(n=>n.k===k))return;NAV.push({k,fn});if(navSkip>0)navWait++;else navStep(k)}
+function navDone(k){if(navPopping)return;const i=NAV.findIndex(n=>n.k===k);if(i<0)return;NAV.splice(i,1);if(navWait>0){navWait--;return}navSkip++;try{history.back()}catch(e){navSkip--}}
+addEventListener('popstate',()=>{if(navSkip>0){navSkip--;if(!navSkip)while(navWait>0){navWait--;navStep('w')}return}const t=NAV.pop();if(!t)return;navPopping=true;try{t.fn()}catch(e){}navPopping=false});
 const lb=$('lb');function enlarge(n){navPush('lb',()=>shut());const c=document.createElement('div');c.className='sl';c.setAttribute('role','img');c.setAttribute('aria-label',D.stories[n].name);c.innerHTML=storyHTML(n);paintStory(c,n);$('lbc').innerHTML='';$('lbc').appendChild(c);$('lbn').textContent='';lb.hidden=false;lb.classList.remove('out');lb.querySelector('[data-a="close"]').focus()}
 function shut(){if(lb.hidden)return;navDone('lb');lb.classList.add('out');setTimeout(()=>{lb.hidden=true},190)}
 lb.addEventListener('click',e=>{if(e.target===lb||e.target.classList.contains('box')||e.target.id==='lbc'||e.target.classList.contains('note')){shut();return}const b=e.target.closest('[data-a]');if(!b)return;if(b.dataset.a==='close')shut();else $('lbn').textContent=b.dataset.a==='save'?'In the app this saves the story as an image, sized for Instagram and TikTok.':'In the app this opens your phone’s share sheet.'});
@@ -377,7 +386,13 @@ try{const t=+localStorage.getItem('cs.theme');if(t>0&&t<TH.length)setTheme(t)}ca
 // ---- linked to Card Board: same name, light/dark and time range; the back arrow returns to the board ----
 function goBack(){if(!lb.hidden)shut();closeMenu();try{parent.cbStoriesBack()}catch(e){}}
 document.querySelector('.top .back').addEventListener('click',()=>{if(EMB)goBack()});
+// profile: the board's own menu, opened over Stories with Stories' rows in the middle
+if(EMB){$('csacct').hidden=false;$('csacct').addEventListener('click',e=>{e.stopPropagation();closeMenu();try{parent.cbMenu($('csacct').getBoundingClientRect())}catch(err){}});
+  document.addEventListener('pointerdown',e=>{if(e.target.closest('#csacct'))return;try{parent.cbMenuClose()}catch(err){}},true)}
+function syncAv(){try{const a=parent.document.getElementById('cb-av'),m=$('csav');m.textContent=a.textContent;m.style.backgroundImage=a.style.backgroundImage;m.style.backgroundColor=a.style.backgroundColor}catch(e){}}
+window.csMenu=function(a){if(a==='st-colors')openSheet('ths');else if(a==='st-save'){const t=$('cstoast');if(t){t.textContent='In the app this saves every story as an image';t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2200)}}};
 window.csSync=function(){
+  syncAv();
   try{NAME=EMB&&parent.cbName?parent.cbName():((JSON.parse(localStorage.getItem('cb.profile')||'null')||{}).first||'').trim()}catch(e){}
   try{const t=localStorage.getItem('cb.theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;else delete document.documentElement.dataset.theme}catch(e){}
   let np='l12',nc=null;

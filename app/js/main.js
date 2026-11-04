@@ -35,27 +35,38 @@
     // A Premium account shows a cranberry Premium pill beside the owner's name
     $('am-name').innerHTML = '<span class="am-nm">' + esc(whoName) + '</span>' + (u.plan === 'premium' ? PREM_PILL : '');
     if (u.plan === 'premium') {
-      p.innerHTML = '<div class="r"><b>Premium plan</b><small>Unlimited entries</small></div><small>' + u.used + (u.used === 1 ? ' entry' : ' entries') + ' added this month</small>';
+      p.innerHTML = ''; p.hidden = true;
       n.hidden = true;
     } else {
-      p.innerHTML = '<div class="r"><b>Free plan</b><button type="button" class="up" data-upgrade>Upgrade</button></div><div class="am-meter' + (u.used >= S.WARN_AT ? ' warn' : '') + '"><i style="width:' + Math.min(100, u.used / u.limit * 100) + '%"></i></div><small>' + u.used + ' of ' + u.limit + ' entries this month · resets ' + u.resetsOn + '</small>';
+      p.hidden = false; p.innerHTML = '<div class="r"><b>Free plan</b><button type="button" class="up" data-upgrade>Upgrade</button></div><div class="am-meter' + (u.used >= S.WARN_AT ? ' warn' : '') + '"><i style="width:' + Math.min(100, u.used / u.limit * 100) + '%"></i></div><small>' + u.used + ' of ' + u.limit + ' entries this month · resets ' + u.resetsOn + '</small>';
       n.hidden = !(u.warn || u.blocked);
       n.textContent = u.blocked ? 'You’ve used all 20 free entries. They reset on ' + u.resetsOn + '.' : 'You’re nearing your limit: ' + u.left + (u.left === 1 ? ' entry' : ' entries') + ' left this month.';
     }
     menu.querySelectorAll('[data-plan]').forEach(b => b.classList.toggle('on', b.dataset.plan === u.plan));
     // Import: Premium sees it from day one; Free only sees a Premium-tagged link later (see store.showImport)
     const im = $('am-import'); im.hidden = !S.showImport();
-    im.innerHTML = 'Import a spreadsheet' + (u.plan === 'premium' ? '' : ' <span class="af-lock">Premium</span>');
+    im.querySelector('span').innerHTML = 'Import a spreadsheet' + (u.plan === 'premium' ? '' : ' <span class="af-lock">Premium</span>');
+    const ai = $('am-av'); ai.textContent = av.textContent; ai.style.cssText = av.style.cssText;
   }
   function placeMenu() {
     const r = av.getBoundingClientRect(), w = menu.offsetWidth;
     menu.style.top = (r.bottom + 8) + 'px';
     menu.style.left = Math.max(12, Math.min(r.right - w, innerWidth - w - 12)) + 'px';
   }
-  function openMenu() { renderMenu(); menu.hidden = false; placeMenu(); av.setAttribute('aria-expanded', 'true'); const f = menu.querySelector('[role="menuitem"]'); if (f) f.focus({ preventScroll: true }); }
-  function closeMenu(focus) { if (menu.hidden) return; menu.hidden = true; av.setAttribute('aria-expanded', 'false'); if (focus) av.focus(); }
+  const PHONE = matchMedia('(max-width:760px)'), bd = $('am-bd');
+  function openMenu() { renderMenu(); menu.hidden = false; placeMenu(); if (PHONE.matches) { bd.hidden = false; document.documentElement.classList.add('am-lock'); } window.CTNav.push('menu', () => closeMenu(false, true)); av.setAttribute('aria-expanded', 'true'); const f = menu.querySelector('[role="menuitem"]'); if (f) f.focus({ preventScroll: true }); }
+  function closeMenu(focus, fromPop) { if (menu.hidden) return; menu.hidden = true; bd.hidden = true; document.documentElement.classList.remove('am-lock'); if (!fromPop) window.CTNav.done('menu'); av.setAttribute('aria-expanded', 'false'); if (focus) av.focus(); }
   av.addEventListener('click', e => { e.stopPropagation(); menu.hidden ? openMenu() : closeMenu(); });
   document.addEventListener('click', e => { if (!menu.hidden && !e.target.closest('#app-menu')) closeMenu(); });
+  // Appearance and haptics: the same settings as Card Board and Stories (shared keys, so one choice applies everywhere)
+  const touchDev = matchMedia('(hover:none)').matches;
+  function applyTheme(th, save) { if (th === 'auto') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = th; if (save) { try { localStorage.setItem('cb.theme', th); } catch (e) {} } $('am-theme').querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', b.dataset.th === th)); }
+  let th0 = 'auto'; try { th0 = localStorage.getItem('cb.theme') || 'auto'; } catch (e) {} applyTheme(th0, false);
+  let hapOn = true; try { hapOn = localStorage.getItem('cb.haptics') !== '0'; } catch (e) {}
+  window.ctBuzz = () => { if (hapOn && touchDev && navigator.vibrate) try { navigator.vibrate(8); } catch (e) {} };
+  const paintHap = () => $('am-hap').setAttribute('aria-checked', hapOn); paintHap(); if (!touchDev) $('am-hapr').hidden = true;
+  $('am-theme').addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('button'); if (b) { applyTheme(b.dataset.th, true); window.ctBuzz(); } });
+  $('am-hap').addEventListener('click', e => { e.stopPropagation(); hapOn = !hapOn; try { localStorage.setItem('cb.haptics', hapOn ? '1' : '0'); } catch (e) {} paintHap(); window.ctBuzz(); });
   document.addEventListener('keydown', e => {
     if (menu.hidden) return;
     if (e.key === 'Escape') { closeMenu(true); return; }
@@ -69,7 +80,9 @@
 
   menu.addEventListener('click', async e => {
     const b = e.target.closest('button, summary'); if (!b) return;
-    if (b.dataset.soon) { closeMenu(); Dash.toast(b.dataset.soon + ' arrive in a later update.'); return; }
+    if (b.closest('#am-theme') || b.id === 'am-hap') return;
+    if (b.dataset.go) { closeMenu(); if (b.dataset.go !== 'entries') Dash.toast(b.dataset.go === 'board' ? 'Opens Card Board' : 'Opens Card Stories'); return; }
+    if (b.dataset.soon) { closeMenu(); Dash.toast(b.dataset.soon + ' arrives in a later update.'); return; }
     if (b.id === 'am-export') { closeMenu(); Dash.exportCSV(); return; }
     if (b.id === 'am-import') { closeMenu(); Dash.openImport(); return; }
     if (b.id === 'am-out') { Sess.signOut(); showAuth(); return; }

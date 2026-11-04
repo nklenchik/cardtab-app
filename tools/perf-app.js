@@ -1,0 +1,28 @@
+const pw=require('playwright');(async()=>{const b=await pw.chromium.launch({args:['--enable-gpu-rasterization']});const W=+process.argv[2]||390,M=W<700;
+const ctx=await b.newContext({viewport:{width:W,height:M?844:900},isMobile:M,hasTouch:M});const p=await ctx.newPage();const er=[];p.on('pageerror',e=>er.push(e.message));
+await p.goto('http://localhost:8765/index.html');await p.evaluate(()=>{localStorage.clear();localStorage.setItem('ct.session',JSON.stringify({email:'n@x.com',name:'Nick',via:'email',expires:Date.now()+864e5}))});await p.reload();await p.waitForTimeout(800);
+await p.evaluate(async()=>{const S=window.CTStore;await S.setPlan('premium');const P=['eBay','TCGplayer','Whatnot','Card Show'],rows=[];const now=new Date();
+ for(let i=0;i<240;i++){const d=new Date(now.getFullYear(),now.getMonth()-(i%12),1+(i*7)%27);const sale=i%3!==0;rows.push({date:S.ymd(d),type:sale?'sale':'purchase',platform:P[i%4],name:'Test card '+i+' - '+(100+i)+'/200 - Set '+(i%9),amount:(20+i*1.37).toFixed(2),fees:sale?(2+i*.11).toFixed(2):undefined,ship:sale?'1.25':undefined,condition:'Near Mint'})}
+ await S._loadSample(rows)});if(process.env.NOSOFT)await p.evaluate(()=>{document.querySelector('link[href="css/soft.css"]').disabled=true});if(process.env.NOHAS)await p.evaluate(()=>{for(const sh of document.styleSheets){try{for(let i=sh.cssRules.length-1;i>=0;i--){if(/:has\(/.test(sh.cssRules[i].cssText))sh.deleteRule(i)}}catch(e){}}});await p.waitForTimeout(1200);
+const cdp=await ctx.newCDPSession(p);await cdp.send('Emulation.setCPUThrottlingRate',{rate:4});
+await p.evaluate(()=>{window.__f=[];const loop=t=>{window.__f.push(t);requestAnimationFrame(loop)};requestAnimationFrame(loop);
+ window.__lt=[];try{new PerformanceObserver(l=>l.getEntries().forEach(e=>window.__lt.push([e.startTime,e.duration]))).observe({entryTypes:['longtask']})}catch(e){}});
+const run=async(name,fn,ms=900)=>{await p.waitForTimeout(250);const t0=await p.evaluate(()=>performance.now());await fn();await p.waitForTimeout(ms);
+ const r=await p.evaluate(t0=>{const f=window.__f.filter(t=>t>=t0);const g=[];for(let i=1;i<f.length;i++)g.push(f[i]-f[i-1]);const lt=window.__lt.filter(x=>x[0]>=t0);return {frames:g.length,worst:Math.round(Math.max(0,...g)),over34:g.filter(x=>x>34).length,long:lt.map(x=>Math.round(x[1])).join(',')}},t0);
+ console.log(W,name.padEnd(22),'worst',String(r.worst).padStart(4)+'ms','janky frames',r.over34,'long tasks',r.long||'-')};
+const tap=sel=>p.evaluate(s=>document.querySelector(s).click(),sel);
+await run('expand entry',()=>tap('.ct-row-toggle'));
+await run('collapse entry',()=>tap('.ct-row-toggle'));
+await run('expand 3rd entry',()=>p.evaluate(()=>document.querySelectorAll('.ct-row-toggle')[2].click()));
+if(await p.$('.ct-earlier-btn'))await run('show earlier months',()=>tap('.ct-earlier-btn'),1200);
+await run('scroll list',async()=>{for(let i=0;i<12;i++){await p.mouse.wheel(0,300);await p.waitForTimeout(40)}});
+await p.evaluate(()=>scrollTo(0,0));
+await run('insights tab',()=>p.evaluate(()=>document.querySelectorAll('.ct-insight-tabs button')[1].click()));
+await run('menu open',()=>tap('#app-avatar'));
+await run('menu close',()=>p.evaluate(()=>document.body.click()));
+await run('add sheet open',()=>tap('#ct-add'));
+await run('type search',async()=>{await p.type('#as-in','charizard',{delay:60})},600);
+await run('pick card',()=>tap('#as .li'));
+await run('add sheet close',()=>tap('#as [data-as-close]'));
+await run('filter sales',()=>p.evaluate(()=>{const b=document.querySelector('[data-ct-type="sale"]');b&&b.offsetParent?b.click():(document.querySelector('#ct-type,select[aria-label*=ype]')||{}).dispatchEvent?.(new Event('change'))}));
+console.log('errors',er);await b.close()})();

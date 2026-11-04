@@ -1,0 +1,116 @@
+/* New pieces (add-card list, open entry, profile menu). Kept on in both looks of the preview. */
+:root{--s-bg:#f8f7f4;--s-card:#fff;--s-track:#f1efea;--s-hair:rgba(40,30,20,.075);--s-dot:#d9d6cb;--s-whisper:0 1px 2px rgba(40,30,20,.05),0 8px 22px -12px rgba(40,30,20,.17);--s-fade:color-mix(in srgb,#fff 97%,#e9e2d8);--s-brand:#bf1240}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--s-bg:#121110;--s-card:#1f1d1b;--s-track:#2a2725;--s-hair:rgba(255,255,255,.06);--s-dot:#4a4744;--s-whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6);--s-fade:#1c1a18;--s-brand:#e0285a}}
+:root[data-theme="dark"]{--s-bg:#121110;--s-card:#1f1d1b;--s-track:#2a2725;--s-hair:rgba(255,255,255,.06);--s-dot:#4a4744;--s-whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6);--s-fade:#1c1a18;--s-brand:#e0285a}
+/* ===== iPhone was enlarging text on its own; keep every font at its set size ===== */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+
+/* ===== Add a card: fits above the keyboard, slim white search, list results ===== */
+@media(max-width:760px){#as .phone{height:calc(100% - 12px)}}
+#as .x{width:36px;height:36px;background:var(--s-card);border:1px solid var(--s-hair);color:var(--text)}
+#as .x svg{width:13px;height:13px}
+#as .search{height:44px;border-radius:14px;background:var(--s-card);border:1.5px solid var(--s-hair);margin-top:8px}
+#as .search:focus-within{border-color:var(--brand)}
+#as .search svg{width:17px;height:17px}
+#as .search input{font-size:16px}
+#as .chips{min-height:0;padding:8px 0 2px}
+#as .chips:empty{padding:0}
+#as .chip{height:28px;font-size:12.5px;background:var(--s-card);border-color:var(--s-hair)}
+#as #as-s1 .body{-webkit-mask:linear-gradient(transparent,#000 10px);mask:linear-gradient(transparent,#000 10px);padding-top:4px}
+#as #as-go{display:none}
+#as .lsl{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:8px 2px 6px}
+#as .lst{background:var(--s-card);border:1px solid var(--s-hair);border-radius:16px;box-shadow:var(--s-whisper);overflow:hidden}
+#as .li{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:none;padding:9px 12px;border-bottom:1px dotted var(--s-dot);transition:background .15s;-webkit-tap-highlight-color:transparent}
+#as .li:last-child{border-bottom:0}
+#as .li:active,#as .li.on{background:color-mix(in srgb,var(--brand) 7%,transparent)}
+@media(hover:hover){#as .li:hover{background:color-mix(in srgb,var(--brand) 5%,transparent)}}
+#as .li .art{width:32px;aspect-ratio:5/7;border-radius:4px;flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)}
+#as .li .t{flex:1;min-width:0;display:grid}
+#as .li .n{font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#as .li .m{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#as .li .bm{color:var(--green);font-weight:800;font-size:11px;margin-left:8px}
+#as .li .go{width:7px;height:7px;border-right:1.8px solid var(--muted);border-top:1.8px solid var(--muted);transform:rotate(45deg);flex:none;margin-right:4px}
+#as .addtyped{background:var(--s-card);border-color:var(--s-hair)}
+#as .none{margin-top:18px}
+
+/* ===== Open entry: stays white, details as small labeled stats, quiet pill buttons ===== */
+.ct-demo .ct-row.expanded,.ct-demo .ct-row:hover{background:var(--s-card)}
+.ct-demo .ct-row.expanded .ct-art-ph,.ct-demo .ct-row:hover .ct-art-ph{background:var(--s-track)}
+.ct-demo .ct-stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:8px 12px;border-top:1px dotted var(--s-dot);padding-top:10px;margin-top:2px}
+.ct-demo .ct-stats-row>div{min-width:0}
+.ct-demo .ct-stats-row small{display:block;font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ct-muted);white-space:nowrap}
+.ct-demo .ct-stats-row span{display:block;font-size:13.5px;font-weight:700;color:var(--ct-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ct-demo .ct-stats-row em{display:block;font-style:normal;font-size:11px;color:var(--ct-muted)}
+.ct-demo .ct-pct{font-size:11.5px;color:var(--ct-muted);margin-top:6px}
+.ct-demo .ct-demo-actions{display:flex;gap:8px;margin-top:12px}
+.ct-demo .ct-demo-actions button{flex:1;height:34px;padding:0 10px;border-radius:999px;border:1px solid var(--s-hair);background:var(--s-card);font-size:12.5px;font-weight:700;color:var(--ct-text);white-space:nowrap}
+.ct-demo .ct-demo-actions button[data-act="del"]{flex:0 0 auto;border-color:transparent;background:none;color:var(--s-brand)}
+@media(hover:hover){.ct-demo .ct-demo-actions button:hover{background:var(--s-bg)}.ct-demo .ct-demo-actions button[data-act="del"]:hover{background:color-mix(in srgb,var(--s-brand) 8%,transparent)}}
+
+/* ===== Profile menu: the same menu as Card Board and Stories ===== */
+.app-menu.am{--am-hl:color-mix(in srgb,var(--text) 6%,transparent);width:auto;min-width:280px;max-width:calc(100vw - 24px);max-height:min(78vh,620px);background:var(--s-card);border:1px solid var(--s-hair);border-radius:16px;padding:6px;box-shadow:0 14px 34px rgba(0,0,0,.18);font-family:inherit;animation:amIn .22s cubic-bezier(.2,.8,.2,1) both;transform-origin:top right}
+.app-menu.am>*{animation:amItem .26s cubic-bezier(.2,.8,.2,1) both}
+.app-menu.am>*:nth-child(2){animation-delay:.02s}.app-menu.am>*:nth-child(3){animation-delay:.04s}.app-menu.am>*:nth-child(4){animation-delay:.06s}.app-menu.am>*:nth-child(5){animation-delay:.08s}.app-menu.am>*:nth-child(6){animation-delay:.1s}
+@keyframes amIn{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes amItem{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+@keyframes amPop{from{opacity:0;transform:translate(-50%,-50%) scale(.95)}to{opacity:1;transform:translate(-50%,-50%)}}
+.app-menu.am .amh{display:flex;align-items:center;gap:12px;padding:10px;margin:0 0 2px;border:0;flex-direction:row}
+.app-menu.am .av{display:grid;place-items:center;border-radius:50%;background:var(--s-brand);color:#fff;font-weight:800;background-size:cover;background-position:center}
+.app-menu.am .av.lg{width:42px;min-width:42px;height:42px;font-size:17px}
+.app-menu.am .amh-t{display:grid;min-width:0;flex:1}
+.app-menu.am .amh b{display:flex;align-items:center;gap:8px;font-size:15px;white-space:nowrap}
+.app-menu.am .amh .am-nm{font-size:15px;font-weight:800}
+.app-menu.am .amh small{font-size:12.5px;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app-menu.am .am-plan{border-bottom:0;border-top:1px solid var(--s-hair);margin:0;padding:10px}
+.app-menu.am .am-plan[hidden]{display:none}
+.app-menu.am .amg{border-top:1px solid var(--s-hair);padding:4px 0}
+.app-menu.am .amg button{display:flex;align-items:center;justify-content:flex-start;gap:12px;width:100%;border:0;background:none;text-align:left;font:inherit;font-weight:650;font-size:14px;padding:9px 10px;border-radius:10px;color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.app-menu.am .amg button[hidden]{display:none}
+.app-menu.am .amg button>span{flex:1;min-width:0}
+.app-menu.am .amg button:hover,.app-menu.am .amg button:focus-visible{background:var(--am-hl);outline:0}
+.app-menu.am .mi{flex:none;color:var(--muted)}
+.app-menu.am .amg button:hover .mi{color:var(--text)}
+.app-menu.am .amgo button.here{color:var(--muted);cursor:default}
+.app-menu.am .amgo button.here::after{content:"You're here";margin-left:auto;font-size:11.5px;font-weight:750;color:var(--s-brand)}
+.app-menu.am .amgo button.here:hover{background:none}
+.app-menu.am .amr{display:flex;align-items:center;gap:12px;padding:7px 10px;font-weight:650;font-size:14px}
+.app-menu.am .amr[hidden]{display:none}
+.app-menu.am .amr>span{flex:1}
+.app-menu.am .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;padding:3px;flex:none;min-width:186px;background:var(--s-track);border-radius:999px}
+.app-menu.am .amr .seg button{width:auto;display:block;text-align:center;padding:5px 9px;font-size:12px;font-weight:750;border-radius:999px;color:var(--muted);justify-content:center}
+.app-menu.am .amr .seg button:hover{background:none;color:var(--text)}
+.app-menu.am .amr .seg button[aria-checked="true"]{background:var(--s-card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.app-menu.am .swt{width:42px;height:26px;padding:2px;border-radius:999px;background:var(--s-dot);flex:none;transition:background .2s;display:block;border:0}
+.app-menu.am .swt i{display:block;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s cubic-bezier(.2,.7,.2,1)}
+.app-menu.am .swt[aria-checked="true"]{background:var(--green)}
+.app-menu.am .swt[aria-checked="true"] i{transform:translateX(16px)}
+.app-menu.am .am-dev{border-top:1px solid var(--s-hair);margin-top:0}
+.am-bd{position:fixed;inset:0;z-index:49;background:rgba(10,10,10,.32);animation:amFade .22s ease both}
+@keyframes amFade{from{opacity:0}}
+@media(min-width:761px){.am-bd{display:none}}
+@media(max-width:760px){
+  .app-menu.am:not([hidden]){position:fixed;left:50%!important;top:50%!important;right:auto;transform:translate(-50%,-50%);width:min(360px,calc(100vw - 32px));max-height:calc(100dvh - 48px);overflow:auto;overscroll-behavior:contain;animation:amPop .26s cubic-bezier(.2,.8,.2,1) both;transform-origin:50% 50%}
+  html.am-lock,html.am-lock body{overflow:hidden}
+}
+@media(prefers-reduced-motion:reduce){.app-menu.am,.app-menu.am>*,.am-bd{animation:none!important}}
+.app-menu.am .amr button.swt{width:42px;height:26px;padding:2px;display:block;border-radius:999px;flex:none}
+.app-menu.am .amr button.swt:hover{background:var(--s-dot)}.app-menu.am .amr button.swt[aria-checked="true"]:hover{background:var(--green)}
+.app-menu.am .amgo button.here:focus-visible{background:none}
+
+/* ===== Sheets move exactly like the board's: up from the bottom on phones, a soft rise on desktop, and they slide away on close ===== */
+@keyframes ct-shUp{from{transform:translateY(100%)}to{transform:none}}
+@keyframes ct-shDown{to{transform:translateY(100%)}}
+@keyframes ct-sheetIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes ct-sheetOut{to{opacity:0;transform:translateY(6px) scale(.98)}}
+@keyframes ct-bdIn{from{opacity:0}}
+@keyframes ct-bdOut{to{opacity:0}}
+#as .phone,.ed .ed-form{animation:ct-sheetIn .32s cubic-bezier(.2,.8,.2,1) both}
+#as.closing .phone,.ed.closing .ed-form{animation:ct-sheetOut .18s cubic-bezier(.4,0,1,1) both}
+#as[open]::backdrop,.ed[open]::backdrop{animation:ct-bdIn .3s ease-out both}
+#as.closing::backdrop,.ed.closing::backdrop{animation:ct-bdOut .19s ease both}
+#as.closing,.ed.closing{pointer-events:none}
+@media(max-width:760px){
+  #as .phone,.ed .ed-form{animation:ct-shUp .42s cubic-bezier(.2,.8,.2,1) both}
+  #as.closing .phone,.ed.closing .ed-form{animation:ct-shDown .22s ease-in both}
+}
+@media(prefers-reduced-motion:reduce){#as .phone,.ed .ed-form,#as::backdrop,.ed::backdrop{animation:none!important}}

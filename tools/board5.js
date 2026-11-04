@@ -71,8 +71,8 @@ function buckets(a,b){const n=days(a,b),unit=n<=31?'day':n<=124?'week':'month',o
   return {unit,list:out}}
 const inR=(list,a,b)=>list.filter(e=>e.date>=a&&e.date<=b);
 const pool=()=>plat==='all'?E:E.filter(e=>e.platform===plat);
-const kshort=v=>(v<0?'−':'')+'$'+Math.round(Math.abs(v)/100).toLocaleString('en-US');
-const ksigned=v=>(v>=0?'+':'−')+'$'+(Math.abs(v)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const kshort=v=>(v<0?'−':'')+'$'+NFR.format(Math.round(Math.abs(v)/100));
+const ksigned=v=>(v>=0?'+':'−')+'$'+NF2.format(Math.abs(v)/100);
 const KPI={profit:t=>t.profit,sales:t=>t.sales,spent:t=>t.spent,fees:t=>t.fees};
 const GOOD={profit:'up',sales:'up',spent:'down',fees:'down'};
 const KCOL={sales:'var(--cb-pos)',spent:'var(--cb-bl)',fees:'var(--cb-gry)'};
@@ -108,10 +108,11 @@ function bindTip(ev,anchor,fn){ev.setAttribute('data-tip','');
 // ---------- back gesture (iOS edge swipe, Android back, the browser's Back button) closes the top layer ----------
 // Each layer that opens (the board, Stories, a sheet, a menu) adds one step to history; going back closes the newest one.
 // Closing a layer with its own button removes its step, so history never fills up with stale entries.
-const NAV=[];let navSkip=0,navPopping=false;
-function navPush(k,fn){if(NAV.some(n=>n.k===k))return;NAV.push({k,fn});try{history.pushState({cbn:k},'')}catch(e){}}
-function navDone(k){if(navPopping)return;const i=NAV.findIndex(n=>n.k===k);if(i<0)return;NAV.splice(i,1);navSkip++;try{history.back()}catch(e){navSkip--}}
-addEventListener('popstate',()=>{if(navSkip>0){navSkip--;return}const t=NAV.pop();if(!t)return;navPopping=true;try{t.fn()}catch(e){}navPopping=false});
+// a layer opened while a back step is still settling (menu -> Export) waits for it, so back never skips a layer or leaves the page
+const NAV=[];let navSkip=0,navPopping=false,navWait=0;const navStep=k=>{try{history.pushState({cbn:k},'')}catch(e){}};
+function navPush(k,fn){if(NAV.some(n=>n.k===k))return;NAV.push({k,fn});if(navSkip>0)navWait++;else navStep(k)}
+function navDone(k){if(navPopping)return;const i=NAV.findIndex(n=>n.k===k);if(i<0)return;NAV.splice(i,1);if(navWait>0){navWait--;return}navSkip++;try{history.back()}catch(e){navSkip--}}
+addEventListener('popstate',()=>{if(navSkip>0){navSkip--;if(!navSkip)while(navWait>0){navWait--;navStep('w')}return}const t=NAV.pop();if(!t)return;navPopping=true;try{t.fn()}catch(e){}navPopping=false});
 
 // ---------- charts, drawn at the exact size of their box ----------
 // cv() leaves a placeholder; fillCharts() measures it after layout and draws the SVG to fit.
@@ -278,7 +279,7 @@ let rsT=0,lastW=innerWidth;addEventListener('resize',()=>{if(!shown||rz||drag||M
 // menus inside the scrolling phone toolbar would be cut off, so there they float above everything, under their button
 function placeMenu(btn,m){m.style.position='';m.style.top='';m.style.left='';m.style.right='';if(!btn.closest('.tctl')||getComputedStyle(btn.closest('.tctl')).overflowX==='visible')return;
   const r=btn.getBoundingClientRect(),w=m.offsetWidth;m.style.position='fixed';m.style.top=(r.bottom+6)+'px';m.style.right='auto';m.style.left=Math.max(12,Math.min(r.left,innerWidth-w-12))+'px'}
-function closeMenus(){document.querySelectorAll('.cbx .cb-menu').forEach(m=>{m.hidden=true});document.querySelectorAll('.cbx [aria-haspopup]').forEach(b=>b.setAttribute('aria-expanded','false'))}
+function closeMenus(){document.querySelectorAll('.cbx .cb-menu,#cb-amenu').forEach(m=>{m.hidden=true});document.querySelectorAll('.cbx [aria-haspopup]').forEach(b=>b.setAttribute('aria-expanded','false'))}
 function pickMenu(btn,menuEl,items,cur,onPick,foot){
   btn.addEventListener('click',e=>{e.stopPropagation();hideTip();const o=menuEl.hidden;closeMenus();if(!o)return;menuEl.innerHTML=items().map(([k,l])=>'<button type="button" role="menuitemradio" aria-checked="'+(k===cur())+'" data-k="'+esc(k)+'">'+esc(l)+'</button>').join('')+(foot?foot():'');menuEl.hidden=false;btn.setAttribute('aria-expanded','true');placeMenu(btn,menuEl)});
   menuEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.cmp){setCompare(b.dataset.cmp);b.parentNode.querySelectorAll('button').forEach(x=>x.setAttribute('aria-checked',x===b));return}onPick(b.dataset.k,b.textContent);closeMenus()})}
@@ -315,12 +316,32 @@ cr.addEventListener('click',e=>{if(e.target===cr){cr.close();return}const b=e.ta
     $('cb-perl').textContent=customLabel();saveView();buzz('firm');cr.close();render(false);grow();return}
   if(b.hasAttribute('data-close'))cr.close()});
 pickMenu($('cb-plat'),$('cb-pmenu'),()=>[['all','All platforms']].concat([...new Set(E.map(e=>e.platform))].sort().map(p=>[p,p])),()=>plat,(k,l)=>{plat=k;$('cb-platl').textContent=l;saveView();render(false);grow()});
-$('cb-acct').addEventListener('click',e=>{e.stopPropagation();hideTip();const m=$('cb-amenu'),o=m.hidden;closeMenus();if(o){m.hidden=false;$('cb-acct').setAttribute('aria-expanded','true')}});
+// One profile menu for the board and Stories: same rows everywhere, only the middle group changes with where you are
+function menuCtx(ctx){const m=$('cb-amenu');m.dataset.ctx=ctx;m.querySelectorAll('.amctx').forEach(g=>g.hidden=g.dataset.ctx!==ctx);
+  m.querySelectorAll('[data-here]').forEach(b=>{const on=b.dataset.here===ctx;b.classList.toggle('here',on);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')})}
+$('cb-acct').addEventListener('click',e=>{e.stopPropagation();hideTip();const m=$('cb-amenu'),o=m.hidden;closeMenus();if(o){menuCtx('board');m.hidden=false;$('cb-acct').setAttribute('aria-expanded','true')}});
+// Opened from Stories: the same menu, moved into a top-level holder above the Stories layer (the board sits in its own layer)
+const mhost=document.createElement('div');mhost.className='mhost';mhost.innerHTML='<div class="mhbd"></div>';document.body.appendChild(mhost);
+;(()=>{const re=/\.cbx(\.[\w-]+)?\s+#cb\b/g,hit=t=>/(\.cb-menu|#cb-amenu|\.am\b|\.amg|\.amr|\.amh|\.av\b|\.prem2|\.swt|\.seg\b)/.test(t);const add=[];
+  const walk=(rules,wrap)=>{for(const r of rules){try{if(r.cssRules&&r.media){walk(r.cssRules,'@media '+r.media.mediaText);continue}if(!r.selectorText)continue;
+    const sel=r.selectorText.split(',').map(x=>x.trim()).filter(x=>(hit(x)||x==='#cb *')&&/^(\.cbx|#cb\b)/.test(x)&&!/\.cbx\.(lock|mover)/.test(x)).map(x=>x.replace(re,'.mhost').replace(/^\.cbx\s+/,'.mhost ').replace(/^#cb\b/,'.mhost'));
+    if(sel.length)add.push((wrap?wrap+'{':'')+sel.join(',')+'{'+r.style.cssText+'}'+(wrap?'}':''))}catch(e){}}};
+  for(const sh of document.styleSheets){try{walk(sh.cssRules,'')}catch(e){}}
+  const st=document.createElement('style');st.textContent=add.join('\n')+'\n.mhost{position:fixed;inset:0;z-index:96;pointer-events:none}.mhost:empty,.mhost:not(.on){display:none}.mhost .mhbd{position:absolute;inset:0;background:rgba(10,10,10,.32);pointer-events:auto;animation:mhfade .22s ease both}@media(min-width:761px){.mhost .mhbd{background:transparent}}.mhost #cb-amenu{pointer-events:auto}@keyframes mhfade{from{opacity:0}}';document.head.appendChild(st)})();
+const MVARS=['--cb-hl','--bg','--card','--text','--muted','--line','--brand','--err','--hl','--cb-pos','--cb-alt','--hair','--whisper','--surface','--raised','--s-card','--s-hair'];
+function mhVars(){const cs=getComputedStyle($('cb'));MVARS.forEach(v=>{const x=cs.getPropertyValue(v);if(x)mhost.style.setProperty(v,x)});mhost.style.fontFamily=cs.fontFamily;mhost.style.color=cs.color;mhost.style.colorScheme=cs.colorScheme}
+const mhome=()=>$('cb-acct').closest('.acctw');
+window.cbMenu=function(r){const m=$('cb-amenu');if(!m.hidden){closeMenus();return}closeMenus();menuCtx('stories');mhVars();mhost.appendChild(m);mhost.classList.add('on');
+  if(r&&!matchMedia('(max-width:760px)').matches){m.style.position='fixed';m.style.top=(r.bottom+8)+'px';m.style.right=Math.max(12,innerWidth-r.right)+'px';m.style.left='auto'}
+  m.hidden=false};
+window.cbMenuClose=function(){if(!$('cb-amenu').hidden)closeMenus()};
+mhost.querySelector('.mhbd').addEventListener('click',()=>closeMenus());
+new MutationObserver(()=>{const m=$('cb-amenu');if(m.hidden&&m.parentNode===mhost){mhost.classList.remove('on');m.style.position=m.style.top=m.style.right=m.style.left='';mhome().appendChild(m)}}).observe($('cb-amenu'),{attributes:true,attributeFilter:['hidden']});
 document.addEventListener('click',e=>{if(!e.target.closest('.perwrap')&&!e.target.closest('#wmenu'))closeMenus();if(!e.target.closest('#cb [data-tip]'))hideTip()});
 
 // ---------- customize ----------
 const DONE_UNUSED=0;const EDIT_I='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',DONE_I='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.8l4 3.9L18.5 7.8"/></svg>';
-function setEditing(on){if(on)buzz('tap');editing=on;$('cb-edit').innerHTML=(on?DONE_I:EDIT_I)+'<span>'+(on?'Done':'Edit')+'</span>';$('cb-edit').classList.toggle('on',on);$('editfoot').hidden=!on;render(true)}
+function setEditing(on){if(on){buzz('tap');(window.requestIdleCallback||(f=>setTimeout(f,120)))(prebuildAdd,{timeout:600})}editing=on;$('cb-edit').innerHTML=(on?DONE_I:EDIT_I)+'<span>'+(on?'Done':'Edit')+'</span>';$('cb-edit').classList.toggle('on',on);$('editfoot').hidden=!on;render(true)}
 $('cb-edit').addEventListener('click',()=>setEditing(!editing));
 // reset asks first, and sits far from Done
 const rs=$('rs');$('cb-reset').addEventListener('click',()=>{buzz('tap');rs.showModal()});
@@ -456,11 +477,15 @@ const CATS={profit:'num',sales:'num',spent:'num',fees:'num',sell:'num',win:'num'
 const PLUS_I='<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
 const CHECK_I='<svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.4l2.6 2.5L11 4.4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 let added={},awCat='all';
-function openAdd(){$('aw-hint').textContent=AW_TIP;$('aw-hint').classList.remove('msg');added={};awCat='all';$('aw-q').value='';$('aw-cats').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c==='all'));aw.showModal();drawThumbs()}
+// The gallery is built ahead of time (when you start editing) and reused, so tapping Add widgets only has to show it
+let awSig='';const awSigNow=()=>{const g=gridSpec();return [period,plat,compare,E.length,g.col,g.row,maskAmt()?1:0,JSON.stringify(typeof custom!=='undefined'?custom:'')].join('|')};
+function prebuildAdd(){if(aw.open||awSig===awSigNow())return;const st=aw.style.cssText;aw.style.cssText='display:block;position:fixed;left:-10000px;top:0;visibility:hidden;pointer-events:none';added={};awCat='all';$('aw-q').value='';try{drawThumbs()}finally{aw.style.cssText=st}awSig=awSigNow()}
+function openAdd(){$('aw-hint').textContent=AW_TIP;$('aw-hint').classList.remove('msg');const fresh=awCat==='all'&&!$('aw-q').value&&!Object.keys(added).length&&awSig===awSigNow();
+  added={};awCat='all';$('aw-q').value='';$('aw-cats').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c==='all'));aw.showModal();if(!fresh){drawThumbs();awSig=awSigNow()}}
 function drawThumbs(){const g=gridSpec(),W=g.col,H=g.row,ctx=ctxNow(),q=$('aw-q').value.trim().toLowerCase(),host=$('aw-list');
   const keys=Object.keys(CATALOG).filter(k=>(awCat==='all'||CATS[k]===awCat)&&(!q||(CATALOG[k].t+' '+CATALOG[k].d).toLowerCase().includes(q)));
   host.innerHTML=keys.length?keys.map(k=>'<div role="button" tabindex="0" class="thumb'+(added[k]?' added':'')+'" data-k="'+k+'" aria-pressed="'+!!added[k]+'" aria-label="'+(added[k]?'Remove ':'Add ')+CATALOG[k].t+'"><span class="tbox"><span class="tin">'+widgetHTML({id:'pv'+k,k,size:'S'},ctx,'pv')+'</span></span><span class="badge">'+(added[k]?CHECK_I:PLUS_I)+'</span></div>').join(''):'<p class="awnone">No widgets match “'+esc(q)+'”.</p>';
-  host.querySelectorAll('.tbox').forEach(bx=>{const sc=bx.clientWidth/W,inn=bx.firstChild,el=inn.firstChild;el.style.width=W+'px';el.style.height=H+'px';inn.style.transform='scale('+sc+')';bx.style.height=(H*sc)+'px'});
+  const bxs=[...host.querySelectorAll('.tbox')],ws=bxs.map(bx=>bx.clientWidth);bxs.forEach((bx,i)=>{const sc=ws[i]/W,inn=bx.firstChild,el=inn.firstChild;el.style.width=W+'px';el.style.height=H+'px';inn.style.transform='scale('+sc+')';bx.style.height=(H*sc)+'px'});
   wire(host,ctx)}
 // the tip line under the gallery briefly becomes the confirmation, then goes back; nothing floats over anything
 const AW_TIP='Tap to add · tap again to remove · resize from the corner on your board';
@@ -488,7 +513,7 @@ function prepare(){if(ready||shown)return;render(false);ready=true}
 function open(){
   if(busy||shown)return;navPush('board',()=>close());busy=true;xb.classList.remove('hint');$('note').hidden=true;
   if(!ready){render(false);ready=true}
-  const r=ins.getBoundingClientRect();shown=true;cbx.scrollTop=0;document.documentElement.style.overflow='hidden';xb.setAttribute('aria-expanded','true');
+  const r=ins.getBoundingClientRect();shown=true;cbx.scrollTop=0;document.documentElement.style.overflow='hidden';document.documentElement.classList.add('cbopen');xb.setAttribute('aria-expanded','true');
   cbx.inert=false;cbx.removeAttribute('aria-hidden');
   if(calm.matches){cbx.classList.remove('off','enter');busy=false;$('close').focus({preventScroll:true});return}
   cbx.classList.add('anim','enter');cbx.classList.remove('off');bgl.classList.add('on');
@@ -501,7 +526,7 @@ function open(){
 }
 function close(){
   if(busy||!shown)return;navDone('board');busy=true;hideTip();closeMenus();$('wmenu').hidden=true;xb.setAttribute('aria-expanded','false');
-  const finish=()=>{shown=false;cbx.classList.add('off');cbx.classList.remove('anim');bgl.classList.remove('on');cbx.inert=true;cbx.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';busy=false;
+  const finish=()=>{shown=false;cbx.classList.add('off');cbx.classList.remove('anim');bgl.classList.remove('on');cbx.inert=true;cbx.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';document.documentElement.classList.remove('cbopen');busy=false;
     if(editing){editing=false;$('cb-edit').innerHTML=EDIT_I+'<span>Edit</span>';$('cb-edit').classList.remove('on');$('editfoot').hidden=true;$('cb').classList.remove('editing');render(false)}xb.focus({preventScroll:true})};
   if(calm.matches){finish();return}
   const r=ins.getBoundingClientRect();cbx.classList.add('anim');bgl.classList.add('on');
@@ -526,7 +551,7 @@ function paintAvatar(){const c=avatar.color||SWATCH[0];['cb-av','cb-av2'].forEac
 function paintTitle(){const f=(profile.first||'').trim(),t=viewing&&f?f+'’s Card Board':'Card Board';$('cbtn').textContent=t;document.title=t}
 function toast(msg){const t=$('cbtoast');t.textContent=msg;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2200)}
 // appearance
-function applyTheme(th){if(th==='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=th;try{localStorage.setItem('cb.theme',th)}catch(e){}
+function applyTheme(th){if($('cb-amenu').parentNode===mhost)setTimeout(mhVars,30);if(th==='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=th;try{localStorage.setItem('cb.theme',th)}catch(e){}
   $('am-theme').querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',b.dataset.th===th))}
 applyTheme((()=>{try{return localStorage.getItem('cb.theme')||'auto'}catch(e){return 'auto'}})());
 $('am-theme').addEventListener('click',e=>{const b=e.target.closest('button');if(b){applyTheme(b.dataset.th);buzz('tick');setTimeout(()=>render(false),30)}});
@@ -535,8 +560,17 @@ function paintHap(){$('am-hap').setAttribute('aria-checked',hapOn)}paintHap();
 if(!touchDev)$('am-hapr').hidden=true;
 $('am-hap').addEventListener('click',()=>{hapOn=!hapOn;try{localStorage.setItem('cb.haptics',hapOn?'1':'0')}catch(e){}paintHap();buzz('tap')});
 $('cb-amenu').addEventListener('click',e=>{const b=e.target.closest('[data-am]');if(!b)return;closeMenus();const a=b.dataset.am;
+  const inSt=()=>{try{return $('csx').querySelector('iframe').contentWindow}catch(e){return null}};
+  if(a==='go-board'){if($('cb-amenu').dataset.ctx==='stories')window.cbStoriesBack();return}
+  if(a==='go-stories'){if($('cb-amenu').dataset.ctx!=='stories')$('cb-stories').click();return}
+  if(a==='go-app'){toast('Opens your entries in the app');return}
+  if(a==='st-save'||a==='st-colors'){const w=inSt();try{w.csMenu(a)}catch(e){}return}
+  // Account rows open on the board, so from Stories slide back first, then open them
+  if($('cb-amenu').dataset.ctx==='stories'){menuCtx('board');window.cbStoriesBack();setTimeout(()=>run(a),calm.matches?0:340);return}
+  run(a)});
+function run(a){
   if(a==='profile')openAvatar();else if(a==='export')openExport();
-  else toast({plan:'Plan and billing opens here in the app',import:'Import opens from the dashboard in the app',plat:'Platforms and fees open here in the app',goal:'Budget and goals open here in the app',help:'Help and feedback open here in the app',out:'Sign out works in the app'}[a])});
+  else toast({plan:'Plan and billing opens here in the app',import:'Import opens from the dashboard in the app',plat:'Platforms and fees open here in the app',goal:'Budget and goals open here in the app',help:'Help and feedback open here in the app',out:'Sign out works in the app'}[a])}
 // avatar editor: your initial on a color, or a photo you upload or take, positioned in a circle
 const av=$('av');let ad=null;const AVC=135;
 function openAvatar(){ad={color:avatar.color||SWATCH[0],photo:null,src:avatar.src||null,x:avatar.x||0,y:avatar.y||0,z:avatar.z||1,img:null,first:profile.first,last:profile.last,show:profile.show};
