@@ -323,3 +323,9 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - iPhone Safari was enlarging the panel text (text autosizing), so it spilled out of the tile. Added html{-webkit-text-size-adjust:100%}.
 - The panel now sizes to its tile: padding, gaps and text scale with the tile width (cqi, 11–13px), labels never wrap (ellipsis), centred with safe center, overflow hidden. Shorter labels: Fees, Avg per card, Of sales.
 - Checked at 320/375/390/430 widths: every element stays inside the tile.
+
+### v19 — flip panel per size, long-press to edit
+- fitFlip() lays the flip panel out from the tile's real size. Squares and tall tiles (kv): two label/value lines, then the total big (up to 48px); wide tiles, ratio over 1.6 (kh): columns with label over value, the total on the right with a divider. Text sizes come from the tile width and height and from the longest value, clamped. "See entries" is a quiet link in small tiles and a pill when the short side is 230px or more.
+- Checked on phone (390, 375) and iPad (1024), sizes S/M/L/X/B: everything fits; small tiles fill about 82% of their height.
+- Long-press a widget for 480ms on touch (no more than 10px of movement, cancelled by scrolling) to enter Edit; it suppresses the click that follows and blocks the iPhone callout and text selection on widgets.
+- Test: tools/t77.js.

@@ -720,10 +720,27 @@ function flipTile(w,k,o){if(!w)return;const old=w.querySelector('.kback');
   document.querySelectorAll('#simple .kback').forEach(x=>flipTile(x.closest('.w'),null));
   const list=pool().filter(e=>e.date>=(o.a||'0000')&&e.date<=(o.b||'9999')),rows=FLIP[k](totals(list),list);
   const b=document.createElement('div');b.className='kback';b.dataset.o=JSON.stringify(o);
-  b.innerHTML=rows.map((r,i)=>'<div class="kr'+(i===rows.length-1?' kt':'')+'"><span>'+esc(r[0])+'</span><b class="'+(r[2]||'')+'">'+hideMoney(esc(r[1]))+'</b></div>').join('')+'<button type="button" class="kgo">See entries ›</button>';
-  w.appendChild(b);void b.offsetWidth;b.classList.add('on');w.classList.add('flipped');buzz('tap')}
+  b.innerHTML='<div class="kis">'+rows.map((r,i)=>'<div class="ki'+(i===rows.length-1?' kt':'')+'"><span>'+esc(r[0])+'</span><b class="'+(r[2]||'')+'">'+hideMoney(esc(r[1]))+'</b></div>').join('')+'</div><button type="button" class="kgo">See entries ›</button>';
+  w.appendChild(b);fitFlip(w,b,rows);void b.offsetWidth;b.classList.add('on');w.classList.add('flipped');buzz('tap')}
+// lay the flip panel out for the tile it's in: stacked in squares and tall tiles, side by side in wide ones.
+// Text sizes come from the tile's real width and height, so small tiles use their space and big ones don't look empty.
+function fitFlip(w,b,rows){const W=w.clientWidth,H=w.clientHeight,wide=W/H>1.6,u=wide?H:Math.min(W,H),pad=Math.max(12,Math.min(26,u*.09)),iw=W-2*pad,cl=(x,a,z)=>Math.max(a,Math.min(z,x));
+  const len=s=>String(s).length,vmax=Math.max(...rows.slice(0,-1).map(r=>len(r[1]))),tot=rows[rows.length-1];let fr,fv,ft,fl;
+  if(wide){const colW=(iw-2*14)/rows.length;fv=cl(Math.min(H*.13,colW/(vmax*.6)),13,46);ft=cl(Math.min(H*.17,colW/(len(tot[1])*.6)),15,60);fl=cl(fv*.52,11,19);fr=fl}
+  else{const rmax=Math.max(...rows.slice(0,-1).map(r=>len(r[0])+len(r[1])+2));fr=cl(Math.min(u*.08,iw/(rmax*.56)),11,18);ft=cl(Math.min(u*.155,iw/(len(tot[1])*.62)),18,48);fl=cl(fr*.92,11,16);fv=fr}
+  const big=u>=230;b.classList.add(wide?'kh':'kv');b.classList.toggle('kbig',big);
+  b.style.cssText='--pad:'+pad.toFixed(1)+'px;--fr:'+fr.toFixed(1)+'px;--fv:'+fv.toFixed(1)+'px;--ft:'+ft.toFixed(1)+'px;--fl:'+fl.toFixed(1)+'px;--gap:'+cl(u*.04,4,14).toFixed(1)+'px;--cols:'+rows.length}
 document.addEventListener('pointerdown',e=>{if(!TOUCH.matches)return;if(!e.target.closest('#simple .w.scrubbing'))document.querySelectorAll('#simple svg.sel').forEach(s=>s._clear&&s._clear());
   if(!e.target.closest('#simple .w.flipped'))document.querySelectorAll('#simple .kback').forEach(x=>flipTile(x.closest('.w'),null))},{passive:true});
+
+// ---------- long-press a widget to start editing (phones and tablets) ----------
+;(()=>{let t=0,xy=null,fired=false;const stop=()=>{clearTimeout(t);xy=null};
+  $('simple').addEventListener('pointerdown',e=>{if(!TOUCH.matches||editing||viewing||e.pointerType==='mouse'||!e.target.closest('.w[data-id]'))return;xy=[e.clientX,e.clientY];fired=false;clearTimeout(t);
+    t=setTimeout(()=>{if(!xy)return;fired=true;xy=null;document.querySelectorAll('#simple svg.sel').forEach(s=>s._clear&&s._clear());document.querySelectorAll('#simple .kback').forEach(x=>flipTile(x.closest('.w'),null));hideTip();buzz('firm');setEditing(true)},480)},{passive:true});
+  $('simple').addEventListener('pointermove',e=>{if(xy&&Math.hypot(e.clientX-xy[0],e.clientY-xy[1])>10)stop()},{passive:true});
+  ['pointerup','pointercancel','scroll'].forEach(ev=>$('simple').addEventListener(ev,stop,{passive:true}));cbx.addEventListener('scroll',stop,{passive:true});
+  $('simple').addEventListener('click',e=>{if(fired){fired=false;e.stopPropagation();e.preventDefault()}},true);
+  $('simple').addEventListener('contextmenu',e=>{if(TOUCH.matches&&e.target.closest('.w[data-id]'))e.preventDefault()})})();
 
 // ---------- motion for menus and sheets: GPU-only (transform and opacity), springy in, quick out ----------
 document.querySelectorAll('dialog.sheet').forEach(d=>{const nat=HTMLDialogElement.prototype.close;

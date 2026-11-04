@@ -10,7 +10,7 @@ await step('tap bar',async()=>{const svg=p.locator('#simple .w svg.pc').first();
   await p.touchscreen.tap(200,30);await p.waitForTimeout(300);L('cleared',await p.evaluate(()=>!document.querySelector('#simple .scr.on')))});
 await step('flip profit',async()=>{await p.tap('#simple .kS .cq.drill');await p.waitForTimeout(400);await p.screenshot({path:'shots/u-'+sc+'-flip.png'});
   L('back',await p.evaluate(()=>{const k=document.querySelector('#simple .kback');return k?k.innerText.replace(/\s+/g,' '):'none'}),'ent',await p.evaluate(()=>document.getElementById('ent').open));
-  await p.tap('#simple .kback .kr');await p.waitForTimeout(400);L('unflipped',await p.evaluate(()=>!document.querySelector('#simple .kback')))});
+  await p.tap('#simple .kback .ki');await p.waitForTimeout(400);L('unflipped',await p.evaluate(()=>!document.querySelector('#simple .kback')))});
 await ctx.close()}
 // desktop unchanged: click bar opens entries
 const ctx=await b.newContext({viewport:{width:1440,height:900}});const p=await ctx.newPage();p.on('pageerror',e=>errs.push('d '+e.message));
