@@ -318,3 +318,8 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - Phones: the entries list is a full-width bottom sheet (min(82dvh,720px)) with its header visible.
 - Desktop unchanged: hover tooltips, and clicking opens entries.
 - Test: tools/t76.js. Options preview: tools/tap-options.html.
+
+### v18.1 — flip panel fits its tile
+- iPhone Safari was enlarging the panel text (text autosizing), so it spilled out of the tile. Added html{-webkit-text-size-adjust:100%}.
+- The panel now sizes to its tile: padding, gaps and text scale with the tile width (cqi, 11–13px), labels never wrap (ellipsis), centred with safe center, overflow hidden. Shorter labels: Fees, Avg per card, Of sales.
+- Checked at 320/375/390/430 widths: every element stays inside the tile.

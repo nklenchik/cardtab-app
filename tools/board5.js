@@ -712,9 +712,9 @@ function scrubChart(el,svg,sp){const w=el.closest('.w');if(!w)return;let cur=-1,
   svg._clear=()=>pick(-1)}
 const FLIP={
   profit:t=>[['You kept',money(t.after)],['You spent','−'+money(t.spent)],['Profit',money(t.profit),t.profit>=0?'g':'r']],
-  sales:t=>[['Sales',money(t.sales)],['Fees and shipping','−'+money(t.fees)],['You kept',money(t.sales-t.fees)]],
-  spent:(t,l)=>{const nb=l.filter(e=>e.type==='purchase').reduce((a,e)=>a+(e.qty||1),0);return [['Cards bought',String(nb)],['Average per card',money(Math.round(t.spent/Math.max(1,nb)))],['Spent',money(t.spent)]]},
-  fees:t=>[['Sales',money(t.sales)],['Share of sales',(t.sales?(t.fees/t.sales*100).toFixed(1):'0.0')+'%'],['Fees and shipping',money(t.fees)]]};
+  sales:t=>[['Sales',money(t.sales)],['Fees','−'+money(t.fees)],['You kept',money(t.sales-t.fees)]],
+  spent:(t,l)=>{const nb=l.filter(e=>e.type==='purchase').reduce((a,e)=>a+(e.qty||1),0);return [['Cards bought',String(nb)],['Avg per card',money(Math.round(t.spent/Math.max(1,nb)))],['Spent',money(t.spent)]]},
+  fees:t=>[['Sales',money(t.sales)],['Of sales',(t.sales?(t.fees/t.sales*100).toFixed(1):'0.0')+'%'],['Fees',money(t.fees)]]};
 function flipTile(w,k,o){if(!w)return;const old=w.querySelector('.kback');
   if(old||!k){if(old){old.classList.remove('on');w.classList.remove('flipped');setTimeout(()=>old.remove(),220)}return}
   document.querySelectorAll('#simple .kback').forEach(x=>flipTile(x.closest('.w'),null));
