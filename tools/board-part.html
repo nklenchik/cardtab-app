@@ -1,0 +1,54 @@
+/* ---------- site tokens the Card Board design uses ---------- */
+:root{--card:#ffffff;--brand-soft:#fbe3ea;--brand-text:#a50e37;--green:#3b6d11;--ok-bg:#eaf3de;--err:#a32d2d;--brand-ink:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--card:#262624;--brand-soft:#3d1220;--brand-text:#f27a9a;--green:#6cb83a;--ok-bg:#1c2e10;--err:#ff8a8a}}
+:root[data-theme="dark"]{--card:#262624;--brand-soft:#3d1220;--brand-text:#f27a9a;--green:#6cb83a;--ok-bg:#1c2e10;--err:#ff8a8a}
+/* ---------- Card Board design from cardtab.app (extracted from the site build) ---------- */
+__SITECSS__
+/* ---------- full page Card Board ---------- */
+.cbx{position:fixed;inset:0;z-index:50;background:var(--bg);overflow:auto;overscroll-behavior:contain;will-change:clip-path}
+.cbx[hidden]{display:none}
+.cbx #cb{max-width:none;min-height:100%;background:var(--cb-alt);padding-block:max(18px,env(safe-area-inset-top,0px)) 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.cbx #cb .frame{border:0;border-radius:0;box-shadow:none;background:transparent;padding:0;overflow:visible;max-width:1240px;margin:0 auto}
+.cbx #cb .topbar{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:nowrap}
+.cbx .cbt{margin:0 auto 0 0;display:flex;align-items:center;gap:10px;font-size:28px;font-weight:800;letter-spacing:-.03em;line-height:1.1;white-space:nowrap}
+.cbx .prem{display:inline-flex;align-items:center;gap:4px;padding:3px 10px 3px 8px;border-radius:999px;background:var(--brand);color:#fff;font-size:11.5px;font-weight:750;letter-spacing:0}
+.cbx .perwrap{position:relative}
+.cbx #cb .cb-menu{left:auto;right:0}
+.cbx .close{width:42px;height:42px;flex:none;border-radius:50%;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;color:var(--muted);transition:color .2s}
+.cbx .close:hover{color:var(--text)}
+.cbx #cb .kpi{text-align:left}
+.cbx #cb .kpi .ttl{font-size:15px;color:var(--muted);font-weight:700}
+.cbx #cb .kpi .sm{display:block;margin-top:8px;font-size:13px;font-weight:700;color:var(--muted)}
+.cbx #cb .kpi .big.r{color:var(--loss-ink)}
+.cbx #cb .w{text-align:left}
+.cbx #cb .hero2{text-align:center}
+.cbx #cb .card-ph{width:110px;height:153px;border-radius:7px;background:linear-gradient(155deg,color-mix(in srgb,var(--brand) 70%,#fff),color-mix(in srgb,var(--brand) 55%,#000));display:grid;place-items:center;color:#fff;font-size:44px;font-weight:800;box-shadow:inset 0 0 0 4px rgba(255,255,255,.22)}
+.cbx #cb .eg{display:block;text-align:center;font-size:12px;font-weight:600;color:var(--muted);margin-top:10px}
+.cbx #cb svg .bar{transform-box:fill-box;transform-origin:50% 100%;transition:transform .55s var(--ease)}
+.cbx #cb svg .bar.n{transform-origin:50% 0%}
+.cbx #cb .grow svg .bar{transform:scaleY(0)}
+.cbx #cb .sell .bar i,.cbx #cb .bb .bars i{transition:transform .55s var(--ease);transform-origin:left}
+.cbx #cb .bb .bars i{transform-origin:bottom}
+.cbx #cb.grow .sell .bar i{transform:scaleX(0)}
+.cbx #cb.grow .bb .bars i{transform:scaleY(0)}
+.cbx #cb svg rect[data-i]{fill:transparent;cursor:default}
+@media(max-width:760px){.cbx #cb .simple .kpi{grid-column:span 6;padding:16px 18px}.cbx #cb .kpi .big{font-size:26px;margin-top:8px}.cbx .cbt{font-size:22px}.cbx #cb .simple .kpi.kp1{grid-column:1/-1}.cbx #cb .simple .kpi.kp1 .big{font-size:34px}}
+@media(max-width:400px){.cbx .prem{display:none}}
+/* entrance */
+.cbx #cb .w,.cbx #cb .topbar{transition:opacity .3s ease,transform .38s var(--ease)}
+.cbx.enter #cb .w,.cbx.enter #cb .topbar{opacity:0;transform:translateY(10px)}
+@media (prefers-reduced-motion:reduce){.cbx #cb .w,.cbx #cb .topbar,.cbx #cb svg .bar,.cbx #cb .sell .bar i,.cbx #cb .bb .bars i{transition:none}}
+.cbx #cb .mt{font-family:Manrope,-apple-system,"Segoe UI",sans-serif}
+.cbx #cb .pill{white-space:nowrap}
+@media(max-width:760px){
+  .cbx #cb .topbar{flex-wrap:wrap;row-gap:12px}
+  .cbx #cb .cbt{font-size:24px;flex:1 1 auto;margin:0}
+  .cbx #cb .close{order:2}
+  .cbx #cb .perwrap{order:3;flex-basis:100%}
+  .cbx #cb .simple .kpi.kp1{grid-column:span 6}
+  .cbx #cb .simple .kpi.kp1 .big{font-size:26px}
+  .cbx #cb .kpi .big{font-size:24px}
+  .cbx #cb .kpi .ttl{font-size:13px}
+  .cbx #cb .kpi .sm{font-size:12px}
+}
+.cbx #cb .perwrap{text-align:left}
