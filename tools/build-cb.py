@@ -6,13 +6,13 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
 <div id="cb"><div class="frame">
   <div class="topbar">
     <button class="back" id="close" type="button" aria-label="Back to dashboard"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span>Dashboard</span></button>
-    <h1 class="cbt">Card Board <span class="prem"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/></svg>Premium</span></h1>
+    <h1 class="cbt"><span class="cbtn">Card Board</span><span class="ehint2">Drag to move · drag a corner to resize</span> <span class="prem"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/></svg>Premium</span></h1>
     <div class="tctl">
     <button type="button" class="tbtn edit" id="cb-edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg><span>Edit</span></button>
     <div class="perwrap"><button type="button" class="pill on" id="cb-per" aria-haspopup="true" aria-expanded="false"><span id="cb-perl">Last 12 months</span> <i>▾</i></button><div class="cb-menu" id="cb-menu" hidden role="menu"></div></div>
     <div class="perwrap"><button type="button" class="pill alt" id="cb-plat" aria-haspopup="true" aria-expanded="false"><span id="cb-platl">All platforms</span> <i>▾</i></button><div class="cb-menu" id="cb-pmenu" hidden role="menu"></div></div>
     <span class="ehint">Drag to move · drag a corner to resize</span>
-    <button type="button" class="tlink rst" id="cb-reset" hidden><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg>Reset</button>
+    
     </div>
     <button type="button" class="iconb" id="cb-ask" aria-label="Ask about your numbers"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2 5.3 5.5 1.9-5.5 2-2 5.3-2-5.3-5.5-2 5.5-1.9z"/><path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg><span>Ask</span></button>
     <button type="button" class="iconb" id="cb-share" aria-label="Share Card Board"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3L10.5 13.5"/><path d="M21 3l-6.5 18-4-7.5L3 9.5z"/></svg><span>Share</span></button>
@@ -30,6 +30,7 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
   <div class="vbar" id="vbar" hidden><span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>This is what people with your link see</span><button type="button" class="tbtn" id="vbar-x">Back to my board</button></div>
   <button type="button" class="addbar" id="addw" hidden><span aria-hidden="true">+</span> Add widget</button>
   <div class="simple" id="simple"></div>
+  <div class="editfoot" id="editfoot" hidden><button type="button" class="tlink rst" id="cb-reset"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg>Reset to the starting layout</button></div>
 </div>
 <div class="cb-menu" id="wmenu" hidden role="menu"></div>
 <dialog id="shd" class="sheet" aria-labelledby="sh-h"><div class="awp shp">

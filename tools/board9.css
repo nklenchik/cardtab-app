@@ -223,3 +223,18 @@ dialog.sheet .awp>.go,dialog.sheet .awp>.rsb,#aw .awfoot{position:static;box-sha
 #aw .awbody{padding-top:12px;padding-bottom:10px}
 #aw .awbody .thumbs{padding:0 6px}
 .shp .awbody{gap:12px}
+/* Edit mode: the top bar holds only what editing needs. Filters, Ask, Share and your picture come back with Done. */
+.cbx #cb.editing .topbar .back,.cbx #cb.editing .topbar .acctw,.cbx #cb.editing #cb-ask,.cbx #cb.editing #cb-share,.cbx #cb.editing .tctl .perwrap{display:none!important}
+.cbx #cb.editing .topbar .cbt{flex-direction:column;align-items:flex-start;gap:2px}
+.cbx #cb.editing .topbar .cbt .prem{display:none}
+.cbx #cb.editing .ehint{display:none!important}
+.cbx #cb .cbt .ehint2{display:none;font-size:13px;font-weight:650;color:var(--muted);letter-spacing:0}
+.cbx #cb.editing .cbt .ehint2{display:block}
+.cbx #cb.editing .tctl{margin-left:auto;overflow:visible!important;flex:0 0 auto!important;padding:0!important;margin-right:0!important}
+.cbx #cb.editing .tbtn.edit{background:var(--brand);color:#fff;border-color:transparent;padding:10px 18px 10px 15px;font-size:14.5px}
+.cbx #cb.editing .tbtn.edit:hover{filter:brightness(1.06)}
+@media(max-width:760px){.cbx #cb.editing .topbar .tctl{order:2;flex-basis:auto!important}.cbx #cb.editing .cbt .ehint2{font-size:12px}}
+/* Reset lives at the bottom of the board while editing, far from Done */
+.cbx #cb .editfoot{display:flex;justify-content:center;padding:26px 0 6px}
+.cbx #cb .editfoot[hidden]{display:none}
+.cbx #cb .editfoot .rst{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:13.5px}

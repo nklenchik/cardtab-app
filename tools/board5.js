@@ -293,7 +293,7 @@ document.addEventListener('click',e=>{if(!e.target.closest('.perwrap')&&!e.targe
 
 // ---------- customize ----------
 const DONE_UNUSED=0;const EDIT_I='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',DONE_I='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.8l4 3.9L18.5 7.8"/></svg>';
-function setEditing(on){if(on)buzz('tap');editing=on;$('cb-edit').innerHTML=(on?DONE_I:EDIT_I)+'<span>'+(on?'Done':'Edit')+'</span>';$('cb-edit').classList.toggle('on',on);$('cb-reset').hidden=!on;render(true)}
+function setEditing(on){if(on)buzz('tap');editing=on;$('cb-edit').innerHTML=(on?DONE_I:EDIT_I)+'<span>'+(on?'Done':'Edit')+'</span>';$('cb-edit').classList.toggle('on',on);$('editfoot').hidden=!on;render(true)}
 $('cb-edit').addEventListener('click',()=>setEditing(!editing));
 // reset asks first, and sits far from Done
 const rs=$('rs');$('cb-reset').addEventListener('click',()=>{buzz('tap');rs.showModal()});
@@ -467,7 +467,7 @@ function open(){
 function close(){
   if(busy||!shown)return;busy=true;hideTip();closeMenus();$('wmenu').hidden=true;xb.setAttribute('aria-expanded','false');
   const finish=()=>{shown=false;cbx.classList.add('off');cbx.classList.remove('anim');bgl.classList.remove('on');cbx.inert=true;cbx.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';busy=false;
-    if(editing){editing=false;$('cb-edit').innerHTML=EDIT_I+'<span>Edit</span>';$('cb-edit').classList.remove('on');$('cb-reset').hidden=true;$('cb').classList.remove('editing');render(false)}xb.focus({preventScroll:true})};
+    if(editing){editing=false;$('cb-edit').innerHTML=EDIT_I+'<span>Edit</span>';$('cb-edit').classList.remove('on');$('editfoot').hidden=true;$('cb').classList.remove('editing');render(false)}xb.focus({preventScroll:true})};
   if(calm.matches){finish();return}
   const r=ins.getBoundingClientRect();cbx.classList.add('anim');bgl.classList.add('on');
   $('cb').animate([{opacity:1},{opacity:0}],{duration:150,easing:'ease-in',fill:'forwards'}).onfinish=function(){
