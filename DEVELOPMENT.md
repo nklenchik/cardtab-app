@@ -293,3 +293,9 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - Stories dates: same menu as the board; custom dates are month tiles (tap start, tap end; From/To to change one). On phones the range opens one sheet with quick picks + month tiles.
 - Stories on phones shows 2 themes + All 24 themes.
 - Test: tools/t72.js.
+
+### Stories v2.7
+- "All themes" chip: rainbow circle (conic gradient) and no count.
+- Last month added: Last month · This year · Last 12 months · Last year · All time · Custom dates (months only).
+- Any single-month range (Last month or one custom month): money line by day; Staying accountable becomes Budget (to spare/over) · Avg week · Lightest week; Busiest month becomes Busiest week (weeks are 1–7, 8–14, 15–21, 22–28, 29–end). If a month has no flips, Biggest win shows the biggest sale.
+- Test: tools/t73.js.
