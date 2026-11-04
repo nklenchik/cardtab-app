@@ -190,3 +190,11 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - Edit profile picture is 25% smaller (135px); the photo crop math follows it (AVC).
 - Card-art widgets (Recent sales, Top sellers, Still holding, Biggest losses, Recent buys): Nick likes them only if they're as clean as Apple or Google would make them. Preview them alongside Card Stories before building.
 - Number widgets: the change % (for example "▲ 494%") sits beside the widget name, wrapping under it on narrow widgets, and "vs previous period" is gone from the widget. The comparison is still in its tooltip and screen-reader label. With Compare off, the count (for example "75 entries") shows under the number instead.
+- Phone top bar: back, name and your picture on the first row; the toolbar (Edit, time range, platforms) on the second row, with Ask and Share held to the right. In Edit mode, Ask and Share step aside and the toolbar takes the full row, with Reset at its end.
+- Hiding the trend on a Small number widget centers the number vertically. It stays left-aligned, to line up with the name above it.
+- Audit fixes:
+  - Number widgets crashed when there was nothing to compare against (Compare off, or a platform with no earlier data). Fixed.
+  - Phone time and platform menus were cut off inside the scrolling toolbar. They now float under their button (`placeMenu`).
+  - Edit-mode resize handles covered widget text. They're now small round handles on each widget's bottom edge, just inside its corner.
+  - `tools/t57.js` sweeps every widget × size × Compare mode × range on phone and desktop for errors and overflow; it's clean.
+- Haptics: Nick can't feel them on his phone. iPhone web pages can't vibrate, and the switch workaround is unreliable (it needs iOS 18+, System Haptics on, and seems to fire only on taps, not drags). Real haptics need the native app wrapper (for example Capacitor).

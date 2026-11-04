@@ -199,15 +199,15 @@ function kpiBody(k,ctx,s,t,w){const T=!(w&&w.trend===false);
   const series=mt.map(x=>KPI[k](totals(x.list))),bi=series.reduce((a,x,i)=>x>series[a]?i:a,0);
   const sub=k==='profit'?cnt(t.n,'entry','entries'):k==='sales'?cnt(inP.filter(e=>e.type==='sale').length,'sale','sales'):k==='spent'?cnt(inP.filter(e=>e.type==='purchase').length,'purchase','purchases'):(t.sales?(t.fees/t.sales*100).toFixed(1):'0.0')+'% of sales';
   // the change now sits beside the widget's name; under the number only the count shows, and only when there's nothing to compare
-  const cls=k==='profit'?(v>=0?'g':'r'):'',dl=chg==null?'<span class="sm">'+sub+'</span>':'',kdv=dl?kdv:'';
+  const cls=k==='profit'?(v>=0?'g':'r'):'',dl=chg==null?'<span class="sm">'+sub+'</span>':'',kdv=dl?'<div class="kd">'+dl+'</div>':'';
   const spk='<div class="kspk'+(k==='profit'?(v<0?' r':''):' mu')+'">'+spark(series)+'</div>';
   const nm=CATALOG[k].t.toLowerCase(),tipf=i=>{const tt=totals(mt[i].list);return '<b>'+mt[i].l+'</b>'+CATALOG[k].t+' <span class="'+(k==='profit'?(tt.profit>=0?'p':'l'):'')+'">'+kshort(KPI[k](tt))+'</span>'};
   const bars=o=>cv(ctx,Object.assign({data:mt.map((x,i)=>Object.assign({},x,{v:series[i],on:x.list.length>0})),color:KCOL[k],tip:tipf,aria:CATALOG[k].t+' by '+unit,unit:nm},o));
   const avg=money(Math.round(series.reduce((a,x)=>a+x,0)/Math.max(1,series.length)));
   // with the trend hidden, the number gets the room and the count takes the chart's place
-  if(s==='S')return '<div class="kS"><div class="cq">'+bn(money(v),cls,T?34:40)+'</div>'+kdv+''+(T?spk:'<small class="cap kfoot">'+sub+'</small>')+'</div>';
-  if(s==='M'){const hz='<div class="hz"><div class="cq">'+bn(money(v),cls,T?40:48)+'</div>'+kdv+'<small class="cap">'+sub+'</small></div>';return T?'<div class="split">'+hz+spk+'</div>':hz}
-  if(s==='B'){const hz='<div class="hz"><div class="cq">'+bn(money(v),cls,44)+'</div>'+kdv+'<small class="cap">'+sub+'</small></div>';return T?'<div class="split wide">'+hz+bars({labels:true,maxW:30,r:6})+'</div>':hz}
+  if(s==='S')return '<div class="kS'+(T?'':' notr')+'"><div class="cq">'+bn(money(v),cls,T?34:40)+'</div>'+kdv+''+(T?spk:'<small class="cap kfoot">'+sub+'</small>')+'</div>';
+  if(s==='M'){const hz='<div class="hz"><div class="cq">'+bn(money(v),cls,T?40:48)+'</div>'+'<small class="cap">'+sub+'</small></div>';return T?'<div class="split">'+hz+spk+'</div>':hz}
+  if(s==='B'){const hz='<div class="hz"><div class="cq">'+bn(money(v),cls,44)+'</div>'+'<small class="cap">'+sub+'</small></div>';return T?'<div class="split wide">'+hz+bars({labels:true,maxW:30,r:6})+'</div>':hz}
   const facts='<div class="facts"><span><small>Average '+unit+'</small><b class="num">'+avg+'</b></span><span><small>Best '+unit+'</small><b class="num">'+mt[bi].m+'</b></span>'+(s==='X'?'<span><small>'+(k==='fees'?'Share of sales':'Count')+'</small><b class="num">'+(k==='fees'?sub.replace(' of sales',''):sub)+'</b></span>':'')+'</div>';
   if(s==='L')return '<div class="col'+(T?'':' notrend')+'"><div class="cq">'+bn(money(v),cls,T?48:60)+'</div>'+kdv+''+(T?bars({labels:true,maxW:26,r:6}):'')+facts+'</div>';
   const hz='<div class="hz"><div class="cq">'+bn(money(v),cls,56)+'</div>'+kdv+''+facts+'</div>';return T?'<div class="split wide">'+hz+bars({labels:true,maxW:40,r:8})+'</div>':hz}
@@ -251,9 +251,12 @@ phone.addEventListener('change',()=>{if(shown)render(false)});
 let rsT=0,lastW=innerWidth;addEventListener('resize',()=>{if(!shown||rz||drag||Math.abs(innerWidth-lastW)<2)return;clearTimeout(rsT);rsT=setTimeout(()=>{lastW=innerWidth;render(false)},120)});
 
 // ---------- period and platform pickers ----------
+// menus inside the scrolling phone toolbar would be cut off, so there they float above everything, under their button
+function placeMenu(btn,m){m.style.position='';m.style.top='';m.style.left='';m.style.right='';if(!btn.closest('.tctl')||getComputedStyle(btn.closest('.tctl')).overflowX==='visible')return;
+  const r=btn.getBoundingClientRect(),w=m.offsetWidth;m.style.position='fixed';m.style.top=(r.bottom+6)+'px';m.style.right='auto';m.style.left=Math.max(12,Math.min(r.left,innerWidth-w-12))+'px'}
 function closeMenus(){document.querySelectorAll('.cbx .cb-menu').forEach(m=>{m.hidden=true});document.querySelectorAll('.cbx [aria-haspopup]').forEach(b=>b.setAttribute('aria-expanded','false'))}
 function pickMenu(btn,menuEl,items,cur,onPick,foot){
-  btn.addEventListener('click',e=>{e.stopPropagation();hideTip();const o=menuEl.hidden;closeMenus();if(!o)return;menuEl.innerHTML=items().map(([k,l])=>'<button type="button" role="menuitemradio" aria-checked="'+(k===cur())+'" data-k="'+esc(k)+'">'+esc(l)+'</button>').join('')+(foot?foot():'');menuEl.hidden=false;btn.setAttribute('aria-expanded','true')});
+  btn.addEventListener('click',e=>{e.stopPropagation();hideTip();const o=menuEl.hidden;closeMenus();if(!o)return;menuEl.innerHTML=items().map(([k,l])=>'<button type="button" role="menuitemradio" aria-checked="'+(k===cur())+'" data-k="'+esc(k)+'">'+esc(l)+'</button>').join('')+(foot?foot():'');menuEl.hidden=false;btn.setAttribute('aria-expanded','true');placeMenu(btn,menuEl)});
   menuEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.cmp){setCompare(b.dataset.cmp);b.parentNode.querySelectorAll('button').forEach(x=>x.setAttribute('aria-checked',x===b));return}onPick(b.dataset.k,b.textContent);closeMenus()})}
 pickMenu($('cb-per'),$('cb-menu'),()=>PERIODS,()=>period,(k,l)=>{if(k==='custom'){openCustom();return}period=k;$('cb-perl').textContent=l;render(false);grow()},()=>'<div class="mcmp"><span>Compare to</span><div class="seg">'+COMPARE.map(([c,l])=>'<button type="button" data-cmp="'+c+'" aria-checked="'+(compare===c)+'">'+l.replace('Previous period','Previous')+'</button>').join('')+'</div></div>');
 // custom dates: a range calendar. First tap sets the start, second tap the end; tap From or To to change just that one.

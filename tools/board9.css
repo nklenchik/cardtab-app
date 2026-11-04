@@ -170,3 +170,30 @@ dialog.drawer .askp{width:min(420px,100vw);max-height:none;height:100%;border-ra
 .cbx #cb .eS .dl.hd{font-size:12px}
 .cbx #cb .wq .wh{align-items:flex-start}
 .cbx #cb .wq .wh .wmore{margin-top:-3px}
+/* phone top bar: back, name and your picture on top; the toolbar underneath with Ask and Share held to the right.
+   While editing, Ask and Share step aside and the toolbar (with Reset at its end) takes the full row. */
+@media(max-width:760px){
+  .cbx #cb .topbar{flex-wrap:wrap;column-gap:10px;row-gap:12px}
+  .cbx #cb .topbar .back{order:0}
+  .cbx #cb .topbar .cbt{order:1;flex:1 1 auto;min-width:0}
+  .cbx #cb .topbar .acctw{order:2}
+  .cbx #cb .topbar .tctl{order:3;flex:1 1 calc(100% - 110px);min-width:0;margin:0 0 0 -16px;padding:2px 4px 4px 16px}
+  .cbx #cb .topbar #cb-ask{order:4}
+  .cbx #cb .topbar #cb-share{order:5}
+  .cbx #cb.editing .topbar #cb-ask,.cbx #cb.editing .topbar #cb-share{display:none}
+  .cbx #cb.editing .topbar .tctl{flex-basis:100%;margin-right:-16px;padding-right:16px}
+}
+/* with the trend hidden, the number sits in the middle of the widget */
+.cbx #cb .kS.notr{justify-content:center}
+.cbx #cb .kS.notr .kfoot{margin-top:6px}
+/* phone menus float above the board */
+@media(max-width:760px){.cbx #cb .cb-menu[style*="fixed"]{z-index:60}}
+/* resize handle: a small round handle sitting on the corner, like the remove badge, so it never covers the widget's text */
+.cbx #cb.editing .wq .grip{width:28px!important;height:28px!important;border-radius:50%!important;right:-9px!important;bottom:-9px!important;left:auto!important;background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.18),0 0 0 1px var(--line)!important;color:var(--text);z-index:4}
+.cbx #cb.editing .wq .grip svg{width:12px;height:12px}
+.cbx #cb.editing .wq .grip::before{inset:-10px!important;border-radius:50%}
+.cbx #cb.editing .wq.edgeR .grip{right:auto!important;left:-9px!important}
+@media(hover:none),(pointer:coarse){.cbx #cb.editing .wq .grip{width:30px!important;height:30px!important}}
+/* handles sit on the bottom edge, just inside each widget's own corner, so neighbours' handles never meet in the gap */
+.cbx #cb.editing .wq .grip{right:12px!important;bottom:-10px!important}
+.cbx #cb.editing .wq.edgeR .grip{left:12px!important;right:auto!important}
