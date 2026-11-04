@@ -212,8 +212,8 @@ function kpiBody(k,ctx,s,t,w){const T=!(w&&w.trend===false);
   const hz='<div class="hz"><div class="cq">'+bn(money(v),cls,56)+'</div><div class="kd">'+dl+'</div>'+facts+'</div>';return T?'<div class="split wide">'+hz+bars({labels:true,maxW:40,r:8})+'</div>':hz}
 
 const GRIP='<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M13 5L5 13M13 9.5L9.5 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
-function widgetHTML(w,ctx,extra){const s=eff(w.size),t=w.k==='month'?'Profit by '+ctx.unit:CATALOG[w.k].t,tt=s==='S'?(w.k==='month'?'Best '+ctx.unit:CATALOG[w.k].s):t;
-  return '<section class="w wq sz'+w.size+' e'+s+(s==='B'?' eM':'')+' k-'+w.k+(extra?' '+extra:'')+'" data-id="'+w.id+'" data-k="'+w.k+'" aria-label="'+esc(t)+', '+SIZE_NAMES[s]+'"><div class="wh"><h3 class="ttl" title="'+esc(t)+'">'+tt+'</h3><button type="button" class="wmore" aria-label="Options for '+t+'" aria-haspopup="true">⋯</button></div><div class="wb">'+hideMoney(body(w.k,ctx,s,w))+'</div>'+
+function widgetHTML(w,ctx,extra){const s=eff(w.size),t=w.name||(w.k==='month'?'Profit by '+ctx.unit:CATALOG[w.k].t),tt=w.name||(s==='S'?(w.k==='month'?'Best '+ctx.unit:CATALOG[w.k].s):t);
+  return '<section class="w wq sz'+w.size+' e'+s+(s==='B'?' eM':'')+' k-'+w.k+(extra?' '+extra:'')+'" data-id="'+w.id+'" data-k="'+w.k+'" aria-label="'+esc(t)+', '+SIZE_NAMES[s]+'"><div class="wh"><h3 class="ttl" title="'+esc(t)+'">'+esc(tt)+'</h3><button type="button" class="wmore" aria-label="Options for '+t+'" aria-haspopup="true">⋯</button></div><div class="wb">'+hideMoney(body(w.k,ctx,s,w))+'</div>'+
     '<button type="button" class="rm" aria-label="Remove '+t+'"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 2l6 6M8 2L2 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>'+
     '<button type="button" class="grip" aria-label="Resize '+t+'. Now '+SIZE_NAMES[s]+'. Arrow keys change the size." title="Drag to resize">'+GRIP+'</button></section>'}
 
@@ -312,13 +312,18 @@ const SZL={S:'Small',M:'Wide',B:'Banner',L:'Large',X:'X-Large'};
 function openWidgetMenu(btn,w){closeMenus();hideTip();const m=$('wmenu'),cur=eff(w.size);
   m.innerHTML='<div class="mh">Size</div><div class="msz2" style="--n:'+sizesNow().length+'">'+sizesNow().map(s=>'<button type="button" data-msize="'+s+'" aria-pressed="'+(cur===s)+'" aria-label="'+SIZE_NAMES[s]+'"><i class="sg sg'+s+'"></i><span>'+SZL[s]+'</span></button>').join('')+'</div>'+
     (KPI[w.k]?'<div class="mrow"><span>Show trend</span><button type="button" class="swt" data-act="trend" role="switch" aria-checked="'+(w.trend!==false)+'" aria-label="Show trend"><i></i></button></div>':'')+
-    '<div class="msep"></div><button type="button" data-act="up">Move up</button><button type="button" data-act="down">Move down</button><button type="button" data-act="rm" class="danger">Remove</button>';
+    '<div class="msep"></div><button type="button" data-act="rename">Rename</button><button type="button" data-act="up">Move up</button><button type="button" data-act="down">Move down</button><button type="button" data-act="rm" class="danger">Remove</button>';
   const r=btn.getBoundingClientRect(),host=$('cb').getBoundingClientRect();m.hidden=false;const mw=m.offsetWidth;m.style.top=(r.bottom-host.top+6)+'px';m.style.left=Math.max(8,Math.min(r.right-host.left-mw,host.width-mw-8))+'px';
   m.onclick=ev=>{const b=ev.target.closest('button');if(!b)return;
     if(b.dataset.act==='trend'){w.trend=w.trend===false;save();b.setAttribute('aria-checked',w.trend!==false);buzz('tick');rebuild(w.id);return}
     m.hidden=true;if(b.dataset.msize){setSize(w.id,b.dataset.msize);return}
-    if(b.dataset.act==='up')moveWidget(w.id,-1);else if(b.dataset.act==='down')moveWidget(w.id,1);else removeWidget(w.id)}}
+    if(b.dataset.act==='rename'){startRename(w.id);return}if(b.dataset.act==='up')moveWidget(w.id,-1);else if(b.dataset.act==='down')moveWidget(w.id,1);else removeWidget(w.id)}}
 
+// rename: the title becomes a text field; an empty name goes back to the suggested one
+function startRename(id){const w=byId(id),el=$('simple').querySelector('.w[data-id="'+id+'"]');if(!w||!el)return;const h=el.querySelector('.ttl'),def=w.k==='month'?'Profit by '+ctxNow().unit:CATALOG[w.k].t;
+  const inp=document.createElement('input');inp.className='ttlin';inp.value=w.name||def;inp.maxLength=40;inp.setAttribute('aria-label','Widget name');h.replaceWith(inp);inp.focus();inp.select();let done=false;
+  const fin=ok=>{if(done)return;done=true;const v=inp.value.trim();if(ok){w.name=v&&v!==def?v:undefined;save();buzz('tick')}rebuild(id)};
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();fin(true)}else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();fin(false)}});inp.addEventListener('blur',()=>fin(true))}
 // ---------- corner resize: width and height together ----------
 // Grab anywhere near the corner. The widget's content steps aside and a clean card follows your finger or cursor over
 // a faint grid of cells, with a dashed outline showing exactly which size it will land on. Nothing else moves while
@@ -343,7 +348,7 @@ function edgeScroll(clientY){const z=56,sp=clientY>innerHeight-z?Math.min(14,(cl
 function scrollLoop(){const st=rz||drag;if(!st)return;if(st.vy){cbx.scrollTop+=st.vy;if(rz){rz.y=clampH(rz.h0+(rz.cy-rz.sy)+(cbx.scrollTop-rz.st0));if(!rz.raf)rz.raf=requestAnimationFrame(placeRz)}if(drag)moveDrag(drag.cx,drag.cy)}st.loop=requestAnimationFrame(scrollLoop)}
 const clampH=v=>Math.max(pxH(rz.g,1)*.75,Math.min(pxH(rz.g,2)+rz.g.row*.4,v));
 $('simple').addEventListener('pointerdown',e=>{
-  if(!editing||e.button>0)return;
+  if(!editing||e.button>0||e.target.closest('input'))return;
   const gr=e.target.closest('.grip');
   if(gr){const sec=gr.closest('.w[data-id]'),g=gridSpec(),r=sec.getBoundingClientRect();e.preventDefault();$('simple').setPointerCapture(e.pointerId);hideTip();
     const left=r.left-g.r.left,top=r.top-g.r.top,room=Math.max(60,(e.pointerType==='touch'?innerWidth-8:innerWidth-16)-e.clientX),rowsNeeded=Math.ceil((g.r.height+g.rgap)/(g.row+g.rgap))+2;
@@ -491,14 +496,13 @@ $('cb-amenu').addEventListener('click',e=>{const b=e.target.closest('[data-am]')
 // avatar editor: your initial on a color, or a photo you upload or take, positioned in a circle
 const av=$('av');let ad=null;const AVC=180;
 function openAvatar(){ad={color:avatar.color||SWATCH[0],photo:null,src:avatar.src||null,x:avatar.x||0,y:avatar.y||0,z:avatar.z||1,img:null,first:profile.first,last:profile.last,show:profile.show};
-  $('av-sw').innerHTML=SWATCH.map(c=>'<button type="button" role="radio" data-c="'+c+'" style="--c:'+c+'" aria-label="Color '+c+'" aria-checked="'+(c===ad.color)+'"></button>').join('')+'<label class="cust" title="Any color"><input type="color" id="av-pick" value="'+ad.color+'" aria-label="Pick any color"></label>';
-  $('av-pick').addEventListener('input',e=>{ad.color=e.target.value;drawAv()});
+  $('av-sw').innerHTML=SWATCH.map(c=>'<button type="button" role="radio" data-c="'+c+'" style="--c:'+c+'" aria-label="Color '+c+'" aria-checked="'+(c===ad.color)+'"></button>').join('')+'<button type="button" class="cust" id="av-pick" aria-label="Pick any color" aria-expanded="false"></button>';$('av-cpk').hidden=true;
   $('pf-first').value=ad.first;$('pf-last').value=ad.last;paintShow();
   $('av-camw').hidden=!touchDev;$('av-l').textContent=initial();
   if(ad.src)loadImg(ad.src,true);else drawAv();av.showModal()}
 function paintShow(){$('pf-show').querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',b.dataset.sh===ad.show))}
 function drawAv(){const c=$('av-c'),img=$('av-img'),has=!!ad.img;c.style.background=has?'#111':ad.color;c.style.color=inkFor(ad.color);$('av-l').textContent=(($('pf-first').value||'?')[0]).toUpperCase();
-  const custom=!SWATCH.includes(ad.color);$('av-hex').value=ad.color.toUpperCase();const pk=$('av-pick');if(pk){pk.parentNode.classList.toggle('on',custom);pk.parentNode.style.setProperty('--c',ad.color);if(pk.value!==ad.color.toLowerCase())pk.value=ad.color}$('av-l').hidden=has;img.hidden=!has;$('av-zw').hidden=!has;$('av-hint').hidden=!has;$('av-rm').hidden=!has;$('av-colw').hidden=has;
+  const custom=!SWATCH.includes(ad.color);if(document.activeElement!==$('av-hex'))$('av-hex').value=ad.color.toUpperCase();const pk=$('av-pick');if(pk){pk.classList.toggle('on',custom);pk.style.setProperty('--c',ad.color)}paintPicker();$('av-l').hidden=has;img.hidden=!has;$('av-zw').hidden=!has;$('av-hint').hidden=!has;$('av-rm').hidden=!has;$('av-colw').hidden=has;
   $('av-sw').querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',b.dataset.c===ad.color));
   if(has){const s0=Math.max(AVC/ad.img.naturalWidth,AVC/ad.img.naturalHeight),s=s0*ad.z,w=ad.img.naturalWidth*s,h=ad.img.naturalHeight*s;
     ad.x=Math.min(0,Math.max(AVC-w,ad.x));ad.y=Math.min(0,Math.max(AVC-h,ad.y));img.style.width=w+'px';img.style.height=h+'px';img.style.transform='translate('+ad.x+'px,'+ad.y+'px)'}}
@@ -512,6 +516,7 @@ let pan=null;$('av-c').addEventListener('pointerdown',e=>{if(!ad.img)return;e.pr
 $('av-c').addEventListener('pointermove',e=>{if(!pan)return;ad.x=pan.ox+(e.clientX-pan.x);ad.y=pan.oy+(e.clientY-pan.y);drawAv()});
 ['pointerup','pointercancel'].forEach(t=>$('av-c').addEventListener(t,()=>{pan=null}));
 av.addEventListener('click',e=>{if(e.target===av){av.close();return}const b=e.target.closest('button');if(!b)return;
+  if(b.id==='av-pick'){const o=$('av-cpk').hidden;$('av-cpk').hidden=!o;b.setAttribute('aria-expanded',o);if(o){hsv=hexToHsv(ad.color);paintPicker()}return}
   if(b.dataset.c){ad.color=b.dataset.c;buzz('tick');drawAv()}
   else if(b.dataset.sh){ad.show=b.dataset.sh;paintShow()}
   else if(b.id==='av-rm'){ad.img=null;ad.src=null;drawAv()}
@@ -522,7 +527,16 @@ av.addEventListener('click',e=>{if(e.target===av){av.close();return}const b=e.ta
     profile={first:$('pf-first').value.trim()||profile.first,last:$('pf-last').value.trim(),show:ad.show};try{localStorage.setItem('cb.profile',JSON.stringify(profile))}catch(e){}
     paintAvatar();buzz('firm');av.close();toast('Profile saved')}
   else if(b.hasAttribute('data-close'))av.close()});
-$('av-hex').addEventListener('input',e=>{let v=e.target.value.trim();if(v[0]!=='#')v='#'+v;if(/^#[0-9a-f]{6}$/i.test(v)){ad.color=v.toLowerCase();drawAv()}});
+// a color square (saturation and brightness) and a hue slider, drawn with CSS gradients
+let hsv={h:345,s:.9,v:.65};
+function hexToHsv(hex){const n=parseInt(hex.slice(1),16),r=(n>>16)/255,g=(n>>8&255)/255,b=(n&255)/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let h=0;if(d){h=mx===r?((g-b)/d)%6:mx===g?(b-r)/d+2:(r-g)/d+4;h*=60;if(h<0)h+=360}return {h,s:mx?d/mx:0,v:mx}}
+function hsvToHex({h,s,v}){const f=n=>{const k=(n+h/60)%6;return v-v*s*Math.max(0,Math.min(k,4-k,1))};return '#'+[f(5),f(3),f(1)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('')}
+function paintPicker(){const sv=$('cp-sv');if(!sv)return;sv.style.setProperty('--hue','hsl('+hsv.h+',100%,50%)');$('cp-dot').style.left=(hsv.s*100)+'%';$('cp-dot').style.top=((1-hsv.v)*100)+'%';$('cp-dot').style.background=ad?ad.color:'#fff';$('cp-hue').value=hsv.h;$('cp-hue').style.setProperty('--hc','hsl('+hsv.h+',100%,50%)')}
+function pickFromSV(e){const r=$('cp-sv').getBoundingClientRect();hsv.s=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width));hsv.v=Math.min(1,Math.max(0,1-(e.clientY-r.top)/r.height));ad.color=hsvToHex(hsv);drawAv()}
+let svDrag=false;$('cp-sv').addEventListener('pointerdown',e=>{svDrag=true;$('cp-sv').setPointerCapture(e.pointerId);pickFromSV(e)});$('cp-sv').addEventListener('pointermove',e=>{if(svDrag)pickFromSV(e)});['pointerup','pointercancel'].forEach(t=>$('cp-sv').addEventListener(t,()=>{svDrag=false}));
+$('cp-sv').addEventListener('keydown',e=>{const st=.04,m={ArrowLeft:['s',-st],ArrowRight:['s',st],ArrowUp:['v',st],ArrowDown:['v',-st]}[e.key];if(!m)return;e.preventDefault();hsv[m[0]]=Math.min(1,Math.max(0,hsv[m[0]]+m[1]));ad.color=hsvToHex(hsv);drawAv()});
+$('cp-hue').addEventListener('input',e=>{hsv.h=+e.target.value;ad.color=hsvToHex(hsv);drawAv()});
+$('av-hex').addEventListener('input',e=>{let v=e.target.value.trim();if(v[0]!=='#')v='#'+v;if(/^#[0-9a-f]{6}$/i.test(v)){ad.color=v.toLowerCase();hsv=hexToHsv(ad.color);drawAv()}});
 $('pf-first').addEventListener('input',()=>drawAv());
 paintAvatar();
 // export: entries as CSV or Excel, the board as a PDF or an image

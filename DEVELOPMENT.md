@@ -179,3 +179,10 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
   - In the preview it uses Claude through the artifact `sample` capability, sending a compact text summary of the board: totals, comparison, per bucket, per platform, the last 40 entries
   - Real app: an Anthropic API call from the Worker with the same data shape. Premium-only with a monthly cap, because each question costs money.
 - Google Drive import (Nick, when ready): use Google Picker with the drive.file scope (access only to the file the user picks). Avoid drive.readonly (a restricted scope with a yearly security assessment). Export the Sheet as .xlsx through the Drive API, then run it through CTImport. Ask for the permission only when they tap "Import from Google Drive".
+
+### Card Board v11 (Nov 4)
+- Rename widgets: ⋯ → Rename turns the title into a text field. Enter or click away saves, Escape cancels, and an empty name goes back to the suggested one. Stored as `w.name`.
+- Edit profile color: a card like the calendar, with 8 swatches plus a rainbow swatch that opens our own picker (color square, hue slider, hex field). It replaces the browser's color dialog.
+- Fixes: the Ask and search fields showed a second focus outline inside their frame; the Compare row in the time menu wrapped "Last year"; Share and Import had the same icon. Share is now a paper plane, Import a document with a plus.
+- PINNED for later (Nick): a monthly budget setting for the app, and maybe the site demo. Suggested home: set it from the Spend vs budget widget itself ("Set your monthly budget") and from Budget and goals in the account menu, rather than in the toolbar, which holds filters.
+- Proposed, awaiting Nick: card-art widgets, previewed with Card Stories. Ideas: Recent sales (a fanned stack), Top sellers (a row of card tops), Still holding (an art grid of unsold cards with cost), Biggest losses, Recent buys.

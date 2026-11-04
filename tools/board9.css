@@ -124,3 +124,33 @@ dialog.drawer .askp{width:min(420px,100vw);max-height:none;height:100%;border-ra
 /* share cards never grow wider than the sheet */
 .shcard{grid-template-columns:minmax(0,1fr);min-width:0}
 .shp>*{min-width:0}
+/* ---- v11 fixes ---- */
+/* one frame around Ask and search fields: the field itself shows no second outline */
+.askform input:focus,.askform input:focus-visible,#aw .aws input:focus,#aw .aws input:focus-visible{outline:none!important;box-shadow:none!important}
+#aw .aws input::-webkit-search-decoration{display:none}
+/* compare row: room for all three choices on one line */
+.cbx #cb #cb-menu{min-width:280px}
+.cbx #cb .cb-menu .mcmp .seg button{white-space:nowrap;padding:7px 6px}
+/* rename */
+.cbx #cb .ttlin{flex:1;min-width:0;font:inherit;font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--text);background:var(--cb-alt);border:1.5px solid var(--brand);border-radius:9px;padding:3px 8px;margin:-4px 0 -4px -9px;outline:none}
+.cbx #cb .eS .ttlin{font-size:13.5px}
+/* color: a card like the calendar, with our own picker */
+.avpal{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;display:grid;gap:14px}
+.avsw{display:grid!important;grid-template-columns:repeat(9,minmax(0,1fr));gap:8px!important;justify-items:center}
+.avsw button,.avsw .cust{width:32px!important;height:32px!important;border-radius:50%;border:0;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.avsw button[aria-checked="true"]{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--c)!important}
+.avsw .cust{background:conic-gradient(from 180deg,#f43f5e,#f59e0b,#eab308,#22c55e,#06b6d4,#3b82f6,#8b5cf6,#ec4899,#f43f5e);position:relative;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
+.avsw .cust.on{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--c)!important}
+.avsw .cust.on::after{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--c)}
+.avsw .cust[aria-expanded="true"]{transform:scale(1.08)}
+.cpk{display:grid;gap:12px}.cpk[hidden]{display:none}
+.sv{position:relative;height:150px;border-radius:14px;background:linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,var(--hue,red));cursor:crosshair;touch-action:none}
+.sv:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.sv i{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);pointer-events:none}
+.hue{-webkit-appearance:none;appearance:none;width:100%;height:14px;border-radius:999px;background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);outline:none;margin:0}
+.hue::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--hc,red);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);cursor:pointer}
+.hue::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--hc,red);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);cursor:pointer}
+.hue:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
+.avpal .hexf{margin:0;display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding-top:12px}
+.avpal .hexf input{width:120px!important;text-align:center}
+@media(max-width:420px){.avsw{grid-template-columns:repeat(5,minmax(0,1fr))}}
