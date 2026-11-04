@@ -154,3 +154,7 @@ dialog.drawer .awh{align-items:center}
 /* while a menu or sheet is open, the board underneath doesn't scroll */
 .cbx.lock{overflow:hidden!important;overscroll-behavior:none;touch-action:none}
 .cbx.lock .cb-menu,.cbx.lock dialog{touch-action:pan-y}
+
+/* entries list: month headers stay pinned while you scroll a long list */
+dialog .entlist .emh{position:sticky;top:0;z-index:2;background:var(--cb-alt);margin:0;padding:10px 2px 8px;box-shadow:0 -14px 0 var(--cb-alt)}
+dialog .entlist .entmore{height:1px}

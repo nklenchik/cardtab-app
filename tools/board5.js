@@ -693,10 +693,18 @@ function openEntries(o){hideTip();const key=e=>e.name.toLowerCase().replace(/[^a
   list=list.slice().sort((a,b)=>a.date<b.date?1:-1);
   const sum=list.reduce((t,e)=>t+(e.type==='sale'?(o.fees?e.amount-e.net:e.net):-e.amount),0),scope=o.sub||(o.card?'':$('cb-perl').textContent+(plat==='all'?'':' · '+plat));
   $('ent-h').textContent=o.t;$('ent-sub').textContent=[scope,cnt(list.length,'entry','entries')+(list.length?' · '+(o.fees?'fees and shipping '+money(sum):(sum>=0?'net +':'net ')+money(sum)):'')].filter(Boolean).join(' · ');
-  let h='',m='';list.slice(0,300).forEach(e=>{const mm=e.date.slice(0,7);if(mm!==m){m=mm;h+='<p class="emh">'+mLong(mm)+'</p>'}
-    const sale=e.type==='sale',amt=sale?'+'+money(e.amount):'−'+money(e.amount),sub=sale?(o.fees?'fees '+money(e.amount-e.net):'you kept '+money(e.net)):'';
-    h+='<div class="er"><span class="ety t-'+e.type+'">'+(sale?'Sale':e.type==='purchase'?'Buy':'Refund')+'</span><div class="en"><b>'+esc(e.name)+(e.qty>1?' ×'+e.qty:'')+'</b><small>'+dFmt(e.date,{month:'short',day:'numeric'})+' · '+esc(e.platform)+(e.no?' · '+esc(e.no):'')+'</small></div><div class="ea'+(sale?' p':'')+'">'+amt+(sub?'<small>'+sub+'</small>':'')+'</div></div>'});
-  $('ent-list').innerHTML=h||'<p class="enone">No entries here.</p>';$('ent-list').scrollTop=0;buzz('tap');ent.showModal()}
+  // long ranges load in batches of 50 as you scroll, so the sheet opens fast whatever the size; the summary above counts everything
+  const el=$('ent-list');let m='',at=0;
+  const row=e=>{const sale=e.type==='sale',amt=sale?'+'+money(e.amount):'−'+money(e.amount),sub=sale?(o.fees?'fees '+money(e.amount-e.net):'you kept '+money(e.net)):'';
+    return '<div class="er"><span class="ety t-'+e.type+'">'+(sale?'Sale':e.type==='purchase'?'Buy':'Refund')+'</span><div class="en"><b>'+esc(e.name)+(e.qty>1?' ×'+e.qty:'')+'</b><small>'+dFmt(e.date,{month:'short',day:'numeric'})+' · '+esc(e.platform)+(e.no?' · '+esc(e.no):'')+'</small></div><div class="ea'+(sale?' p':'')+'">'+amt+(sub?'<small>'+sub+'</small>':'')+'</div></div>'};
+  const more=()=>{if(at>=list.length)return;let h='';list.slice(at,at+50).forEach(e=>{const mm=e.date.slice(0,7);if(mm!==m){m=mm;h+='<p class="emh">'+mLong(mm)+'</p>'}h+=row(e)});at+=50;el.insertAdjacentHTML('beforeend',h)};
+  el.innerHTML=list.length?'':'<p class="enone">No entries here.</p>';more();buzz('tap');ent.showModal();
+  // find the part of the sheet that actually scrolls, and top up the list whenever you get within ~800px of its end
+  let sc=el;while(sc&&sc!==ent){const ov=getComputedStyle(sc).overflowY;if((ov==='auto'||ov==='scroll')&&sc.scrollHeight>sc.clientHeight+1)break;sc=sc.parentElement}
+  if(!sc||sc===ent)sc=el.closest('.awbody')||el;sc.scrollTop=0;
+  if(entScroll)entScroll[0].removeEventListener('scroll',entScroll[1]);
+  const top=()=>{if(at<list.length&&sc.scrollHeight-sc.scrollTop-sc.clientHeight<800)more()};entScroll=[sc,top];sc.addEventListener('scroll',top,{passive:true})}
+let entScroll=null;
 ent.addEventListener('click',e=>{if(e.target===ent){ent.close();return}const b=e.target.closest('button');if(b&&b.hasAttribute('data-close'))ent.close()});
 $('simple').addEventListener('keydown',e=>{const d=e.target.closest('.drill[data-drill]');if(d&&(e.key==='Enter'||e.key===' ')){e.preventDefault();if(canDrill())openEntries(JSON.parse(d.dataset.drill))}});
 

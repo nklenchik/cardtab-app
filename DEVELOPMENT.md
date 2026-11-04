@@ -374,3 +374,6 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - Board: while a phone menu or any sheet is open, the board underneath is locked (no scrolling behind it).
 - Profile menu: Light / Dark / Auto are equal-width pills with padding on both ends (the menu's full-width button rule was stretching them).
 - tools/t86.js sweeps every period x every story option for text that runs out of a story.
+
+### v24.2 — entries list in batches
+- The entries sheet shows the newest 50 at once and adds 50 more whenever you get within about 800px of the end of the sheet's scroll area (it finds the element that actually scrolls). There is no cap (it used to stop silently at 300); the summary line always counts every entry. Month headers stay pinned while you scroll.
