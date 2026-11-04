@@ -73,7 +73,7 @@ html,body,.ct-demo{background:var(--s-bg)}
   .ct-demo .ct-demo-top .ct-export{display:none!important}
   .ct-demo .ct-demo-top .ct-add{grid-area:add;order:0;margin:0;width:44px;height:44px;min-width:0;padding:0!important;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(40,30,20,.08),0 6px 14px -8px rgba(165,14,55,.45)!important}
   .ct-demo .ct-demo-top .ct-add .ct-add-label{display:none}
-  .ct-demo .ct-demo-top .ct-add .ct-ic{width:20px;height:20px;stroke-width:2}
+  .ct-demo .ct-demo-top .ct-add .ct-ic{width:17px;height:17px;stroke-width:2.6}
 }
 /* ===== Every screen size: the phone's rounded look leads. Pills for search, buttons, filters and sort; light shadows ===== */
 .ct-demo .ct-search,.ct-demo .ct-export,.ct-demo .ct-add,.ct-demo select,.ct-demo .ct-earlier-btn,.ct-demo .ct-ask-input,.ct-demo .ct-ask-input+button,.ct-demo .ct-expand{border-radius:999px!important}
