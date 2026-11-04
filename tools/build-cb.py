@@ -1,6 +1,6 @@
 import json,base64
 P=json.load(open('dash-parts.json'))
-board_css=open('board-part.html').read().replace('__SITECSS__',open('site-cb.css').read())+open('board3.css').read()
+board_css=open('board-part.html').read().replace('__SITECSS__',open('site-cb.css').read())+open('board4.css').read()
 markup='''<section class="cbx enter" id="cbx" hidden role="dialog" aria-modal="true" aria-label="Card Board">
 <div id="cb"><div class="frame">
   <div class="topbar">
@@ -18,8 +18,7 @@ markup='''<section class="cbx enter" id="cbx" hidden role="dialog" aria-modal="t
 <div class="cb-menu" id="wmenu" hidden role="menu"></div>
 <dialog id="aw" aria-labelledby="aw-h"><div class="awp">
   <div class="awh"><h2 id="aw-h">Add a widget</h2><button type="button" class="x" data-close aria-label="Close">✕</button></div>
-  <div><p class="lab">What to measure</p><div class="chips" id="aw-metrics"></div></div>
-  <div><p class="lab">Show it as</p><div class="chips" id="aw-views"></div></div>
+  <div class="opts" id="aw-list"></div>
   <div><p class="lab">Size</p><div class="chips" id="aw-sizes"></div></div>
   <div class="prev" id="aw-prev"></div>
   <button type="button" class="go" id="aw-go">Add to board</button>
@@ -51,7 +50,7 @@ function monthsBack(n){const t=new Date(TODAY+'T12:00:00'),out=[];for(let i=n-1;
 function totals(list){let sales=0,after=0,spent=0,ref=0,fees=0;list.forEach(e=>{if(e.type==='sale'){sales+=e.amount;after+=e.net;fees+=e.amount-e.net}else if(e.type==='purchase')spent+=e.amount;else ref+=e.amount});after-=ref;return{sales,after,spent,profit:after-spent,fees,n:list.length}}
 const calm=matchMedia('(prefers-reduced-motion: reduce)');
 '''.replace('__DATA__',data)
-page=P['css']+board_css+tipcss+'</style>\n\n'+P['html']+markup+head_js+P['js']+open('board3.js').read()+'\n})();\n</script>\n'
+page=P['css']+board_css+tipcss+'</style>\n\n'+P['html']+markup+head_js+P['js']+open('board4.js').read()+'\n})();\n</script>\n'
 logo='data:image/webp;base64,'+base64.b64encode(open('/home/claude/cardtab-app/app/assets/logo-128.webp','rb').read()).decode()
 open('card-board-preview.html','w').write(page.replace('__LOGO__',logo))
 print(len(page))
