@@ -103,7 +103,7 @@ function hideTip(){if(tipEl)tipEl.classList.remove('show')}
 function bindTip(ev,anchor,fn){ev.setAttribute('data-tip','');
   ev.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse'&&!rz&&!drag)showTip(anchor,fn())});ev.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')hideTip()});
   ev.addEventListener('focus',()=>{if(!rz&&!drag)showTip(anchor,fn())});ev.addEventListener('blur',hideTip);
-  ev.addEventListener('click',e=>{if(rz||drag||editing)return;e.stopPropagation();showTip(anchor,fn())})}
+  ev.addEventListener('click',e=>{if(rz||drag||editing)return;if(TOUCH.matches&&ev.hasAttribute('data-drill'))return;e.stopPropagation();showTip(anchor,fn())})}
 
 // ---------- charts, drawn at the exact size of their box ----------
 // cv() leaves a placeholder; fillCharts() measures it after layout and draws the SVG to fit.
@@ -126,7 +126,7 @@ function barsSVG(sp,W,H){
   if(sp.best&&top>4&&best>-1&&bv>0){const c=Math.max(28,Math.min(W-28,best*slot+slot/2)),y=base-bv*sc;s+='<text x="'+c.toFixed(1)+'" y="'+Math.max(14,y-22).toFixed(1)+'" text-anchor="middle" fill="var(--green)" style="font:800 15px Manrope,-apple-system,Segoe UI,sans-serif">+'+kshort(bv)+'</text><text x="'+c.toFixed(1)+'" y="'+Math.max(28,y-8).toFixed(1)+'" text-anchor="middle" fill="var(--muted)" style="font:800 11.5px Manrope,-apple-system,Segoe UI,sans-serif">'+(sp.bestLabel||'best month')+'</text>'}
   return s+hit+'</svg>'}
 function fillCharts(root,ctx){root.querySelectorAll('.cv[data-cv]').forEach(el=>{const sp=ctx.cv[+el.dataset.cv];if(!sp)return;const W=Math.floor(el.clientWidth),H=Math.floor(el.clientHeight);el.innerHTML=hideMoney(barsSVG(sp,W,H));
-  const svg=el.querySelector('svg');if(!svg||!sp.tip)return;
+  const svg=el.querySelector('svg');if(!svg||!sp.tip)return;if(TOUCH.matches){scrubChart(el,svg,sp);return}
   svg.querySelectorAll('rect[data-i]').forEach(rc=>{const i=+rc.dataset.i,bar=svg.querySelector('path[data-i="'+i+'"]');
     ['pointerenter','focus'].forEach(ev=>rc.addEventListener(ev,e=>{if(bar&&!rz&&(ev==='focus'||e.pointerType==='mouse'))bar.classList.add('hv')}));
     ['pointerleave','blur'].forEach(ev=>rc.addEventListener(ev,()=>{if(bar)bar.classList.remove('hv')}));
@@ -147,7 +147,7 @@ function body(k,ctx,s,w){
   const {p,inP,mt,unit}=ctx,t=totals(inP);
   if(KPI[k])return kpiBody(k,ctx,s,t,w);
   if(k==='month'){const data=mt.map(x=>Object.assign({},x,{v:totals(x.list).profit,on:x.list.length>0})),tot=data.reduce((a,d)=>a+d.v,0),act=data.filter(d=>d.on),bestM=act.length?act.reduce((a,d)=>d.v>a.v?d:a):null;
-    const tipf=i=>{const tt=totals(mt[i].list);return '<b>'+mt[i].l+'</b>Sales '+kshort(tt.sales)+'<br>Spent '+kshort(tt.spent)+'<br>Profit <span class="'+(tt.profit>=0?'p':'l')+'">'+kshort(tt.profit)+'</span>'};
+    const tipf=i=>{const tt=totals(mt[i].list);return '<b>'+mt[i].l+'</b>Profit <span class="'+(tt.profit>=0?'p':'l')+'">'+kshort(tt.profit)+'</span><br>Sales '+kshort(tt.sales)+'<br>Spent '+kshort(tt.spent)};
     const ch=o=>cv(ctx,Object.assign({data,tip:tipf,aria:'Profit by '+unit,unit:'profit',bestLabel:'best '+unit,ent:i=>({t:'Profit',sub:mt[i].l,a:mt[i].from,b:mt[i].to})},o));
     if(!act.length)return '<p class="eg">No entries in this period.</p>';
     if(s==='S')return '<div class="mS"><div class="cq">'+bn((bestM.v>=0?'+':'')+kshort(bestM.v),bestM.v>=0?'g':'r',30)+'</div><small class="cap">'+bestM.m+'</small>'+ch({labels:false,maxW:14,r:3})+'</div>';
@@ -327,6 +327,7 @@ function moveWidget(id,d){const i=layout.findIndex(w=>w.id===id),j=i+d;if(i<0||j
 $('simple').addEventListener('click',e=>{
   if(justDragged){justDragged=false;e.stopPropagation();return}
   if(e.target.closest('#mkw')){setEditing(true);setTimeout(openAdd,220);return}
+  if(TOUCH.matches&&canDrill()){const kb=e.target.closest('.kback');if(kb){e.stopPropagation();if(e.target.closest('.kgo'))openEntries(JSON.parse(kb.dataset.o));flipTile(kb.closest('.w'),null);return}const cq=e.target.closest('.cq.drill');if(cq){const ww=cq.closest('.w'),kk=ww&&byId(ww.dataset.id);if(kk&&FLIP[kk.k]){e.stopPropagation();flipTile(ww,kk.k,JSON.parse(cq.dataset.drill));return}}}
   const dr=e.target.closest('[data-drill]');if(dr&&canDrill()){e.stopPropagation();openEntries(JSON.parse(dr.dataset.drill));return}
   const sec=e.target.closest('.w[data-id]');if(!sec)return;const w=byId(sec.dataset.id);if(!w)return;
   if(e.target.closest('.rm')){removeWidget(w.id);return}
@@ -688,6 +689,41 @@ function openEntries(o){hideTip();const key=e=>e.name.toLowerCase().replace(/[^a
   $('ent-list').innerHTML=h||'<p class="enone">No entries here.</p>';$('ent-list').scrollTop=0;buzz('tap');ent.showModal()}
 ent.addEventListener('click',e=>{if(e.target===ent){ent.close();return}const b=e.target.closest('button');if(b&&b.hasAttribute('data-close'))ent.close()});
 $('simple').addEventListener('keydown',e=>{const d=e.target.closest('.drill[data-drill]');if(d&&(e.key==='Enter'||e.key===' ')){e.preventDefault();if(canDrill())openEntries(JSON.parse(d.dataset.drill))}});
+
+// ---------- touch: tap for a quick answer, not a full list ----------
+// Charts: tap or slide across the bars. The bar you're on lights up, the others fade, the header shows that month,
+// and "See entries" opens the list. Tap the same bar again, or anywhere else, to clear.
+// Number tiles: tap to flip to how the number adds up; tap again to flip back.
+const TOUCH=matchMedia('(hover:none)');
+function scrubChart(el,svg,sp){const w=el.closest('.w');if(!w)return;let cur=-1,drag0=null,moved=false,startCur=-1;
+  const n=svg.querySelectorAll('rect[data-i]').length,W=+svg.getAttribute('width');
+  const ro=()=>{let r=w.querySelector('.scr');if(!r){r=document.createElement('div');r.className='scr';r.innerHTML='<span class="st"></span><button type="button" class="sgo">See entries ›</button>';w.appendChild(r);
+    r.querySelector('.sgo').addEventListener('click',ev=>{ev.stopPropagation();const i=+r.dataset.i;if(sp.ent&&canDrill()&&i>-1)openEntries(sp.ent(i))});r.addEventListener('click',ev=>ev.stopPropagation())}return r};
+  const pick=i=>{if(i===cur)return;cur=i;svg.querySelectorAll('path.bar').forEach(b=>b.classList.toggle('on',+b.dataset.i===i));svg.classList.toggle('sel',i>-1);const r=ro();
+    if(i<0){r.classList.remove('on');w.classList.remove('scrubbing');return}
+    buzz('tick');r.dataset.i=i;{const h=hideMoney(sp.tip(i)),m=h.match(/^<b>(.*?)<\/b>([\s\S]*)$/);r.querySelector('.st').innerHTML=m?'<b>'+m[1]+'</b><span class="sd">'+m[2].replace(/<br\s*\/?>/g,' · ')+'</span>':h}r.querySelector('.sgo').hidden=!(sp.ent&&canDrill());r.classList.add('on');w.classList.add('scrubbing')};
+  const at=x=>{const b=svg.getBoundingClientRect();return Math.max(0,Math.min(n-1,Math.floor((x-b.left)/b.width*n)))};
+  svg.style.touchAction='pan-y';
+  svg.addEventListener('pointerdown',e=>{if(editing||viewing||rz||drag||noTips())return;drag0=[e.clientX,e.clientY];moved=false;startCur=cur;const i=at(e.clientX);if(i!==cur)pick(i)});
+  svg.addEventListener('pointermove',e=>{if(!drag0)return;if(!moved&&Math.abs(e.clientX-drag0[0])>8&&Math.abs(e.clientX-drag0[0])>Math.abs(e.clientY-drag0[1])){moved=true;try{svg.setPointerCapture(e.pointerId)}catch(_){}}if(moved)pick(at(e.clientX))});
+  svg.addEventListener('pointerup',e=>{if(drag0&&!moved&&startCur>-1&&startCur===at(e.clientX))pick(-1);drag0=null});
+  svg.addEventListener('pointercancel',()=>{drag0=null});
+  svg.addEventListener('click',e=>e.stopPropagation());
+  svg._clear=()=>pick(-1)}
+const FLIP={
+  profit:t=>[['You kept',money(t.after)],['You spent','−'+money(t.spent)],['Profit',money(t.profit),t.profit>=0?'g':'r']],
+  sales:t=>[['Sales',money(t.sales)],['Fees and shipping','−'+money(t.fees)],['You kept',money(t.sales-t.fees)]],
+  spent:(t,l)=>{const nb=l.filter(e=>e.type==='purchase').reduce((a,e)=>a+(e.qty||1),0);return [['Cards bought',String(nb)],['Average per card',money(Math.round(t.spent/Math.max(1,nb)))],['Spent',money(t.spent)]]},
+  fees:t=>[['Sales',money(t.sales)],['Share of sales',(t.sales?(t.fees/t.sales*100).toFixed(1):'0.0')+'%'],['Fees and shipping',money(t.fees)]]};
+function flipTile(w,k,o){if(!w)return;const old=w.querySelector('.kback');
+  if(old||!k){if(old){old.classList.remove('on');w.classList.remove('flipped');setTimeout(()=>old.remove(),220)}return}
+  document.querySelectorAll('#simple .kback').forEach(x=>flipTile(x.closest('.w'),null));
+  const list=pool().filter(e=>e.date>=(o.a||'0000')&&e.date<=(o.b||'9999')),rows=FLIP[k](totals(list),list);
+  const b=document.createElement('div');b.className='kback';b.dataset.o=JSON.stringify(o);
+  b.innerHTML=rows.map((r,i)=>'<div class="kr'+(i===rows.length-1?' kt':'')+'"><span>'+esc(r[0])+'</span><b class="'+(r[2]||'')+'">'+hideMoney(esc(r[1]))+'</b></div>').join('')+'<button type="button" class="kgo">See entries ›</button>';
+  w.appendChild(b);void b.offsetWidth;b.classList.add('on');w.classList.add('flipped');buzz('tap')}
+document.addEventListener('pointerdown',e=>{if(!TOUCH.matches)return;if(!e.target.closest('#simple .w.scrubbing'))document.querySelectorAll('#simple svg.sel').forEach(s=>s._clear&&s._clear());
+  if(!e.target.closest('#simple .w.flipped'))document.querySelectorAll('#simple .kback').forEach(x=>flipTile(x.closest('.w'),null))},{passive:true});
 
 // ---------- motion for menus and sheets: GPU-only (transform and opacity), springy in, quick out ----------
 document.querySelectorAll('dialog.sheet').forEach(d=>{const nat=HTMLDialogElement.prototype.close;

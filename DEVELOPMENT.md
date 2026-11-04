@@ -309,3 +309,12 @@ Meanwhile (no Cloudflare needed): Import (CSV/Excel, Premium) DONE; next Card Bo
 - Fixes: sheets open held on their first frame (class prep, animations paused) and start moving on the next frame; Stories preloads only when idle and no sheet is open; Ask focuses its input only on desktop, after the drawer settles; the phone thumb bar hides while a sheet is open.
 - Phones: every sheet rises on the same soft curve, cubic-bezier(.32,.72,0,1), .48s; closes in .24s.
 - Measured (tools/t74.js, 4x CPU slowdown): Share/Ask/dates/profile move with no frames over 33ms; the one heavier frame happens before motion starts.
+
+### v18 — tap for a quick answer (option B)
+- Touch devices (hover:none): bar charts scrub. Tap or slide across bars; the bar lights up, the others fade, and a two-line readout covers the widget header (month in bold, details under it) with a "See entries ›" button. Tap the same bar again, or anywhere else, to clear. Vertical scrolling still works (touch-action: pan-y; scrub starts after an 8px sideways move).
+- Number tiles (profit, sales, spent, fees) flip to show how the number adds up, with "See entries ›". Tap again or anywhere else to flip back.
+- List rows on touch open entries directly, without the tooltip flash.
+- The Profit by month tooltip leads with Profit (desktop too).
+- Phones: the entries list is a full-width bottom sheet (min(82dvh,720px)) with its header visible.
+- Desktop unchanged: hover tooltips, and clicking opens entries.
+- Test: tools/t76.js. Options preview: tools/tap-options.html.
