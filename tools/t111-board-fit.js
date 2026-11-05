@@ -1,0 +1,6 @@
+const pw=require('playwright');(async()=>{const b=await pw.chromium.launch();for(const [W,H] of [[1440,900],[1470,820],[1280,720],[1280,640],[1920,1080]]){const p=await (await b.newContext({viewport:{width:W,height:H}})).newPage();
+await p.goto('http://localhost:8765/index.html');await p.evaluate(()=>{localStorage.clear();localStorage.setItem('ct.session',JSON.stringify({email:'n@x.com',name:'Nick',via:'email',expires:Date.now()+864e5}))});await p.reload();await p.waitForTimeout(500);await p.evaluate(()=>CTStore.setPlan('premium'));await p.reload();await p.waitForTimeout(700);
+await p.evaluate(()=>document.querySelector('[data-dev=sample]').click());await p.waitForTimeout(600);await p.evaluate(()=>document.getElementById('ct-expand').click());await p.waitForTimeout(2600);
+console.log(W+'x'+H,await p.evaluate(()=>{const ws=[...document.querySelectorAll('#simple .w[data-id]')];const bottom=Math.max(...ws.map(w=>w.getBoundingClientRect().bottom));return 'row '+getComputedStyle(document.getElementById('simple')).gridAutoRows+' last widget bottom '+Math.round(bottom)+' / window '+innerHeight+(bottom<=innerHeight?' FITS':' cut')}));
+if(H===640)await p.screenshot({path:'fit-640.png'})}
+await b.close()})();

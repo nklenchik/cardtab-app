@@ -390,14 +390,22 @@ function flip(before,skip){markEdges();if(calm.matches)return;const els=[...$('s
   if(!a){el.animate([{opacity:0,transform:'scale(.96)'},{opacity:1,transform:'none'}],{duration:320,easing:'cubic-bezier(.2,.7,.2,1)',id:'fl'});return}
   const dx=a.left-b.left,dy=a.top-b.top;if(Math.abs(dx)<1&&Math.abs(dy)<1)return;
   el.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'none'}],{duration:340,easing:'cubic-bezier(.2,.7,.2,1)',id:'fl'})})}
+// desktop: size the rows so the first three always fit in the window under the top bar (between 150 and 206px tall)
+// desktop: the first three rows always fit in the window. Rows grow up to 206px; on short windows the space under the
+// top bar gives way first (60px down to 28px) so widgets stay at least 180px tall, then rows shrink no lower than 168px.
+function fitRows(){const cb=$('cb'),sim=$('simple');if(units()!==4){cb.style.removeProperty('--rowh');cb.style.removeProperty('--topgap');cb.classList.remove('rowtight');return}
+  const tb=cb.querySelector('.topbar'),curGap=parseFloat(getComputedStyle(tb).marginBottom)||0,rg=parseFloat(getComputedStyle(sim).rowGap)||16;
+  const top0=sim.getBoundingClientRect().top-cbx.getBoundingClientRect().top+cbx.scrollTop-curGap,room=cbx.clientHeight-top0-28-2*rg;
+  let g=60;while(g>28&&(room-g)/3<180)g-=4;const h=Math.max(168,Math.min(206,Math.floor((room-g)/3)));
+  cb.style.setProperty('--topgap',g+'px');cb.style.setProperty('--rowh',h+'px');cb.classList.toggle('rowtight',h<190)}
 function render(animate){
-  const before=animate?rects():null,ctx=ctxNow();hideTip();
+  fitRows();const before=animate?rects():null,ctx=ctxNow();hideTip();
   $('simple').innerHTML=layout.map(w=>widgetHTML(w,ctx)).join('')+(!editing&&!customized()&&!viewing?'<button type="button" class="mkw szS" id="mkw"><span class="pl" aria-hidden="true">+</span><b>Make it yours</b><small>Add, resize and move widgets</small></button>':'');$('addw').hidden=!editing;
   $('cb').classList.toggle('editing',editing);wire($('simple'),ctx);markEdges();
   if(before)flip(before)}
 function grow(){const cb=$('cb');if(calm.matches)return;cb.classList.add('grow');void cb.offsetWidth;requestAnimationFrame(()=>requestAnimationFrame(()=>cb.classList.remove('grow')))}
 phone.addEventListener('change',()=>{swapLayout();if(shown)render(false)});
-let rsT=0,lastW=innerWidth;addEventListener('resize',()=>{if(!shown||rz||drag||Math.abs(innerWidth-lastW)<2)return;clearTimeout(rsT);rsT=setTimeout(()=>{lastW=innerWidth;render(false)},120)});
+let rsT=0,lastW=innerWidth,lastH=innerHeight;addEventListener('resize',()=>{if(!shown||rz||drag||(Math.abs(innerWidth-lastW)<2&&(units()!==4||Math.abs(innerHeight-lastH)<2)))return;clearTimeout(rsT);rsT=setTimeout(()=>{lastW=innerWidth;lastH=innerHeight;render(false)},120)});
 
 // ---------- period and platform pickers ----------
 // menus inside the scrolling phone toolbar would be cut off, so there they float above everything, under their button

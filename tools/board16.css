@@ -72,9 +72,16 @@ html.cbfree #cr.pre .crcmp{display:none}
 /* the lifted copy follows the pointer directly; it must not inherit the tiles' transform transition (it slid in from the left edge) */
 .cbx #cb .simple>.w.floating{transition:none!important}
 /* desktop: give the widgets room to breathe below the top bar (phones keep their tighter spacing) */
-@media (min-width:761px){.cbx #cb .topbar{margin-bottom:60px!important}.cbx #cb .cbquiet{margin-bottom:20px}}
+@media (min-width:761px){.cbx #cb .topbar{margin-bottom:var(--topgap,60px)!important}.cbx #cb .cbquiet{margin-bottom:20px}}
 /* when Stories / Ask / Share show as icons only (desktop up to 1340px), the lock sits as a small badge on the corner */
 @media (min-width:761px) and (max-width:1340px){
   html.cbfree #cb-stories,html.cbfree #cb-ask,html.cbfree #cb-share{position:relative}
   html.cbfree #cb-stories::after,html.cbfree #cb-ask::after,html.cbfree #cb-share::after{content:"";position:absolute;right:-2px;top:-2px;width:16px;height:16px;border-radius:50%;background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='3' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2.5'/%3E%3Cpath d='M8 11V8a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") center/9px no-repeat;box-shadow:0 0 0 1px var(--line),0 1px 2px rgba(0,0,0,.15)}
 }
+
+/* desktop rows follow the window height (set in fitRows) so the first three rows fit on screen */
+@media(min-width:601px){.cbx #cb .simple{grid-auto-rows:var(--rowh,206px)}}
+/* short windows: the banner's side summary tightens up so nothing is cut off */
+.cbx #cb.rowtight .msum.v{gap:4px}
+.cbx #cb.rowtight .msum.v b{font-size:15px;margin-top:0}
+.cbx #cb.rowtight .msum.v small{font-size:11.5px}
