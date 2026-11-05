@@ -228,10 +228,11 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 const RAW=__DATA__;let TODAY='2026-11-03';
 let E=RAW.map(r=>({date:r[0],type:r[1]==='s'?'sale':r[1]==='r'?'refund':'purchase',platform:r[2]||'Other',name:r[3],amount:r[4],net:r[5],qty:r[6]||1,no:r[7]||'',set:r[8]||''}));
 // Inside Card Tab: the account's own entries and today's date come from the board; card art paths resolve against the app
-let ART=new Map();
+let ART=new Map(),BUDGET=15000;
 function loadReal(){try{if(window.parent===window||typeof parent.cbEntries!=='function')return false;const base=parent.document.baseURI,rows=parent.cbEntries()||[];
   E=rows.map(r=>({date:r.date,type:r.type,platform:r.platform||'Other',name:r.name||'',amount:r.amount||0,net:r.net==null?r.amount:r.net,qty:r.qty||1,no:r.no||'',set:r.set||'',art:r.art||null}));
   const d=new Date();TODAY=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  try{const bc=parent.CTBudgetCents&&parent.CTBudgetCents();if(bc>0)BUDGET=bc}catch(e){}
   ART=new Map();E.forEach(e=>{const a=e.art,src=a&&(a.detail||a.list);if(!src)return;const k=e.name.toLowerCase();if(!ART.has(k)||e.type==='purchase')ART.set(k,new URL(src,base).href)});return true}catch(e){return false}}
 loadReal();
 const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -244,7 +245,7 @@ const MN=new Map();const mName=(k,o)=>{o=o||{month:'long'};const key=k+JSON.stri
 const dShort=d=>new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
 const days=(a,b)=>Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5);
 const key=e=>e.name.toLowerCase().replace(/[^a-z0-9]/g,'')+'|'+e.no;
-const cnt=(n,a,b)=>n+' '+(n===1?a:b),BUDGET=15000,sn=n=>n.split(',')[0].trim();
+const cnt=(n,a,b)=>n+' '+(n===1?a:b),BUDGET0=15000,sn=n=>n.split(',')[0].trim();
 function tot(l){let s=0,k=0,sp=0,f=0,r=0,nb=0,ns=0;l.forEach(e=>{if(e.type==='sale'){s+=e.amount;k+=e.net;f+=e.amount-e.net;ns+=e.qty}else if(e.type==='purchase'){sp+=e.amount;nb+=e.qty}else r+=e.amount});return {sales:s,kept:k-r,spent:sp,fees:f,profit:k-r-sp,nb,ns,n:l.length}}
 // ---------- time ranges ----------
 const y=+TODAY.slice(0,4),PER=[['lm','Last month'],['ytd','This year'],['l12','Last 12 months'],['ly','Last year · '+(y-1)],['all','All time']];let per='l12',cust=null;

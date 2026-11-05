@@ -499,3 +499,11 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 - v29.1: phones never get a zip. With the share sheet they save the 5 images straight to Photos; without it, the 5 images download one by one. The zip is desktop only.
 - v29.2: on desktop the first three rows of Card Board always fit in the window (`fitRows`): rows grow up to 206px; on short windows the gap under the top bar shrinks first (60px down to 28px) so widgets stay ~180px tall, then rows shrink to no less than 168px, and the Profit by month side summary tightens (`rowtight`). Re-fits when the window height changes. Checked 1920×1080, 1440×900, 1470×820, 1280×720, 1280×640: all fit.
 - v29.3: the 60px gap no longer shrinks after editing. `fitRows` measured from the top of the widgets, which in edit mode sits under the Add widget bar, so adding or resizing a widget re-fit the board as if the window were shorter. It now measures from the top bar (plus the quiet line) and keeps its fit while editing.
+
+## v29.4: monthly budget (both plans)
+- A budget card sits under the four totals (js/budget.js): "November budget", a progress bar, "$64.80 of $150", "$85.20 left · 27 days". Green under 80%, amber with "83% used" from 80%, red with "$10.80 over" past the budget. Spending = this month's purchases, exact to the cent.
+- Before a budget is set, a dashed "Set a monthly budget" card (can be dismissed; Monthly budget stays in the profile menu, which shows the current amount).
+- The sheet: type any amount (decimal keyboard) or tap $50 / $100 / $150 / $250, "Heads-up at 80%" switch, Save, and Turn off budget.
+- Heads-up: a quiet note once when you cross 80% and once when you go over, each month; never on app launch.
+- Stored in the store's meta (`budget`, `budgetFlags`), ready to sync after the Cloudflare move. Card Board's Budget widget and the "months under budget" Story now use the real budget (`window.CTBudgetCents`); they still fall back to $150 when none is set (TODO: show "set a budget" there instead).
+- Free users can open Card Board from the profile menu's Go to row too.

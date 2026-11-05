@@ -242,6 +242,11 @@
     undo, canUndo: () => undoStack.length > 0, undoLabel: () => (undoStack.length ? undoStack[undoStack.length - 1].label : ''),
 
     plan, usage,
+    // Monthly budget for cards (cents). null when not set. alert = the one-time heads-up at 80%.
+    budget() { const b = meta.budget; return b && b.cents > 0 ? { cents: b.cents, alert: b.alert !== false } : null; },
+    async setBudget(b) { await putMeta('budget', b && b.cents > 0 ? { cents: Math.round(b.cents), alert: b.alert !== false } : null); changed('budget'); },
+    budgetFlag(k) { return (meta.budgetFlags || {})[k]; },
+    async setBudgetFlag(k, v) { await putMeta('budgetFlags', Object.assign({}, meta.budgetFlags, { [k]: v })); },
     async setPlan(p) { await putMeta('plan', p === 'premium' ? 'premium' : 'free'); changed('plan'); },
 
     /* Free users don't see Import at first. A Premium-tagged Import appears after 3 different days

@@ -39,7 +39,8 @@ function applyPlan(){const f=cbFree();if(f===FREEMODE)return false;FREEMODE=f;LK
   layoutD=loadL(LKEY)||clone(defL());layoutP=loadL(LKEYP);layout=onPhone?(layoutP||(layoutP=clone(layoutD))):layoutD;if(editing)setEditing(false);fitFreePeriod();return true}
 function fitFreePeriod(){if(cbFree()&&!FREE_P.includes(period)){period='l3';const l=$('cb-perl');if(l)l.textContent='Last 3 months'}}
 const VKEY='cb.view',saveView=()=>{try{localStorage.setItem(VKEY,JSON.stringify({period,plat,custom}))}catch(e){}};
-const BUDGET=15000; // example monthly budget ($150) until the budget setting exists
+let BUDGET=15000; // your monthly budget in cents; inside the app it comes from the budget setting (see fitBudget)
+const fitBudget=()=>{try{const c=window.CTBudgetCents&&window.CTBudgetCents();if(c>0)BUDGET=c}catch(e){}};
 const phone=matchMedia('(max-width:600px)');
 const units=()=>phone.matches?2:4;
 const sizesNow=()=>phone.matches?['S','M','L']:SIZES;
@@ -288,7 +289,7 @@ function fitRows(){const cb=$('cb'),sim=$('simple');if(units()!==4){cb.style.rem
   let g=60;while(g>28&&(room-g)/3<180)g-=4;const h=Math.max(168,Math.min(206,Math.floor((room-g)/3)));
   cb.style.setProperty('--topgap',g+'px');cb.style.setProperty('--rowh',h+'px');cb.classList.toggle('rowtight',h<190)}
 function render(animate){
-  fitRows();const before=animate?rects():null,ctx=ctxNow();hideTip();
+  fitBudget();fitRows();const before=animate?rects():null,ctx=ctxNow();hideTip();
   $('simple').innerHTML=layout.map(w=>widgetHTML(w,ctx)).join('')+(!editing&&!customized()&&!viewing?'<button type="button" class="mkw szS" id="mkw"><span class="pl" aria-hidden="true">+</span><b>Make it yours</b><small>Add, resize and move widgets</small></button>':'');$('addw').hidden=!editing;
   $('cb').classList.toggle('editing',editing);wire($('simple'),ctx);markEdges();
   if(before)flip(before)}

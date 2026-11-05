@@ -81,8 +81,9 @@
   menu.addEventListener('click', async e => {
     const b = e.target.closest('button, summary'); if (!b) return;
     if (b.closest('#am-theme') || b.id === 'am-hap') return;
-    if (b.dataset.go) { closeMenu(); const g = b.dataset.go; if (g === 'entries') return; if (S.plan() === 'premium' && window.CTBoardLoader) window.CTBoardLoader.open(g === 'stories' ? 'stories' : null); else Dash.toast(g === 'board' ? 'Full-screen Card Board is part of Premium' : 'Card Stories is part of Premium'); return; }
+    if (b.dataset.go) { closeMenu(); const g = b.dataset.go; if (g === 'entries') return; if (window.CTBoardLoader) window.CTBoardLoader.open(g === 'stories' ? 'stories' : null); else Dash.toast(g === 'board' ? 'Full-screen Card Board is part of Premium' : 'Card Stories is part of Premium'); return; }
     if (b.dataset.soon) { closeMenu(); Dash.toast(b.dataset.soon + ' arrives in a later update.'); return; }
+    if (b.id === 'am-budget') { closeMenu(); setTimeout(() => window.CTBudget && window.CTBudget.open(), 120); return; }
     if (b.id === 'am-export') { closeMenu(); Dash.exportCSV(); return; }
     if (b.id === 'am-import') { closeMenu(); Dash.openImport(); return; }
     if (b.id === 'am-out') { Sess.signOut(); showAuth(); return; }
