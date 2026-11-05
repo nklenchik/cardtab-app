@@ -487,3 +487,4 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 - v28.6: grabbing a widget no longer shows the lifted copy sliding in from the left edge (it inherited the tiles' 0.38s transform transition; `.floating` now has no transition).
 - v28.7: the widget ••• menu's divider is a 1px line again; the free plan's "With Premium" label had reused its class name (`msep`) and gave it padding. The label is now `mprem`. Desktop dragging from v28.5/28.6 is locked in.
 - v28.8: desktop Card Board has 34px between the top bar and the widgets (was 18; phones unchanged), 20px under the quiet line. On free, when Stories / Ask / Share are icon-only (761–1340px) the lock shows as a small badge on each button's corner.
+- v28.9: desktop gap under the Card Board top bar locked at 60px (Nick's call: few widgets, keep it simple and calm).

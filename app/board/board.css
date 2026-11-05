@@ -1757,7 +1757,7 @@ html.cbfree #cr.pre .crcmp{display:none}
 /* the lifted copy follows the pointer directly; it must not inherit the tiles' transform transition (it slid in from the left edge) */
 .cbx #cb .simple>.w.floating{transition:none!important}
 /* desktop: give the widgets room to breathe below the top bar (phones keep their tighter spacing) */
-@media (min-width:761px){.cbx #cb .topbar{margin-bottom:34px!important}.cbx #cb .cbquiet{margin-bottom:20px}}
+@media (min-width:761px){.cbx #cb .topbar{margin-bottom:60px!important}.cbx #cb .cbquiet{margin-bottom:20px}}
 /* when Stories / Ask / Share show as icons only (desktop up to 1340px), the lock sits as a small badge on the corner */
 @media (min-width:761px) and (max-width:1340px){
   html.cbfree #cb-stories,html.cbfree #cb-ask,html.cbfree #cb-share{position:relative}
