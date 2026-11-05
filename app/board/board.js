@@ -679,6 +679,13 @@ function open(){
   const r=fromEl();shown=true;cbx.scrollTop=0;document.documentElement.style.overflow='hidden';document.documentElement.classList.add('cbopen');xb.setAttribute('aria-expanded','true');
   cbx.inert=false;cbx.removeAttribute('aria-hidden');
   if(calm.matches){cbx.classList.remove('off','enter');busy=false;$('close').focus({preventScroll:true});return}
+  // phones: pages slide like a tab app: Board sits right of Entries, so it slides in from the right while Entries drifts left underneath
+  if(matchMedia('(max-width:760px)').matches){const inst=window.cbInstant;window.cbInstant=false;cbx.classList.remove('off','enter');
+    if(inst){busy=false;return}
+    const ease='cubic-bezier(.32,.72,0,1)',app=document.getElementById('view-app');
+    const a=cbx.animate([{transform:'translate3d(100%,0,0)'},{transform:'none'}],{duration:440,easing:ease});
+    if(app)app.animate([{transform:'none'},{transform:'translate3d(-24%,0,0)'}],{duration:440,easing:ease});
+    a.onfinish=()=>{busy=false;$('close').focus({preventScroll:true})};return}
   cbx.classList.add('anim','enter');cbx.classList.remove('off');bgl.classList.add('on');
   bgl.animate([{transform:fromRect(r)},{transform:'none'}],{duration:460,easing:EASE});
   $('cb').animate([{opacity:0},{opacity:1}],{duration:240,delay:170,easing:'ease-out',fill:'backwards'});
@@ -692,6 +699,11 @@ function close(){
   const finish=()=>{shown=false;cbx.classList.add('off');cbx.classList.remove('anim');bgl.classList.remove('on');cbx.inert=true;cbx.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';document.documentElement.classList.remove('cbopen');busy=false;
     if(editing){editing=false;$('cb-edit').innerHTML=EDIT_I+'<span>Edit</span>';$('cb-edit').classList.remove('on');$('editfoot').hidden=true;$('cb').classList.remove('editing');render(false)}xb.focus({preventScroll:true})};
   if(calm.matches){finish();return}
+  if(matchMedia('(max-width:760px)').matches){const inst=window.cbInstant;window.cbInstant=false;if(inst){finish();return}
+    const ease='cubic-bezier(.32,.72,0,1)',app=document.getElementById('view-app');
+    const a=cbx.animate([{transform:'none'},{transform:'translate3d(100%,0,0)'}],{duration:380,easing:ease,fill:'forwards'});
+    if(app)app.animate([{transform:'translate3d(-24%,0,0)'},{transform:'none'}],{duration:380,easing:ease});
+    a.onfinish=()=>{finish();a.cancel()};return}
   const r=fromEl();cbx.classList.add('anim');bgl.classList.add('on');
   $('cb').animate([{opacity:1},{opacity:0}],{duration:150,easing:'ease-in',fill:'forwards'}).onfinish=function(){
     this.cancel();$('cb').style.opacity='0';

@@ -1,0 +1,10 @@
+const pw=require('playwright');(async()=>{const b=await pw.chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:760},isMobile:true,hasTouch:true})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+await p.goto('http://localhost:8765/index.html');await p.evaluate(()=>{localStorage.clear();localStorage.setItem('ct.session',JSON.stringify({email:'n@x.com',name:'Nick',via:'email',expires:Date.now()+864e5}));localStorage.setItem('cb.hint',JSON.stringify({off:1}))});await p.reload();await p.waitForTimeout(800);
+await p.evaluate(async()=>{document.querySelector('[data-dev=sample]').click();await new Promise(r=>setTimeout(r,300));await CTStore.setPlan('premium')});await p.waitForTimeout(4000);
+await p.evaluate(()=>window.CTBoardLoader.load());await p.waitForTimeout(800);
+const sample=()=>p.evaluate(()=>new Promise(r=>{const out=[];const t0=performance.now();let last=t0,maxGap=0;const f=n=>{maxGap=Math.max(maxGap,n-last);last=n;const c=document.querySelector('.cbx'),x=document.getElementById('csx');const bx=c.getBoundingClientRect().left,sx=x?x.getBoundingClientRect().left:null;out.push([Math.round(n-t0),Math.round(bx),c.classList.contains('off')?'off':'on',sx==null?'-':Math.round(sx),x&&x.classList.contains('in')?'in':'']);if(n-t0<900)requestAnimationFrame(f);else r({frames:out.filter((_,i)=>i%6===0),maxGap:Math.round(maxGap)})};requestAnimationFrame(f)}));
+const step=async(label,tab)=>{const s=sample();await p.tap('#ct-tbar [data-tab='+tab+']');const r=await s;await p.waitForTimeout(500);console.log(label,'maxFrameGap',r.maxGap,'| [ms, boardX, board, storiesX, stories]',JSON.stringify(r.frames));};
+await step('Entries -> Board','board');await step('Board -> Entries','entries');
+await step('Entries -> Stories','stories');await p.waitForTimeout(800);await step('Stories -> Entries','entries');
+await step('Entries -> Board','board');await step('Board -> Stories','stories');await p.waitForTimeout(600);await step('Stories -> Board','board');
+console.log('final cur:',await p.evaluate(()=>document.querySelector('#ct-tbar [aria-current]').dataset.tab),errs);await b.close()})();

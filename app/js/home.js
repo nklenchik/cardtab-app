@@ -71,16 +71,22 @@
   document.addEventListener('keydown', e => { const tile = e.target.closest && e.target.closest('.ct-budtile'); if (tile && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); if (window.CTBudget) window.CTBudget.open(tile); } });
 
   // Entries · Board · Stories: the bottom bar on phones (on every page, over Card Board and Stories too) and the tabs on desktop
+  const PH = () => matchMedia('(max-width:760px)').matches;
   const cbOpen = () => { const c = document.querySelector('.cbx'); return !!c && !c.classList.contains('off'); };
   const stOpen = () => { const x = document.getElementById('csx'); return !!x && x.classList.contains('in'); };
   function go(g, from) {
     if (from) opener = from;
     if (window.ctBuzz) window.ctBuzz('tap');
-    if (g === 'entries') { if (stOpen() && window.cbStoriesBack) window.cbStoriesBack(); if (cbOpen() && window.CTBoard) { setTimeout(() => window.CTBoard.close(), stOpen() ? 0 : 0); } else window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    if (g === 'entries') {
+      // from Stories: the board steps out of the way underneath first, so Stories slides straight back to your list
+      if (stOpen() && window.cbStoriesBack) { if (cbOpen() && window.CTBoard) { window.cbInstant = PH(); window.CTBoard.close(); } window.cbStoriesBack(); return; }
+      if (cbOpen() && window.CTBoard) window.CTBoard.close(); else window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
     if (g === 'board') { if (stOpen() && window.cbStoriesBack) { window.cbStoriesBack(); return; } if (cbOpen()) { const c = document.querySelector('.cbx'); c.scrollTo({ top: 0, behavior: 'smooth' }); return; } }
     // Free: Stories is Premium, so its window opens right here (no board opening underneath it)
     if (g === 'stories' && S.plan() !== 'premium' && !cbOpen() && window.CTBoardLoader) { window.CTBoardLoader.load().then(() => { if (window.CTPremiumOpen) window.CTPremiumOpen('stories'); }).catch(() => {}); return; }
     if (g === 'stories' && cbOpen()) { if (!stOpen()) { const b = document.getElementById('cb-stories'); if (b) b.click(); } return; }
+    // phones, Premium: Entries straight to Stories is one slide (the board opens underneath without its own slide)
+    if (g === 'stories' && PH() && S.plan() === 'premium' && window.CTBoardLoader) { window.CTBoardLoader.load().then(() => { window.cbInstant = true; window.CTBoard.refresh(); window.CTBoard.open(); const b = document.getElementById('cb-stories'); if (b) b.click(); }).catch(() => {}); return; }
     const m = document.querySelector('#app-menu [data-go="' + g + '"]'); if (m) m.click();
   }
   window.CTTabGo = go;
