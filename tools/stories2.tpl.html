@@ -83,7 +83,8 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 .sl .chip{font-weight:800;font-size:3.3cqmin;border-radius:99cqmin;padding:1.8cqmin 3.4cqmin;background:var(--chip);color:var(--chipink);white-space:nowrap}
 .sl .chip.o{background:var(--chip2);color:var(--ink)}
 .sl .vis{position:relative}
-.sl .card{position:absolute;width:52cqmin;aspect-ratio:63/88;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-5deg);border-radius:2.4cqmin;display:grid;place-items:center;font-weight:800;font-size:20cqmin;color:#fff;background:linear-gradient(155deg,#d9577a,#7d0b2b);box-shadow:inset 0 0 0 1.4cqmin rgba(255,255,255,.22),0 4cqmin 6cqmin rgba(0,0,0,.28)}
+.sl .card.art{background-size:cover!important;background-position:center!important;box-shadow:0 4cqmin 6cqmin rgba(0,0,0,.28)!important}
+.card{position:absolute;width:52cqmin;aspect-ratio:63/88;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-5deg);border-radius:2.4cqmin;display:grid;place-items:center;font-weight:800;font-size:20cqmin;color:#fff;background:linear-gradient(155deg,#d9577a,#7d0b2b);box-shadow:inset 0 0 0 1.4cqmin rgba(255,255,255,.22),0 4cqmin 6cqmin rgba(0,0,0,.28)}
 .sl .stk{position:absolute;right:2cqmin;top:28%;transform:rotate(9deg);background:var(--stk);color:var(--stki);font-weight:800;font-size:5.4cqmin;border-radius:3cqmin;padding:2.4cqmin 3.4cqmin;box-shadow:0 2cqmin 4cqmin rgba(0,0,0,.25);white-space:nowrap}
 .sl .rr{margin-top:3.6cqmin}.sl .rr:first-child{margin-top:0}
 .sl .rt{display:flex;justify-content:space-between;gap:3cqmin;font-weight:800;font-size:3.9cqmin;margin-bottom:1.5cqmin}.sl .rt span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sl .rt span:last-child{opacity:.75}
@@ -212,8 +213,15 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 
 <script>
 (function(){'use strict';
-const RAW=__DATA__,TODAY='2026-11-03';
-const E=RAW.map(r=>({date:r[0],type:r[1]==='s'?'sale':r[1]==='r'?'refund':'purchase',platform:r[2]||'Other',name:r[3],amount:r[4],net:r[5],qty:r[6]||1,no:r[7]||'',set:r[8]||''}));
+const RAW=__DATA__;let TODAY='2026-11-03';
+let E=RAW.map(r=>({date:r[0],type:r[1]==='s'?'sale':r[1]==='r'?'refund':'purchase',platform:r[2]||'Other',name:r[3],amount:r[4],net:r[5],qty:r[6]||1,no:r[7]||'',set:r[8]||''}));
+// Inside Card Tab: the account's own entries and today's date come from the board; card art paths resolve against the app
+let ART=new Map();
+function loadReal(){try{if(window.parent===window||typeof parent.cbEntries!=='function')return false;const base=parent.document.baseURI,rows=parent.cbEntries()||[];
+  E=rows.map(r=>({date:r.date,type:r.type,platform:r.platform||'Other',name:r.name||'',amount:r.amount||0,net:r.net==null?r.amount:r.net,qty:r.qty||1,no:r.no||'',set:r.set||'',art:r.art||null}));
+  const d=new Date();TODAY=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  ART=new Map();E.forEach(e=>{const a=e.art,src=a&&(a.detail||a.list);if(!src)return;const k=e.name.toLowerCase();if(!ART.has(k)||e.type==='purchase')ART.set(k,new URL(src,base).href)});return true}catch(e){return false}}
+loadReal();
 const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const NF2=new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}),NFR=new Intl.NumberFormat('en-US');
 const money=c=>(c<0?'−':'')+'$'+NF2.format(Math.abs(c)/100);
@@ -254,7 +262,7 @@ function model(){const M=months(per),set=new Set(M),L=E.filter(e=>set.has(e.date
   const area=line+' L260 300 L0 300Z';
   const vMoney='<svg viewBox="0 0 260 300" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%"><defs><linearGradient id="gg'+per+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--acc)" stop-opacity=".38"/><stop offset="1" style="stop-color:var(--acc)" stop-opacity="0"/></linearGradient></defs><path d="'+area+'" fill="url(#gg'+per+')"/><path d="'+line+'" fill="none" style="stroke:var(--acc)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>';
   const ARTG=['linear-gradient(155deg,#d9577a,#7d0b2b)','linear-gradient(155deg,#5fa0d6,#174b78)','linear-gradient(155deg,#8cc96a,#2e5c12)','linear-gradient(155deg,#8a8983,#3a3936)','linear-gradient(155deg,#f0a35c,#a5551a)'],ag=n=>ARTG[[...n].reduce((a,c)=>a+c.charCodeAt(0),0)%ARTG.length];
-  const card=(n,st)=>'<span class="card" style="background:'+ag(n)+';'+(st||'')+'">'+esc(n.replace(/^(SS|SSB)\s+/,'')[0])+'</span>';
+  const card=(n,st)=>{const a=ART.get(String(n).toLowerCase());return a?'<span class="card art" style="background-image:url(&quot;'+esc(a)+'&quot;);'+(st||'')+'"></span>':'<span class="card" style="background:'+ag(n)+';'+(st||'')+'">'+esc(n.replace(/^(SS|SSB)\s+/,'')[0])+'</span>'};
   const f0=flips[0],bmax=Math.max(BUDGET*1.3,...by.map(x=>x.spent));
   const WB=Math.round(BUDGET*7/Math.max(1,dim||30)),wmax=one?Math.max(WB*1.3,...wk.map(x=>x.spent)):1,wl=one?wk.reduce((a,x,i)=>x.spent<wk[a].spent?i:a,0):0,wb=one?wk.reduce((a,x,i)=>x.n>wk[a].n?i:a,0):0,wavg=one?Math.round(t.spent/wk.length):0;
   const vBudgetW=one?'<div class="bars">'+wk.map(x=>'<i class="'+(x.spent>WB?'o':'')+'" style="height:'+Math.max(1,x.spent/wmax*100).toFixed(1)+'%"></i>').join('')+'<div class="bl" style="bottom:'+(WB/wmax*100).toFixed(1)+'%"></div></div><div class="mon">'+wk.map(x=>'<span>'+x.d+'</span>').join('')+'</div>':'';
@@ -339,7 +347,7 @@ function render(){D=model();$('track').innerHTML=D.stories.map((st,n)=>'<div cla
   document.querySelectorAll('#track .sl').forEach(el=>paintStory(el,+el.dataset.n));$('dots').innerHTML=D.stories.map((_,i)=>'<i class="'+(i?'':'on')+'"></i>').join('')}
 render();
 $('thm').addEventListener('click',e=>{if(e.target.closest('[data-all]')){openSheet('ths');return}const b=e.target.closest('[data-i]');if(!b)return;setTheme(+b.dataset.i)});
-const allMonths=months('all'),mLab=m=>mName(m,{month:'short',year:'numeric'}),customLab=()=>cust[0]===cust[1]?mLab(cust[0]):mLab(cust[0])+' – '+mLab(cust[1]);
+let allMonths=months('all');const mLab=m=>mName(m,{month:'short',year:'numeric'}),customLab=()=>cust[0]===cust[1]?mLab(cust[0]):mLab(cust[0])+' – '+mLab(cust[1]);
 function setPer(p){per=p;$('perl').textContent=p==='custom'?customLab():PER.find(x=>x[0]===p)[1];render();document.querySelectorAll('#track .sl').forEach(el=>{el.classList.add('swap');setTimeout(()=>el.classList.remove('swap'),450)})}
 function openMenu(){const m=$('perm');m.innerHTML=PER.map(p=>'<button role="menuitemradio" aria-checked="'+(p[0]===per)+'" data-p="'+p[0]+'">'+p[1]+'</button>').join('')+'<hr><button role="menuitemradio" aria-checked="'+(per==='custom')+'" data-p="custom">Custom dates…</button>';m.hidden=false;$('perb').setAttribute('aria-expanded','true');m.style.left='';m.style.right='';const r=m.getBoundingClientRect();if(r.left<8){m.style.left='0';m.style.right='auto'}else if(r.right>innerWidth-8){m.style.right='0';m.style.left='auto'}}
 function closeMenu(){$('perm').hidden=true;$('perb').setAttribute('aria-expanded','false')}
@@ -392,7 +400,7 @@ if(EMB){$('csacct').hidden=false;$('csacct').addEventListener('click',e=>{e.stop
 function syncAv(){try{const a=parent.document.getElementById('cb-av'),m=$('csav');m.textContent=a.textContent;m.style.backgroundImage=a.style.backgroundImage;m.style.backgroundColor=a.style.backgroundColor}catch(e){}}
 window.csMenu=function(a){if(a==='st-colors')openSheet('ths');else if(a==='st-save'){const t=$('cstoast');if(t){t.textContent='In the app this saves every story as an image';t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2200)}}};
 window.csSync=function(){
-  syncAv();
+  syncAv();if(loadReal())allMonths=months('all');
   try{NAME=EMB&&parent.cbName?parent.cbName():((JSON.parse(localStorage.getItem('cb.profile')||'null')||{}).first||'').trim()}catch(e){}
   try{const t=localStorage.getItem('cb.theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;else delete document.documentElement.dataset.theme}catch(e){}
   let np='l12',nc=null;

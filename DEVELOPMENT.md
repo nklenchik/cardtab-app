@@ -470,3 +470,8 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 ## Decided for stage 3 (Stories on real data + image saving)
 - Save all: desktop gets a "Save all 5" pill in the Stories top bar, left of the time range (preview D1). Phones keep the bottom Save/Share bar; tapping Save opens a small sheet: "This story" / "All 5 stories" (preview P2).
 - Saves all 5 in order with the current theme and time range. iPhone: the share sheet with all 5 images ("Save 5 Images"); desktop: one zip of 5 numbered PNGs ("Card Stories 1 – The money.png" …). Free users get the Premium sheet (export context).
+
+## v28: Card Stories on real entries (stage 3, part 1)
+- Inside the app, Stories reads the account's own entries (`parent.cbEntries()`, the board's cents data) and today's date instead of the built-in sample; it re-reads them whenever the board refreshes (adding, editing, deleting an entry updates open Stories).
+- Card drawings use the entry's real card art (detail image, resolved against the app's URL since the Stories frame is a srcdoc); cards without art keep the lettered placeholder.
+- Next in stage 3: saving images (one story, and Save all as decided), then free-plan locks on Stories saving.
