@@ -58,3 +58,14 @@ html.cbfree #cr.pre .crcmp{display:none}
 :root[data-theme="dark"] #aw .thumb .tbox,:root[data-theme="dark"] #aw .awsearch,:root[data-theme="dark"] #aw input[type=search],:root[data-theme="dark"] #aw #aw-q{background-color:#2a2725}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #cr .crrow,:root:not([data-theme="light"]) #mored .morow{background:#2a2725!important;border-color:rgba(255,255,255,.1)!important}}
 :root[data-theme="dark"] #cr .crrow,:root[data-theme="dark"] #mored .morow{background:#2a2725!important;border-color:rgba(255,255,255,.1)!important}
+
+/* Appearance in the board's menu: same as the app, the switch on its own line under the label */
+#cb-amenu{overflow-x:hidden}
+.cbx #cb .amr.amth{flex-wrap:wrap;row-gap:8px;padding-bottom:10px}
+.cbx #cb .amr.amth>span{flex:1 1 auto}
+.cbx #cb .amr.amth .seg{flex:0 0 calc(100% - 30px);min-width:0;margin-left:30px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.cbx #cb .amr.amth .seg button{justify-content:center;text-align:center;height:32px;padding:0 10px;font-size:13px}
+
+/* dark: the selected option in any switch is the lightest thing in it */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cbx #cb .am .seg button[aria-checked="true"],:root:not([data-theme="light"]) dialog.sheet .seg button[aria-checked="true"],:root:not([data-theme="light"]) .cbx #cb .cb-menu .mcmp .seg button[aria-checked="true"],:root:not([data-theme="light"]) .mhost .am .seg button[aria-checked="true"]{background:#423e3a!important;box-shadow:0 1px 2px rgba(0,0,0,.35)!important}}
+:root[data-theme="dark"] .cbx #cb .am .seg button[aria-checked="true"],:root[data-theme="dark"] dialog.sheet .seg button[aria-checked="true"],:root[data-theme="dark"] .cbx #cb .cb-menu .mcmp .seg button[aria-checked="true"],:root[data-theme="dark"] .mhost .am .seg button[aria-checked="true"]{background:#423e3a!important;box-shadow:0 1px 2px rgba(0,0,0,.35)!important}

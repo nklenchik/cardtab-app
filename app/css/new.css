@@ -134,3 +134,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
 /* preview-only helper chip (?preview) */
 .pv-chip{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:45;height:40px;padding:0 18px;border-radius:999px;border:1px solid var(--s-hair);background:var(--s-card);color:var(--ct-text);font:inherit;font-weight:800;font-size:13px;box-shadow:0 8px 22px -12px rgba(0,0,0,.35);white-space:nowrap;cursor:pointer}
+
+/* Appearance: the Light / Dark / Auto switch sits on its own line under the label, so the menu never runs wider than the screen */
+.app-menu.am{overflow-x:hidden}
+.app-menu.am .amr.amth{flex-wrap:wrap;row-gap:8px;padding-bottom:10px}
+.app-menu.am .amr.amth>span{flex:1 1 auto}
+.app-menu.am .amr.amth .seg{flex:0 0 calc(100% - 30px);min-width:0;margin-left:30px}
+.app-menu.am .amr.amth .seg button{padding:0 10px;height:32px;font-size:13px}
