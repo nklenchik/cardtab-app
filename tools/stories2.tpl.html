@@ -126,6 +126,18 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 /* v33.6: no back arrow: the app's bar (phones) and tabs (desktop) already take you back */
 @media(max-width:760px){.top .back{visibility:hidden!important;pointer-events:none}}
 @media(min-width:761px){.top .tl2:has(.cstabs) .back{display:none!important}}
+/* v33.7 phones: the same slim bar as the other pages: slides in once the title scrolls away, title + Save · Share, no back arrow */
+.csslim{display:none}
+@media(max-width:760px){
+ .csslim{display:flex;align-items:center;gap:8px;position:fixed;left:0;right:0;top:0;z-index:50;padding:calc(8px + env(safe-area-inset-top,0px)) 16px 8px 18px;transform:translateY(-110%);transition:transform .8s cubic-bezier(.4,0,.2,1);pointer-events:none}
+ .csslim::before{content:"";position:absolute;inset:0;z-index:-1;background:color-mix(in srgb,var(--bg) 86%,transparent);-webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line);box-shadow:0 6px 24px rgba(0,0,0,.06)}
+ .csslim.on{transform:none;pointer-events:auto;transition:transform .8s cubic-bezier(.22,.61,.36,1)}
+ .csslim b{font-size:17px;font-weight:800;letter-spacing:-.01em;color:var(--text)}
+ .csslim .sic{margin-left:auto;display:flex;gap:8px}
+ .csslim .sic button{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;padding:0;border:1px solid var(--line);background:color-mix(in srgb,currentColor 7%,transparent);color:var(--text);cursor:pointer}
+ .csslim .sic button svg{width:15px;height:15px}
+}
+@media (prefers-reduced-motion:reduce){.csslim,.csslim.on{transition:none}}
 /* v31: shared window style: frosted blur behind every sheet, hairline around it */
 :root{--win-veil:rgba(10,8,6,.3);--win-edge:rgba(40,30,20,.1);--win-blur:blur(6px) saturate(1.1)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--win-veil:rgba(0,0,0,.42);--win-edge:rgba(255,255,255,.1)}}
@@ -507,5 +519,14 @@ $('svs').addEventListener('click',e=>{const b=e.target.closest('[data-sv]');if(!
  const tl=document.querySelector('.top .tl2');let P=null;try{P=window.parent&&window.parent.CTTabGo?window.parent:null}catch(e){}
  if(tl&&P){let src=null;try{src=P.document.querySelector('.ct-tabs')}catch(e){}if(src){const t=document.createElement('nav');t.className='cstabs';t.setAttribute('aria-label','Sections');t.innerHTML=src.innerHTML;t.querySelectorAll('[aria-current]').forEach(x=>x.removeAttribute('aria-current'));const st=t.querySelector('[data-tab="stories"]');if(st)st.setAttribute('aria-current','page');
   t.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)P.CTTabGo(b.dataset.tab)});tl.appendChild(t)}}
+})();
+
+// v33.7 phones: the slim bar
+;(()=>{const dock=document.getElementById('csdock'),ttl=document.querySelector('.top .ttl');if(!dock||!ttl)return;
+ const bar=document.createElement('div');bar.className='csslim';bar.setAttribute('aria-hidden','true');bar.innerHTML='<b>Card Stories</b><div class="sic"></div>';
+ ['save','share'].forEach(k=>{const src=dock.querySelector('[data-d="'+k+'"]');if(!src)return;const b=document.createElement('button');b.type='button';b.tabIndex=-1;b.setAttribute('aria-label',k==='save'?'Save to Photos':'Share this story');const sv=src.querySelector('svg');if(sv)b.appendChild(sv.cloneNode(true));b.addEventListener('click',()=>src.click());bar.querySelector('.sic').appendChild(b)});
+ document.body.appendChild(bar);
+ const sync=()=>{const on=matchMedia('(max-width:760px)').matches&&ttl.getBoundingClientRect().bottom<8;bar.classList.toggle('on',on);bar.setAttribute('aria-hidden',on?'false':'true')};
+ addEventListener('scroll',sync,{passive:true});document.addEventListener('scroll',sync,{passive:true,capture:true});sync();
 })();
 </script>

@@ -157,3 +157,15 @@ dialog.sheet.pms:focus{outline:none}
 @media (prefers-reduced-motion:reduce){.cbdone,.cbhint{transition:none}}
 /* v33.6 desktop: the tabs beside the title take you back, so the "‹ Dashboard" button goes */
 @media(min-width:761px){.cbx:has(.cb-tabs) #close{display:none!important}}
+/* v33.7 phones: the slim bar is the same on every page (slides in on scroll, frosted, hairline, round icons, no back arrow);
+   on Board it holds the title with Edit · Share · Ask, and "Editing" with Done while editing */
+@media(max-width:760px){
+ .cbslim{padding-left:max(18px,env(safe-area-inset-left,0px))!important;border-bottom:1px solid var(--win-edge)}
+ .cbslim .sback,.cbslim .spill{display:none!important}
+ .cbslim .sic{margin-left:auto;display:flex;align-items:center;gap:8px}
+ .cbslim .sic button{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;padding:0;border:1px solid var(--win-edge);background:color-mix(in srgb,currentColor 7%,transparent);color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent}
+ .cbslim .sic button svg{width:15px;height:15px}
+ .cbslim .sic .se{width:auto;display:flex;gap:6px;padding:0 13px;border-radius:999px;font:inherit;font-weight:800;font-size:13.5px}
+ .cbslim .sic button:active{transform:scale(.93)}
+ .cbslim.sedit .sic{display:none}
+}

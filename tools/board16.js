@@ -114,3 +114,10 @@ window.cbSyncPlan();
  // once you've edited, you know the trick: the tip retires; editing also swaps the top icons for the floating Done
  new MutationObserver(()=>{const on=edit.classList.contains('on');cbx.classList.toggle('cbediting',on&&phone.matches);if(on){hide();if(!st.used){st.used=1;save()}}requestAnimationFrame(place)}).observe(edit,{attributes:true,attributeFilter:['class']});
 })();
+// v33.7 phones: the slim bar matches the other pages: title + Edit · Share · Ask, no back arrow; "Editing" + Done while editing
+;(()=>{const slim=document.querySelector('.cbslim');if(!slim)return;const title=slim.querySelector('b');
+ const mk=(src,label,cls,text)=>{const b=document.createElement('button');b.type='button';b.tabIndex=-1;b.setAttribute('aria-label',label);if(cls)b.className=cls;const s=src&&src.querySelector('svg');if(s)b.appendChild(s.cloneNode(true));if(text){const t=document.createElement('span');t.textContent=text;b.appendChild(t)}b.addEventListener('click',()=>src&&src.click());return b};
+ const sic=document.createElement('div');sic.className='sic';sic.append(mk($('cb-edit'),'Edit board','se','Edit'),mk($('cb-share'),'Share'),mk($('cb-ask'),'Ask your board'));
+ const done=slim.querySelector('.sdone');slim.insertBefore(sic,done||null);
+ new MutationObserver(()=>{if(title)title.textContent=slim.classList.contains('sedit')?'Editing':'Card Board'}).observe(slim,{attributes:true,attributeFilter:['class']});
+})();
