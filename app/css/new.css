@@ -409,3 +409,10 @@ dialog::backdrop,.bu-sheet::backdrop{background:var(--win-veil)!important;-webki
  .ct-tabs button[aria-current] svg{color:var(--tab-on)}
 }
 
+/* v33.4: phones: the profile menu sits above the bottom bar (the bar frosts with the rest of the page) and always fits the screen, scrolling inside when it's taller */
+@media(max-width:760px){
+ .am-bd{z-index:56!important}
+ .app-menu.am{z-index:57!important;max-height:calc(100dvh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))!important;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+}
+/* while one of Card Board's menus is open on a phone, the bar tucks behind the board so the board's dim covers it too */
+@media(max-width:760px){html:has(#mbd.on) .ct-tbar{z-index:45}}
