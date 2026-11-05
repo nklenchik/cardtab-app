@@ -1,7 +1,7 @@
 /* New pieces (add-card list, open entry, profile menu). Kept on in both looks of the preview. */
 :root{--s-bg:#f8f7f4;--s-card:#fff;--s-track:#f1efea;--s-hair:rgba(40,30,20,.075);--s-dot:#d9d6cb;--s-whisper:0 1px 2px rgba(40,30,20,.05),0 8px 22px -12px rgba(40,30,20,.17);--s-fade:color-mix(in srgb,#fff 97%,#e9e2d8);--s-brand:#bf1240}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--s-bg:#121110;--s-card:#1f1d1b;--s-track:#2a2725;--s-hair:rgba(255,255,255,.06);--s-dot:#4a4744;--s-whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6);--s-fade:#1c1a18;--s-brand:#e0285a}}
-:root[data-theme="dark"]{--s-bg:#121110;--s-card:#1f1d1b;--s-track:#2a2725;--s-hair:rgba(255,255,255,.06);--s-dot:#4a4744;--s-whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6);--s-fade:#1c1a18;--s-brand:#e0285a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--s-bg:#121110;--s-card:#252320;--s-track:#2a2725;--s-hair:rgba(255,255,255,.09);--s-dot:#55514d;--s-whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6);--s-fade:#22201d;--s-brand:#e0285a}}
+:root[data-theme="dark"]{--s-bg:#121110;--s-card:#252320;--s-track:#2a2725;--s-hair:rgba(255,255,255,.09);--s-dot:#55514d;--s-whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6);--s-fade:#22201d;--s-brand:#e0285a}
 /* ===== iPhone was enlarging text on its own; keep every font at its set size ===== */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 

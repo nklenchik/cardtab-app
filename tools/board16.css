@@ -46,3 +46,15 @@ html.cbfree #cb-stories>span::after,html.cbfree #cb-ask>span::after,html.cbfree 
 html.cbfree #cr.pre .crcmp{display:none}
 
 .pms .pmp:focus{outline:none}
+
+/* dark: sheets sit a step above the board, menus a step above that, controls readable as controls */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) dialog.sheet .awp{--cb-alt:#1c1a18}}
+:root[data-theme="dark"] dialog.sheet .awp{--cb-alt:#1c1a18}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cbx #cb-amenu,:root:not([data-theme="light"]) .mhost #cb-amenu,:root:not([data-theme="light"]) .cbx .cb-menu,:root:not([data-theme="light"]) .mhost .cb-menu{background:#2b2926!important;border-color:rgba(255,255,255,.12)!important}}
+:root[data-theme="dark"] .cbx #cb-amenu,:root[data-theme="dark"] .mhost #cb-amenu,:root[data-theme="dark"] .cbx .cb-menu,:root[data-theme="dark"] .mhost .cb-menu{background:#2b2926!important;border-color:rgba(255,255,255,.12)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cbx #cb .wq.editing,:root:not([data-theme="light"]) .cbx #cb.editing .wq{background:#252320}}
+:root[data-theme="dark"] .cbx #cb .wq.editing,:root[data-theme="dark"] .cbx #cb.editing .wq{background:#252320}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #aw .thumb .tbox,:root:not([data-theme="light"]) #aw .awsearch,:root:not([data-theme="light"]) #aw input[type=search],:root:not([data-theme="light"]) #aw #aw-q{background-color:#2a2725}}
+:root[data-theme="dark"] #aw .thumb .tbox,:root[data-theme="dark"] #aw .awsearch,:root[data-theme="dark"] #aw input[type=search],:root[data-theme="dark"] #aw #aw-q{background-color:#2a2725}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #cr .crrow,:root:not([data-theme="light"]) #mored .morow{background:#2a2725!important;border-color:rgba(255,255,255,.1)!important}}
+:root[data-theme="dark"] #cr .crrow,:root[data-theme="dark"] #mored .morow{background:#2a2725!important;border-color:rgba(255,255,255,.1)!important}

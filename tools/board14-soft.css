@@ -2,13 +2,13 @@
 /* page: Apple-style grouped background, a touch lighter and warmer; cards pure white */
 #cb,:root{--hair-l:1;}
 #cb{--cb-alt:#f8f7f4;--hair:rgba(40,30,20,.075);--whisper:0 1px 2px rgba(40,30,20,.05),0 8px 22px -12px rgba(40,30,20,.17)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #cb{--cb-alt:#121110;--hair:rgba(255,255,255,.06);--whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6)}}
-:root[data-theme="dark"] #cb{--cb-alt:#121110;--hair:rgba(255,255,255,.06);--whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #cb{--cb-alt:#121110;--hair:rgba(255,255,255,.09);--whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6)}}
+:root[data-theme="dark"] #cb{--cb-alt:#121110;--hair:rgba(255,255,255,.09);--whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6)}
 .cbx{background:var(--cb-alt)}
 /* widgets: same 1px border (so nothing moves), now a faint hairline plus a whisper of shadow */
 .cbx #cb:not(.editing) .wq{border-color:var(--hair);box-shadow:var(--whisper);background:linear-gradient(180deg,var(--card) 55%,color-mix(in srgb,var(--card) 97%,#e9e2d8))}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cbx #cb:not(.editing) .wq{background:#1f1d1b}}
-:root[data-theme="dark"] .cbx #cb:not(.editing) .wq{background:#1f1d1b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cbx #cb:not(.editing) .wq{background:#252320}}
+:root[data-theme="dark"] .cbx #cb:not(.editing) .wq{background:#252320}
 /* buttons and pills: hairline edges, almost no shadow */
 .cbx #cb .iconb,.cbx #cb .pill.alt,.cbx #cb .tbtn,.cbx #cb .acct{border-color:var(--hair);box-shadow:0 1px 2px rgba(40,30,20,.035)}
 :root{--dock-hair:rgba(40,30,20,.075)}

@@ -475,3 +475,7 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 - Inside the app, Stories reads the account's own entries (`parent.cbEntries()`, the board's cents data) and today's date instead of the built-in sample; it re-reads them whenever the board refreshes (adding, editing, deleting an entry updates open Stories).
 - Card drawings use the entry's real card art (detail image, resolved against the app's URL since the Stories frame is a srcdoc); cards without art keep the lettered placeholder.
 - Next in stage 3: saving images (one story, and Save all as decided), then free-plan locks on Stories saving.
+
+## v28.1: dark mode levels
+- Dark mode now has clear steps: page #121110 → cards/widgets/rows #252320 (was #1f1d1b) → controls (search, selects, Export, entry Edit/Duplicate/Delete, add-sheet search and platform, editor inputs, segmented tracks) #302d2a with a 12% white edge → menus #2b2926 with a stronger shadow → selected thumbs #423e3a. Hairlines 6% → 9%. Sheets (add, editor, import, board sheets) sit at #1c1a18 above the page.
+- Tokens: `--s-ctl`, `--s-ctl-line`, `--s-pop`, `--s-raise` in soft.css (light values unchanged; dark-only rules at the end of soft.css and board16.css). Board widgets follow (board14-soft.css).

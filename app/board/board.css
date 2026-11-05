@@ -1541,13 +1541,13 @@ html.cbopen,html.cbopen body{overflow:hidden;overscroll-behavior:none}
 /* page: Apple-style grouped background, a touch lighter and warmer; cards pure white */
 #cb{--hair-l:1;}
 #cb{--cb-alt:#f8f7f4;--hair:rgba(40,30,20,.075);--whisper:0 1px 2px rgba(40,30,20,.05),0 8px 22px -12px rgba(40,30,20,.17)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #cb{--cb-alt:#121110;--hair:rgba(255,255,255,.06);--whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6)}}
-:root[data-theme="dark"] #cb{--cb-alt:#121110;--hair:rgba(255,255,255,.06);--whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #cb{--cb-alt:#121110;--hair:rgba(255,255,255,.09);--whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6)}}
+:root[data-theme="dark"] #cb{--cb-alt:#121110;--hair:rgba(255,255,255,.09);--whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6)}
 .cbx{background:var(--cb-alt)}
 /* widgets: same 1px border (so nothing moves), now a faint hairline plus a whisper of shadow */
 .cbx #cb:not(.editing) .wq{border-color:var(--hair);box-shadow:var(--whisper);background:linear-gradient(180deg,var(--card) 55%,color-mix(in srgb,var(--card) 97%,#e9e2d8))}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cbx #cb:not(.editing) .wq{background:#1f1d1b}}
-:root[data-theme="dark"] .cbx #cb:not(.editing) .wq{background:#1f1d1b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cbx #cb:not(.editing) .wq{background:#252320}}
+:root[data-theme="dark"] .cbx #cb:not(.editing) .wq{background:#252320}
 /* buttons and pills: hairline edges, almost no shadow */
 .cbx #cb .iconb,.cbx #cb .pill.alt,.cbx #cb .tbtn,.cbx #cb .acct{border-color:var(--hair);box-shadow:0 1px 2px rgba(40,30,20,.035)}
 .cbroot{--dock-hair:rgba(40,30,20,.075)}
@@ -1731,6 +1731,18 @@ html.cbfree #cb-stories>span::after,html.cbfree #cb-ask>span::after,html.cbfree 
 html.cbfree #cr.pre .crcmp{display:none}
 
 .pms .pmp:focus{outline:none}
+
+/* dark: sheets sit a step above the board, menus a step above that, controls readable as controls */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) dialog.sheet .awp{--cb-alt:#1c1a18}}
+:root[data-theme="dark"] dialog.sheet .awp{--cb-alt:#1c1a18}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cbx #cb-amenu,:root:not([data-theme="light"]) .mhost #cb-amenu,:root:not([data-theme="light"]) .cbx .cb-menu,:root:not([data-theme="light"]) .mhost .cb-menu{background:#2b2926!important;border-color:rgba(255,255,255,.12)!important}}
+:root[data-theme="dark"] .cbx #cb-amenu,:root[data-theme="dark"] .mhost #cb-amenu,:root[data-theme="dark"] .cbx .cb-menu,:root[data-theme="dark"] .mhost .cb-menu{background:#2b2926!important;border-color:rgba(255,255,255,.12)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cbx #cb .wq.editing,:root:not([data-theme="light"]) .cbx #cb.editing .wq{background:#252320}}
+:root[data-theme="dark"] .cbx #cb .wq.editing,:root[data-theme="dark"] .cbx #cb.editing .wq{background:#252320}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #aw .thumb .tbox,:root:not([data-theme="light"]) #aw .awsearch,:root:not([data-theme="light"]) #aw input[type=search],:root:not([data-theme="light"]) #aw #aw-q{background-color:#2a2725}}
+:root[data-theme="dark"] #aw .thumb .tbox,:root[data-theme="dark"] #aw .awsearch,:root[data-theme="dark"] #aw input[type=search],:root[data-theme="dark"] #aw #aw-q{background-color:#2a2725}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #cr .crrow,:root:not([data-theme="light"]) #mored .morow{background:#2a2725!important;border-color:rgba(255,255,255,.1)!important}}
+:root[data-theme="dark"] #cr .crrow,:root[data-theme="dark"] #mored .morow{background:#2a2725!important;border-color:rgba(255,255,255,.1)!important}
 .tip{position:fixed;z-index:60;pointer-events:none;background:var(--text);color:var(--bg);border-radius:10px;padding:8px 11px;font-size:12.5px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;text-align:left}
 .tip.on{opacity:1}
 .note{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--text);color:var(--bg);border-radius:999px;padding:8px 14px;font-size:12px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}

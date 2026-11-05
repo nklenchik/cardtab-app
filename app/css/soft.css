@@ -1,7 +1,7 @@
 /* ================= Card Tab app — soft look (preview). Look only: layout, sizes, behavior untouched. ================= */
 :root{--s-bg:#f8f7f4;--s-card:#fff;--s-track:#f1efea;--s-hair:rgba(40,30,20,.075);--s-dot:#d9d6cb;--s-whisper:0 1px 2px rgba(40,30,20,.05),0 8px 22px -12px rgba(40,30,20,.17);--s-fade:color-mix(in srgb,#fff 97%,#e9e2d8);--s-brand:#bf1240}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--s-bg:#121110;--s-card:#1f1d1b;--s-track:#2a2725;--s-hair:rgba(255,255,255,.06);--s-dot:#4a4744;--s-whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6);--s-fade:#1c1a18;--s-brand:#e0285a}}
-:root[data-theme="dark"]{--s-bg:#121110;--s-card:#1f1d1b;--s-track:#2a2725;--s-hair:rgba(255,255,255,.06);--s-dot:#4a4744;--s-whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6);--s-fade:#1c1a18;--s-brand:#e0285a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--s-bg:#121110;--s-card:#252320;--s-track:#2a2725;--s-hair:rgba(255,255,255,.09);--s-dot:#55514d;--s-whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6);--s-fade:#22201d;--s-brand:#e0285a}}
+:root[data-theme="dark"]{--s-bg:#121110;--s-card:#252320;--s-track:#2a2725;--s-hair:rgba(255,255,255,.09);--s-dot:#55514d;--s-whisper:0 1px 2px rgba(0,0,0,.25),0 8px 20px -14px rgba(0,0,0,.6);--s-fade:#22201d;--s-brand:#e0285a}
 html,body,.ct-demo{background:var(--s-bg)}
 .ct-demo{--ct-bg:var(--s-bg);--ct-line:var(--s-hair)}
 .ct-demo .ct-app{background:var(--s-bg)}
@@ -116,3 +116,50 @@ html,body,.ct-demo{background:var(--s-bg)}
 .auth-seg button{min-width:0;height:42px;padding:0 16px!important;border-radius:999px!important;font-size:15px;font-weight:700;overflow:hidden;text-overflow:ellipsis;transition:color .2s}
 .auth-pill{top:4px!important;bottom:4px!important;left:4px!important;width:calc(50% - 4px)!important;border-radius:999px!important;background:var(--s-raise)!important;box-shadow:0 1px 2px rgba(0,0,0,.08),0 4px 12px -6px rgba(0,0,0,.25)!important}
 @media(max-width:360px){.auth-seg button{padding:0 8px!important;font-size:13.5px}}
+
+/* ---- dark mode: three clear levels. Page (darkest) → cards and widgets → things you tap (search, selects, buttons, inputs), with menus raised above ---- */
+:root{--s-ctl:#fff;--s-ctl-line:var(--s-hair);--s-pop:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--s-card:#252320;--s-fade:#22201d;--s-hair:rgba(255,255,255,.09);--s-dot:#55514d;--s-ctl:#302d2a;--s-ctl-line:rgba(255,255,255,.12);--s-pop:#2b2926;--s-raise:#423e3a;--s-thumb-sh:0 1px 2px rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--s-card:#252320;--s-fade:#22201d;--s-hair:rgba(255,255,255,.09);--s-dot:#55514d;--s-ctl:#302d2a;--s-ctl-line:rgba(255,255,255,.12);--s-pop:#2b2926;--s-raise:#423e3a;--s-thumb-sh:0 1px 2px rgba(0,0,0,.35)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #ct-search,:root:not([data-theme="light"]) .ct-search{background:var(--s-ctl)!important;border-color:var(--s-ctl-line)!important}}
+:root[data-theme="dark"] #ct-search,:root[data-theme="dark"] .ct-search{background:var(--s-ctl)!important;border-color:var(--s-ctl-line)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #ct-search input,:root:not([data-theme="light"]) .ct-search input{background:transparent!important}}
+:root[data-theme="dark"] #ct-search input,:root[data-theme="dark"] .ct-search input{background:transparent!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ct-demo select{background-color:var(--s-ctl)!important;border-color:var(--s-ctl-line)!important}}
+:root[data-theme="dark"] .ct-demo select{background-color:var(--s-ctl)!important;border-color:var(--s-ctl-line)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ct-demo .ct-demo-actions button{background:var(--s-ctl)!important;border-color:var(--s-ctl-line)!important}}
+:root[data-theme="dark"] .ct-demo .ct-demo-actions button{background:var(--s-ctl)!important;border-color:var(--s-ctl-line)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ct-demo .ct-demo-actions button:hover{background:#3a3633!important}}
+:root[data-theme="dark"] .ct-demo .ct-demo-actions button:hover{background:#3a3633!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ct-demo .ct-insight-tabs{background:var(--s-ctl)!important}}
+:root[data-theme="dark"] .ct-demo .ct-insight-tabs{background:var(--s-ctl)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ct-demo .ct-insight-tabs button.ct-selected{background:var(--s-raise)!important;box-shadow:var(--s-thumb-sh)!important}}
+:root[data-theme="dark"] .ct-demo .ct-insight-tabs button.ct-selected{background:var(--s-raise)!important;box-shadow:var(--s-thumb-sh)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #app-menu{background:var(--s-pop)!important;border-color:var(--s-ctl-line)!important;box-shadow:0 18px 40px -10px rgba(0,0,0,.6)!important}}
+:root[data-theme="dark"] #app-menu{background:var(--s-pop)!important;border-color:var(--s-ctl-line)!important;box-shadow:0 18px 40px -10px rgba(0,0,0,.6)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #app-menu .am-plan{border-color:var(--s-ctl-line)!important}}
+:root[data-theme="dark"] #app-menu .am-plan{border-color:var(--s-ctl-line)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #am-theme{background:var(--s-ctl)!important}}
+:root[data-theme="dark"] #am-theme{background:var(--s-ctl)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #am-theme [aria-checked=true],:root:not([data-theme="light"]) #am-theme .on{background:var(--s-raise)!important}}
+:root[data-theme="dark"] #am-theme [aria-checked=true],:root[data-theme="dark"] #am-theme .on{background:var(--s-raise)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .auth-seg{background:var(--s-ctl)!important}}
+:root[data-theme="dark"] .auth-seg{background:var(--s-ctl)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #as .search,:root:not([data-theme="light"]) #as .sel select,:root:not([data-theme="light"]) #as #as-plat{background:var(--s-ctl)!important;border-color:var(--s-ctl-line)!important}}
+:root[data-theme="dark"] #as .search,:root[data-theme="dark"] #as .sel select,:root[data-theme="dark"] #as #as-plat{background:var(--s-ctl)!important;border-color:var(--s-ctl-line)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #as .seg{background:var(--s-ctl)!important}}
+:root[data-theme="dark"] #as .seg{background:var(--s-ctl)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #as .seg .th{background:var(--s-raise)!important}}
+:root[data-theme="dark"] #as .seg .th{background:var(--s-raise)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #as .x,:root:not([data-theme="light"]) .ed .x{background:var(--s-ctl)!important;border-color:var(--s-ctl-line)!important}}
+:root[data-theme="dark"] #as .x,:root[data-theme="dark"] .ed .x{background:var(--s-ctl)!important;border-color:var(--s-ctl-line)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ed input,:root:not([data-theme="light"]) .ed select,:root:not([data-theme="light"]) .ed textarea{background:var(--s-ctl)!important;border-color:var(--s-ctl-line)!important}}
+:root[data-theme="dark"] .ed input,:root[data-theme="dark"] .ed select,:root[data-theme="dark"] .ed textarea{background:var(--s-ctl)!important;border-color:var(--s-ctl-line)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #as .sheet,:root:not([data-theme="light"]) .ed .ed-form,:root:not([data-theme="light"]) .ed.imp > div:first-child{background:#1c1a18!important}}
+:root[data-theme="dark"] #as .sheet,:root[data-theme="dark"] .ed .ed-form,:root[data-theme="dark"] .ed.imp > div:first-child{background:#1c1a18!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ct-demo .ct-export,:root:not([data-theme="light"]) .ct-demo .ct-earlier-btn,:root:not([data-theme="light"]) .ct-demo .ct-ask-input,:root:not([data-theme="light"]) .ct-demo .ct-expand{background:var(--s-ctl)!important;border-color:var(--s-ctl-line)!important}}
+:root[data-theme="dark"] .ct-demo .ct-export,:root[data-theme="dark"] .ct-demo .ct-earlier-btn,:root[data-theme="dark"] .ct-demo .ct-ask-input,:root[data-theme="dark"] .ct-demo .ct-expand{background:var(--s-ctl)!important;border-color:var(--s-ctl-line)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ct-demo .ct-tabs{background:var(--s-ctl)!important}}
+:root[data-theme="dark"] .ct-demo .ct-tabs{background:var(--s-ctl)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ct-demo .ct-tabs button.ct-selected{background:var(--s-raise)!important;box-shadow:var(--s-thumb-sh)!important}}
+:root[data-theme="dark"] .ct-demo .ct-tabs button.ct-selected{background:var(--s-raise)!important;box-shadow:var(--s-thumb-sh)!important}
