@@ -24,7 +24,7 @@ dialog.sheet.pms .awp.pmp{padding:0!important;border:0!important;gap:0;overflow:
 .pms .pmlater{height:40px;margin-top:6px;border:0;background:none;color:var(--muted);font:inherit;font-size:13.5px;font-weight:750;cursor:pointer}
 @media(max-width:760px){dialog.sheet.pms .awp.pmp{width:100%;border-radius:28px 28px 0 0}.pms .pmhero{height:236px}}
 /* locks */
-.cb-menu .msep{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:12px 14px 4px}
+.cb-menu .mprem{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:12px 14px 4px}
 .cb-menu button.lockd{color:var(--muted)}
 .cb-menu button.lockd .mlock{display:inline-grid;place-items:center;color:var(--brand)}
 /* locked widgets in the gallery: softly blurred, so you can tell what each one is without getting the full effect; the name stays sharp */
@@ -40,7 +40,7 @@ html.cbfree #cb-stories>span::after,html.cbfree #cb-ask>span::after,html.cbfree 
 .cbquiet b{color:var(--text)}
 .cbquiet button{margin-left:auto;height:32px;padding:0 14px;border-radius:999px;border:0;background:color-mix(in srgb,var(--brand) 11%,transparent);color:var(--brand);font:inherit;font-weight:800;font-size:12.5px;white-space:nowrap;cursor:pointer}
 
-#cr .crpre .msep{background:none!important;border:0!important;height:auto!important;min-height:0!important;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:14px 16px 4px}
+#cr .crpre .mprem{background:none!important;border:0!important;height:auto!important;min-height:0!important;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:14px 16px 4px}
 #cr .crrow.lockd{color:var(--muted)}
 #cr .crrow.lockd .mlock{margin-left:auto;display:inline-grid;place-items:center;color:var(--brand)}
 html.cbfree #cr.pre .crcmp{display:none}

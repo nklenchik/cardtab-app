@@ -50,7 +50,7 @@ $('aw-list').addEventListener('click',e=>{const th=e.target.closest('.thumb.lock
 // the time range menu: what Free covers first, then everything else under "With Premium", each with a lock
 $('cb-per').addEventListener('click',()=>{if(!cbFree())return;const m=$('cb-menu');if(m.hidden)return;let first=true;
   m.querySelectorAll('button[data-k]').forEach(b=>{if(FREE_P.includes(b.dataset.k))return;b.classList.add('lockd');b.setAttribute('aria-label',b.textContent+', Premium');b.insertAdjacentHTML('beforeend','<span class="mlock">'+LOCK_I+'</span>');
-    if(first){first=false;b.insertAdjacentHTML('beforebegin','<div class="msep">With Premium</div>')}});});
+    if(first){first=false;b.insertAdjacentHTML('beforebegin','<div class="mprem">With Premium</div>')}});});
 // --- the quiet line: the first few times a free user opens the board ---
 const QKEY='cb.quiet.n';const q=document.createElement('div');q.className='cbquiet';q.hidden=true;
 q.innerHTML='<span><b>Free</b> shows your last 3 months.</span><button type="button">See Premium</button>';
