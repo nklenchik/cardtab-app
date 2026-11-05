@@ -214,3 +214,20 @@ html.bu-lock,html.bu-lock body{overflow:hidden;overscroll-behavior:none}
 .bu-amt input{caret-color:var(--s-brand,#b0123d)}
 .bu-amt input:focus,.bu-amt input:focus-visible{outline:none!important;box-shadow:none!important}
 .bu-amt input::selection{background:color-mix(in srgb,var(--s-brand,#b0123d) 16%,transparent);color:inherit}
+
+/* ---------- phones: the slim search bar that slides back in when you scroll up ---------- */
+.ct-stick{display:none}
+@media(max-width:760px){
+  .ct-stick{display:grid;grid-template-columns:minmax(0,1fr) 44px;align-items:center;position:fixed;left:0;right:0;top:0;z-index:40;
+    padding:calc(env(safe-area-inset-top,0px) + 10px) max(12px,env(safe-area-inset-right,0px)) 10px max(12px,env(safe-area-inset-left,0px));
+    background:color-mix(in srgb,var(--s-bg,#f8f7f4) 86%,transparent);-webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px);
+    border-bottom:1px solid var(--s-hair);box-shadow:0 6px 24px rgba(0,0,0,.06);
+    transform:translate3d(0,-100%,0);pointer-events:none;will-change:transform;transition:transform .8s cubic-bezier(.4,0,.2,1)}
+  .ct-stick.on{transform:none;pointer-events:auto;transition:transform .8s cubic-bezier(.22,.61,.36,1)}
+  .ct-demo .ct-stick .ct-stick-q{grid-column:1 / -1;grid-row:1;display:flex;align-items:center;gap:8px;width:auto!important;min-width:0;margin:0;flex:none;height:44px;padding:0 56px 0 16px!important}
+  .ct-demo .ct-stick .ct-stick-q input{flex:1;min-width:0;border:0;background:transparent;color:var(--ct-text);font:inherit;font-size:15px;outline:none;padding:0}
+  .ct-demo .ct-stick .ct-stick-q input::placeholder{color:var(--ct-muted)}
+  .ct-demo .ct-stick .ct-stick-add{grid-column:2;grid-row:1;justify-self:end;position:relative;z-index:2;margin:0;width:44px;height:44px;min-width:0;padding:0!important;display:flex;align-items:center;justify-content:center;border-radius:50%!important}
+  .ct-demo .ct-stick .ct-stick-add .ct-ic{width:17px;height:17px;stroke-width:2.6}
+}
+@media (prefers-reduced-motion:reduce){.ct-stick,.ct-stick.on{transition-duration:.01s!important}}
