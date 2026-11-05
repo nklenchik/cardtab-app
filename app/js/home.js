@@ -6,6 +6,7 @@
    Everything is exact to the cent. */
 (function () {
   'use strict';
+  let opener = null;
   const S = window.CTStore, $ = id => document.getElementById(id);
   const NF = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const NF0 = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
@@ -69,17 +70,30 @@
   document.addEventListener('click', e => { const tile = e.target.closest('.ct-budtile'); if (tile && window.CTBudget) window.CTBudget.open(tile); });
   document.addEventListener('keydown', e => { const tile = e.target.closest && e.target.closest('.ct-budtile'); if (tile && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); if (window.CTBudget) window.CTBudget.open(tile); } });
 
-  // Entries · Board · Stories (bottom bar on phones, tabs beside the logo on desktop): they go where the menu's links go
-  document.addEventListener('click', e => {
-    const a = e.target.closest('[data-tab]'); if (!a) return;
-    const g = a.dataset.tab; opener = a; if (g === 'entries') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
-    const m = document.querySelector('#app-menu [data-go="' + g + '"]'); if (m) m.click();
+  // Entries · Board · Stories: the bottom bar on phones (on every page, over Card Board and Stories too) and the tabs on desktop
+  const cbOpen = () => { const c = document.querySelector('.cbx'); return !!c && !c.classList.contains('off'); };
+  const stOpen = () => { const x = document.getElementById('csx'); return !!x && x.classList.contains('in'); };
+  function go(g, from) {
+    if (from) opener = from;
     if (window.ctBuzz) window.ctBuzz('tap');
-  });
+    if (g === 'entries') { if (stOpen() && window.cbStoriesBack) window.cbStoriesBack(); if (cbOpen() && window.CTBoard) { setTimeout(() => window.CTBoard.close(), stOpen() ? 0 : 0); } else window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    if (g === 'board') { if (stOpen() && window.cbStoriesBack) { window.cbStoriesBack(); return; } if (cbOpen()) { const c = document.querySelector('.cbx'); c.scrollTo({ top: 0, behavior: 'smooth' }); return; } }
+    if (g === 'stories' && cbOpen()) { if (!stOpen()) { const b = document.getElementById('cb-stories'); if (b) b.click(); } return; }
+    const m = document.querySelector('#app-menu [data-go="' + g + '"]'); if (m) m.click();
+  }
+  window.CTTabGo = go;
+  document.addEventListener('click', e => { const a = e.target.closest('[data-tab]'); if (!a) return; go(a.dataset.tab, a); });
+  document.addEventListener('click', e => { if (e.target.closest('#ct-fab')) { const a = $('ct-add'); if (a) a.click(); } });
+  // keep the bar's highlight on the page you're on
+  function syncTabs() {
+    const cur = stOpen() ? 'stories' : cbOpen() ? 'board' : 'entries';
+    document.querySelectorAll('#ct-tbar [data-tab], .ct-demo-top .ct-tabs [data-tab]').forEach(b => { if (b.dataset.tab === cur) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  }
+  const watch = () => { const c = document.querySelector('.cbx'), x = document.getElementById('csx'); const mo = new MutationObserver(syncTabs); if (c) mo.observe(c, { attributes: true, attributeFilter: ['class'] }); if (x) mo.observe(x, { attributes: true, attributeFilter: ['class'] }); return !!(c && x); };
+  if (!watch()) { const t = setInterval(() => { if (document.querySelector('.cbx') && document.getElementById('csx')) { clearInterval(t); watch(); syncTabs(); } }, 600); }
 
   // Card Board grows out of whatever opened it: the tab you tapped, or your avatar when it came from the profile menu
-  let opener = null;
-  document.addEventListener('click', e => { if (e.target.closest('#app-menu [data-go]')) opener = $('app-avatar'); }, true);
+  document.addEventListener('click', e => { if (e.isTrusted && e.target.closest('#app-menu [data-go]')) opener = $('app-avatar'); }, true);
   window.CTBoardFrom = () => (opener && opener.getClientRects().length ? opener : null);
   window.CTHome = { paint };
   S.on(() => paint());

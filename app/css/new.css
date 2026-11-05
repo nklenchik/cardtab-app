@@ -384,4 +384,28 @@ dialog::backdrop,.bu-sheet::backdrop{background:var(--win-veil)!important;-webki
  .ct-tabs button[aria-current]{background:var(--s-card);color:var(--ct-text);box-shadow:0 1px 2px rgba(0,0,0,.12)}
  .ct-tabs button[aria-current] svg{color:var(--s-brand,#b0123d)}
 }
+/* ================= v33.1: one bar on every page, highlight B, floating Add =================
+   highlight B: a brand-tinted pill with the icon and label in brand; in dark mode a soft rose so it reads pink, never maroon */
+:root{--tab-on:var(--s-brand,#b0123d);--tab-onbg:color-mix(in srgb,var(--s-brand,#b0123d) 16%,transparent)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--tab-on:#ff8db0;--tab-onbg:rgba(255,128,165,.17)}}
+:root[data-theme="dark"]{--tab-on:#ff8db0;--tab-onbg:rgba(255,128,165,.17)}
+@media(max-width:760px){
+ .ct-tbar{z-index:55}
+ .ct-tbar button[aria-current]{color:var(--tab-on);font-weight:800}
+ .ct-tbar button[aria-current] span{background:var(--tab-onbg);color:var(--tab-on)}
+ /* Add New moves down to a floating button where your thumb is; search gets the full width */
+ .ct-demo .ct-demo-top .ct-add,.ct-stick .ct-stick-add{display:none!important}
+ .ct-demo .ct-demo-top .ct-search{padding-right:16px!important}
+ .ct-stick .ct-stick-q{grid-column:1/-1!important;margin-right:0!important;width:auto!important}
+ .ct-fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:44;width:58px;height:58px;border-radius:20px;border:0;padding:0;display:grid;place-items:center;background:var(--s-brand,#b0123d);color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 12px 26px -10px color-mix(in srgb,var(--s-brand,#b0123d) 75%,transparent),0 2px 6px rgba(0,0,0,.22);transition:transform .18s cubic-bezier(.2,.8,.2,1)}
+ .ct-fab:active{transform:scale(.92)}
+ #view-app[hidden]~.ct-fab{display:none}
+ .app-toasts{bottom:calc(152px + env(safe-area-inset-bottom,0px))}
+}
+.ct-fab{display:none}
+@media(max-width:760px){.ct-fab{display:grid}}
+@media(min-width:761px){
+ .ct-tabs button[aria-current]{background:var(--tab-onbg);color:var(--tab-on);box-shadow:none}
+ .ct-tabs button[aria-current] svg{color:var(--tab-on)}
+}
 

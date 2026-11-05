@@ -530,3 +530,10 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
   - Desktop: one centered column (920px) with the four tiles in a row, icon tabs (Entries · Board · Stories) beside the logo, 60px under the top bar like Card Board; Export moved to the profile menu ("Export everything").
   - Card Board now grows out of whatever opened it (the Board tab, or the avatar when opened from the menu) and shrinks back into it (fromEl() in board5.js; window.CTBoardFrom).
   - Cache tags ?v=33, board V=33. Tests: tools/t127, t128 (t119/t120/t122 updated for the Spent tile; t121/t126 removed).
+- v33.1: one bar on every page, highlight B, floating Add.
+  - Phones: the Entries · Board · Stories bar stays at the bottom over Card Board and Stories too (z 55, above the board, below menus and windows), and its highlight follows the page you're on (home.js syncTabs, watching .cbx and #csx). Tapping Entries from Board/Stories closes them; Board from Stories goes back to the board; Stories from the board opens Stories.
+  - Board's floating Stories · Ask · Share bar is gone on phones: Ask and Share are two round icons just left of Edit (they forward to the original buttons, so the Premium locks still apply). Stories ends just above the bar; its Save/Share dock is replaced by two round icons left of your avatar.
+  - Highlight B: brand-tinted pill with the icon and label in brand; in dark mode a soft rose (#ff8db0 on rgba(255,128,165,.17)) so it reads pink, not maroon (tokens --tab-on / --tab-onbg). Same style on the desktop tabs.
+  - Add New moves to a floating pink + above the bar on the right (phones); the header + and the floating search bar's + are gone, so search runs full width.
+  - Desktop: the same tabs sit beside the title on Board and Stories (Board's own Stories button hides when they're there).
+  - Cache tags ?v=33.1, board V=33.1. Test: tools/t129.

@@ -66,3 +66,15 @@ window.cbSyncPlan();
 })();
 // v31.1: the profile menu's close button (phones)
 ;(()=>{const x=document.querySelector('#cb-amenu .am-x');if(x)x.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();closeMenus()})})();
+// v33.1: phones: Ask and Share as two icons beside Edit (the floating bar is gone); desktop: the app's tabs beside the title
+;(()=>{const ask=$('cb-ask'),share=$('cb-share'),edit=$('cb-edit');if(!ask||!share||!edit)return;
+ const ic=(src,label)=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',label);const s=src.querySelector('svg');if(s)b.appendChild(s.cloneNode(true));b.addEventListener('click',e=>{e.preventDefault();src.click()});return b};
+ const wrap=document.createElement('div');wrap.className='cbic';wrap.append(ic(share,'Share'),ic(ask,'Ask your board'));cbx.appendChild(wrap);
+ // sits just left of Edit, in line with it
+ const place=()=>{if(!matchMedia('(max-width:760px)').matches)return;const e=edit.getBoundingClientRect(),c=cbx.getBoundingClientRect();if(!e.width)return;wrap.style.top=(e.top-c.top+cbx.scrollTop+e.height/2-20)+'px';wrap.style.right=(c.right-e.left+6)+'px'};
+ new MutationObserver(()=>{if(!cbx.classList.contains('off'))requestAnimationFrame(place)}).observe(cbx,{attributes:true,attributeFilter:['class']});addEventListener('resize',place);setTimeout(place,300);
+ // desktop tabs, the same ones as on the entries screen
+ const src=document.querySelector('.ct-tabs'),h=document.querySelector('.cbx h1.cbt');
+ if(src&&h){const t=src.cloneNode(true);t.className='cb-tabs';t.querySelectorAll('[aria-current]').forEach(x=>x.removeAttribute('aria-current'));const bt=t.querySelector('[data-tab="board"]');if(bt)bt.setAttribute('aria-current','page');h.after(t)}
+})();
+

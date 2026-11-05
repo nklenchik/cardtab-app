@@ -111,6 +111,18 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 .lb .note{color:rgba(255,255,255,.75);font-size:12.5px;font-weight:650;min-height:18px;margin:0}
 .foot{margin:26px auto 0;text-align:center;color:var(--muted);font-size:13px;font-weight:650;max-width:560px}
 @media(max-width:420px){#per button{padding:8px 11px;font-size:13px}}
+/* v33.1: phones: the app's bar sits under Stories, so Save and Share move up beside your avatar; desktop: the app's tabs beside the title */
+.csic{display:none}
+@media(max-width:760px){html .csdock{display:none!important}.csic{display:flex;gap:8px;position:absolute;z-index:6}
+ .csic button{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;padding:0;border:1px solid var(--line);background:color-mix(in srgb,currentColor 7%,transparent);color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent}
+ .csic button:active{transform:scale(.92)}.csic button svg{width:17px;height:17px}}
+.cstabs{display:none}
+@media(min-width:761px){.cstabs{display:flex;gap:4px;padding:4px;margin-left:16px;border-radius:999px;background:var(--hl,rgba(0,0,0,.05));align-self:center}
+ .cstabs button{display:flex;align-items:center;gap:7px;height:32px;padding:0 13px;border:0;border-radius:999px;background:none;color:var(--muted);font:inherit;font-size:13px;font-weight:750;white-space:nowrap;cursor:pointer}
+ .cstabs button:hover{color:var(--text)}
+ .cstabs button[aria-current]{background:color-mix(in srgb,var(--brand) 16%,transparent);color:var(--brand)}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cstabs button[aria-current]{background:rgba(255,128,165,.17);color:#ff8db0}}
+:root[data-theme="dark"] .cstabs button[aria-current]{background:rgba(255,128,165,.17);color:#ff8db0}
 /* v31: shared window style: frosted blur behind every sheet, hairline around it */
 :root{--win-veil:rgba(10,8,6,.3);--win-edge:rgba(40,30,20,.1);--win-blur:blur(6px) saturate(1.1)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--win-veil:rgba(0,0,0,.42);--win-edge:rgba(255,255,255,.1)}}
@@ -481,5 +493,16 @@ const curN=()=>{const dots=[...$('dots').querySelectorAll('i')];return Math.max(
 $('svall').addEventListener('click',()=>saveStories([0,1,2,3,4].slice(0,D.stories.length)));
 $('svs').addEventListener('click',e=>{const b=e.target.closest('[data-sv]');if(!b)return;const n=curN();closeSheet('svs');setTimeout(()=>saveStories(b.dataset.sv==='all'?D.stories.map((_,i)=>i):[n]),200)});
 
+})();
+
+// v33.1: Save/Share icons up top on phones, and the app's Entries · Board · Stories tabs on desktop
+;(()=>{const tr=document.querySelector('.top .tr'),acct=document.getElementById('csacct'),dock=document.getElementById('csdock');
+ if(tr&&dock){const w=document.createElement('div');w.className='csic';['save','share'].forEach(k=>{const src=dock.querySelector('[data-d="'+k+'"]');if(!src)return;const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',k==='save'?'Save to Photos':'Share this story');const sv=src.querySelector('svg');if(sv)b.appendChild(sv.cloneNode(true));b.addEventListener('click',()=>src.click());w.appendChild(b)});document.body.appendChild(w);
+  // just left of your avatar, in line with it
+  const place=()=>{if(!acct)return;const r=acct.getBoundingClientRect();if(!r.width)return;w.style.top=(r.top+scrollY+r.height/2-20)+'px';w.style.right=(document.documentElement.clientWidth-r.left+8)+'px'};
+  place();addEventListener('resize',place);setTimeout(place,400);setTimeout(place,1200);window.csPlaceIcons=place}
+ const tl=document.querySelector('.top .tl2');let P=null;try{P=window.parent&&window.parent.CTTabGo?window.parent:null}catch(e){}
+ if(tl&&P){let src=null;try{src=P.document.querySelector('.ct-tabs')}catch(e){}if(src){const t=document.createElement('nav');t.className='cstabs';t.setAttribute('aria-label','Sections');t.innerHTML=src.innerHTML;t.querySelectorAll('[aria-current]').forEach(x=>x.removeAttribute('aria-current'));const st=t.querySelector('[data-tab="stories"]');if(st)st.setAttribute('aria-current','page');
+  t.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)P.CTTabGo(b.dataset.tab)});tl.appendChild(t)}}
 })();
 </script>

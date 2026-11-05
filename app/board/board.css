@@ -1792,6 +1792,27 @@ dialog.sheet.pms .awp.pmp{border:1px solid var(--win-edge)!important}
 }
 .mbd{background:var(--win-veil)!important;-webkit-backdrop-filter:var(--win-blur);backdrop-filter:var(--win-blur)}
 @media(max-width:760px){#cb-amenu{position:fixed}#cb-amenu>.am-x{position:absolute!important;top:14px!important;right:14px!important;left:auto!important;z-index:2;display:grid!important;place-items:center;width:34px!important;height:34px!important;min-height:0!important;padding:0!important;margin:0!important;gap:0!important;border-radius:50%!important;border:1px solid var(--win-edge)!important;background:color-mix(in srgb,currentColor 7%,transparent)!important;font-size:0}#cb-amenu>.am-x svg{width:13px;height:13px;margin:0!important;opacity:1}#cb-amenu .amh{padding-right:56px}}
+/* v33.1: the app's Entries · Board · Stories bar stays at the bottom on phones, so the floating Stories · Ask · Share bar goes:
+   Ask and Share become two icons beside Edit, Stories ends just above the bar; desktop gets the same tabs beside the title */
+.cbic{display:none}
+@media(max-width:760px){
+ #cbdock{display:none!important}
+ .cbx #cb{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important}
+ .csx{bottom:calc(63px + env(safe-area-inset-bottom,0px))!important;height:auto!important}
+ .cbic{display:flex;gap:8px;position:absolute;z-index:6}
+ .cbic button{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;padding:0;border:1px solid var(--win-edge);background:color-mix(in srgb,currentColor 7%,transparent);color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+ .cbic button:active{transform:scale(.92)}
+ .cbic button svg{width:17px;height:17px}
+}
+.cb-tabs{display:none}
+@media(min-width:761px){
+ .cb-tabs{display:flex;gap:4px;padding:4px;margin-left:16px;border-radius:999px;background:var(--s-track,rgba(0,0,0,.05));align-self:center}
+ .cb-tabs button{display:flex;align-items:center;gap:7px;height:32px;padding:0 13px;border:0;border-radius:999px;background:none;color:var(--muted);font:inherit;font-size:13px;font-weight:750;white-space:nowrap;cursor:pointer}
+ .cb-tabs button:hover{color:var(--text)}
+ .cb-tabs button[aria-current]{background:var(--tab-onbg,rgba(176,18,61,.14));color:var(--tab-on,#b0123d)}
+}
+
+@media(min-width:761px){.cbx:has(.cb-tabs) #cb-stories{display:none!important}.cbx h1.cbt{flex:none!important;min-width:max-content}}
 .tip{position:fixed;z-index:60;pointer-events:none;background:var(--text);color:var(--bg);border-radius:10px;padding:8px 11px;font-size:12.5px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;text-align:left}
 .tip.on{opacity:1}
 .note{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--text);color:var(--bg);border-radius:999px;padding:8px 14px;font-size:12px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}
