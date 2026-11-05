@@ -466,3 +466,7 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 - v27.5: default Premium art is now Mega Gengar, Magby and Dragonair (181/165, MEW; artwork band cropped below the name strip and above the attacks, 660×388 WebP, 47 KB) in place of Articuno.
 - v27.6: Sign in / Create account switch rebuilt: two equal halves (grid), a fully round thumb inset 4px on every side, raised (lighter, `--s-raise`) in dark mode instead of darker than the track; labels fit down to 320px. The app build drops the standalone board preview's "Preview with your real entries" note, which had started showing on the sign-in screen once the board preloaded for free users.
 - v27.7: Stories headlines get room for descenders (line-height 1.1, .14em bottom padding inside the 4-line clamp, which was clipping g/y/p) and a little more space above.
+
+## Decided for stage 3 (Stories on real data + image saving)
+- Save all: desktop gets a "Save all 5" pill in the Stories top bar, left of the time range (preview D1). Phones keep the bottom Save/Share bar; tapping Save opens a small sheet: "This story" / "All 5 stories" (preview P2).
+- Saves all 5 in order with the current theme and time range. iPhone: the share sheet with all 5 images ("Save 5 Images"); desktop: one zip of 5 numbered PNGs ("Card Stories 1 – The money.png" …). Free users get the Premium sheet (export context).
