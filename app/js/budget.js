@@ -93,7 +93,7 @@
   let closing = false;
   shut = function () {
     if (!dlg.open || closing) return; closing = true; inp.blur();
-    const an = grow(-1), done = () => { closing = false; dlg.close(); if (an) an.cancel(); };
+    dlg.classList.add('closing'); const an = grow(-1), done = () => { closing = false; dlg.close(); dlg.classList.remove('closing'); if (an) an.cancel(); };
     if (an) an.onfinish = done; else done();
   }
   const cents = () => { const v = parseFloat(String(inp.value).replace(/[^0-9.]/g, '')); return isFinite(v) ? Math.round(v * 100) : 0; };
