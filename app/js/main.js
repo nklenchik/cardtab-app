@@ -107,7 +107,7 @@
   function sampleEntries() {
     const now = new Date(), Y = now.getFullYear(), M = now.getMonth(), D = now.getDate();
     const at = (mBack, day) => { const last = new Date(Y, M - mBack + 1, 0).getDate(); const d = mBack === 0 ? Math.min(day, D) : Math.min(day, last); return S.ymd(new Date(Y, M - mBack, d)); };
-    const art = k => ({ list: 'assets/card-art/' + k + '-sm.webp?v=2', detail: 'assets/card-art/' + k + '.webp?v=2' });
+    const art = k => ({ list: 'assets/card-art/' + k + '-sm.webp?v=3', detail: 'assets/card-art/' + k + '.webp?v=3' });
     return [
       { date: at(0, Math.ceil(D * .9)), type: 'sale', platform: 'eBay', name: 'Pikachu ex - 238/191 - SV08: Surging Sparks', amount: '255.00', fees: '33.80', ship: '6.70', condition: 'Near Mint', art: art('pikachu-ex') },
       { date: at(0, Math.ceil(D * .45)), type: 'purchase', platform: 'eBay', name: 'Gengar ex - 154/128 - ME: 30th Celebration', amount: '64.80', condition: 'Near Mint', art: art('gengar-ex') },
@@ -120,11 +120,11 @@
       { date: at(2, 4), type: 'purchase', platform: 'Whatnot', name: 'Houndoom - 4/64 - Neo Revelation', amount: '18.40', condition: 'Near Mint', art: { list: 'assets/card-art/houndoom-sm.webp', detail: 'assets/card-art/houndoom.webp' } },
       { date: at(3, 20), type: 'purchase', platform: 'Local game store', name: 'Surging Sparks booster bundle', amount: '32.39', condition: 'Sealed' },
       // HD samples with an artwork-only copy (wall), so Featured card shows full art in the preview
-      { date: at(1, 14), type: 'sale', platform: 'eBay', name: 'Mega Gengar ex - 284/217 - Ascended Heroes', amount: '421.50', fees: '27.83', ship: '1.27', condition: 'Near Mint', art: { list: 'assets/card-art/mega-gengar-ex-sm.webp?v=2', detail: 'assets/card-art/mega-gengar-ex.webp?v=2', wall: 'assets/card-art/mega-gengar-ex-wall.webp', focus: [50, 50] } },
-      { date: at(4, 2), type: 'purchase', platform: 'TCGplayer', name: 'Mega Gengar ex - 284/217 - Ascended Heroes', amount: '180.00', condition: 'Near Mint', art: { list: 'assets/card-art/mega-gengar-ex-sm.webp?v=2', detail: 'assets/card-art/mega-gengar-ex.webp?v=2', wall: 'assets/card-art/mega-gengar-ex-wall.webp', focus: [50, 50] } },
-      { date: at(0, Math.ceil(D * .6)), type: 'sale', platform: 'eBay', name: 'Articuno ex - 036/082 - Japanese', amount: '170.00', fees: '22.11', ship: '1.27', condition: 'Lightly Played', art: { list: 'assets/card-art/articuno-ex-sm.webp?v=2', detail: 'assets/card-art/articuno-ex.webp?v=2', wall: 'assets/card-art/articuno-ex-wall.webp', focus: [50, 62] } },
-      { date: at(2, 6), type: 'purchase', platform: 'Card Show', name: 'Articuno ex - 036/082 - Japanese', amount: '40.00', condition: 'Lightly Played', art: { list: 'assets/card-art/articuno-ex-sm.webp?v=2', detail: 'assets/card-art/articuno-ex.webp?v=2', wall: 'assets/card-art/articuno-ex-wall.webp', focus: [50, 62] } },
-      { date: at(1, 3), type: 'purchase', platform: 'TCGplayer', name: 'Magby - 186/182 - Paradox Rift', amount: '48.99', condition: 'Near Mint', art: { list: 'assets/card-art/magby-sm.webp?v=2', detail: 'assets/card-art/magby.webp?v=2', wall: 'assets/card-art/magby-wall.webp', focus: [52, 52] } }
+      { date: at(1, 14), type: 'sale', platform: 'eBay', name: 'Mega Gengar ex - 284/217 - Ascended Heroes', amount: '421.50', fees: '27.83', ship: '1.27', condition: 'Near Mint', art: { list: 'assets/card-art/mega-gengar-ex-sm.webp?v=3', detail: 'assets/card-art/mega-gengar-ex.webp?v=3', wall: 'assets/card-art/mega-gengar-ex-wall.webp', focus: [50, 50] } },
+      { date: at(4, 2), type: 'purchase', platform: 'TCGplayer', name: 'Mega Gengar ex - 284/217 - Ascended Heroes', amount: '180.00', condition: 'Near Mint', art: { list: 'assets/card-art/mega-gengar-ex-sm.webp?v=3', detail: 'assets/card-art/mega-gengar-ex.webp?v=3', wall: 'assets/card-art/mega-gengar-ex-wall.webp', focus: [50, 50] } },
+      { date: at(0, Math.ceil(D * .6)), type: 'sale', platform: 'eBay', name: 'Articuno ex - 036/082 - Japanese', amount: '170.00', fees: '22.11', ship: '1.27', condition: 'Lightly Played', art: { list: 'assets/card-art/articuno-ex-sm.webp?v=3', detail: 'assets/card-art/articuno-ex.webp?v=3', wall: 'assets/card-art/articuno-ex-wall.webp', focus: [50, 62] } },
+      { date: at(2, 6), type: 'purchase', platform: 'Card Show', name: 'Articuno ex - 036/082 - Japanese', amount: '40.00', condition: 'Lightly Played', art: { list: 'assets/card-art/articuno-ex-sm.webp?v=3', detail: 'assets/card-art/articuno-ex.webp?v=3', wall: 'assets/card-art/articuno-ex-wall.webp', focus: [50, 62] } },
+      { date: at(1, 3), type: 'purchase', platform: 'TCGplayer', name: 'Magby - 186/182 - Paradox Rift', amount: '48.99', condition: 'Near Mint', art: { list: 'assets/card-art/magby-sm.webp?v=3', detail: 'assets/card-art/magby.webp?v=3', wall: 'assets/card-art/magby-wall.webp', focus: [52, 52] } }
     ];
   }
 
