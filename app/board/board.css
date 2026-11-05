@@ -1814,6 +1814,8 @@ dialog.sheet.pms .awp.pmp{border:1px solid var(--win-edge)!important}
 
 @media(min-width:761px){.cbx:has(.cb-tabs) #cb-stories{display:none!important}.cbx h1.cbt{flex:none!important;min-width:max-content}}
 .cbx.pmonly #pms,.cbx.pmonly #pms *{pointer-events:auto!important;visibility:visible!important}
+dialog.sheet.pms{overflow:hidden!important}
+dialog.sheet.pms:focus{outline:none}
 .tip{position:fixed;z-index:60;pointer-events:none;background:var(--text);color:var(--bg);border-radius:10px;padding:8px 11px;font-size:12.5px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;text-align:left}
 .tip.on{opacity:1}
 .note{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--text);color:var(--bg);border-radius:999px;padding:8px 14px;font-size:12px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}

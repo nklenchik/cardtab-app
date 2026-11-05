@@ -1131,7 +1131,11 @@ function openPm(ctx){
     // a whole card: zoom past the frame and name strip so only the artwork window fills the header
     hero.style.backgroundSize=a.card?'120% auto':'';hero.style.backgroundPosition=a.card?'50% 21%':fx+' '+fy;hero.classList.add('pmart')}
   else{hero.classList.remove('pmart');hero.style.backgroundImage='';hero.style.backgroundPosition='';hero.style.backgroundSize=''}
-  closeMenus();hideTip();buzz('tap');pms.showModal();const pp=pms.querySelector('.pmp');pp.tabIndex=-1;pp.focus({preventScroll:true})}
+  closeMenus();hideTip();buzz('tap');pms.showModal();pms.scrollTop=0;
+  // focus the window itself, which never moves: focusing the panel while it's still sliding up from below made iPhone scroll the window to it, leaving the panel pushed off the top
+  pms.tabIndex=-1;try{pms.focus({preventScroll:true})}catch(e){}pms.scrollTop=0}
+// the window itself never scrolls (its panel scrolls inside when it's taller than the screen)
+pms.addEventListener('scroll',()=>{if(pms.scrollTop||pms.scrollLeft){pms.scrollTop=0;pms.scrollLeft=0}});
 PM_OPEN=openPm;
 // warm the art up the first time a free user opens the board, so the sheet never shows a blank header
 let warmed=false;function warmArt(){if(warmed||!cbFree())return;warmed=true;artList().slice(0,3).forEach(a=>{const i=new Image();i.decoding='async';i.src=a.src})}

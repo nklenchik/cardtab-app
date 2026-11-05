@@ -129,3 +129,5 @@ dialog.sheet.pms .awp.pmp{border:1px solid var(--win-edge)!important}
 
 @media(min-width:761px){.cbx:has(.cb-tabs) #cb-stories{display:none!important}.cbx h1.cbt{flex:none!important;min-width:max-content}}
 .cbx.pmonly #pms,.cbx.pmonly #pms *{pointer-events:auto!important;visibility:visible!important}
+dialog.sheet.pms{overflow:hidden!important}
+dialog.sheet.pms:focus{outline:none}
