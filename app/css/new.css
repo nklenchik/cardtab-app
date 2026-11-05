@@ -280,3 +280,13 @@ html.bu-lock,html.bu-lock body{overflow:hidden;overscroll-behavior:none}
 .bu-p{border:1px solid rgba(40,30,20,.1)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .bu-p{border-color:rgba(255,255,255,.1)}}
 :root[data-theme="dark"] .bu-p{border-color:rgba(255,255,255,.1)}
+/* v31: one window style across the whole app (and Card Board, which shares this page): a soft frosted blur behind every window
+   and a barely-there hairline around it. Same on phones and desktop; light and dark have their own veil and edge. */
+:root{--win-veil:rgba(10,8,6,.3);--win-edge:rgba(40,30,20,.1);--win-blur:blur(6px) saturate(1.1)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--win-veil:rgba(0,0,0,.42);--win-edge:rgba(255,255,255,.1)}}
+:root[data-theme="dark"]{--win-veil:rgba(0,0,0,.42);--win-edge:rgba(255,255,255,.1)}
+@media (prefers-reduced-transparency:reduce){:root{--win-blur:none;--win-veil:rgba(10,8,6,.5)}}
+dialog::backdrop,.bu-sheet::backdrop{background:var(--win-veil)!important;-webkit-backdrop-filter:var(--win-blur);backdrop-filter:var(--win-blur)}
+.bu-p,.ed-form,#as .phone,.app-menu.am{border:1px solid var(--win-edge)!important}
+@media(max-width:760px){.ed-form,#as .phone{border-bottom-color:transparent!important}}
+

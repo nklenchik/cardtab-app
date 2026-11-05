@@ -1775,6 +1775,15 @@ html.cbfree #cr.pre .crcmp{display:none}
 html[data-cbv="A"] .cbslim{opacity:1!important;will-change:transform;transition:transform .8s cubic-bezier(.4,0,.2,1),box-shadow .3s ease!important}
 html[data-cbv="A"] .cbslim.on{transition:transform .8s cubic-bezier(.22,.61,.36,1),box-shadow .3s ease!important;box-shadow:0 6px 24px rgba(0,0,0,.06)}
 @media (prefers-reduced-motion:reduce){html[data-cbv="A"] .cbslim,html[data-cbv="A"] .cbslim.on{transition-duration:.01s!important}}
+/* v31: shared window style: frosted blur behind every sheet, hairline around it */
+.cbroot{--win-veil:rgba(10,8,6,.3);--win-edge:rgba(40,30,20,.1);--win-blur:blur(6px) saturate(1.1)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cbroot{--win-veil:rgba(0,0,0,.42);--win-edge:rgba(255,255,255,.1)}}
+:root[data-theme="dark"] .cbroot{--win-veil:rgba(0,0,0,.42);--win-edge:rgba(255,255,255,.1)}
+@media (prefers-reduced-transparency:reduce){:root{--win-blur:none;--win-veil:rgba(10,8,6,.5)}}
+dialog.sheet::backdrop{background:var(--win-veil)!important;-webkit-backdrop-filter:var(--win-blur);backdrop-filter:var(--win-blur)}
+dialog.sheet .awp{border:1px solid var(--win-edge)!important}
+
+dialog.sheet.pms .awp.pmp{border:1px solid var(--win-edge)!important}
 .tip{position:fixed;z-index:60;pointer-events:none;background:var(--text);color:var(--bg);border-radius:10px;padding:8px 11px;font-size:12.5px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;text-align:left}
 .tip.on{opacity:1}
 .note{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--text);color:var(--bg);border-radius:999px;padding:8px 14px;font-size:12px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}
