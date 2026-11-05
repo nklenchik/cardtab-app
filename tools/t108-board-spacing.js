@@ -1,0 +1,6 @@
+const pw=require('playwright');(async()=>{const b=await pw.chromium.launch();for(const W of [1280,1440,390]){const p=await (await b.newContext({viewport:{width:W,height:900},isMobile:W<500,hasTouch:W<500,deviceScaleFactor:W<500?2:1})).newPage();
+await p.goto('http://localhost:8765/index.html');await p.evaluate(()=>{localStorage.clear();localStorage.setItem('ct.session',JSON.stringify({email:'n@x.com',name:'Nick',via:'email',expires:Date.now()+864e5}))});await p.reload();await p.waitForTimeout(700);
+await p.evaluate(()=>document.querySelector('[data-dev=sample]').click());await p.waitForTimeout(600);await p.evaluate(()=>document.getElementById('ct-expand').click());await p.waitForTimeout(2600);
+console.log(W,await p.evaluate(()=>{const t=document.querySelector('#cb .topbar').getBoundingClientRect(),q=document.querySelector('.cbquiet'),s=document.getElementById('simple').getBoundingClientRect(),qr=q&&!q.hidden?q.getBoundingClientRect():null;return 'topbar bottom '+Math.round(t.bottom)+(qr?' quiet '+Math.round(qr.top)+'-'+Math.round(qr.bottom):'')+' widgets top '+Math.round(s.top)+' gap '+Math.round(s.top-(qr?qr.bottom:t.bottom))+' toptop '+Math.round(t.top)}));
+await p.screenshot({path:'gap-'+W+'.png'})}
+await b.close()})();
