@@ -465,6 +465,7 @@ async function saveStories(list,share){if(saving)return;if(!EMB){say('In the app
     const ff=files.map(f=>new File([f.blob],f.name,{type:'image/png'}));
     if((share||phoneUI())&&navigator.canShare&&navigator.canShare({files:ff})){say(list.length>1?'Your '+list.length+' stories are ready.':'Your story is ready.');try{await navigator.share({files:ff})}catch(e){}}
     else if(files.length===1){download(files[0].blob,files[0].name);say('Saved “'+D.stories[list[0]].name+'”.')}
+    else if(phoneUI()){for(let k=0;k<files.length;k++){download(files[k].blob,files[k].name);await new Promise(r=>setTimeout(r,350))}say('Saved all '+files.length+' stories as images.')}// phones never get a zip: one image each
     else{download(await zipOf(files),'Card Stories - '+D.lab.replace(/[\\/:*?"<>|]/g,'')+'.zip');say('Saved all '+files.length+' stories in one zip.')}}
   catch(e){console.error(e);say('Couldn’t make the image. Try again.')}
   finally{saving=false;$('svall').disabled=false;$('xhost').innerHTML=''}}

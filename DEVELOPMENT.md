@@ -496,3 +496,4 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 - Desktop: "Save all 5" pill left of the time range → one zip ("Card Stories - Last 12 months.zip", files "Card Stories 1 - The money.png" …) made by a tiny built-in zip writer (stored, no compression). The enlarged story's Save image / Share save or share just that one.
 - Phones: Save in the bottom bar opens "Save to Photos" → This story / All 5 stories; uses the phone's share sheet with the image(s) when available ("Save 5 Images"), otherwise downloads. Share this story shares one image. The profile menu's "Save all stories" saves all 5.
 - Progress shows in the toast ("Making image 2 of 5…"). Measured in Chromium: all 5 in about 0.7–2.5 s.
+- v29.1: phones never get a zip. With the share sheet they save the 5 images straight to Photos; without it, the 5 images download one by one. The zip is desktop only.
