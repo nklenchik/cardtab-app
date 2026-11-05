@@ -1,0 +1,6 @@
+const pw=require('playwright');(async()=>{const b=await pw.chromium.launch();const W=+(process.argv[2]||1280);const p=await (await b.newContext({viewport:{width:W,height:W<500?664:900},deviceScaleFactor:2,isMobile:W<500,hasTouch:W<500})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+await p.goto('http://localhost:8765/index.html');await p.evaluate(()=>{localStorage.clear();localStorage.setItem('ct.session',JSON.stringify({email:'n@x.com',name:'Nick',via:'email',expires:Date.now()+864e5}))});await p.reload();await p.waitForTimeout(500);await p.evaluate(()=>CTStore.setPlan('premium'));await p.reload();await p.waitForTimeout(700);
+await p.evaluate(()=>document.querySelector('[data-dev=sample]').click());await p.waitForTimeout(600);await p.evaluate(()=>document.getElementById('ct-expand').click());await p.waitForTimeout(2600);
+await p.evaluate(()=>document.getElementById('cb-stories').click());await p.waitForTimeout(2500);
+const th=process.argv[3];if(th){const f=p.frames().find(f=>f!==p.mainFrame());await f.evaluate(t=>{const b=[...document.querySelectorAll('button')].find(x=>x.textContent.trim()===t);b&&b.click()},th);await p.waitForTimeout(800)}
+await p.screenshot({path:'st-'+W+'.png'});console.log('errors',errs);await b.close()})();
