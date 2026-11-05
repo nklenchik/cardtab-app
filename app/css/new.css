@@ -502,3 +502,19 @@ dialog::backdrop,.bu-sheet::backdrop{background:var(--win-veil)!important;-webki
  #app-first-wrap.ct-demo-right{padding-bottom:0!important;margin-bottom:16px}
  #app-grid:has(#app-first-wrap:not([hidden])) .ct-demo-left{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important}
 }
+/* v34.6 desktop: Entries · Board · Stories as a centered switcher (the desktop twin of the phone's bottom bar):
+   bigger, in the middle of the header, the page you're on lifted as a card. Same look on Board and Stories. */
+@media(min-width:761px){
+ .ct-demo-top{grid-template-columns:auto minmax(0,1fr) auto!important;align-items:center}
+ .ct-demo-top .ct-tabs{justify-self:center;margin:0 16px!important}
+ .ct-tabs,.cb-tabs{gap:4px;padding:5px!important;border-radius:16px!important;background:var(--s-track)!important}
+ .ct-tabs button,.cb-tabs button{height:40px!important;padding:0 18px!important;border-radius:12px!important;gap:9px!important;font-size:14px!important;font-weight:800!important;color:var(--ct-muted,var(--muted))!important;background:none!important;box-shadow:none!important}
+ .ct-tabs button svg,.cb-tabs button svg{width:17px;height:17px}
+ .ct-tabs button:hover,.cb-tabs button:hover{color:var(--ct-text,var(--text))!important}
+ .ct-tabs button[aria-current],.cb-tabs button[aria-current]{background:var(--s-card)!important;color:var(--ct-text,var(--text))!important;box-shadow:0 1px 2px rgba(0,0,0,.08),0 6px 16px -8px rgba(0,0,0,.28)!important}
+ .ct-tabs button[aria-current] svg,.cb-tabs button[aria-current] svg{color:var(--tab-on)}
+ .ct-demo-top .ct-top-actions{min-width:0}
+ .ct-demo-top .ct-search{min-width:150px}
+ .cbx .cb-tabs{margin:0 auto!important}
+}
+

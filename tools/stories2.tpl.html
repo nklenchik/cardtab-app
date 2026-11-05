@@ -117,12 +117,12 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
  .csic button{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;padding:0;border:1px solid var(--line);background:color-mix(in srgb,currentColor 7%,transparent);color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent}
  .csic button:active{transform:scale(.92)}.csic button svg{width:17px;height:17px}}
 .cstabs{display:none}
-@media(min-width:761px){.cstabs{display:flex;gap:4px;padding:4px;margin-left:16px;border-radius:999px;background:var(--hl,rgba(0,0,0,.05));align-self:center}
- .cstabs button{display:flex;align-items:center;gap:7px;height:32px;padding:0 13px;border:0;border-radius:999px;background:none;color:var(--muted);font:inherit;font-size:13px;font-weight:750;white-space:nowrap;cursor:pointer}
+@media(min-width:761px){.cstabs{display:flex;gap:4px;padding:5px;margin-left:16px;border-radius:16px;background:var(--hl,rgba(0,0,0,.05));align-self:center}
+ .cstabs button{display:flex;align-items:center;gap:9px;height:40px;padding:0 18px;border:0;border-radius:12px;background:none;color:var(--muted);font:inherit;font-size:13px;font-weight:750;white-space:nowrap;cursor:pointer}
  .cstabs button:hover{color:var(--text)}
- .cstabs button[aria-current]{background:color-mix(in srgb,var(--brand) 16%,transparent);color:var(--brand)}}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cstabs button[aria-current]{background:rgba(255,128,165,.17);color:#ff8db0}}
-:root[data-theme="dark"] .cstabs button[aria-current]{background:rgba(255,128,165,.17);color:#ff8db0}
+ .cstabs button[aria-current]{background:var(--card);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08),0 6px 16px -8px rgba(0,0,0,.28)}.cstabs button[aria-current] svg{color:var(--brand)}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cstabs button[aria-current] svg{color:#ff8db0}}
+:root[data-theme="dark"] .cstabs button[aria-current] svg{color:#ff8db0}
 /* v33.6: no back arrow: the app's bar (phones) and tabs (desktop) already take you back */
 @media(max-width:760px){.top .back{visibility:hidden!important;pointer-events:none}}
 @media(min-width:761px){.top .tl2:has(.cstabs) .back{display:none!important}}
