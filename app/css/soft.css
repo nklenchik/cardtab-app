@@ -163,3 +163,9 @@ html,body,.ct-demo{background:var(--s-bg)}
 :root[data-theme="dark"] .ct-demo .ct-tabs{background:var(--s-ctl)!important}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ct-demo .ct-tabs button.ct-selected{background:var(--s-raise)!important;box-shadow:var(--s-thumb-sh)!important}}
 :root[data-theme="dark"] .ct-demo .ct-tabs button.ct-selected{background:var(--s-raise)!important;box-shadow:var(--s-thumb-sh)!important}
+/* entries: thin solid lines between rows (was dotted) */
+:root{--s-rowline:#e6e3dc}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--s-rowline:#36332f}}
+:root[data-theme="dark"]{--s-rowline:#36332f}
+.ct-demo .ct-row{border-bottom-style:solid!important;border-bottom-color:var(--s-rowline)!important}
+.ct-demo .ct-row.ct-last{border-bottom-color:var(--s-card)!important}

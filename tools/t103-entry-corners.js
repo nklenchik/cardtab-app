@@ -1,0 +1,11 @@
+const pw=require('playwright');(async()=>{const b=await pw.chromium.launch();const W=+(process.argv[2]||390);const p=await (await b.newContext({viewport:{width:W,height:900},isMobile:W<500,hasTouch:W<500})).newPage();
+await p.goto('http://localhost:8765/index.html');await p.evaluate(()=>{localStorage.clear();localStorage.setItem('ct.session',JSON.stringify({email:'n@x.com',name:'Nick',via:'email',expires:Date.now()+864e5}))});await p.reload();await p.waitForTimeout(700);
+await p.evaluate(()=>document.querySelector('[data-dev=sample]').click());await p.waitForTimeout(800);
+const dump=()=>p.evaluate(()=>[...document.querySelectorAll('.ct-month')].map(m=>{const n=m.nextElementSibling;const c=n?getComputedStyle(n):null;return m.textContent.trim().slice(0,20)+' -> '+(n?n.className+' r='+c.borderRadius:'none')}));
+console.log('initial',JSON.stringify(await dump()));
+await p.evaluate(()=>{const r=document.querySelector('.ct-row-toggle');r.click()});await p.waitForTimeout(600);
+console.log('expanded first',JSON.stringify(await dump()));
+await p.evaluate(()=>{const e=document.querySelector('.ct-earlier-btn');e&&e.click()});await p.waitForTimeout(900);
+console.log('earlier open',JSON.stringify(await dump()));
+console.log(await p.evaluate(()=>{const e=document.querySelector('.ct-earlier-btn');return e?e.outerHTML.slice(0,120):'no earlier btn'}));
+await b.close()})();
