@@ -1,0 +1,10 @@
+const pw=require('playwright');(async()=>{const b=await pw.chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true,colorScheme:'dark'})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+await p.goto('http://localhost:8765/index.html');await p.evaluate(()=>{localStorage.clear();localStorage.setItem('ct.session',JSON.stringify({email:'n@x.com',name:'Nick',via:'email',expires:Date.now()+864e5}))});await p.reload();await p.waitForTimeout(800);
+await p.evaluate(async()=>{document.querySelector('[data-dev=sample]').click();await CTStore.setBudget({cents:15000,alert:false})});await p.waitForTimeout(4200);
+await p.evaluate(()=>window.CTBoardLoader.load());await p.waitForTimeout(300);
+const gaps=p.evaluate(()=>new Promise(r=>{const g=[];let l=performance.now();const f=n=>{g.push(Math.round(n-l));l=n;if(g.length<36)requestAnimationFrame(f);else r(g)};requestAnimationFrame(f)}));
+await p.tap('#ct-tbar [data-tab=board]');await p.waitForTimeout(120);await p.screenshot({path:'grow-mid.png'});const g=await gaps;
+console.log('frames max/avg',Math.max(...g.slice(1)),(g.slice(1).reduce((a,c)=>a+c,0)/35).toFixed(1));
+await p.waitForTimeout(900);await p.screenshot({path:'grow-end.png'});
+await p.evaluate(()=>document.getElementById('close').click());await p.waitForTimeout(150);await p.screenshot({path:'shrink-mid.png'});await p.waitForTimeout(800);
+console.log('back on entries:',await p.evaluate(()=>document.querySelector('.cbx').classList.contains('off')),errs);await b.close()})();

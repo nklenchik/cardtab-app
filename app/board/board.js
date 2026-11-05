@@ -671,10 +671,12 @@ const fromRect=r=>'translate('+r.left+'px,'+r.top+'px) scale('+(r.width/innerWid
 // build the board while you're still on the dashboard, so opening never has to stop and build it
 function prepare(){if(ready||shown)return;render(false);ready=true}
 (window.requestIdleCallback||(f=>setTimeout(f,400)))(prepare,{timeout:1500});
+// the board grows out of whatever opened it (the Board tab, the profile menu), and shrinks back into it; Insights when that's what's on screen
+function fromEl(){const o=(window.CTBoardFrom&&window.CTBoardFrom())||ins;const r=o&&o.getBoundingClientRect();return r&&r.width?r:{left:innerWidth/2-60,top:innerHeight/2-60,width:120,height:120}}
 function open(){
   if(busy||shown)return;navPush('board',()=>close());busy=true;xb.classList.remove('hint');($('note')||{}).hidden=true;
   if(!ready){render(false);ready=true}
-  const r=ins.getBoundingClientRect();shown=true;cbx.scrollTop=0;document.documentElement.style.overflow='hidden';document.documentElement.classList.add('cbopen');xb.setAttribute('aria-expanded','true');
+  const r=fromEl();shown=true;cbx.scrollTop=0;document.documentElement.style.overflow='hidden';document.documentElement.classList.add('cbopen');xb.setAttribute('aria-expanded','true');
   cbx.inert=false;cbx.removeAttribute('aria-hidden');
   if(calm.matches){cbx.classList.remove('off','enter');busy=false;$('close').focus({preventScroll:true});return}
   cbx.classList.add('anim','enter');cbx.classList.remove('off');bgl.classList.add('on');
@@ -690,7 +692,7 @@ function close(){
   const finish=()=>{shown=false;cbx.classList.add('off');cbx.classList.remove('anim');bgl.classList.remove('on');cbx.inert=true;cbx.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';document.documentElement.classList.remove('cbopen');busy=false;
     if(editing){editing=false;$('cb-edit').innerHTML=EDIT_I+'<span>Edit</span>';$('cb-edit').classList.remove('on');$('editfoot').hidden=true;$('cb').classList.remove('editing');render(false)}xb.focus({preventScroll:true})};
   if(calm.matches){finish();return}
-  const r=ins.getBoundingClientRect();cbx.classList.add('anim');bgl.classList.add('on');
+  const r=fromEl();cbx.classList.add('anim');bgl.classList.add('on');
   $('cb').animate([{opacity:1},{opacity:0}],{duration:150,easing:'ease-in',fill:'forwards'}).onfinish=function(){
     this.cancel();$('cb').style.opacity='0';
     bgl.animate([{transform:'none'},{transform:fromRect(r)}],{duration:360,easing:EASE,fill:'forwards'}).onfinish=function(){finish();$('cb').style.opacity='';this.cancel()}};

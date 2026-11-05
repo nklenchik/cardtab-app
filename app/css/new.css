@@ -330,3 +330,58 @@ dialog::backdrop,.bu-sheet::backdrop{background:var(--win-veil)!important;-webki
 @media (prefers-reduced-motion:reduce){.ct-budget .bu-hv .bu-used::before{transition:none}}
 
 .ct-budget.is-over .bu-hv .bu-h:not(.bu-used) .bu-big{color:var(--ct-text)}
+/* ================= v33: the main screen, "Concept 2" =================
+   tiles with one small line each; the budget lives in the Spent tile; Insights, the budget card and the scope line leave the
+   main screen (charts are in Board); Entries · Board · Stories as a bottom bar on phones and tabs beside the logo on desktop */
+.ct-insight,#ct-budget,#app-scope{display:none!important}
+.ct-stats>div{display:flex;flex-direction:column}
+.ct-line{display:block;margin-top:4px;height:22px;line-height:22px;font-size:12px;font-weight:650;color:var(--ct-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;font-style:normal}
+.ct-line[hidden]{display:none}
+.ct-line.is-ok,.ct-line.is-warn,.ct-line.is-over,.ct-line.is-up,.ct-line.is-dn{align-self:flex-start;max-width:100%;height:22px;line-height:22px;padding:0 9px;border-radius:999px;font-weight:800;font-size:11.5px}
+.ct-line.is-ok,.ct-line.is-up{background:var(--bu-okbg);color:var(--bu-ok)}
+.ct-line.is-warn{background:var(--bu-warnbg);color:var(--bu-warn)}
+.ct-line.is-over,.ct-line.is-dn{background:var(--bu-overbg);color:var(--bu-over)}
+.ct-line.is-set{color:var(--s-brand,#b0123d);font-weight:750}
+.ct-positive .ct-line:not([class*="is-"]){color:inherit;opacity:.75}
+/* the Spent tile fills from the bottom with what you've used of the budget */
+.ct-stats>div.ct-budtile{position:relative;overflow:hidden;isolation:isolate;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .18s cubic-bezier(.2,.8,.2,1)}
+.ct-stats>div.ct-budtile::before{content:"";position:absolute;inset:0;z-index:-1;background:color-mix(in srgb,var(--bu-ok) 14%,transparent);transform-origin:bottom;transform:scaleY(var(--fill,0));transition:transform .6s cubic-bezier(.2,.8,.2,1),background-color .3s}
+.ct-stats>div.ct-budtile[data-bud="warn"]::before{background:color-mix(in srgb,var(--bu-warn) 15%,transparent)}
+.ct-stats>div.ct-budtile[data-bud="over"]::before{background:color-mix(in srgb,var(--bu-over) 15%,transparent)}
+.ct-stats>div.ct-budtile:active{transform:scale(.97)}
+.ct-stats>div.ct-budtile:focus-visible{outline:2px solid var(--s-brand,#b0123d);outline-offset:2px}
+@media (hover:hover) and (pointer:fine){.ct-stats>div.ct-budtile:hover{border-color:var(--s-ctl-line,var(--s-hair))}}
+@media (prefers-reduced-motion:reduce){.ct-stats>div.ct-budtile::before{transition:none}}
+
+/* --- phones: bottom bar --- */
+.ct-tabs{display:none}
+.ct-tbar{display:none}
+@media(max-width:760px){
+ .ct-tbar{display:flex;justify-content:space-around;position:fixed;left:0;right:0;bottom:0;z-index:40;padding:7px max(14px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));background:color-mix(in srgb,var(--s-bg,#f8f7f4) 84%,transparent);-webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3);border-top:1px solid var(--win-edge)}
+ #view-app[hidden]~.ct-tbar{display:none}
+ .ct-tbar button{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:76px;padding:0;border:0;background:none;color:var(--ct-muted);font:inherit;font-size:11.5px;font-weight:750;cursor:pointer;-webkit-tap-highlight-color:transparent}
+ .ct-tbar button span{display:grid;place-items:center;width:58px;height:30px;border-radius:999px;transition:background-color .2s,transform .15s}
+ .ct-tbar button:active span{transform:scale(.92)}
+ .ct-tbar button[aria-current]{color:var(--ct-text)}
+ .ct-tbar button[aria-current] span{background:color-mix(in srgb,var(--s-brand,#b0123d) 15%,transparent);color:var(--s-brand,#b0123d)}
+ .ct-demo-right{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+ .app-toasts{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+ .pv-chip{bottom:calc(80px + env(safe-area-inset-bottom,0px))}
+}
+
+/* --- desktop: one centered column, tabs beside the logo, 60px under the top bar (like Card Board) --- */
+@media(min-width:761px){
+ .ct-demo-top,#app-grid.ct-demo-grid{width:min(920px,100%)!important;max-width:none!important;margin-left:auto!important;margin-right:auto!important}
+ .ct-demo-top{grid-template-columns:auto minmax(0,1fr)!important;margin-bottom:60px!important}
+ #app-grid.ct-demo-grid{display:block!important}
+ .ct-demo .ct-demo-left{position:static!important;max-height:none!important;overflow:visible!important;padding-bottom:0!important;min-height:0}
+ .ct-demo .ct-stats{grid-template-columns:repeat(4,minmax(0,1fr))!important;margin-bottom:28px!important}
+ .ct-export{display:none!important}
+ .ct-brand{display:flex!important;align-items:center}
+ .ct-tabs{display:flex;gap:4px;padding:4px;margin-left:18px;border-radius:999px;background:var(--s-track)}
+ .ct-tabs button{display:flex;align-items:center;gap:7px;height:34px;padding:0 14px;border:0;border-radius:999px;background:none;color:var(--ct-muted);font:inherit;font-size:13.5px;font-weight:750;white-space:nowrap;cursor:pointer;transition:background-color .2s,color .2s}
+ .ct-tabs button:hover{color:var(--ct-text)}
+ .ct-tabs button[aria-current]{background:var(--s-card);color:var(--ct-text);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+ .ct-tabs button[aria-current] svg{color:var(--s-brand,#b0123d)}
+}
+
