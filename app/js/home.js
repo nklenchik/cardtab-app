@@ -129,7 +129,7 @@
     im.hidden = true; ex.hidden = true;
     const [title, acts] = PAGE[cur]; t.textContent = title; t.hidden = false;
     acts.forEach(([ic, label, run]) => { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'menuitem'); b.className = 'am-pact'; b.innerHTML = svg(IC[ic]) + '<span>' + label + '</span>';
-      b.addEventListener('click', e => { e.stopPropagation(); if (window.CTMenu) window.CTMenu.close(); setTimeout(run, 160); }); g.appendChild(b); });
+      b.addEventListener('click', e => { e.stopPropagation(); if (window.CTMenu) window.CTMenu.close(); setTimeout(run, matchMedia('(max-width:760px)').matches ? 300 : 160); }); g.appendChild(b); });
   };
   // Card Board's avatar opens this same menu (its own menu is retired)
   document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('.cbx #cb-av'); if (!a) return; const btn = a.closest('button') || a; e.preventDefault(); e.stopImmediatePropagation(); if (window.CTMenu) window.CTMenu.open(btn); }, true);
