@@ -17,14 +17,29 @@
   real.addEventListener('input', () => { if (q.value !== real.value) q.value = real.value; });
   q.addEventListener('keydown', e => { if (e.key === 'Enter') q.blur(); });
   bar.querySelector('.ct-stick-add').addEventListener('click', () => add.click());
+  const realPill = head.querySelector('.ct-search'), barPill = bar.querySelector('.ct-stick-q');
   let lastY = window.scrollY, tick = false, on = false;
-  function set(v) { if (v === on) return; on = v; bar.classList.toggle('on', v); bar.setAttribute('aria-hidden', String(!v)); q.tabIndex = bar.lastChild.tabIndex = v ? 0 : -1; }
+  function set(v, snap) {
+    if (v === on) return; on = v;
+    if (snap) { bar.classList.add('snap'); requestAnimationFrame(() => requestAnimationFrame(() => bar.classList.remove('snap'))); }
+    bar.classList.toggle('on', v); bar.setAttribute('aria-hidden', String(!v)); q.tabIndex = bar.lastChild.tabIndex = v ? 0 : -1;
+    // while the bar is out, the header's own search and + step aside, so there is only ever one of each on screen
+    head.classList.toggle('stick-away', v);
+    if (!v) bar.style.setProperty('--dock', 0);
+  }
   function update() {
     tick = false; const y = window.scrollY;
     const off = !PH.matches || document.documentElement.classList.contains('cbopen') || ($('view-app') && $('view-app').hidden);
-    if (off) { set(false); lastY = y; return; }
-    if (head.getBoundingClientRect().bottom > 0) set(false);           // the real header is still on screen
-    else if (document.activeElement === q) set(true);                 // never slide away while you're typing in it
+    if (off) { set(false, true); lastY = y; return; }
+    const rTop = realPill.getBoundingClientRect().top, bTop = barPill.getBoundingClientRect().top;
+    if (on) {
+      // scrolling back to the top: the bar's background melts away as the header comes down to meet it, and the
+      // moment the header's search lines up with the bar's, they swap in place: the bar becomes the header
+      bar.style.setProperty('--dock', Math.max(0, Math.min(1, 1 - (bTop - rTop) / 70)).toFixed(3));
+      if (rTop >= bTop - 0.5) { set(false, true); lastY = y; return; }
+    }
+    if (rTop + realPill.offsetHeight > 0) { if (!on) { lastY = y; return; } }  // the header's search is still on screen
+    if (document.activeElement === q) set(true);                      // never slide away while you're typing in it
     else if (y > lastY + 6) set(false);                               // reading down: tuck it away
     else if (y < lastY - 6) set(true);                                // a little scroll up: bring it back
     if (Math.abs(y - lastY) > 6) lastY = y;
