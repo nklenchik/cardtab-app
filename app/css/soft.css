@@ -178,3 +178,8 @@ html,body,.ct-demo{background:var(--s-bg)}
 /* desktop: an entry darkens a touch under the pointer, like the demo */
 .ct-demo .ct-row{transition:background-color .15s ease}
 @media (hover:hover) and (pointer:fine){.ct-demo .ct-row:hover{background:var(--s-rowhover)!important}.ct-demo .ct-row.ct-last:hover{border-bottom-color:var(--s-rowhover)!important}}
+/* phones: the search bar runs the full width and the round + sits over its right end */
+@media(max-width:760px){
+  .ct-demo .ct-demo-top .ct-search{grid-column:1 / -1;grid-row:2;padding-right:56px!important}
+  .ct-demo .ct-demo-top .ct-add{grid-column:2;grid-row:2;justify-self:end;position:relative;z-index:2}
+}
