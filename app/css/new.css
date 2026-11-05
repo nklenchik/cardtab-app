@@ -200,3 +200,17 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .bu-save:disabled{opacity:.45;cursor:default}
 .bu-off{display:block;margin:10px auto 0;height:36px;padding:0 14px;border:0;background:none;color:var(--ct-muted);font:inherit;font-weight:750;font-size:13px;cursor:pointer}
 .bu-p:focus{outline:none}
+
+/* budget v2: roomier card, a press you can feel, and a centered window that sits in the visible part of the screen */
+.ct-budget{margin-top:16px;transition:transform .18s cubic-bezier(.2,.8,.2,1)}
+.ct-budget:active:not(.is-unset){transform:scale(.985)}
+.ct-budget .bu-open{gap:14px;padding:18px 18px 16px}
+.ct-budget.is-unset .bu-open{gap:5px;padding:16px 50px 16px 18px}
+@media(max-width:760px){.ct-budget .bu-open{gap:15px;padding:18px 18px 17px}.ct-budget .bu-bar{height:9px}}
+html.bu-lock,html.bu-lock body{overflow:hidden;overscroll-behavior:none}
+.bu-sheet{position:fixed;inset:0 0 auto 0;height:100%;overflow:hidden;overscroll-behavior:contain}
+.bu-sheet[open]{display:grid!important;place-items:center!important;padding:16px}
+.bu-p{width:min(400px,100%)!important;border-radius:26px!important;max-height:calc(100% - 8px);overflow:auto;animation:none!important;padding-bottom:20px!important;will-change:transform,opacity}
+.bu-amt input{caret-color:var(--s-brand,#b0123d)}
+.bu-amt input:focus,.bu-amt input:focus-visible{outline:none!important;box-shadow:none!important}
+.bu-amt input::selection{background:color-mix(in srgb,var(--s-brand,#b0123d) 16%,transparent);color:inherit}

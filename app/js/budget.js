@@ -58,14 +58,36 @@
   }
 
   // ---------- the sheet ----------
-  const dlg = $('bu-sheet'), inp = $('bu-amt');
-  function open() {
+  const dlg = $('bu-sheet'), inp = $('bu-amt'), pnl = dlg.querySelector('.bu-p');
+  const calm = matchMedia('(prefers-reduced-motion: reduce)');
+  let from = null;// the card it opened from, so the window grows out of it and shrinks back into it
+  // keep the window centered in the part of the screen you can see (the keyboard takes the bottom on phones)
+  function fit() { const vv = window.visualViewport; if (!vv) return; dlg.style.height = Math.round(vv.height) + 'px'; dlg.style.top = Math.round(vv.offsetTop) + 'px'; }
+  function grow(dir) {
+    if (calm.matches || !from || !pnl.animate) return null;
+    const a = from.getBoundingClientRect(), b = pnl.getBoundingClientRect();
+    if (!a.width || !b.width) return null;
+    const dx = (a.left + a.width / 2) - (b.left + b.width / 2), dy = (a.top + a.height / 2) - (b.top + b.height / 2), sx = a.width / b.width, sy = Math.min(1, a.height / b.height);
+    const k = [{ transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + sx + ',' + sy + ')', opacity: 0 }, { transform: 'none', opacity: 1, offset: .6 }, { transform: 'none', opacity: 1 }];
+    return pnl.animate(dir > 0 ? k : k.slice().reverse(), dir > 0 ? { duration: 500, easing: 'cubic-bezier(.32,.72,0,1)' } : { duration: 240, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
+  }
+  function open(src) {
+    from = src || null;
     const b = S.budget();
     inp.value = b ? (b.cents % 100 ? (b.cents / 100).toFixed(2) : String(b.cents / 100)) : '';
     $('bu-alert').setAttribute('aria-checked', b ? String(b.alert) : 'true');
     $('bu-off').hidden = !b; paintQuick(); fitAmt();
-    if (window.CTNav) window.CTNav.push('budget', () => dlg.close());
-    dlg.showModal(); const pnl = dlg.querySelector('.bu-p'); pnl.tabIndex = -1; pnl.focus({ preventScroll: true }); if (!matchMedia('(hover:none)').matches) setTimeout(() => inp.focus(), 60);
+    if (window.CTNav) window.CTNav.push('budget', () => shut());
+    document.documentElement.classList.add('bu-lock'); fit(); dlg.showModal();
+    // straight into typing: the amount is focused (and selected) so the keyboard comes up with it
+    try { inp.focus({ preventScroll: true }); inp.select(); } catch (e) {}
+    grow(1);
+  }
+  let closing = false;
+  function shut() {
+    if (!dlg.open || closing) return; closing = true; inp.blur();
+    const an = grow(-1), done = () => { closing = false; dlg.close(); if (an) an.cancel(); };
+    if (an) an.onfinish = done; else done();
   }
   const cents = () => { const v = parseFloat(String(inp.value).replace(/[^0-9.]/g, '')); return isFinite(v) ? Math.round(v * 100) : 0; };
   function paintQuick() { const c = cents(); dlg.querySelectorAll('[data-q]').forEach(q => q.setAttribute('aria-pressed', String(+q.dataset.q * 100 === c))); $('bu-save').disabled = c <= 0; }
@@ -73,20 +95,22 @@
   inp.addEventListener('input', () => { inp.value = inp.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1').replace(/^(\d*\.\d{0,2}).*$/, '$1').slice(0, 9); paintQuick(); fitAmt(); });
   inp.addEventListener('keydown', e => { if (e.key === 'Enter' && cents() > 0) { e.preventDefault(); $('bu-save').click(); } });
   dlg.addEventListener('click', async e => {
-    if (e.target === dlg || e.target.closest('[data-close]')) { dlg.close(); return; }
+    if (e.target === dlg || e.target.closest('[data-close]')) { shut(); return; }
     const q = e.target.closest('[data-q]'); if (q) { inp.value = q.dataset.q; paintQuick(); fitAmt(); return; }
     if (e.target.closest('#bu-alert')) { const s = $('bu-alert'); s.setAttribute('aria-checked', String(s.getAttribute('aria-checked') !== 'true')); return; }
-    if (e.target.closest('#bu-save')) { const c = cents(); if (c <= 0) return; await S.setBudget({ cents: c, alert: $('bu-alert').getAttribute('aria-checked') === 'true' }); dlg.close(); if (window.CTDash) window.CTDash.toast('Monthly budget set to ' + round$(c)); return; }
-    if (e.target.closest('#bu-off')) { await S.setBudget(null); await S.setBudgetFlag('dismissed', true); dlg.close(); if (window.CTDash) window.CTDash.toast('Budget turned off. You can set one again from your profile menu.'); }
+    if (e.target.closest('#bu-save')) { const c = cents(); if (c <= 0) return; await S.setBudget({ cents: c, alert: $('bu-alert').getAttribute('aria-checked') === 'true' }); shut(); if (window.CTDash) window.CTDash.toast('Monthly budget set to ' + round$(c)); return; }
+    if (e.target.closest('#bu-off')) { await S.setBudget(null); await S.setBudgetFlag('dismissed', true); shut(); if (window.CTDash) window.CTDash.toast('Budget turned off. You can set one again from your profile menu.'); }
   });
-  dlg.addEventListener('close', () => { if (window.CTNav) window.CTNav.done('budget'); });
+  dlg.addEventListener('close', () => { document.documentElement.classList.remove('bu-lock'); if (window.CTNav) window.CTNav.done('budget'); });
+  dlg.addEventListener('cancel', e => { e.preventDefault(); shut(); });
+  if (window.visualViewport) { visualViewport.addEventListener('resize', () => { if (dlg.open) fit(); }); visualViewport.addEventListener('scroll', () => { if (dlg.open) fit(); }); }
 
   document.addEventListener('click', e => {
     const c = e.target.closest('#ct-budget'); if (!c) return;
     if (e.target.closest('.bu-x')) { S.setBudgetFlag('dismissed', true).then(paint); return; }
-    if (e.target.closest('.bu-open')) open();
+    if (e.target.closest('.bu-open')) open(c);
   });
-  window.CTBudget = { open, paint };
+  window.CTBudget = { open, paint, shut };
   // the profile menu shows the current budget
   function paintMenu() { const v = $('am-budget-v'); if (v) { const b = S.budget(); v.textContent = b ? round$(b.cents) : 'Set'; } }
   S.on(() => { paint(); paintMenu(); });
