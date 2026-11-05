@@ -280,8 +280,11 @@ function flip(before,skip){markEdges();if(calm.matches)return;const els=[...$('s
 // desktop: the first three rows always fit in the window. Rows grow up to 206px; on short windows the space under the
 // top bar gives way first (60px down to 28px) so widgets stay at least 180px tall, then rows shrink no lower than 168px.
 function fitRows(){const cb=$('cb'),sim=$('simple');if(units()!==4){cb.style.removeProperty('--rowh');cb.style.removeProperty('--topgap');cb.classList.remove('rowtight');return}
-  const tb=cb.querySelector('.topbar'),curGap=parseFloat(getComputedStyle(tb).marginBottom)||0,rg=parseFloat(getComputedStyle(sim).rowGap)||16;
-  const top0=sim.getBoundingClientRect().top-cbx.getBoundingClientRect().top+cbx.scrollTop-curGap,room=cbx.clientHeight-top0-28-2*rg;
+  const tb=cb.querySelector('.topbar'),rg=parseFloat(getComputedStyle(sim).rowGap)||16;
+  if(editing&&cb.style.getPropertyValue('--rowh'))return;// edit mode adds an "Add widget" bar above the widgets; keep the fit you had
+  // measure from the top bar (plus the free plan's quiet line), never from edit-mode extras
+  const q=cb.querySelector('.cbquiet'),qh=q&&!q.hidden?q.offsetHeight+(parseFloat(getComputedStyle(q).marginBottom)||0):0;
+  const top0=tb.getBoundingClientRect().bottom-cbx.getBoundingClientRect().top+cbx.scrollTop+qh,room=cbx.clientHeight-top0-28-2*rg;
   let g=60;while(g>28&&(room-g)/3<180)g-=4;const h=Math.max(168,Math.min(206,Math.floor((room-g)/3)));
   cb.style.setProperty('--topgap',g+'px');cb.style.setProperty('--rowh',h+'px');cb.classList.toggle('rowtight',h<190)}
 function render(animate){
