@@ -1,0 +1,8 @@
+const pw=require('playwright');(async()=>{const b=await pw.chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true})).newPage();
+await p.goto('http://localhost:8765/index.html');await p.evaluate(()=>{localStorage.clear();localStorage.setItem('ct.session',JSON.stringify({email:'n@x.com',name:'Nick',via:'email',expires:Date.now()+864e5}))});await p.reload();await p.waitForTimeout(1500);
+await p.screenshot({path:'new-acct.png'});
+console.log('empty state:',await p.evaluate(()=>{const q=s=>{const e=document.querySelector(s);if(!e||e.hidden||!e.getClientRects().length)return null;const r=e.getBoundingClientRect();return [Math.round(r.top+scrollY),Math.round(r.height)]};return {stats:q('.ct-stats'),left:q('.ct-demo-left'),first:q('#app-first-wrap'),firstCard:q('.app-first'),rightList:q('.ct-demo-right:not(#app-first-wrap)')}}));
+await p.evaluate(async()=>{document.querySelector('[data-dev=sample]').click()});await p.waitForTimeout(3500);
+await p.mouse.wheel(0,900);await p.waitForTimeout(900);await p.mouse.wheel(0,-150);await p.waitForTimeout(1100);
+console.log('slim avatar:',await p.evaluate(()=>{const m=document.querySelector('.ct-stick .ct-me'),cs=getComputedStyle(m),r=m.getBoundingClientRect(),bar=document.querySelector('.ct-stick').getBoundingClientRect();return {r:[Math.round(r.left),Math.round(r.top),Math.round(r.width),Math.round(r.height)],bar:[Math.round(bar.left),Math.round(bar.right)],radius:cs.borderRadius,pos:cs.position,css:m.style.cssText.slice(0,160),cls:m.className}}));
+await p.screenshot({path:'me2.png',clip:{x:0,y:0,width:390,height:90}});await b.close()})();

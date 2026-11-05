@@ -494,3 +494,11 @@ dialog::backdrop,.bu-sheet::backdrop{background:var(--win-veil)!important;-webki
  .ct-stick .ct-me{grid-column:2;grid-row:1;justify-self:end;align-self:center}
 }
 
+/* v34.4: the slim bar's avatar is a perfect circle, lined up with the header's */
+.ct-stick .ct-me,.ct-me{border-radius:50%!important}
+@media(max-width:760px){.ct-stick .ct-me{margin-right:4px}}
+/* a new account: "Add your first card" sits above the tiles, so the room for the bottom bar goes under the tiles instead */
+@media(max-width:760px){
+ #app-first-wrap.ct-demo-right{padding-bottom:0!important;margin-bottom:16px}
+ #app-grid:has(#app-first-wrap:not([hidden])) .ct-demo-left{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important}
+}
