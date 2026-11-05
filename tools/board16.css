@@ -69,3 +69,5 @@ html.cbfree #cr.pre .crcmp{display:none}
 /* dark: the selected option in any switch is the lightest thing in it */
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cbx #cb .am .seg button[aria-checked="true"],:root:not([data-theme="light"]) dialog.sheet .seg button[aria-checked="true"],:root:not([data-theme="light"]) .cbx #cb .cb-menu .mcmp .seg button[aria-checked="true"],:root:not([data-theme="light"]) .mhost .am .seg button[aria-checked="true"]{background:#423e3a!important;box-shadow:0 1px 2px rgba(0,0,0,.35)!important}}
 :root[data-theme="dark"] .cbx #cb .am .seg button[aria-checked="true"],:root[data-theme="dark"] dialog.sheet .seg button[aria-checked="true"],:root[data-theme="dark"] .cbx #cb .cb-menu .mcmp .seg button[aria-checked="true"],:root[data-theme="dark"] .mhost .am .seg button[aria-checked="true"]{background:#423e3a!important;box-shadow:0 1px 2px rgba(0,0,0,.35)!important}
+/* the lifted copy follows the pointer directly; it must not inherit the tiles' transform transition (it slid in from the left edge) */
+.cbx #cb .simple>.w.floating{transition:none!important}
