@@ -169,3 +169,12 @@ html,body,.ct-demo{background:var(--s-bg)}
 :root[data-theme="dark"]{--s-rowline:#36332f}
 .ct-demo .ct-row{border-bottom-style:solid!important;border-bottom-color:var(--s-rowline)!important}
 .ct-demo .ct-row.ct-last{border-bottom-color:var(--s-card)!important}
+/* the Profit tile keeps the demo's soft green (red when profit is negative), on the paper-card look */
+:root{--s-pos-a:#e9f3dd;--s-pos-b:#e2edd3;--s-pos-line:rgba(56,114,14,.14);--s-neg-a:#f9e6ea;--s-neg-b:#f4dde2;--s-neg-line:rgba(165,14,55,.14);--s-rowhover:#f5f3ee}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--s-pos-a:#1e3519;--s-pos-b:#1a2f16;--s-pos-line:rgba(145,200,91,.16);--s-neg-a:#3a1820;--s-neg-b:#33151c;--s-neg-line:rgba(240,138,160,.16);--s-rowhover:#2d2a27}}
+:root[data-theme="dark"]{--s-pos-a:#1e3519;--s-pos-b:#1a2f16;--s-pos-line:rgba(145,200,91,.16);--s-neg-a:#3a1820;--s-neg-b:#33151c;--s-neg-line:rgba(240,138,160,.16);--s-rowhover:#2d2a27}
+.ct-demo .ct-stats>div.ct-positive{background:linear-gradient(180deg,var(--s-pos-a) 55%,var(--s-pos-b))!important;border-color:var(--s-pos-line)!important}
+.ct-demo .ct-stats>div.ct-negative{background:linear-gradient(180deg,var(--s-neg-a) 55%,var(--s-neg-b))!important;border-color:var(--s-neg-line)!important}
+/* desktop: an entry darkens a touch under the pointer, like the demo */
+.ct-demo .ct-row{transition:background-color .15s ease}
+@media (hover:hover) and (pointer:fine){.ct-demo .ct-row:hover{background:var(--s-rowhover)!important}.ct-demo .ct-row.ct-last:hover{border-bottom-color:var(--s-rowhover)!important}}
