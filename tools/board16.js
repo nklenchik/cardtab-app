@@ -109,7 +109,7 @@ window.cbSyncPlan();
  tip.querySelector('.h2').addEventListener('click',()=>{hide();buzz('tap')});
  tip.querySelector('.h1').addEventListener('click',()=>{st.off=1;save();hide();buzz('tap')});
  let shownThisOpen=false;
- const maybe=()=>{if(!phone.matches||st.off||st.used||(st.n||0)>=3||cbx.classList.contains('off')||edit.classList.contains('on'))return;st.n=(st.n||0)+1;save();shownThisOpen=true;setTimeout(()=>{if(!cbx.classList.contains('off')&&!edit.classList.contains('on'))tip.classList.add('on')},calm.matches?0:900)};
+ const maybe=()=>{if(!phone.matches||st.off||st.used||(st.n||0)>=3||cbx.classList.contains('off')||edit.classList.contains('on'))return;if(window.CTTips&&!window.CTTips.can('hold'))return;if(window.CTTips)window.CTTips.mark('hold');st.n=(st.n||0)+1;save();shownThisOpen=true;setTimeout(()=>{if(!cbx.classList.contains('off')&&!edit.classList.contains('on'))tip.classList.add('on')},calm.matches?0:900)};
  new MutationObserver(()=>{const open=!cbx.classList.contains('off');if(open&&!shownThisOpen)maybe();if(!open){shownThisOpen=false;hide()}}).observe(cbx,{attributes:true,attributeFilter:['class']});
  // once you've edited, you know the trick: the tip retires; editing also swaps the top icons for the floating Done
  new MutationObserver(()=>{const on=edit.classList.contains('on');cbx.classList.toggle('cbediting',on&&phone.matches);if(on){hide();if(!st.used){st.used=1;save()}}requestAnimationFrame(place)}).observe(edit,{attributes:true,attributeFilter:['class']});
@@ -128,3 +128,5 @@ window.cbSyncPlan();
   const ring=document.createElement('i');ring.className='cbring';const t=document.createElement('i');t.className='cbtouch';tgt.append(ring,t)};
  new MutationObserver(()=>{if(tip.classList.contains('on'))show();else clear()}).observe(tip,{attributes:true,attributeFilter:['class']});
 })();
+// v34.1: warm Stories up in idle time (Premium), so the first slide into it never waits on loading
+;(()=>{const s=$('cb-stories');if(!s)return;const warm=()=>{if(!cbFree())s.dispatchEvent(new Event('focus'))};(window.requestIdleCallback||(f=>setTimeout(f,2500)))(warm,{timeout:5000})})();

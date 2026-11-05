@@ -568,10 +568,10 @@ function open(){
   // phones: pages slide like a tab app: Board sits right of Entries, so it slides in from the right while Entries drifts left underneath
   if(matchMedia('(max-width:760px)').matches){const inst=window.cbInstant;window.cbInstant=false;cbx.classList.remove('off','enter');
     if(inst){busy=false;return}
-    const ease='cubic-bezier(.32,.72,0,1)',app=document.getElementById('view-app');
-    const a=cbx.animate([{transform:'translate3d(100%,0,0)'},{transform:'none'}],{duration:440,easing:ease});
-    if(app)app.animate([{transform:'none'},{transform:'translate3d(-24%,0,0)'}],{duration:440,easing:ease});
-    a.onfinish=()=>{busy=false;$('close').focus({preventScroll:true})};return}
+    // exactly the Stories slide: same curve, same time, same soft shadow on the leading edge; the page underneath stays still
+    cbx.style.boxShadow='-24px 0 60px rgba(0,0,0,.18)';
+    const a=cbx.animate([{transform:'translate3d(100%,0,0)'},{transform:'none'}],{duration:420,easing:'cubic-bezier(.2,.9,.25,1)'});
+    a.onfinish=()=>{cbx.style.boxShadow='';busy=false;$('close').focus({preventScroll:true})};return}
   cbx.classList.add('anim','enter');cbx.classList.remove('off');bgl.classList.add('on');
   bgl.animate([{transform:fromRect(r)},{transform:'none'}],{duration:460,easing:EASE});
   $('cb').animate([{opacity:0},{opacity:1}],{duration:240,delay:170,easing:'ease-out',fill:'backwards'});
@@ -586,10 +586,9 @@ function close(){
     if(editing){editing=false;$('cb-edit').innerHTML=EDIT_I+'<span>Edit</span>';$('cb-edit').classList.remove('on');$('editfoot').hidden=true;$('cb').classList.remove('editing');render(false)}xb.focus({preventScroll:true})};
   if(calm.matches){finish();return}
   if(matchMedia('(max-width:760px)').matches){const inst=window.cbInstant;window.cbInstant=false;if(inst){finish();return}
-    const ease='cubic-bezier(.32,.72,0,1)',app=document.getElementById('view-app');
-    const a=cbx.animate([{transform:'none'},{transform:'translate3d(100%,0,0)'}],{duration:380,easing:ease,fill:'forwards'});
-    if(app)app.animate([{transform:'translate3d(-24%,0,0)'},{transform:'none'}],{duration:380,easing:ease});
-    a.onfinish=()=>{finish();a.cancel()};return}
+    cbx.style.boxShadow='-24px 0 60px rgba(0,0,0,.18)';
+    const a=cbx.animate([{transform:'none'},{transform:'translate3d(100%,0,0)'}],{duration:280,easing:'cubic-bezier(.4,0,.8,.6)',fill:'forwards'});
+    a.onfinish=()=>{finish();cbx.style.boxShadow='';a.cancel()};return}
   const r=fromEl();cbx.classList.add('anim');bgl.classList.add('on');
   $('cb').animate([{opacity:1},{opacity:0}],{duration:150,easing:'ease-in',fill:'forwards'}).onfinish=function(){
     this.cancel();$('cb').style.opacity='0';
