@@ -97,6 +97,38 @@
   // Card Board grows out of whatever opened it: the tab you tapped, or your avatar when it came from the profile menu
   document.addEventListener('click', e => { if (e.isTrusted && e.target.closest('#app-menu [data-go]')) opener = $('app-avatar'); }, true);
   window.CTBoardFrom = () => (opener && opener.getClientRects().length ? opener : null);
+
+  // ---------- one profile menu on every page, with an "On this page" section ----------
+  const IC = {
+    edit: '<path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/>',
+    share: '<path d="M13.8 5.6v3.1C8.5 9.2 5.3 12.6 4.6 18.4c2-3 5-4.4 9.2-4.5v3.1c0 .5.6.8 1 .4l5.2-5.1c.3-.3.3-.8 0-1.1L14.8 6c-.4-.4-1-.1-1 .4z"/>',
+    ask: '<path d="M12 3.5l2.1 5.6 5.9 2-5.9 2.1L12 19l-2.1-5.8L4 11.1l5.9-2z"/>',
+    save: '<path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14"/>',
+    themes: '<circle cx="12" cy="12" r="8.5"/><circle cx="8.5" cy="10" r="1.3" fill="currentColor"/><circle cx="12.5" cy="7.8" r="1.3" fill="currentColor"/><circle cx="15.8" cy="10.8" r="1.3" fill="currentColor"/><path d="M12 20.5c-1.2 0-2-.8-2-1.8 0-1.6 1.6-1.6 1.6-3.2"/>'
+  };
+  const svg = p => '<svg class="mi" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
+  const storyDoc = () => { const f = document.querySelector('#csx iframe'); try { return f && f.contentDocument; } catch (e) { return null; } };
+  const clickIn = (doc, sel) => { const el = doc && doc.querySelector(sel); if (el) el.click(); };
+  const PAGE = {
+    board: ['On Card Board', [['edit', 'Edit board', () => clickIn(document, '#cb-edit')], ['share', 'Share board', () => clickIn(document, '#cb-share')], ['ask', 'Ask your board', () => clickIn(document, '#cb-ask')]]],
+    stories: ['On Card Stories', [['save', 'Save all stories', () => clickIn(storyDoc(), '#svall')], ['themes', 'Story themes', () => clickIn(storyDoc(), '[data-all]')], ['share', 'Share this story', () => clickIn(storyDoc(), '#csdock [data-d="share"]')]]]
+  };
+  window.CTHomeMenu = function () {
+    const cur = stOpen() ? 'stories' : cbOpen() ? 'board' : 'entries';
+    document.querySelectorAll('#app-menu .amgo [data-go]').forEach(b => { const on = b.dataset.go === cur; b.classList.toggle('here', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+    const g = $('am-page'); if (!g) return; g.querySelectorAll('.am-pact').forEach(x => x.remove());
+    const t = $('am-page-t'), im = $('am-import'), ex = $('am-export');
+    if (cur === 'entries') { t.hidden = true; ex.hidden = false; return; }
+    im.hidden = true; ex.hidden = true;
+    const [title, acts] = PAGE[cur]; t.textContent = title; t.hidden = false;
+    acts.forEach(([ic, label, run]) => { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'menuitem'); b.className = 'am-pact'; b.innerHTML = svg(IC[ic]) + '<span>' + label + '</span>';
+      b.addEventListener('click', e => { e.stopPropagation(); if (window.CTMenu) window.CTMenu.close(); setTimeout(run, 160); }); g.appendChild(b); });
+  };
+  // Card Board's avatar opens this same menu (its own menu is retired)
+  document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('.cbx #cb-av'); if (!a) return; const btn = a.closest('button') || a; e.preventDefault(); e.stopImmediatePropagation(); if (window.CTMenu) window.CTMenu.open(btn); }, true);
+  // admin: show the first-time tips again
+  document.addEventListener('click', e => { if (!e.target.closest('[data-dev="tips"]')) return; try { localStorage.removeItem('cb.hint'); } catch (er) {} if (window.CTDash) window.CTDash.toast('First-time tips will show again'); });
+
   window.CTHome = { paint };
   S.on(() => paint());
 })();

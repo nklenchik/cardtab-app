@@ -416,3 +416,8 @@ dialog::backdrop,.bu-sheet::backdrop{background:var(--win-veil)!important;-webki
 }
 /* while one of Card Board's menus is open on a phone, the bar tucks behind the board so the board's dim covers it too */
 @media(max-width:760px){html:has(#mbd.on) .ct-tbar{z-index:45}}
+/* v33.9: one profile menu on every page: it sits above Card Board and Stories, and has an "On this page" section */
+.app-menu.am{z-index:97!important}.am-bd{z-index:96!important}
+.app-menu.am .am-sub{padding:8px 12px 2px;font-size:11.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ct-muted)}
+.app-menu.am .am-sub[hidden]{display:none}
+

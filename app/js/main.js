@@ -16,7 +16,8 @@
     await S.open({ email: session.email });
     av.textContent = (displayName(session)[0] || '?').toUpperCase();
     whoName = displayName(session); $('am-name').textContent = whoName; $('am-email').textContent = session.email.endsWith('.local') ? 'Signed in on this device' : session.email;
-    $('am-dev').hidden = !Sess.LOCAL_MODE;
+    // Admin tools: you (and local testing) only
+    $('am-dev').hidden = !(Sess.LOCAL_MODE || /^(nklenchik@gmail\.com)$/i.test((session && session.email) || ''));
     Dash.mount();
     if (!S.persistent) Dash.toast('This browser isn’t letting Card Tab save on the device, so entries last until you close the tab.');
     else if (isNew && !S.all().length) Dash.toast('Welcome to Card Tab');
@@ -47,17 +48,21 @@
     const im = $('am-import'); im.hidden = !S.showImport();
     im.querySelector('span').innerHTML = 'Import a spreadsheet' + (u.plan === 'premium' ? '' : ' <span class="af-lock">Premium</span>');
     const ai = $('am-av'); ai.textContent = av.textContent; ai.style.cssText = av.style.cssText;
+    if (window.CTHomeMenu) window.CTHomeMenu();
   }
   function placeMenu() {
-    const r = av.getBoundingClientRect(), w = menu.offsetWidth;
+    let r = anchor && anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : null; if (!r || !r.width) r = av.getBoundingClientRect(); const w = menu.offsetWidth;
     menu.style.top = (r.bottom + 8) + 'px';
     menu.style.left = Math.max(12, Math.min(r.right - w, innerWidth - w - 12)) + 'px';
   }
   const PHONE = matchMedia('(max-width:760px)'), bd = $('am-bd');
-  function openMenu() { renderMenu(); menu.hidden = false; placeMenu(); if (PHONE.matches) { bd.hidden = false; document.documentElement.classList.add('am-lock'); } window.CTNav.push('menu', () => closeMenu(false, true)); av.setAttribute('aria-expanded', 'true'); const f = menu.querySelector('[role="menuitem"]'); if (f) f.focus({ preventScroll: true }); }
+  let anchor = null;
+  function openMenu(src) { anchor = src || null; renderMenu(); menu.hidden = false; placeMenu(); if (PHONE.matches) { bd.hidden = false; document.documentElement.classList.add('am-lock'); } window.CTNav.push('menu', () => closeMenu(false, true)); av.setAttribute('aria-expanded', 'true'); const f = menu.querySelector('[role="menuitem"]'); if (f) f.focus({ preventScroll: true }); }
   document.querySelector('#app-menu .am-x').addEventListener('click', e => { e.stopPropagation(); closeMenu(true); });
   function closeMenu(focus, fromPop) { if (menu.hidden) return; menu.hidden = true; bd.hidden = true; document.documentElement.classList.remove('am-lock'); if (!fromPop) window.CTNav.done('menu'); av.setAttribute('aria-expanded', 'false'); if (focus) av.focus(); }
   av.addEventListener('click', e => { e.stopPropagation(); menu.hidden ? openMenu() : closeMenu(); });
+  // one profile menu everywhere: Card Board's and Stories' avatars open this same menu
+  window.CTMenu = { open: src => { if (menu.hidden) openMenu(src); else closeMenu(); }, close: () => closeMenu(), get open_() { return !menu.hidden; } };
   document.addEventListener('click', e => { if (!menu.hidden && !e.target.closest('#app-menu')) closeMenu(); });
   // Appearance and haptics: the same settings as Card Board and Stories (shared keys, so one choice applies everywhere)
   const touchDev = matchMedia('(hover:none)').matches;

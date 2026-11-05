@@ -529,4 +529,10 @@ $('svs').addEventListener('click',e=>{const b=e.target.closest('[data-sv]');if(!
  const sync=()=>{const on=matchMedia('(max-width:760px)').matches&&ttl.getBoundingClientRect().bottom<8;bar.classList.toggle('on',on);bar.setAttribute('aria-hidden',on?'false':'true')};
  addEventListener('scroll',sync,{passive:true});document.addEventListener('scroll',sync,{passive:true,capture:true});sync();
 })();
+
+// v33.9: one profile menu everywhere: the avatar here opens the app's menu (and tapping anywhere in Stories closes it)
+;(()=>{let P=null;try{P=window.parent&&window.parent.CTMenu?window.parent:null}catch(e){}if(!P)return;const a=document.getElementById('csacct');
+ if(a)a.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();P.CTMenu.open(a)},true);
+ document.addEventListener('pointerdown',e=>{if(e.target.closest('#csacct'))return;try{if(P.CTMenu.open_)P.CTMenu.close()}catch(er){}},true);
+})();
 </script>
