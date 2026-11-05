@@ -487,3 +487,10 @@ dialog::backdrop,.bu-sheet::backdrop{background:var(--win-veil)!important;-webki
  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #app-menu.app-menu.am{background:var(--sheet-bg)!important;border-color:var(--win-edge)!important}}
  :root[data-theme="dark"] #app-menu.app-menu.am{background:var(--sheet-bg)!important;border-color:var(--win-edge)!important}
 }
+/* v34.3: your avatar at the right end of the phone slim bars */
+.ct-me{flex:none;padding:0;border:0;cursor:pointer;display:grid;place-items:center;border-radius:50%;-webkit-tap-highlight-color:transparent}
+@media(max-width:760px){
+ .ct-stick .ct-stick-q{grid-column:1!important;padding-right:16px!important}
+ .ct-stick .ct-me{grid-column:2;grid-row:1;justify-self:end;align-self:center}
+}
+

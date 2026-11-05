@@ -565,3 +565,4 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
   - Edit profile from anywhere: tapping your name at the top of the menu (with an "Edit profile" link under it) opens Card Board's profile editor (name, photo, color) right where you are (window.CTProfileOpen; the board stays closed underneath).
   - One avatar everywhere: 38px with a 15px initial on Entries, Board and Stories, and the app's avatars now follow the saved color/photo and name (window.CTMePaint reads cb.avatar / cb.profile; repaints after a save).
   - Cache tags ?v=34.2, board V=34.2. Test: tools/t139.
+- v34.3: phones: your avatar sits at the right end of every slim bar (Entries: search + avatar; Board: title, Edit, Share, Ask + avatar; Stories: title, Save, Share + avatar), mirroring your saved color/photo and opening the profile sheet, so settings are one tap away at any scroll position. Cache tags ?v=34.3, board V=34.3. Test: tools/t140.

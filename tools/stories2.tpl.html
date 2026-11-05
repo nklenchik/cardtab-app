@@ -136,6 +136,7 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
  .csslim .sic{margin-left:auto;display:flex;gap:8px}
  .csslim .sic button{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;padding:0;border:1px solid var(--line);background:color-mix(in srgb,currentColor 7%,transparent);color:var(--text);cursor:pointer}
  .csslim .sic button svg{width:15px;height:15px}
+ .csslim .sic .me{width:38px;height:38px;border:0;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:15px;background-size:cover!important;background-position:center!important}
 }
 @media (prefers-reduced-motion:reduce){.csslim,.csslim.on{transition:none}}
 /* v31: shared window style: frosted blur behind every sheet, hairline around it */
@@ -525,6 +526,10 @@ $('svs').addEventListener('click',e=>{const b=e.target.closest('[data-sv]');if(!
 ;(()=>{const dock=document.getElementById('csdock'),ttl=document.querySelector('.top .ttl');if(!dock||!ttl)return;
  const bar=document.createElement('div');bar.className='csslim';bar.setAttribute('aria-hidden','true');bar.innerHTML='<b>Card Stories</b><div class="sic"></div>';
  ['save','share'].forEach(k=>{const src=dock.querySelector('[data-d="'+k+'"]');if(!src)return;const b=document.createElement('button');b.type='button';b.tabIndex=-1;b.setAttribute('aria-label',k==='save'?'Save to Photos':'Share this story');const sv=src.querySelector('svg');if(sv)b.appendChild(sv.cloneNode(true));b.addEventListener('click',()=>src.click());bar.querySelector('.sic').appendChild(b)});
+ // your avatar at the right end, mirroring the one in the header; it opens the app's profile sheet
+ const av=document.getElementById('csav'),acct=document.getElementById('csacct');if(av&&acct){const me=document.createElement('button');me.type='button';me.className='me';me.tabIndex=-1;me.setAttribute('aria-label','Account');
+  const cp=()=>{me.style.cssText=av.getAttribute('style')||'';me.textContent=av.textContent;me.style.background=getComputedStyle(av).background;me.style.color=getComputedStyle(av).color};cp();new MutationObserver(cp).observe(av,{attributes:true,childList:true,characterData:true,subtree:true});
+  me.addEventListener('click',e=>{e.preventDefault();acct.click()});bar.querySelector('.sic').appendChild(me)}
  document.body.appendChild(bar);
  const sync=()=>{const on=matchMedia('(max-width:760px)').matches&&ttl.getBoundingClientRect().bottom<8;bar.classList.toggle('on',on);bar.setAttribute('aria-hidden',on?'false':'true')};
  addEventListener('scroll',sync,{passive:true});document.addEventListener('scroll',sync,{passive:true,capture:true});sync();

@@ -158,6 +158,19 @@
       if (dy > 90 || v > .6) { if (window.CTMenu) window.CTMenu.close(); return; }
       if (dy > 0) { const a = m.animate([{ transform: 'translateY(' + dy + 'px)' }, { transform: 'none' }], { duration: 260, easing: 'cubic-bezier(.2,.9,.25,1)' }); m.style.transform = ''; a.onfinish = () => { m.style.animation = ''; }; } }, { passive: true });
   })();
+
+  // ---------- your avatar rides along in each slim bar, so settings are one tap away at any scroll ----------
+  const meBtns = new Set();
+  function mkMe() { const b = document.createElement('button'); b.type = 'button'; b.className = 'app-avatar ct-me'; b.tabIndex = -1; b.setAttribute('aria-label', 'Account'); meBtns.add(b); syncMe(); return b; }
+  function syncMe() { const src = $('app-avatar'); if (!src) return; meBtns.forEach(b => { b.style.cssText = src.style.cssText; b.textContent = src.textContent; }); }
+  const avSrc = $('app-avatar'); if (avSrc) new MutationObserver(syncMe).observe(avSrc, { attributes: true, attributeFilter: ['style'], childList: true, characterData: true, subtree: true });
+  document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.ct-me'); if (!b) return; e.preventDefault(); e.stopImmediatePropagation(); if (window.CTMenu) window.CTMenu.open(b); }, true);
+  // Entries' slim bar and Board's slim bar get one as soon as they exist
+  const fit = setInterval(() => {
+    const st = document.querySelector('.ct-stick'); if (st && !st.querySelector('.ct-me')) st.appendChild(mkMe());
+    const sic = document.querySelector('.cbslim .sic'); if (sic && !sic.querySelector('.ct-me')) sic.appendChild(mkMe());
+    if (st && st.querySelector('.ct-me') && sic && sic.querySelector('.ct-me')) clearInterval(fit);
+  }, 700);
   window.CTHome = { paint };
   S.on(() => paint());
 })();
