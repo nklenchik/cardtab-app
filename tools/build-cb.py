@@ -173,6 +173,9 @@ if APP:
     b13=b13.replace("document.body.appendChild(dock)","CBROOT.appendChild(dock)").replace("document.body.appendChild(slim)","CBROOT.appendChild(slim)")
     b5=b5.replace("if(a==='go-app'){toast('Opens your entries in the app');return}","if(a==='go-app'){close();return}")
     assert "CBROOT.appendChild(mhost)" in b5 and "CBROOT.appendChild(dock)" in b13 and "if(a==='go-app'){close();return}" in b5
+    # the standalone preview's hint note has no place in the app (it showed on the sign-in screen once the board preloaded)
+    markup=markup.replace('<div class="note" id="note">Preview with your real entries · click ⤢ on Insights</div>','')
+    assert 'id="note"' not in markup
     js='/* Card Board for the Card Tab app. Built by tools/build-cb.py app; loaded on demand by js/board-loader.js. */\n(function(){\nif(window.CTBoard)return;\nconst CBROOT=document.createElement("div");CBROOT.className="cbroot";CBROOT.innerHTML='+json.dumps(markup)+';document.body.appendChild(CBROOT);\n'+("document.documentElement.dataset.cbv='"+VAR+"';\n")+hj.split("(function(){",1)[1]+b5+b13+open('board16.js').read()+open('board-app-tail.js').read()+'\n})();\n'
     # the app's own menu already uses these ids; the board's copies get their own names
     idfix=lambda x:re.sub(r'\bam-(name|theme|hapr|hap)\b',r'cb-am-\1',x)

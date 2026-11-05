@@ -1,0 +1,6 @@
+const pw=require('playwright');(async()=>{const b=await pw.chromium.launch();const out=[];for(const cs of ['dark','light']){for(const W of [390,320]){const p=await (await b.newContext({viewport:{width:W,height:700},isMobile:true,hasTouch:true,deviceScaleFactor:2,colorScheme:cs})).newPage();
+await p.goto('http://localhost:8765/index.html');await p.evaluate(()=>localStorage.clear());await p.reload();await p.waitForTimeout(800);
+const r=await p.evaluate(()=>{const s=document.querySelector('.auth-seg').getBoundingClientRect(),pl=document.querySelector('.auth-pill').getBoundingClientRect(),bs=[...document.querySelectorAll('.auth-seg button')].map(x=>{const q=x.getBoundingClientRect();return [Math.round(q.width),x.scrollWidth>x.clientWidth]});return {seg:[s.x,s.y,s.width,s.height],pill:[pl.x-s.x,pl.y-s.y,s.right-pl.right,s.bottom-pl.bottom].map(Math.round),bs}});
+console.log(cs,W,JSON.stringify(r));await p.screenshot({path:'auth-'+cs+W+'.png',clip:{x:0,y:r.seg[1]-20,width:W,height:r.seg[3]+40}});
+await p.evaluate(()=>document.querySelector('.auth-seg [data-m=up]').click());await p.waitForTimeout(400);await p.screenshot({path:'auth-'+cs+W+'b.png',clip:{x:0,y:r.seg[1]-20,width:W,height:r.seg[3]+40}})}}
+await b.close()})();
