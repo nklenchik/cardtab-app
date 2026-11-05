@@ -315,4 +315,18 @@ dialog::backdrop,.bu-sheet::backdrop{background:var(--win-veil)!important;-webki
 .ct-budget.is-over .bu-rn{fill:var(--bu-over)}
 .ct-budget.is-unset .bu-open{min-height:88px;justify-content:center}
 @media (prefers-reduced-motion:reduce){.ct-budget .bu-arc{transition:none}}
+/* v32.1: two halves at tile height: Used (fills from the bottom with green, amber from 80%, red when over) | Days left */
+.ct-budget .bu-open.bu-hv{display:grid;grid-template-columns:1fr 1px 1fr;align-items:stretch;gap:0;height:88px;padding:0;overflow:hidden;position:relative}
+.ct-budget .bu-hv .bu-h{position:relative;z-index:1;padding:14px 15px;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
+.ct-budget .bu-hv .bu-used::before{content:"";position:absolute;inset:0;z-index:-1;background:color-mix(in srgb,var(--bu-ok) 14%,transparent);transform-origin:bottom;transform:scaleY(var(--fill,0));transition:transform .6s cubic-bezier(.2,.8,.2,1),background-color .3s}
+.ct-budget.is-warn .bu-hv .bu-used::before{background:color-mix(in srgb,var(--bu-warn) 15%,transparent)}
+.ct-budget.is-over .bu-hv .bu-used::before{background:color-mix(in srgb,var(--bu-over) 15%,transparent)}
+.ct-budget .bu-hv .bu-dv{background:var(--s-hair)}
+.ct-budget .bu-hv .bu-t{font-size:13.5px;font-weight:800;white-space:nowrap}
+.ct-budget .bu-hv .bu-nb{display:flex;flex-direction:column;min-width:0}
+.ct-budget .bu-hv .bu-big{font-size:24px;font-weight:800;letter-spacing:-.035em;line-height:1.05;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ct-budget .bu-hv small{font-size:12px;font-weight:650;color:var(--ct-muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.ct-budget.is-over .bu-hv .bu-used .bu-big,.ct-budget.is-over .bu-hv .bu-used .bu-t{color:var(--bu-over)}
+@media (prefers-reduced-motion:reduce){.ct-budget .bu-hv .bu-used::before{transition:none}}
 
+.ct-budget.is-over .bu-hv .bu-h:not(.bu-used) .bu-big{color:var(--ct-text)}

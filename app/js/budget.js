@@ -27,14 +27,14 @@
       return;
     }
     const spent = spentThisMonth(), pct = Math.round(spent / b.cents * 100), over = spent > b.cents, warn = !over && pct >= 80;
-    const state = over ? 'over' : warn ? 'warn' : 'ok', days = m.left + (m.left === 1 ? ' day' : ' days') + ' to go';
-    const big = over ? money(spent - b.cents) + '<em>over ' + round$(b.cents) + '</em>' : money(b.cents - spent) + '<em>left of ' + round$(b.cents) + '</em>';
-    // the ring fills with what you've used; the middle says so ("43% used"), and "Over" once you pass it
-    const fill = Math.min(100, spent / b.cents * 100), mid = over ? '<text x="29" y="33" text-anchor="middle" class="bu-rn">Over</text>' : '<text x="29" y="30" text-anchor="middle" class="bu-rn">' + pct + '%</text><text x="29" y="40.5" text-anchor="middle" class="bu-ru2">used</text>';
+    const state = over ? 'over' : warn ? 'warn' : 'ok', total = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+    // two halves, like two tiles: Used (which fills up from the bottom as you spend) and Days left
+    const fill = Math.min(1, spent / b.cents);
+    const used = over ? '<span class="bu-big">' + money(spent - b.cents) + '</span><small>over ' + round$(b.cents) + ' · ' + pct + '%</small>' : '<span class="bu-big">' + money(spent) + '</span><small>of ' + round$(b.cents) + ' · ' + pct + '%</small>';
     el.hidden = false; el.className = 'ct-budget is-' + state;
-    el.innerHTML = '<button type="button" class="bu-open bu-rg" aria-label="' + m.name + ' budget: ' + money(spent) + ' of ' + round$(b.cents) + ' spent, ' + pct + '% used, ' + days + '. Edit budget">' +
-      '<span class="bu-tx"><span class="bu-t">' + m.name + ' budget<span class="bu-d"> · ' + days + '</span></span><span class="bu-big">' + big + '</span></span>' +
-      '<svg class="bu-ring" viewBox="0 0 58 58" aria-hidden="true"><circle cx="29" cy="29" r="24" pathLength="100" class="bu-trk"/><circle cx="29" cy="29" r="24" pathLength="100" class="bu-arc" style="stroke-dashoffset:' + (100 - fill).toFixed(2) + '"/>' + mid + '</svg></button>';
+    el.innerHTML = '<button type="button" class="bu-open bu-hv" style="--fill:' + fill.toFixed(4) + '" aria-label="' + m.name + ' budget: ' + money(spent) + ' of ' + round$(b.cents) + ' used, ' + pct + '%. ' + m.left + ' of ' + total + ' days left. Edit budget">' +
+      '<span class="bu-h bu-used"><span class="bu-t">' + (over ? 'Over budget' : 'Used') + '</span><span class="bu-nb">' + used + '</span></span><span class="bu-dv" aria-hidden="true"></span>' +
+      '<span class="bu-h"><span class="bu-t">Days left</span><span class="bu-nb"><span class="bu-big">' + m.left + '</span><small>of ' + total + ' in ' + m.name + '</small></span></span></button>';
     nudge(b, spent, pct, over, m);
   }
 
