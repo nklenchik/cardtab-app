@@ -169,3 +169,16 @@ dialog.sheet.pms:focus{outline:none}
  .cbslim .sic button:active{transform:scale(.93)}
  .cbslim.sedit .sic{display:none}
 }
+/* v33.8: one Done while editing (the floating one); the slim bar just says "Editing" */
+@media(max-width:760px){.cbslim .sdone{display:none!important}.cbdone{color:#fff!important}.cbdone svg{stroke:#fff}}
+/* the tip points at a widget and shows the gesture: a soft ring pulses around it, and a "finger" presses and holds in its middle */
+.cbring,.cbtouch{position:absolute;pointer-events:none;z-index:5}
+.cbring{inset:-5px;border-radius:25px;border:2px solid var(--tab-on,#b0123d);opacity:0;animation:cbRing 2.4s cubic-bezier(.2,.7,.2,1) infinite}
+@keyframes cbRing{0%{opacity:0;transform:scale(.985)}18%{opacity:.85;transform:scale(1)}70%{opacity:.85;transform:scale(1)}100%{opacity:0;transform:scale(1.025)}}
+.cbtouch{left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:color-mix(in srgb,var(--text) 22%,transparent);border:2px solid color-mix(in srgb,#fff 85%,transparent);box-shadow:0 4px 14px rgba(0,0,0,.25);opacity:0;animation:cbPress 2.4s cubic-bezier(.3,.7,.3,1) infinite}
+.cbtouch::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--tab-on,#b0123d);opacity:0;animation:cbHold 2.4s ease-out infinite}
+@keyframes cbPress{0%{opacity:0;transform:scale(1.25)}14%{opacity:1;transform:scale(1)}24%{transform:scale(.84)}70%{opacity:1;transform:scale(.84)}84%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1)}}
+@keyframes cbHold{0%,24%{opacity:0;transform:scale(1)}30%{opacity:.9}70%{opacity:0;transform:scale(2.1)}100%{opacity:0;transform:scale(2.1)}}
+@media (prefers-reduced-motion:reduce){.cbring{animation:none;opacity:.85}.cbtouch{animation:none;opacity:1;transform:scale(.84)}.cbtouch::after{animation:none}}
+.cbring,.cbtouch{z-index:30}
+.cbtouch{width:54px;height:54px;margin:-27px 0 0 -27px;background:rgba(255,255,255,.38);border:2.5px solid #fff;box-shadow:0 6px 18px rgba(0,0,0,.35),inset 0 0 0 1px rgba(0,0,0,.08);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}

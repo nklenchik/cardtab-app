@@ -121,3 +121,10 @@ window.cbSyncPlan();
  const done=slim.querySelector('.sdone');slim.insertBefore(sic,done||null);
  new MutationObserver(()=>{if(title)title.textContent=slim.classList.contains('sedit')?'Editing':'Card Board'}).observe(slim,{attributes:true,attributeFilter:['class']});
 })();
+// v33.8: while the press-and-hold tip is up, the first widget gets the pulse and the gesture
+;(()=>{const tip=document.querySelector('.cbhint');if(!tip)return;let tgt=null;
+ const clear=()=>{document.querySelectorAll('.cbring,.cbtouch').forEach(x=>x.remove());tgt=null};
+ const show=()=>{clear();tgt=[...document.querySelectorAll('#simple > .w')].find(w=>{const r=w.getBoundingClientRect();return r.height>60&&r.top>40&&r.bottom<innerHeight-160})||document.querySelector('#simple > .w');if(!tgt)return;
+  const ring=document.createElement('i');ring.className='cbring';const t=document.createElement('i');t.className='cbtouch';tgt.append(ring,t)};
+ new MutationObserver(()=>{if(tip.classList.contains('on'))show();else clear()}).observe(tip,{attributes:true,attributeFilter:['class']});
+})();
