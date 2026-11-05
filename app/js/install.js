@@ -54,7 +54,7 @@
 
   // ---------- the window with the steps ----------
   const dlg = document.createElement('dialog'); dlg.className = 'hs-sheet'; dlg.id = 'hs-sheet'; dlg.setAttribute('aria-labelledby', 'hs-h');
-  dlg.innerHTML = '<div class="hs-p"><div class="hs-hd"><span class="hs-ic" aria-hidden="true"><img src="icon-192.png" alt="" width="44" height="44"></span><div><h2 id="hs-h">Add to Home Screen</h2><p id="hs-who"></p></div><button type="button" class="hs-x" data-close aria-label="Close">✕</button></div>' +
+  dlg.innerHTML = '<div class="hs-p"><div class="hs-hd"><span class="hs-ic" aria-hidden="true"><img src="icon-192.png" alt="" width="44" height="44"></span><div><h2 id="hs-h">Add to Home Screen</h2><p id="hs-who"></p></div><button type="button" class="hs-x" data-close aria-label="Close"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
     '<p class="hs-why">Card Tab opens full screen with its own icon, like an app, with no browser bars in the way.</p>' +
     '<button type="button" class="hs-install" id="hs-install" hidden>Install Card Tab</button><ol class="hs-steps" id="hs-steps"></ol><button type="button" class="hs-ok" data-close>Got it</button></div>';
   document.body.appendChild(dlg);

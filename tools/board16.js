@@ -139,3 +139,17 @@ window.cbSyncPlan();
   openAvatar()};
  const a=$('cb-av');if(a)new MutationObserver(()=>{if(window.CTMePaint)window.CTMePaint()}).observe(a,{attributes:true,attributeFilter:['style'],childList:true,characterData:true,subtree:true});
 })();
+// v35.8 phones: one header row (Card Board · Edit · Share · Ask · your avatar) that stays at the top while the board scrolls
+// under it, gaining a frosted background as widgets pass beneath. It replaces the stacked title and the slide-in bar.
+;(()=>{const edit=$('cb-edit'),share=$('cb-share'),ask=$('cb-ask'),av=$('cb-av'),frame=cbx.querySelector('#cb .frame');if(!edit||!share||!ask||!av||!frame)return;
+ const ic=(src,label,cls)=>{const b=document.createElement('button');b.type='button';if(cls)b.className=cls;b.setAttribute('aria-label',label);const s=src.querySelector('svg');if(s)b.appendChild(s.cloneNode(true));b.addEventListener('click',e=>{e.preventDefault();src.click()});return b};
+ const h=document.createElement('div');h.className='cbhead';h.innerHTML='<b class="cbh-t">Card Board</b><div class="cbh-i"></div>';
+ const box=h.querySelector('.cbh-i');box.append(ic(edit,'Edit board','cbh-edit'),ic(share,'Share'),ic(ask,'Ask your board'));
+ const me=document.createElement('button');me.type='button';me.className='cbh-me';me.setAttribute('aria-label','Account');
+ me.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(window.CTMenu)window.CTMenu.open(me);else $('cb-acct').click()});box.append(me);
+ const paint=()=>{me.style.background=av.style.background||'';me.style.color=av.style.color||'';me.textContent=av.textContent};paint();
+ new MutationObserver(paint).observe(av,{attributes:true,childList:true,characterData:true,subtree:true});
+ frame.prepend(h);
+ const t=h.querySelector('.cbh-t');new MutationObserver(()=>{t.textContent=edit.classList.contains('on')?'Editing':'Card Board'}).observe(edit,{attributes:true,attributeFilter:['class']});
+ let tk=false;const sc=()=>{tk=false;h.style.setProperty('--s',Math.min(1,cbx.scrollTop/18).toFixed(3))};cbx.addEventListener('scroll',()=>{if(!tk){tk=true;requestAnimationFrame(sc)}},{passive:true});sc();
+})();

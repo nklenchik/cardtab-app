@@ -123,6 +123,37 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
  .cstabs button[aria-current]{background:var(--card);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08),0 6px 16px -8px rgba(0,0,0,.28)}.cstabs button[aria-current] svg{color:var(--brand)}}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cstabs button[aria-current] svg{color:#ff8db0}}
 :root[data-theme="dark"] .cstabs button[aria-current] svg{color:#ff8db0}
+/* v35.4: the same page color as Entries and Board, so nothing shifts tint when you switch */
+:root{--bg:#f8f7f4}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121110}}:root[data-theme="dark"]{--bg:#121110}
+.top .ttl .tname{display:inline-block}
+/* v35.8 phones: the single header row that stays at the top */
+.cshead{display:none}
+@media(max-width:760px){
+ .cshead{display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:40;margin:-28px calc(-1*max(16px,env(safe-area-inset-right,0px))) 8px calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px))}
+ .cshead::before{content:"";position:absolute;inset:0;z-index:-1;opacity:var(--s,0);background:color-mix(in srgb,var(--bg) 86%,transparent);-webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line)}
+ .csh-t{flex:1;min-width:0;font-size:24px;font-weight:800;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+ .csh-i{display:flex;align-items:center;gap:8px;flex:none}
+ .csh-i button{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;padding:0;border:1px solid var(--line);background:color-mix(in srgb,currentColor 7%,transparent);color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent}
+ .csh-i button:active{transform:scale(.92)}.csh-i button svg{width:17px;height:17px}
+ .csh-i .csh-me{border:0;font:inherit;font-size:15px;font-weight:800}
+ .top .tl2,.csic,.csslim,#csacct{display:none!important}
+ .top{margin-bottom:14px!important}
+}
+html.pg-clear,html.pg-clear body{background:transparent!important}
+html.pg-moving *,html.pg-moving *::before{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+/* v36: the app shell is the header now; Stories keeps its range pill as the first row */
+.top .tl2,#svall,#csacct,.cshead,.csslim,.csic{display:none!important}
+@media(min-width:761px){.wrap{padding-top:114px!important}.top{margin:0 auto 26px!important;justify-content:flex-start!important}}
+@media(max-width:760px){.wrap{padding-top:calc(70px + env(safe-area-inset-top,0px))!important;padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))!important}.top{margin:0 0 14px!important}}
+/* v35.2 desktop: the same header as Entries and Board (1120px column, logo + name in a 172px slot, tabs right after, 60px to the content) */
+@media(min-width:761px){.wrap{padding-top:22px}
+ .top{width:min(1120px,calc(100vw - 64px));margin:0 auto 60px!important}
+ .top .tl2{gap:0}
+ .top .ttl{width:172px;flex:none;display:flex;align-items:center;gap:8px;font-size:19px!important;letter-spacing:normal}
+ .top .ttl::before{content:"";width:30px;height:30px;flex:none;background:url(__LOGO__) center/contain no-repeat}
+ .cstabs{margin-left:0!important}
+ .cstabs button{font-size:14px!important;font-weight:800!important}.cstabs button svg{width:17px;height:17px}
+ html.navhold .cstabs{visibility:hidden}}
 /* v33.6: no back arrow: the app's bar (phones) and tabs (desktop) already take you back */
 @media(max-width:760px){.top .back{visibility:hidden!important;pointer-events:none}}
 @media(min-width:761px){.top .tl2:has(.cstabs) .back{display:none!important}}
@@ -238,6 +269,9 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
 .svrow.all{background:var(--text);color:var(--bg);border-color:transparent}.svrow.all small{color:inherit;opacity:.65}
 #xhost{position:fixed;left:-20000px;top:0;width:360px;pointer-events:none}
 #xhost .sl{width:360px!important;max-width:none!important;border-radius:0!important;box-shadow:none!important;transform:none!important;transition:none!important;cursor:default}
+/* v37: wide screens — the app's header row shows the range and themes, so the page's own copies step aside */
+@media(min-width:1100px){html.row2 .wrap{padding-top:160px!important;max-width:none;width:min(1360px,calc(100% - 64px));padding-left:0;padding-right:0}html.row2 .top,html.row2 .controls{display:none!important}
+ html.row2 .track{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:20px}html.row2 .cell{min-width:0}html.row2 .cell .sl{width:100%!important;max-width:none!important}}
 </style>
 
 <div class="wrap">
@@ -371,7 +405,7 @@ const TH=[
  ['Matcha',[P('#c8d8a8','#22301a','#4f6b2b'),P('#eef3e2','#22301a','#4f6b2b'),P('#4f6b2b','#f3f8e8','#e5efc9'),P('#22301a','#e5efc9','#a9c47a'),P('#a9c47a','#22301a','#22301a')]],
  ['Retro',[P('#f2e3c6','#2b2118','#e4572e'),P('#2b2118','#f2e3c6','#f3a712'),P('#e4572e','#fff4e6','#f2e3c6'),P('#29335c','#f2e3c6','#f3a712'),P('#f3a712','#2b2118','#29335c')]]];
 const PHT=matchMedia('(max-width:600px)');PHT.addEventListener&&PHT.addEventListener('change',()=>paintChips());
-let NAME='';const EMB=(()=>{try{return window.parent!==window&&typeof parent.cbStoriesBack==='function'}catch(e){return false}})(),foot=()=>NAME?NAME+' · Card Tab':'Card Tab';
+let NAME='';const EMB=(()=>{try{return window.parent!==window&&typeof parent.cbStoriesBack==='function'}catch(e){return false}})(),foot=()=>NAME?NAME+' · Card Tab':'Card Tab';if(EMB)document.documentElement.classList.add('row2');
 let th=0,mi=[0,0,0,0,0];
 const hexRGB=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),cdist=(a,b)=>{const x=hexRGB(a),z=hexRGB(b);return Math.hypot(x[0]-z[0],x[1]-z[1],x[2]-z[2])};
 const SWC=new Map();function swCols(t){if(SWC.has(t[0]))return SWC.get(t[0]);const all=[];t[1].forEach(p=>(p.bg.match(/#[0-9a-fA-F]{6}/g)||[]).forEach(c=>all.push(c)));
@@ -383,7 +417,7 @@ function paintChips(){const el=$('thm');const draw=F=>{const show=[...Array(F).k
   let F=FEW;draw(F);if(PHT.matches){while(F>2&&el.scrollWidth>el.clientWidth+1){F--;draw(F)}}}
 addEventListener('resize',()=>{clearTimeout(paintChips.t);paintChips.t=setTimeout(paintChips,120)});
 function paintGrid(){$('tgrid').innerHTML=TH.map((t,i)=>'<button class="topt" aria-pressed="'+(i===th)+'" data-i="'+i+'"><span class="tsw big">'+sw(t)+'</span><span>'+t[0]+'</span></button>').join('')}
-function setTheme(i){th=i;paintChips();document.querySelectorAll('#track .sl').forEach(el=>paintStory(el,+el.dataset.n));try{localStorage.setItem('cs.theme',th)}catch(err){}}
+function setTheme(i){th=i;paintChips();tellParent();document.querySelectorAll('#track .sl').forEach(el=>paintStory(el,+el.dataset.n));try{localStorage.setItem('cs.theme',th)}catch(err){}}
 paintChips();
 $('tgrid').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(!b)return;setTheme(+b.dataset.i);paintGrid();$('ths-s').textContent=TH[th][0]+' is on. Pick another or '+(matchMedia('(hover:none)').matches?'tap':'click')+' Done.';$('ths-s').classList.add('msg')});
 
@@ -396,7 +430,7 @@ function render(){D=model();$('track').innerHTML=D.stories.map((st,n)=>'<div cla
 render();
 $('thm').addEventListener('click',e=>{if(e.target.closest('[data-all]')){openSheet('ths');return}const b=e.target.closest('[data-i]');if(!b)return;setTheme(+b.dataset.i)});
 let allMonths=months('all');const mLab=m=>mName(m,{month:'short',year:'numeric'}),customLab=()=>cust[0]===cust[1]?mLab(cust[0]):mLab(cust[0])+' – '+mLab(cust[1]);
-function setPer(p){per=p;$('perl').textContent=p==='custom'?customLab():PER.find(x=>x[0]===p)[1];render();document.querySelectorAll('#track .sl').forEach(el=>{el.classList.add('swap');setTimeout(()=>el.classList.remove('swap'),450)})}
+function setPer(p){per=p;$('perl').textContent=p==='custom'?customLab():PER.find(x=>x[0]===p)[1];render();tellParent();document.querySelectorAll('#track .sl').forEach(el=>{el.classList.add('swap');setTimeout(()=>el.classList.remove('swap'),450)})}
 function openMenu(){const m=$('perm');m.innerHTML=PER.map(p=>'<button role="menuitemradio" aria-checked="'+(p[0]===per)+'" data-p="'+p[0]+'">'+p[1]+'</button>').join('')+'<hr><button role="menuitemradio" aria-checked="'+(per==='custom')+'" data-p="custom">Custom dates…</button>';m.hidden=false;$('perb').setAttribute('aria-expanded','true');m.style.left='';m.style.right='';const r=m.getBoundingClientRect();if(r.left<8){m.style.left='0';m.style.right='auto'}else if(r.right>innerWidth-8){m.style.right='0';m.style.left='auto'}}
 function closeMenu(){$('perm').hidden=true;$('perb').setAttribute('aria-expanded','false')}
 $('perb').addEventListener('click',e=>{e.stopPropagation();if(PHS.matches){closeMenu();openSheet('crs',true);return}$('perm').hidden?openMenu():closeMenu()});
@@ -446,14 +480,21 @@ document.querySelector('.top .back').addEventListener('click',()=>{if(EMB)goBack
 if(EMB){$('csacct').hidden=false;$('csacct').addEventListener('click',e=>{e.stopPropagation();closeMenu();try{parent.cbMenu($('csacct').getBoundingClientRect())}catch(err){}});
   document.addEventListener('pointerdown',e=>{if(e.target.closest('#csacct'))return;try{parent.cbMenuClose()}catch(err){}},true)}
 function syncAv(){try{const a=parent.document.getElementById('cb-av'),m=$('csav');m.textContent=a.textContent;m.style.backgroundImage=a.style.backgroundImage;m.style.backgroundColor=a.style.backgroundColor}catch(e){}}
+// v37: on wide screens the app's toolbar shows Stories' range and themes; it reads and sets them through here
+function tellParent(){try{parent.csChanged&&parent.csChanged()}catch(e){}}
+function stepPer(dir){const M=months(per).filter(m=>allMonths.includes(m));if(per==='all'||!M.length)return null;const n=M.length,sh=(k,d)=>{const x=new Date(k+'-15T12:00:00');x.setMonth(x.getMonth()+d);return x.toISOString().slice(0,7)};
+  const a=sh(M[0],dir*n),b=sh(M[n-1],dir*n),now=TODAY.slice(0,7);if(dir>0&&M[n-1]>=now)return null;if(dir<0&&M[0]<=allMonths[0])return null;return [a<allMonths[0]?allMonths[0]:a,b>now?now:b]}
+window.csRange={label:()=>$('perl').textContent,per:()=>per,list:()=>PER.concat([['custom','Custom dates…']]),
+  set:k=>{if(k==='custom')openSheet('crs',false);else setPer(k)},can:d=>!!stepPer(d),step:d=>{const r=stepPer(d);if(!r)return;cust=r;setPer('custom')}};
+window.csThemes={list:()=>TH.map((t,i)=>({i,name:t[0],sw:swCols(t)})),cur:()=>th,set:i=>setTheme(i),all:()=>openSheet('ths')};
 window.csMenu=function(a){if(a==='st-colors')openSheet('ths');else if(a==='st-save')saveStories(D.stories.map((_,i)=>i))};
 window.csSync=function(){
   syncAv();if(loadReal())allMonths=months('all');
   try{NAME=EMB&&parent.cbName?parent.cbName():((JSON.parse(localStorage.getItem('cb.profile')||'null')||{}).first||'').trim()}catch(e){}
   try{const t=localStorage.getItem('cb.theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;else delete document.documentElement.dataset.theme}catch(e){}
-  let np='l12',nc=null;
-  try{const v=JSON.parse(localStorage.getItem('cb.view')||'null');if(v){if(['l12','ytd','ly','all'].includes(v.period))np=v.period;else if(v.period==='custom'&&v.custom&&v.custom.from){const a=v.custom.from.slice(0,7),b=v.custom.to.slice(0,7);if(allMonths.includes(a)||allMonths.includes(b)){np='custom';nc=[a<allMonths[0]?allMonths[0]:a,b]}}}}catch(e){}
-  if(nc)cust=nc;per=np;$('perl').textContent=per==='custom'?customLab():PER.find(x=>x[0]===per)[1];render()};
+  // v37: Stories keeps its own range (it sums up longer stretches than a month), so the board's date no longer sets it
+  let np=per,nc=null;
+  if(nc)cust=nc;per=np;$('perl').textContent=per==='custom'?customLab():PER.find(x=>x[0]===per)[1];render();tellParent()};
 csSync();
 window.csEnter=function(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
   const parts=[document.querySelector('.top'),document.querySelector('.controls')].filter(Boolean);parts.forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:420,delay:80+i*50,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));
@@ -520,6 +561,11 @@ $('svs').addEventListener('click',e=>{const b=e.target.closest('[data-sv]');if(!
  const tl=document.querySelector('.top .tl2');let P=null;try{P=window.parent&&window.parent.CTTabGo?window.parent:null}catch(e){}
  if(tl&&P){let src=null;try{src=P.document.querySelector('.ct-tabs')}catch(e){}if(src){const t=document.createElement('nav');t.className='cstabs';t.setAttribute('aria-label','Sections');t.innerHTML=src.innerHTML;t.querySelectorAll('[aria-current]').forEach(x=>x.removeAttribute('aria-current'));const st=t.querySelector('[data-tab="stories"]');if(st)st.setAttribute('aria-current','page');
   t.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)P.CTTabGo(b.dataset.tab)});tl.appendChild(t)}}
+ {const h=document.querySelector('.top .ttl');if(h&&!h.querySelector('.tname')){const n=[...h.childNodes].find(x=>x.nodeType===3&&x.textContent.trim());if(n){const sp=document.createElement('span');sp.className='tname';sp.textContent=n.textContent.trim();h.replaceChild(sp,n)}}}
+ // first open: if the app is mid-slide with its tabs held still, keep these out of sight until it lands
+ try{if(P&&P.document.documentElement.classList.contains('navhold')){const h=document.documentElement;h.classList.add('navhold');const w=setInterval(()=>{if(!P.document.documentElement.classList.contains('navhold')){h.classList.remove('navhold');clearInterval(w)}},50)}}catch(e){}
+ // desktop: arrow keys and 1/2/3 switch tabs from inside Stories too (the app decides; typing and dialogs are left alone)
+ if(P&&P.CTTabKey)document.addEventListener('keydown',e=>{const a=document.activeElement;if(a&&(/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)||a.isContentEditable)||document.querySelector('dialog[open]'))return;P.CTTabKey(e)});
 })();
 
 // v33.7 phones: the slim bar
@@ -533,6 +579,18 @@ $('svs').addEventListener('click',e=>{const b=e.target.closest('[data-sv]');if(!
  document.body.appendChild(bar);
  const sync=()=>{const on=matchMedia('(max-width:760px)').matches&&ttl.getBoundingClientRect().bottom<8;bar.classList.toggle('on',on);bar.setAttribute('aria-hidden',on?'false':'true')};
  addEventListener('scroll',sync,{passive:true});document.addEventListener('scroll',sync,{passive:true,capture:true});sync();
+})();
+
+// v35.8 phones: one header row (Card Stories · Save · Share · your avatar) that stays at the top while the stories scroll
+// under it, with a frosted background fading in as content passes beneath. Replaces the stacked title and the slide-in bar.
+;(()=>{const dock=document.getElementById('csdock'),wrap=document.querySelector('.wrap'),av=document.getElementById('csav'),acct=document.getElementById('csacct');if(!dock||!wrap||!av||!acct)return;
+ const h=document.createElement('div');h.className='cshead';h.innerHTML='<b class="csh-t">Card Stories</b><div class="csh-i"></div>';const box=h.querySelector('.csh-i');
+ ['save','share'].forEach(k=>{const src=dock.querySelector('[data-d="'+k+'"]');if(!src)return;const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',k==='save'?'Save to Photos':'Share this story');const sv=src.querySelector('svg');if(sv)b.appendChild(sv.cloneNode(true));b.addEventListener('click',e=>{e.preventDefault();src.click()});box.appendChild(b)});
+ const me=document.createElement('button');me.type='button';me.className='csh-me';me.setAttribute('aria-label','Account');
+ const cp=()=>{me.textContent=av.textContent;const c=getComputedStyle(av);me.style.background=c.background;me.style.color=c.color};cp();new MutationObserver(cp).observe(av,{attributes:true,childList:true,characterData:true,subtree:true});
+ me.addEventListener('click',e=>{e.preventDefault();acct.click()});box.appendChild(me);
+ wrap.prepend(h);
+ let tk=false;const sc=()=>{tk=false;h.style.setProperty('--s',Math.min(1,scrollY/18).toFixed(3))};addEventListener('scroll',()=>{if(!tk){tk=true;requestAnimationFrame(sc)}},{passive:true});sc();
 })();
 
 // v33.9: one profile menu everywhere: the avatar here opens the app's menu (and tapping anywhere in Stories closes it)

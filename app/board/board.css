@@ -1870,6 +1870,91 @@ dialog.sheet.pms:focus{outline:none}
 .cbx.pmonly dialog[open],.cbx.pmonly dialog[open] *{pointer-events:auto!important;visibility:visible!important}
 /* v34.2: one avatar size everywhere (38px, 15px initial) */
 .cbx #cb-av{width:38px!important;height:38px!important;font-size:15px!important;font-weight:800!important}
+/* v35: Stories is the page to the right of the board (phones and desktop): moved by the page slide in script, no transitions here */
+.csx{box-shadow:none!important}
+.csx.in,.csx.out{transition:none!important}
+@media(min-width:761px){.csx{transform:translate3d(100%,0,0);opacity:1}.csx.in{transform:none;opacity:1}.csx.out{opacity:1}.cbx.csback,.cbx.csret{transform:none;opacity:1;transition:none}}
+/* v35.2 desktop: the same header as Entries and Stories (1120px column, logo + name in a 172px slot, tabs right after) */
+@media(min-width:761px){
+ .cbx #cb{padding-top:22px!important}
+ .cbx #cb .frame{max-width:none!important;width:min(1120px,calc(100vw - 64px))}
+ .cbx .topbar .cbt{width:160px;flex:none;margin:0!important;display:flex;align-items:center;gap:8px}
+ .cbx .topbar .cbt::before{content:"";width:30px;height:30px;flex:none;background:url(data:image/webp;base64,UklGRigKAABXRUJQVlA4WAoAAAAQAAAAfwAAfwAAQUxQSDMCAAABkGTbttpG9+spnLRi9Z1xpJhxNiV7pSbAI2CGIXANgLnKnBanXSi9fwMGeS29YogIRm7bOLKT2d73aH0AvexCABNb4muPFz4qc2P9uPD4WrxlAkDo0JedAMOHL7WYU7cuHR4GpJ8ZAaJylSQ1VZ8veU2V666WI0D6WDsSL7Rty+fQ8UAL8XDWlc5h10syUebampAvdsFlKYEcIxPP3Nsn5DGBZOjoNlVpwqq8HUF6dvEtE5pxwrfFHhWg2NxoS9UoIuh6tsl3G22r3k061+Wqcm+jrdU9kY4SnOBXmvNXHod09M72eXuzO9vKBaNVqkUpK6OB25iWmdKkU5YhCFxhRdWm1K8UXBDiaPt2m5tnELqRWb8+tTppDjsc4HqbLe4FLvrErhJ/HmOz9JaHxsgmpWV7nY6ZWlbK+Lp1XX9C04vKx/P0pldz7gON+4NaV0rz/u+//vuv34Gyn3uyn/uyn3szn/t7ZD/3eMR87nOz2l6dbho3nvutD1vPPZ8DDlnPfbuRlvHce4gZ47n/De7B6kT9csEFEJTsch8lSBv3UrHMvXwDuJ+2Os3EYp+CdHJf4UMm9vpB2AW/DBBVmFjrSoQA6FJT5ri/5hQC09zjm2IG8DK6Y4n7vBNlAk/luB3u9bhALHO/L3fBuczcc2me1Lyu6Hig+dIIxPXFfb9v/zfyx323/9Pv27jvPrn3wT1nKjmdaOXMnsEM3Hs27n9oOr71YiFPSIp+WHhxK54eysT9AwBWUDggzgcAAHAsAJ0BKoAAgAA+MRaIQyIhIRYKrQAgAwSgDNBGRSjuM/DPtPuu+8vS23L/bPyZ/qvtHe2HxC9wB/Dv6n/zPaA9FvoAfsL1if9I/uXsAfsl6Uf7gfBR+4P7ge45/af+ZSfch3/GcUrRzxIaSzMe/sP/S9PH/c8xP1H/1P8J8Av8o/oX/R9aDqa/2cB0bfW+7qzH2hCd0s8mLIMCx49PdWGBlbrOZf8rYf7fwnsRmCzLFXI4DwQjg0klezBw2a+TB78DLx/CXFiGiGXsU9XdZGiHFeAeu0W64Y7SOHM3MfWI450GEWOFiQ5P1nWJHT5jvdZf9kjQRRKMQW9vojHzPoDshISmQLKJi1gQOlNgPDoRXA/pRTf3HqW55QfhxlVVCIl2ID810Tf8GKqQy9bIUbq0OgscLy5/wC2j1XDdwxY8kQpUuvifTjua3LVyzDxwdOEf7RM02urR3jnB0xZtIcfJGMRwAm1M036lDVAA/rkTowq7zoLy1KTM+mXhM3GpV5FxLbLI933qBNYGubtyQ0SJmYC710tGGM6NA/IEdUa5qw1QJwKCHIfX9GpY5/PTckLA4fotCR8Vj33GUKGI7QJZDTgeUcaHeA+HLcBl1c8SGX7+p7/Ul92/coxmzgZdnkB6k+U7ivCt7oB7PlndX26EWOG07XUM5w/rxovCDQ0c8bjbLJHh2+52f4gSCXM7MYdZ5p4uEzjygK6m6f+pR3Us7bk/cFiBYFldAZU58CIvcmtWc0KlTXKVMLKavdPBOWktJ13f9dDzk6JaZHI2plNotLpQ4ETktWhy/9DPDsFkrqubmcILJ80u/F04UbtW7e4GSecDfxeb1k5aib/PhSquROAw60cPW1a6V8oPMj4XoQeu6VCx4Z26vgQF/9gRUmoD+/ETS7T2cjeqaLp+lbd614K6fh+EsLVaapAOo2cU5WTEJZ1pFY1ahPvMu2WrHBFbbPtAP5Wk/si+wnC1h3v/2aP9Ux+T9Hl8nLYaRQ9nVA8pFQ+4HFlR0uunR2oWsni7NFx34pSQglRhdI+yMrYte7ULHikZr7Mo7RA1qp+x7ysrCmZXyZ+lNuYJ1Ywh0w3rq92/+ge59vw6C3PYUPRKOP4dK2YgQS0hM+Ub9nm6yrmgs5nla0AVmcUEid/heeEKYrUN/lA1JPb+2DGpPWhBpsl4ttW81U3asbAjhITdSit7D2ZCOtV6Px4LZx3OCLCmlzC4CkAxkcRTELZGzwMV5zz0MYDIstqwkxx/W7ugWWZFnnsQFOMJh/Y9p4N/3NdlmZjbcoNqGD4YJGyxlj+CO9bDvEZyTORYvUEX3FXbhiOC6pmjMt4Jslw2zVQmvYLxWQeFxTowFrUcsMFOoXEVw4QfWsvW78J66DNQTo24Jr5/y9sifj6ku+0d7v9McUz/GLowmQ/uoM/kRLa7j3vlz1iLq4UTfCggzarnMHhvCoGnAC0qstwOtl7ziHd36+devoosKXFw0q95p5YYlHcilbq2iFoZfoHiQIRwECK42ZGPPnZG0geu/rPPHL8JI2HPfi+fuM0MXNbYYrX/83NfZpSqTzj54oNUSsicfFleecv5h73D/ZdVqbJ23BSp2pkPKfSx5WB+aP6Q8pihuW6abaWjIhJtIVfXC+MNFCajgSYTRAjPvpj75A0YJq0sXjHtX4MCnFsm9f8NhIaARFggjAQhJEOT6/5UfYMvqVwHvdJqvMx+xggbzRqdIM6Sa82GBJCC5iLyymh5RzHepLZ6kPt6rhDtGdKYgQq9xWMNqMI/zMpr+lEjo3e9ZZsaobOnCYYW/6n1z8sXPBvq7ui5OMnSGTHroWBAbODcaiPfdTHUxU/wQH2T/kaf6ujfI+Rxql60ZwxNmV+jf3DQhwFObyfSQbfTFTNxFU8IL5OEZvwenz3bGPFWXsQpzYTjsp/x/5Of4uPwlW0MlehNmKh2eLtQ14svBvlQTq+ZKfIOdzo2Df2WbaDNmNDHWbypL4l5hJk+6oMRvr+d4gXtv6WaGx7wZ8eD/3+Qj/7tNsifK6vp3usZhLBHKh00HWZRZBY+iQ3FO4PY5/j/y5/x//hE9S/gpWIs+MDYBCiNZtz9AmiQDatA38NHvQksif+Cue+wyUwlnJvgfQtCk8tfKIQRnlY1E6CucStkUHBNYFmaCVyuUHIjly2nsnVaQdZyrxG3VWHmKxbqCgGAF8UJK7J2wvraOk6CHfxWAEf/CT5VM6OXsOl2eeJzIy3AQkTVS61YtN8NvCCylP7wzG/Bfda1vpnoiGM8kKDK7Buat/bzWwL3S89ax0ad90wC9p9rxMFb6JDxzxljg6Jcr0xiwvzPhDzZpvzou3M/gBe9G13Dix28zaVxUWmbnmqqVQIn2vUmY8/H7ePojrP71HjM8S3r9X/W29dsCKck4BUf+LSUSFfFhwZz+9GljdOVycdThWuwjADak0VBFFKH7zNxy3JSbidfC1JSYVn4wGFPZN0vrKC1QVPod/LqbhRup20F4kikFZ9x16E6SK3SRiGJZV5vcNpw8CjiapeJJHxT3ADiAQ1NAuFMLjB5WUxhwqBq8mmsEGNCHCsL/Fa4uhrc8UlWZAjbq4JUmnO3HpC1iiMwfaQ3Kzch/HRDfT5dxfwm6AtTjr2qN6uq8Hm9vtz+9UtNdR4M9UlI/VqxZgAAAA==) center/contain no-repeat}
+ .cbx .topbar .cbtn{font-size:19px!important;font-weight:800;letter-spacing:normal}
+ .cbx .topbar .cb-tabs{margin:0!important}
+ .cbx .topbar .tctl{margin-left:auto!important}
+ .cbx .iconb span{display:none}.cbx .iconb{width:40px;padding:0;justify-content:center}
+}
+/* v35.5: the avatar sits on exactly the same pixels as on Entries and Stories */
+@media(min-width:761px){.cbx #cb-acct{display:grid;place-items:center;padding:0;border:0!important;width:38px!important;height:38px!important;background:none!important;box-shadow:none!important}.cbx #cb-acct #cb-av{margin:0}}
+/* v35.5: while the pages glide, the one on top is see-through (the pages share one background color) */
+.cbx.pg-clear,.cbx.pg-clear #cb{background:transparent!important}
+.csx.pg-clear{background:transparent!important}
+/* v35.8: live blurs pause while pages slide (they cost a full repaint per frame); they come back when the slide lands */
+html.pg-moving .cbx #cb .wq.k-feat .ttl,html.pg-moving .cbx #cb .fpc,html.pg-moving .cbx .cbslim,html.pg-moving .cbx .cbdock{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+/* v35.8 phones: the single header row that stays at the top */
+.cbhead{display:none}
+@media(max-width:760px){
+ .cbx .cbhead{display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:20;margin:-18px -16px 8px;padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px))}
+ .cbx .cbhead::before{content:"";position:absolute;inset:0;z-index:-1;opacity:var(--s,0);background:color-mix(in srgb,var(--cb-alt,#f8f7f4) 86%,transparent);-webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--win-edge)}
+ .cbh-t{flex:1;min-width:0;font-size:24px;font-weight:800;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+ .cbh-i{display:flex;align-items:center;gap:8px;flex:none}
+ .cbh-i button{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;padding:0;border:1px solid var(--win-edge);background:color-mix(in srgb,currentColor 6%,transparent);color:var(--text);-webkit-tap-highlight-color:transparent}
+ .cbh-i button:active{transform:scale(.92)}
+ .cbh-i button svg{width:17px;height:17px}
+ .cbh-i .cbh-me{border:0;font:inherit;font-size:15px;font-weight:800;color:#fff;background:#a50e37}
+ .cbx .cbt,.cbx .cbedl,.cbx .cbic,.cbx .acctw,.cbslim,html[data-cbv] .cbslim{display:none!important}
+ .cbx.cbediting .cbh-i button:not(.cbh-me){display:none}
+ html.pg-moving .cbx .cbhead::before{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+}
+@media(max-width:760px){.cbh-t{text-align:left!important}.cbx .topbar{justify-content:flex-start!important;text-align:left}.cbx .topbar .perwrap:first-of-type{margin-left:0!important}}
+@media(max-width:760px){.cbx .topbar #close,.cbx .tctl #cb-edit{display:none!important}}
+/* v36: the app shell replaces the board's own header (title, tabs, Edit, Ask, Share, avatar); the board keeps its range row */
+@media(min-width:761px){
+ .cbx #cb{padding-top:132px!important}
+ .cbx .topbar .cbt,.cbx .topbar .cb-tabs,.cbx .topbar .iconb,.cbx .topbar .acctw,.cbx .topbar #close,.cbx .tctl #cb-edit{display:none!important}
+ .cbx .topbar{margin-bottom:18px!important;justify-content:flex-start!important}
+ .cbx .topbar .tctl{margin-left:0!important}
+}
+@media(max-width:760px){
+ .cbx .cbhead{display:none!important}
+ .cbx #cb{padding-top:calc(66px + env(safe-area-inset-top,0px))!important}
+}
+@media(min-width:761px){.cbx #cb .topbar{margin-bottom:10px!important}}
+/* phones: the header's Edit turns into Done while editing, so the floating Done isn't needed */
+@media(max-width:760px){.cbdone{display:none!important}}
+@media(min-width:761px){.cbx #cb{padding-top:114px!important}}
+/* v36.4 phones: the tab bar floats, so Stories runs to the bottom of the screen behind it */
+@media(max-width:760px){.csx{bottom:0!important}.cbx #cb{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))!important}}
+
+/* ===== v37: the board in the shared frame ===== */
+/* its old date button gives way to the shared switcher (same date as Entries) */
+#cb .tctl #cb-per,#cb .tctl #cb-per+.cb-menu{display:none!important}
+#cb .tctl .perwrap:has(#cb-per){display:none!important}
+#cb .ms-board{margin:0 8px 0 0!important}
+#cb .ms-board>button{width:34px;height:34px}
+#cb .ms-board .ms-lab{font-size:19px}
+/* wide screens: the header row carries the date and platform, so the board's own top row steps aside */
+@media(min-width:1100px){
+ html.has-row2 .cbx #cb{padding-top:160px!important}
+ html.has-row2 #cb .topbar{display:none!important}
+}
+/* At a glance on the board: the same rows as Entries' card */
+#cb .gl{display:flex;flex-direction:column;margin:2px -4px 0;height:calc(100% - 2px)}
+#cb .gl3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:14px}
+#cb .gl2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px;align-content:start}
+#cb .glr{position:relative;isolation:isolate;display:flex;align-items:center;gap:11px;padding:10px 6px;min-height:56px;border-top:1px solid var(--line);overflow:hidden;border-radius:10px}
+#cb .gl>.glr:first-child,#cb .gl3>.glr,#cb .gl2>.glr:nth-child(-n+2){border-top:0}
+#cb .glic{flex:none;width:32px;height:32px;border-radius:9px;background:var(--cb-alt,rgba(0,0,0,.05));display:grid;place-items:center;color:var(--muted)}
+#cb .glbg{position:absolute;inset:0;z-index:-1;background-size:130% auto;background-position:50% 30%;opacity:.5;-webkit-mask:linear-gradient(90deg,rgba(0,0,0,.06),rgba(0,0,0,.14) 24%,#000 50%,rgba(0,0,0,.14) 76%,rgba(0,0,0,.06));mask:linear-gradient(90deg,rgba(0,0,0,.06),rgba(0,0,0,.14) 24%,#000 50%,rgba(0,0,0,.14) 76%,rgba(0,0,0,.06))}
+#cb .gltx{flex:1;min-width:0}#cb .gltx small{display:block;font-size:12px;font-weight:650;color:var(--muted)}
+#cb .gltx em{display:block;font-style:normal;font-weight:750;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cb .glv{text-align:right;flex:none}#cb .glv b{display:block;font-weight:800;font-size:15px}#cb .glv b.g{color:var(--pos)}#cb .glv span{font-size:12px;color:var(--muted)}
+/* wide screens: the board fills the same width as Entries */
+@media(min-width:1100px){.cbx #cb .frame{width:min(1360px,calc(100vw - 64px))!important}}
+#cb .gl{container-type:inline-size}
+#cb .gltx small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@container (max-width:250px){#cb .glic{display:none}#cb .glv span{display:none}#cb .glr{gap:8px;padding:8px 4px}#cb .gltx em{font-size:13px}#cb .glv b{font-size:14px}}
 .tip{position:fixed;z-index:60;pointer-events:none;background:var(--text);color:var(--bg);border-radius:10px;padding:8px 11px;font-size:12.5px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;text-align:left}
 .tip.on{opacity:1}
 .note{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--text);color:var(--bg);border-radius:999px;padding:8px 14px;font-size:12px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}

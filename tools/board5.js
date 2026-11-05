@@ -17,8 +17,9 @@ const CATALOG={
   budget:{t:'Spend vs budget',s:'Budget',d:'How many months you stayed under budget'},
   feat:{t:'Featured card',s:'Featured',d:'One of your cards in full art, with the number that matters'},
   best:{t:'Best sellers',s:'Best sellers',d:'Your top three cards by profit'},
-  pricey:{t:'Priciest card',s:'Priciest',d:'The most you paid for a single card'}};
-const DEFAULT=[['feat','L'],['profit','S'],['sales','S'],['spent','S'],['month','B']].map(([k,size],i)=>({id:'d'+i,k,size}));
+  pricey:{t:'Priciest card',s:'Priciest',d:'The most you paid for a single card'},
+  glance:{t:'At a glance',s:'At a glance',d:'Your quick numbers from Entries, the same ones you picked there'}};
+const DEFAULT=[['feat','L'],['profit','S'],['sales','S'],['spent','S'],['glance','S'],['month','B']].map(([k,size],i)=>({id:'d'+i,k,size}));
 // Free keeps its own arrangement of its 4 widgets, so going Premium (or back) never scrambles either board
 const DEFAULT_FREE=[['profit','S'],['sales','S'],['month','M'],['spent','S']].map(([k,size],i)=>({id:'f'+i,k,size}));
 let FREEMODE=cbFree();const defL=()=>FREEMODE?DEFAULT_FREE:DEFAULT;
@@ -37,7 +38,7 @@ const newId=()=>'w'+Date.now().toString(36)+Math.random().toString(36).slice(2,6
 let period='l12',plat='all',editing=false;
 function applyPlan(){const f=cbFree();if(f===FREEMODE)return false;FREEMODE=f;LKEY=LKEY0+(f?'.free':'');LKEYP=LKEYP0+(f?'.free':'');
   layoutD=loadL(LKEY)||clone(defL());layoutP=loadL(LKEYP);layout=onPhone?(layoutP||(layoutP=clone(layoutD))):layoutD;if(editing)setEditing(false);fitFreePeriod();return true}
-function fitFreePeriod(){if(cbFree()&&!FREE_P.includes(period)){period='l3';const l=$('cb-perl');if(l)l.textContent='Last 3 months'}}
+function fitFreePeriod(){if(window.cbLinked)return;if(cbFree()&&!FREE_P.includes(period)){period='l3';const l=$('cb-perl');if(l)l.textContent='Last 3 months'}}
 const VKEY='cb.view',saveView=()=>{try{localStorage.setItem(VKEY,JSON.stringify({period,plat,custom}))}catch(e){}};
 let BUDGET=15000; // your monthly budget in cents; inside the app it comes from the budget setting (see fitBudget)
 const fitBudget=()=>{try{const c=window.CTBudgetCents&&window.CTBudgetCents();if(c>0)BUDGET=c}catch(e){}};
@@ -161,6 +162,11 @@ function shareBar(rows,total){if(!rows.length||!total)return '';const top=rows.s
 // list rows: big sizes open in place like the site's FAQs; small sizes show the same detail in a tooltip
 const row=(inner,detail,open,drill)=>'<div class="r" '+(open?'data-row':'data-tipd="'+esc(detail)+'"'+(drill?dd(drill):''))+'>'+inner+'<div class="d">'+esc(detail)+(open&&drill?' <button type="button" class="seeent"'+dd(drill)+'>See entries ›</button>':'')+'</div></div>';
 
+// v37: At a glance, the same quick numbers as Entries (and the same picks), for the board's period and platform
+NEWW.glance=function(ctx,s){const rows=window.CTMetrics&&CTMetrics.rows?CTMetrics.rows(ctx.inP):[];if(!rows.length)return '<p class="eg">Nothing in this period yet.</p>';
+  const n={S:2,M:2,B:3,L:5,X:6}[s]||3,cls=s==='B'?' gl3':s==='X'?' gl2':'';
+  return '<div class="gl'+cls+'">'+rows.slice(0,n).map(r=>'<div class="glr'+(r.art?' gla':'')+'">'+(r.art&&!maskNames()?'<div class="glbg" style="background-image:url(\''+esc(r.art)+'\')"></div>':'<span class="glic">'+(r.icon||'')+'</span>')+
+    '<div class="gltx"><small>'+esc(r.label)+'</small><em>'+esc(maskNames()&&r.art?'A card from your collection':r.title)+'</em></div><div class="glv"><b class="num'+(r.green?' g':'')+'">'+hideMoney(esc(r.value))+'</b>'+(r.sub?'<span>'+hideMoney(esc(r.sub))+'</span>':'')+'</div></div>').join('')+'</div>'};
 // ---------- widget bodies: one layout per metric per size ----------
 function body(k,ctx,s,w){
   if(NEWW[k])return NEWW[k](ctx,s,w);
@@ -314,6 +320,9 @@ const customLabel=()=>{const sameY=custom.from.slice(0,4)===custom.to.slice(0,4)
 (function restoreView(){try{const v=JSON.parse(localStorage.getItem(VKEY));if(!v)return;if(v.custom&&v.custom.from)custom=v.custom;if(PERIODS.some(p=>p[0]===v.period)&&(v.period!=='custom'||custom.from)){period=v.period;$('cb-perl').textContent=period==='custom'?customLabel():PERIODS.find(p=>p[0]===period)[1]}
   if(v.plat&&(v.plat==='all'||E.some(e=>e.platform===v.plat))){plat=v.plat;$('cb-platl').textContent=plat==='all'?'All platforms':plat}}catch(e){}})();
 fitFreePeriod();
+// v37: the board follows the date you pick on Entries (one date for both pages); the app calls this whenever it changes
+window.cbLinkRange=function(from,to,label){window.cbLinked=true;if(from){custom={from,to};period='custom'}else period='all';const l=$('cb-perl');if(l)l.textContent=label;render(false);if(window.CTPage&&CTPage.cur==='board')grow()};
+window.cbPlat={list:()=>[['all','All platforms']].concat([...new Set(E.map(e=>e.platform))].sort().map(p=>[p,p])),get:()=>plat,set:(k,l)=>{plat=k;$('cb-platl').textContent=l;saveView();render(false);grow()}};
 function openCustom(){cr.classList.remove('pre','cust');$('cr-h').textContent='Custom dates';const [a,b]=rangeFor(period);cal={from:custom.from||a,to:custom.to||b,pick:'from',cmp:compare};cal.view=cal.to.slice(0,7);drawCal();cr.showModal()}
 function drawCal(){const mn=startDate(),mx=TODAY,v=cal.view,dow=new Date(v+'-01T12:00:00').getDay(),nd=+lastDay(v).slice(8);
   $('cr-title').textContent=mLabel(v,{month:'long',year:'numeric'});$('cr-prev').disabled=v<=mn.slice(0,7);$('cr-next').disabled=v>=mx.slice(0,7);
@@ -525,8 +534,8 @@ $('simple').addEventListener('keydown',e=>{const gp=e.target.closest('.grip');if
   if(j>-1){e.preventDefault();setSize(id,L[j]);const ng=$('simple').querySelector('.w[data-id="'+id+'"] .grip');if(ng)ng.focus()}});
 
 // ---------- add widgets: a gallery of small widgets; tap to add to the top of the board, tap again to take it back ----------
-const aw=$('aw'),DEF_SIZE={profit:'S',sales:'S',spent:'S',fees:'S',month:'M',sell:'M',where:'S',kept:'M',win:'M',budget:'M',feat:'L',best:'L',pricey:'M'};
-const CATS={profit:'num',sales:'num',spent:'num',fees:'num',sell:'num',win:'num',month:'chart',budget:'chart',where:'list',kept:'list',feat:'num',best:'list',pricey:'num'};
+const aw=$('aw'),DEF_SIZE={profit:'S',sales:'S',spent:'S',fees:'S',month:'M',sell:'M',where:'S',kept:'M',win:'M',budget:'M',feat:'L',best:'L',pricey:'M',glance:'M'};
+const CATS={profit:'num',sales:'num',spent:'num',fees:'num',sell:'num',win:'num',month:'chart',budget:'chart',where:'list',kept:'list',feat:'num',best:'list',pricey:'num',glance:'list'};
 const PLUS_I='<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
 const CHECK_I='<svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.4l2.6 2.5L11 4.4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 let added={},awCat='all';
@@ -562,22 +571,81 @@ let shown=false,ready=false;const bgl=$('cbxbg');
 const fromRect=r=>'translate('+r.left+'px,'+r.top+'px) scale('+(r.width/innerWidth).toFixed(4)+','+(r.height/innerHeight).toFixed(4)+')';
 // build the board while you're still on the dashboard, so opening never has to stop and build it
 function prepare(){if(ready||shown)return;render(false);ready=true}
+// draws the (hidden) board for a few frames at near-zero opacity, so its pictures and widgets are already painted the first time it slides in
+function warm(){if(shown)return;const st=cbx.style;st.visibility='visible';st.opacity='0.001';let n=0;const f=()=>{if(++n<4&&!shown)requestAnimationFrame(f);else if(!shown){st.visibility='';st.opacity=''}else{st.visibility='';st.opacity=''}};requestAnimationFrame(f)}
 (window.requestIdleCallback||(f=>setTimeout(f,400)))(prepare,{timeout:1500});
 // the board grows out of whatever opened it (the Board tab, the profile menu), and shrinks back into it; Insights when that's what's on screen
+// the page slide: dir 1 = moving right (new page from the right), -1 = moving left. Transform only, so it stays smooth.
+// slower and even (eases in and out) so the eye can follow it; a bit longer on desktop, where the page travels further
+const pageMs=()=>matchMedia('(max-width:760px)').matches?460:620,PAGE_EASE='cubic-bezier(.4,0,.2,1)';
+const navHold=(a,b)=>{try{window.CTNavHold&&window.CTNavHold(a,b,pageMs())}catch(e){}};
+function pageSlide(els,dir,kind,hold){let last=null;els.forEach(el=>{if(!el)return;const off='translate3d('+(kind==='in'?dir*100:-dir*100)+'%,0,0)';
+  last=el.animate(kind==='in'?[{transform:off},{transform:'none'}]:[{transform:'none'},{transform:off}],{duration:pageMs(),easing:PAGE_EASE,fill:hold?'forwards':'none'})});return last||{set onfinish(f){f()}}}
+const entriesEls=()=>(window.CTPageEls&&window.CTPageEls())||[];
+window.cbPageSlide=pageSlide;
+// v35.3: one function moves between pages. Phones: the pages slide side by side, in lockstep (both move the full screen width).
+// Desktop: a short fade with a small drift in the direction you're going; the header doesn't move at all, so the logo,
+// tabs and avatar stay put and only what's different changes. (Admin can switch desktop to the slide to compare.)
+const PZ={entries:0,board:1,stories:2};
+const fxMode=()=>{if(matchMedia('(max-width:760px)').matches)return 'slide';try{const v=localStorage.getItem('ct.pagefx');return v==='slide'||v==='fade'?v:'glide'}catch(e){return 'glide'}};
+const frameDoc=()=>{try{return $('csx').querySelector('iframe').contentDocument}catch(e){return null}};
+// the shared header parts of a page (tabs, avatar): the page you're leaving hides its own copy while you move, so only one shows
+function sharedOf(k){const d=k==='stories'?frameDoc():document;if(!d)return [];return (k==='entries'?[d.querySelector('.ct-demo-top .ct-tabs'),d.getElementById('app-avatar')]:k==='board'?[cbx.querySelector('.cb-tabs'),$('cb-acct')]:[d.querySelector('.cstabs'),d.getElementById('csacct')]).filter(Boolean)}
+// a page sits at the top of its own scroll, so its header lines up with the one it's switching with
+const atTop=k=>k==='entries'?scrollY<40:k==='board'?cbx.scrollTop<40:true;
+const layerOf=k=>k==='entries'?entriesEls():k==='board'?[cbx]:[$('csx')];
+function contentOf(k){if(k==='entries')return [document.getElementById('app-grid')].filter(Boolean);if(k==='board')return [$('simple')];
+  try{const d=$('csx').querySelector('iframe').contentDocument;return [...d.querySelectorAll('.wrap > *:not(.top)')]}catch(e){return []}}
+// the parts of each header that differ between pages: the page name and the buttons on the right (logo, tabs and avatar are shared)
+const vis=el=>el&&el.getClientRects().length;
+function headOf(k){try{if(k==='entries')return [document.querySelector('.ct-demo-top .ct-bname'),...document.querySelectorAll('.ct-demo-top .ct-top-actions > :not(#app-avatar)')].filter(vis);
+  if(k==='board')return [$('cbtn'),...cbx.querySelectorAll('.topbar > .tctl, .topbar > .iconb')].filter(vis);
+  const d=$('csx').querySelector('iframe').contentDocument;return [d.querySelector('.top .ttl .tname'),...d.querySelectorAll('.top .tr > :not(.acct)')].filter(vis)}catch(e){return []}}
+function pageGo(from,to,dir,done){
+  // v36: the app shell keeps all three pages drawn side by side and does the slide (see js/shell.js)
+  if(window.CTPage){window.CTPage.move(from,to,done);return}
+  const held=[];let ms;
+  // while pages move, live blurs (the frosted labels on card art) are paused: a blur repaints everything behind it on every
+  // frame, which is what dropped the slide below 60fps. They come back the moment the pages land.
+  const H=document.documentElement,fdm=frameDoc();H.classList.add('pg-moving');if(fdm&&fdm.documentElement)fdm.documentElement.classList.add('pg-moving');
+  const doneIn=done;done=()=>{if(doneIn)doneIn();H.classList.remove('pg-moving');if(fdm&&fdm.documentElement)fdm.documentElement.classList.remove('pg-moving')};
+  if(fxMode()==='slide'){ms=pageMs();const W=innerWidth,EZ={duration:ms,easing:PAGE_EASE};
+    layerOf(to).forEach(el=>el&&el.animate([{transform:'translate3d('+dir*W+'px,0,0)'},{transform:'none'}],EZ));
+    layerOf(from).forEach(el=>el&&held.push(el.animate([{transform:'none'},{transform:'translate3d('+(-dir*W)+'px,0,0)'}],Object.assign({fill:'forwards'},EZ))));
+  }else if(fxMode()==='glide'&&atTop(from)&&atTop(to)){
+    // desktop default: the header stays still and the pages' content glides across like a slider, the old content
+    // sliding out and fading as the new slides in. The page on top goes see-through while it moves (all three pages
+    // share one background color), so both contents are in view.
+    ms=520;const D=Math.round(Math.min(440,innerWidth*.3)),top=PZ[to]>PZ[from]?to:from,EZ={duration:ms,easing:'cubic-bezier(.25,.8,.25,1)'};
+    const clear=top==='board'?[cbx]:[$('csx')],fd=frameDoc();clear.forEach(el=>el.classList.add('pg-clear'));if(top==='stories'&&fd&&fd.documentElement)fd.documentElement.classList.add('pg-clear');
+    const hide=sharedOf(from);hide.forEach(el=>el.style.visibility='hidden');
+    contentOf(to).forEach(el=>{el.animate([{transform:'translate3d('+dir*D+'px,0,0)'},{transform:'none'}],Object.assign({fill:'backwards'},EZ));el.animate([{opacity:0},{opacity:0,offset:.18},{opacity:1}],{duration:ms,easing:'ease-out',fill:'backwards'})});
+    contentOf(from).forEach(el=>{held.push(el.animate([{transform:'none'},{transform:'translate3d('+(-dir*D)+'px,0,0)'}],Object.assign({fill:'forwards'},EZ)));held.push(el.animate([{opacity:1},{opacity:0,offset:.6},{opacity:0}],{duration:ms,easing:'ease-in',fill:'forwards'}))});
+    headOf(from).forEach(el=>held.push(el.animate([{opacity:1},{opacity:0}],{duration:130,easing:'ease-in',fill:'forwards'})));
+    headOf(to).forEach(el=>el.animate([{opacity:0,transform:'translate3d(0,8px,0)'},{opacity:1,transform:'none'}],{duration:300,delay:120,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));
+    const end=done;done=()=>{if(end)end();clear.forEach(el=>el.classList.remove('pg-clear'));if(fd&&fd.documentElement)fd.documentElement.classList.remove('pg-clear');hide.forEach(el=>el.style.visibility='')};
+  }else{ms=300;const D=24,EZ={duration:ms,easing:'cubic-bezier(.2,.8,.2,1)'},drift=(els,a,b)=>els.forEach(el=>el.animate([{transform:'translate3d('+a+'px,0,0)'},{transform:'translate3d('+b+'px,0,0)'}],EZ));
+    if(PZ[to]>PZ[from]){layerOf(to).forEach(el=>el&&el.animate([{opacity:0},{opacity:1}],{duration:ms*.85,easing:'ease-out'}))}
+    else{layerOf(from).forEach(el=>el&&held.push(el.animate([{opacity:1},{opacity:0}],{duration:ms*.85,easing:'ease-in',fill:'forwards'})))}
+    drift(contentOf(to),dir*D,0);drift(contentOf(from),0,-dir*D);
+    // the old page name and buttons fade out first; then the new ones rise in, so two names never sit on top of each other
+    headOf(from).forEach(el=>held.push(el.animate([{opacity:1},{opacity:0}],{duration:110,easing:'ease-in',fill:'forwards'})));
+    headOf(to).forEach(el=>el.animate([{opacity:0,transform:'translate3d(0,8px,0)'},{opacity:1,transform:'none'}],{duration:280,delay:100,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));
+  }
+  setTimeout(()=>{if(done)done();held.forEach(a=>a.cancel())},ms);
+}
 function fromEl(){const o=(window.CTBoardFrom&&window.CTBoardFrom())||ins;const r=o&&o.getBoundingClientRect();return r&&r.width?r:{left:innerWidth/2-60,top:innerHeight/2-60,width:120,height:120}}
 function open(){
   if(busy||shown)return;navPush('board',()=>close());busy=true;xb.classList.remove('hint');$('note').hidden=true;
   if(!ready){render(false);ready=true}
   const r=fromEl();shown=true;cbx.scrollTop=0;document.documentElement.style.overflow='hidden';document.documentElement.classList.add('cbopen');xb.setAttribute('aria-expanded','true');
   cbx.inert=false;cbx.removeAttribute('aria-hidden');
-  if(calm.matches){cbx.classList.remove('off','enter');busy=false;$('close').focus({preventScroll:true});return}
-  // phones: pages slide like a tab app: Board sits right of Entries, so it slides in from the right while Entries drifts left underneath
-  if(matchMedia('(max-width:760px)').matches){const inst=window.cbInstant;window.cbInstant=false;cbx.classList.remove('off','enter');
+  if(calm.matches&&!window.CTPage){cbx.classList.remove('off','enter');busy=false;$('close').focus({preventScroll:true});return}
+  // v35: Entries, Board and Stories are pages side by side (phones and desktop). Going right, the new page pushes in
+  // from the right while the one you're leaving moves out to the left, in step, like turning a page.
+  {const inst=window.cbInstant;window.cbInstant=false;cbx.classList.remove('off','enter');
     if(inst){busy=false;return}
-    // exactly the Stories slide: same curve, same time, same soft shadow on the leading edge; the page underneath stays still
-    cbx.style.boxShadow='-24px 0 60px rgba(0,0,0,.18)';
-    const a=cbx.animate([{transform:'translate3d(100%,0,0)'},{transform:'none'}],{duration:420,easing:'cubic-bezier(.2,.9,.25,1)'});
-    a.onfinish=()=>{cbx.style.boxShadow='';busy=false;$('close').focus({preventScroll:true})};return}
+    pageGo('entries','board',1,()=>{busy=false;$('close').focus({preventScroll:true})});return}
   cbx.classList.add('anim','enter');cbx.classList.remove('off');bgl.classList.add('on');
   bgl.animate([{transform:fromRect(r)},{transform:'none'}],{duration:460,easing:EASE});
   $('cb').animate([{opacity:0},{opacity:1}],{duration:240,delay:170,easing:'ease-out',fill:'backwards'});
@@ -590,11 +658,9 @@ function close(){
   if(busy||!shown)return;navDone('board');busy=true;hideTip();closeMenus();$('wmenu').hidden=true;xb.setAttribute('aria-expanded','false');
   const finish=()=>{shown=false;cbx.classList.add('off');cbx.classList.remove('anim');bgl.classList.remove('on');cbx.inert=true;cbx.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';document.documentElement.classList.remove('cbopen');busy=false;
     if(editing){editing=false;$('cb-edit').innerHTML=EDIT_I+'<span>Edit</span>';$('cb-edit').classList.remove('on');$('editfoot').hidden=true;$('cb').classList.remove('editing');render(false)}xb.focus({preventScroll:true})};
-  if(calm.matches){finish();return}
-  if(matchMedia('(max-width:760px)').matches){const inst=window.cbInstant;window.cbInstant=false;if(inst){finish();return}
-    cbx.style.boxShadow='-24px 0 60px rgba(0,0,0,.18)';
-    const a=cbx.animate([{transform:'none'},{transform:'translate3d(100%,0,0)'}],{duration:280,easing:'cubic-bezier(.4,0,.8,.6)',fill:'forwards'});
-    a.onfinish=()=>{finish();cbx.style.boxShadow='';a.cancel()};return}
+  if(calm.matches&&!window.CTPage){finish();return}
+  {const inst=window.cbInstant;window.cbInstant=false;if(inst){finish();return}
+    pageGo('board','entries',-1,finish);return}
   const r=fromEl();cbx.classList.add('anim');bgl.classList.add('on');
   $('cb').animate([{opacity:1},{opacity:0}],{duration:150,easing:'ease-in',fill:'forwards'}).onfinish=function(){
     this.cancel();$('cb').style.opacity='0';
@@ -753,6 +819,10 @@ function paintAskLeft(){const left=Math.max(0,ASK_LIMIT-askUsed()),el=$('ask-lef
 if(window.claude&&claude.use)claude.use('sample').then(f=>{sampleFn=f;paintAskAvail()},()=>{});
 function paintAskAvail(){$('ask-off').hidden=!!sampleFn;$('ask-form').hidden=!sampleFn;$('ask-starts').hidden=!sampleFn||askTurns.length>0;$('ask-left').hidden=!sampleFn;if(sampleFn)paintAskLeft()}
 const STARTS=['Which platform costs me the most in fees?','Why was profit down the last few months?','What was my best flip, and why did it work?','Am I buying more than I’m selling?'];
+window.CTAskOpen=function(){
+  // Free: the Premium sheet about Ask opens instead, right over whatever page you're on
+  if(window.CTBoardPlan&&window.CTBoardPlan()!=='premium'){if(window.CTPremiumOpen)window.CTPremiumOpen('ask');return}
+  if(cbx.classList.contains('off')){cbx.inert=false;cbx.removeAttribute('aria-hidden');cbx.classList.add('pmonly');const d=$('askd');if(d)d.addEventListener('close',function back(){d.removeEventListener('close',back);if(cbx.classList.contains('off')){cbx.inert=true;cbx.setAttribute('aria-hidden','true')}cbx.classList.remove('pmonly')})}openAsk()};
 function openAsk(){closeMenus();placeAsk();$('ask-starts').innerHTML=STARTS.map(q=>'<button type="button" data-q="'+esc(q)+'">'+esc(q)+'</button>').join('');$('ask-scope').textContent=$('cb-perl').textContent+' · '+$('cb-platl').textContent;paintAskAvail();askd.showModal();if(matchMedia('(hover:hover) and (pointer:fine)').matches)setTimeout(()=>{if(askd.open)$('ask-in').focus({preventScroll:true})},420)}
 // everything Claude sees: the period you picked, with exact cents
 function askData(){const ctx=ctxNow(),t=totals(ctx.inP),d=c=>(c/100).toFixed(2),pt={};
@@ -810,7 +880,8 @@ $('simple').addEventListener('keydown',e=>{const d=e.target.closest('.drill[data
 
 // desktop: Ask opens as a panel under its button and grows out of it; phones keep the bottom sheet
 function placeAsk(){const d=$('askd');if(matchMedia('(max-width:760px)').matches){d.classList.remove('pop');return}
-  const r=$('cb-ask').getBoundingClientRect(),W=Math.min(420,innerWidth-32),right=Math.max(16,innerWidth-r.right),top=r.bottom+10,left=innerWidth-right-W;
+  // v36: it opens under the header's Ask button when that's on screen
+  const hb=document.querySelector('.ct-shell .sh-ask');const r=(hb&&hb.getBoundingClientRect().width?hb:$('cb-ask')).getBoundingClientRect(),W=Math.min(420,innerWidth-32),right=Math.max(16,innerWidth-r.right),top=r.bottom+10,left=innerWidth-right-W;
   d.classList.add('pop');d.style.setProperty('--at',top+'px');d.style.setProperty('--ar',right+'px');d.style.setProperty('--aw',W+'px');d.style.setProperty('--ox',(r.left+r.width/2-left).toFixed(0)+'px')}
 addEventListener('resize',()=>{if($('askd').open)placeAsk()});
 
@@ -910,13 +981,23 @@ addEventListener('resize',()=>document.querySelectorAll('dialog.sheet[open]').fo
 // The page loads quietly in the background once the board is open, so the first slide-in already has the stories on it.
 ;(()=>{const csx=$('csx');let csf=null,open=false;
 function load(){if(csf)return;csf=document.createElement('iframe');csf.title='Card Stories';csf.srcdoc=STORIES_HTML;csx.appendChild(csf)}
-function openStories(){if(open)return;open=true;navPush('stories',()=>window.cbStoriesBack());load();try{csf.contentWindow.csSync()}catch(e){}
-  const desk=!matchMedia('(max-width:760px)').matches;csx.classList.remove('out');void csx.offsetWidth;csx.classList.add('in');csx.removeAttribute('aria-hidden');csx.inert=false;if(desk){cbx.classList.remove('csret');cbx.classList.add('csback');try{csf.contentWindow.csEnter&&csf.contentWindow.csEnter()}catch(e){}}
+function openStories(){if(open)return;open=true;navPush('stories',()=>window.cbStoriesBack());load();
+  // only redraw Stories when the entries changed since it last drew (refresh() already keeps it current), so switching never repaints it
+  try{if(csf.__ver!==window.cbDataVer){csf.contentWindow.csSync();csf.__ver=window.cbDataVer}}catch(e){}
+  const fromE=window.cbFromEntries;window.cbFromEntries=false;csx.classList.remove('out');csx.classList.add('in');csx.removeAttribute('aria-hidden');csx.inert=false;
+  // straight from Entries: Entries is the page you leave (the board opened underneath, out of sight until Stories covers it)
+  if(window.CTPage)pageGo(fromE?'entries':'board','stories',1,null);
+  else if(!calm.matches){if(fromE)cbx.style.visibility='hidden';pageGo(fromE?'entries':'board','stories',1,()=>{cbx.style.visibility=''})}
   setTimeout(()=>{try{csf.contentWindow.focus()}catch(e){}},calm.matches?0:420)}
-window.cbStoriesBack=function(){if(!open)return;open=false;navDone('stories');csx.classList.remove('in');csx.classList.add('out');if(cbx.classList.contains('csback')){cbx.classList.add('csret');cbx.classList.remove('csback');setTimeout(()=>cbx.classList.remove('csret'),360)}csx.setAttribute('aria-hidden','true');csx.inert=true;
-  setTimeout(()=>{csx.classList.remove('out');try{$('cb-stories').focus({preventScroll:true})}catch(e){}},calm.matches?0:300)};
+window.cbStoriesBack=function(toEntries){if(!open)return;open=false;navDone('stories');csx.setAttribute('aria-hidden','true');csx.inert=true;
+  const done=()=>{csx.classList.remove('in','out');if(!toEntries)try{$('cb-stories').focus({preventScroll:true})}catch(e){}};
+  if(calm.matches&&!window.CTPage){done();return}
+  // back one page: Stories moves out to the right and the page before it (the board, or Entries) comes in from the left
+  csx.classList.add('out');pageGo('stories',toEntries?'entries':'board',-1,done)};
 window.cbName=()=>(profile.first||'').trim();
 $('cb-stories').addEventListener('click',openStories);
 ['pointerenter','touchstart','focus'].forEach(ev=>$('cb-stories').addEventListener(ev,load,{passive:true,once:true}));
 const quiet=()=>{if(csf)return;if(document.querySelector('dialog[open]')||document.hidden){setTimeout(quiet,1500);return}(window.requestIdleCallback||(f=>setTimeout(f,1)))(()=>{if(document.querySelector('dialog[open]')){setTimeout(quiet,1500);return}load()},{timeout:4000})};
-$('expand').addEventListener('click',()=>setTimeout(quiet,3000))})();
+$('expand').addEventListener('click',()=>setTimeout(quiet,3000));
+// Premium: Stories gets ready quietly in the background too, so the first switch to it is already drawn
+setTimeout(()=>{try{if(!window.CTBoardPlan||window.CTBoardPlan()==='premium')quiet()}catch(e){}},5000)})();

@@ -116,7 +116,7 @@
   // Preview helper (local mode + ?preview only): one tap loads the sample entries as Premium
   if (Sess.LOCAL_MODE && /[?&]preview\b/.test(location.search)) {
     const pv = document.createElement('button'); pv.type = 'button'; pv.className = 'pv-chip'; pv.textContent = 'Load sample entries';
-    pv.addEventListener('click', async () => { await S._loadSample(sampleEntries()); clearInterval(pvT); pv.remove(); Dash.toast(S.plan() === 'premium' ? 'Sample entries loaded. Tap Board for Card Board.' : 'Sample entries loaded. You’re on Free: tap ⤢ on Insights for the free Card Board.'); });
+    pv.addEventListener('click', async () => { if (S.setPlan) await S.setPlan('premium'); await S._loadSample(sampleEntries()); clearInterval(pvT); pv.remove(); Dash.toast(S.plan() === 'premium' ? 'Sample entries loaded. Tap Board for Card Board.' : 'Sample entries loaded. You’re on Free: tap ⤢ on Insights for the free Card Board.'); });
     const show = () => { if (!document.querySelector('.pv-chip') && !$('view-app').hidden) document.body.appendChild(pv); };
     const pvT = setInterval(show, 800); show();
   }

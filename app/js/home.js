@@ -32,7 +32,10 @@
     const tileOf = id => $(id) && $(id).parentElement;
     const sales = tileOf('ct-sales'), after = tileOf('ct-after'), spent = tileOf('ct-spent'), profit = tileOf('ct-profit');
     if (!sales) return;
-    const thisMonth = !prem || p === 'month';
+    // the month the tiles show (null for All time / 30 days)
+    const prevOf = k => keyOf(+k.slice(0, 4), +k.slice(5, 7) - 2);
+    const sel = p && p.slice(0, 2) === 'm:' ? p.slice(2) : p === 'month' || !prem ? cur : p === 'last' ? prevOf(cur) : null;
+    const thisMonth = sel === cur;
 
     const n = list.filter(e => e.type === 'sale').length;
     line(sales, n ? n + (n === 1 ? ' sale' : ' sales') : 'No sales yet');
@@ -42,14 +45,15 @@
     const b = S.budget();
     spent.classList.add('ct-budtile'); spent.setAttribute('role', 'button'); spent.tabIndex = 0;
     if (b) {
-      const used = monthTotals(cur).spent, pct = Math.round(used / b.cents * 100), over = used > b.cents, warn = !over && pct >= 80;
+      const bk = sel || cur, used = monthTotals(bk).spent, pct = Math.round(used / b.cents * 100), over = used > b.cents, warn = !over && pct >= 80;
       const kind = over ? 'over' : warn ? 'warn' : 'ok';
       const txt = thisMonth ? (over ? 'Over by ' + money(used - b.cents) : (warn ? 'Getting close' : 'On track') + ' · ' + pct + '% of ' + round$(b.cents))
+        : sel ? (over ? 'Over by ' + money(used - b.cents) : pct + '% of ' + round$(b.cents))
         : shortName(cur) + (over ? ' · over by ' + money(used - b.cents) : ' · ' + pct + '% of ' + round$(b.cents));
       line(spent, txt, kind);
-      spent.style.setProperty('--fill', thisMonth ? Math.min(1, used / b.cents).toFixed(4) : '0');
+      spent.style.setProperty('--fill', sel ? Math.min(1, used / b.cents).toFixed(4) : '0');
       spent.dataset.bud = kind;
-      spent.setAttribute('aria-label', 'Spent ' + money(t.spent) + '. Budget: ' + money(used) + ' of ' + round$(b.cents) + ' this month, ' + pct + '% used. Edit budget');
+      spent.setAttribute('aria-label', 'Spent ' + money(t.spent) + '. Budget: ' + money(used) + ' of ' + round$(b.cents) + (thisMonth ? ' this month, ' : ' in ' + shortName(bk) + ', ') + pct + '% used. Edit budget');
     } else {
       line(spent, 'Set a monthly budget', 'set');
       spent.style.setProperty('--fill', '0'); delete spent.dataset.bud;
@@ -58,8 +62,8 @@
 
     // --- profit: compared with the month before when the tiles show one month, otherwise as a share of sales ---
     let shown = false;
-    if (thisMonth || p === 'last') {
-      const base = thisMonth ? cur : keyOf(now.getFullYear(), now.getMonth() - 1), prevK = thisMonth ? keyOf(now.getFullYear(), now.getMonth() - 1) : keyOf(now.getFullYear(), now.getMonth() - 2);
+    if (sel) {
+      const base = sel, prevK = prevOf(sel);
       const prev = monthTotals(prevK);
       if (prev.entries) { const d = monthTotals(base).profit - prev.profit; line(profit, (d < 0 ? '▼ ' : '▲ ') + money(d) + ' vs ' + shortName(prevK), d < 0 ? 'dn' : 'up'); shown = true; }
     }
@@ -74,19 +78,49 @@
   const PH = () => matchMedia('(max-width:760px)').matches;
   const cbOpen = () => { const c = document.querySelector('.cbx'); return !!c && !c.classList.contains('off'); };
   const stOpen = () => { const x = document.getElementById('csx'); return !!x && x.classList.contains('in'); };
+  // the page name gets its own box, so it can fade and rise on its own when you switch pages (the logo stays put)
+  (function () { const br = document.querySelector('.ct-demo-top .ct-brand'); if (!br || br.querySelector('.ct-bname')) return; const n = [...br.childNodes].find(x => x.nodeType === 3 && x.textContent.trim()); if (n) { const sp = document.createElement('span'); sp.className = 'ct-bname'; sp.textContent = n.textContent.trim(); br.replaceChild(sp, n); } })();
+  // the parts of the Entries page that move together when the pages slide (the bottom bar stays put)
+  window.CTPageEls = () => [document.querySelector('#view-app .ct-app'), document.querySelector('.ct-phead.on'), document.querySelector('.ct-sumbar.on'), PH() ? $('ct-fab') : null].filter(Boolean);
+  // desktop: while the pages slide, the tabs hold still. One copy sits on top in the same spot and its highlight glides
+  // from the page you left to the one you picked; the real tabs on both pages step aside until the slide ends.
+  const tabsOf = pg => { if (pg === 'entries') return document.querySelector('.ct-demo-top .ct-tabs'); if (pg === 'board') return document.querySelector('.cbx .cb-tabs');
+    const f = document.querySelector('#csx iframe'); try { return f && f.contentDocument && f.contentDocument.querySelector('.cstabs'); } catch (e) { return null; } };
+  const rectOf = (el, pg) => { const r = el.getBoundingClientRect(); if (pg !== 'stories') return r; const f = document.querySelector('#csx iframe').getBoundingClientRect(); return { top: r.top + f.top, left: r.left, width: r.width, height: r.height }; };
+  window.CTNavHold = function (from, to, ms) {
+    if (PH() || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const src = tabsOf('entries'), a = tabsOf(from), b = tabsOf(to); if (!src || !a || (!b && to === 'entries')) return;
+    // Stories may still be loading the first time; its tabs always sit in the standard spot, same as the board's
+    const ra = rectOf(a, from), rb = b ? rectOf(b, to) : ra;
+    if (!ra.width || Math.abs(ra.top - rb.top) > 3 || ra.top < -10 || ra.top > 140) return;  // only when both sit in the same spot on screen
+    const c = src.cloneNode(true); c.className = 'ct-tabs ct-navhold'; c.setAttribute('aria-hidden', 'true');
+    c.querySelectorAll('[aria-current]').forEach(x => x.removeAttribute('aria-current'));
+    Object.assign(c.style, { left: ra.left + 'px', top: ra.top + 'px', width: ra.width + 'px', height: ra.height + 'px' });
+    const pill = document.createElement('i'); pill.className = 'nh-pill'; c.prepend(pill); document.body.appendChild(c);
+    const btn = t => c.querySelector('[data-tab="' + t + '"]'), fb = btn(from), tb = btn(to); if (!fb || !tb) { c.remove(); return; }
+    pill.style.width = tb.offsetWidth + 'px';
+    pill.animate([{ transform: 'translateX(' + fb.offsetLeft + 'px) scaleX(' + (fb.offsetWidth / tb.offsetWidth) + ')' }, { transform: 'translateX(' + tb.offsetLeft + 'px)' }], { duration: ms, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+    fb.classList.add('nh-on'); setTimeout(() => { fb.classList.remove('nh-on'); tb.classList.add('nh-on'); }, ms * .3);
+    const fr = document.querySelector('#csx iframe'), fdoc = (() => { try { return fr && fr.contentDocument; } catch (e) { return null; } })();
+    document.documentElement.classList.add('navhold'); if (fdoc) fdoc.documentElement.classList.add('navhold');
+    clearTimeout(window.__nhT); if (window.__nh) window.__nh.remove(); window.__nh = c;
+    window.__nhT = setTimeout(() => { c.remove(); window.__nh = null; document.documentElement.classList.remove('navhold'); if (fdoc) fdoc.documentElement.classList.remove('navhold'); }, ms + 40);
+  };
   function go(g, from) {
     if (from) opener = from;
     if (window.ctBuzz) window.ctBuzz('tap');
     if (g === 'entries') {
       // from Stories: the board steps out of the way underneath first, so Stories slides straight back to your list
-      if (stOpen() && window.cbStoriesBack) { if (cbOpen() && window.CTBoard) { window.cbInstant = PH(); window.CTBoard.close(); } window.cbStoriesBack(); return; }
+      // from Stories: the board steps away underneath (out of sight), and Stories slides back straight to your list
+      if (stOpen() && window.cbStoriesBack) { if (cbOpen() && window.CTBoard) { window.cbInstant = true; window.CTBoard.close(); } window.cbStoriesBack(true); return; }
       if (cbOpen() && window.CTBoard) window.CTBoard.close(); else window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
     if (g === 'board') { if (stOpen() && window.cbStoriesBack) { window.cbStoriesBack(); return; } if (cbOpen()) { const c = document.querySelector('.cbx'); c.scrollTo({ top: 0, behavior: 'smooth' }); return; } }
     // Free: Stories is Premium, so its window opens right here (no board opening underneath it)
     if (g === 'stories' && S.plan() !== 'premium' && !cbOpen() && window.CTBoardLoader) { window.CTBoardLoader.load().then(() => { if (window.CTPremiumOpen) window.CTPremiumOpen('stories'); }).catch(() => {}); return; }
     if (g === 'stories' && cbOpen()) { if (!stOpen()) { const b = document.getElementById('cb-stories'); if (b) b.click(); } return; }
     // phones, Premium: Entries straight to Stories is one slide (the board opens underneath without its own slide)
-    if (g === 'stories' && PH() && S.plan() === 'premium' && window.CTBoardLoader) { window.CTBoardLoader.load().then(() => { window.cbInstant = true; window.CTBoard.refresh(); window.CTBoard.open(); const b = document.getElementById('cb-stories'); if (b) b.click(); }).catch(() => {}); return; }
+    // Premium: Entries straight to Stories is one page slide (phones and desktop); the board opens underneath without its own
+    if (g === 'stories' && S.plan() === 'premium' && window.CTBoardLoader) { window.CTBoardLoader.load().then(() => { window.cbInstant = true; window.cbFromEntries = true; if (!window.cbDataVer) window.CTBoard.refresh(); window.CTBoard.open(); const b = document.getElementById('cb-stories'); if (b) b.click(); }).catch(() => {}); return; }
     const m = document.querySelector('#app-menu [data-go="' + g + '"]'); if (m) m.click();
   }
   window.CTTabGo = go;
@@ -95,7 +129,7 @@
   // keep the bar's highlight on the page you're on
   function syncTabs() {
     const cur = stOpen() ? 'stories' : cbOpen() ? 'board' : 'entries';
-    document.querySelectorAll('#ct-tbar [data-tab], .ct-demo-top .ct-tabs [data-tab]').forEach(b => { if (b.dataset.tab === cur) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+    document.querySelectorAll('#ct-tbar [data-tab], .sh-tabs .ct-tabs [data-tab], .ct-demo-top .ct-tabs [data-tab]').forEach(b => { if (b.dataset.tab === cur) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   }
   const watch = () => { const c = document.querySelector('.cbx'), x = document.getElementById('csx'); const mo = new MutationObserver(syncTabs); if (c) mo.observe(c, { attributes: true, attributeFilter: ['class'] }); if (x) mo.observe(x, { attributes: true, attributeFilter: ['class'] }); return !!(c && x); };
   if (!watch()) { const t = setInterval(() => { if (document.querySelector('.cbx') && document.getElementById('csx')) { clearInterval(t); watch(); syncTabs(); } }, 600); }
@@ -134,6 +168,13 @@
   // Card Board's avatar opens this same menu (its own menu is retired)
   document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('.cbx #cb-av'); if (!a) return; const btn = a.closest('button') || a; e.preventDefault(); e.stopImmediatePropagation(); if (window.CTMenu) window.CTMenu.open(btn); }, true);
   // admin: show the first-time tips again
+  // Admin: compare the two desktop page switches (fade is the default; slide is the phone's)
+  const fxBtn = () => document.querySelector('[data-dev="pagefx"]');
+  const FX = ['glide', 'fade', 'slide'], FXN = { glide: 'Glide', fade: 'Fade', slide: 'Slide' };
+  const fxNow = () => { try { const v = localStorage.getItem('ct.pagefx'); return FX.includes(v) ? v : 'glide'; } catch (e) { return 'glide'; } };
+  const fxPaint = () => { const b = fxBtn(); if (b) b.textContent = 'Desktop page switch: ' + FXN[fxNow()]; };
+  fxPaint();
+  document.addEventListener('click', e => { if (!e.target.closest('[data-dev="pagefx"]')) return; e.stopPropagation(); const n = FX[(FX.indexOf(fxNow()) + 1) % FX.length]; try { localStorage.setItem('ct.pagefx', n); } catch (er) {} fxPaint(); if (window.CTDash) window.CTDash.toast('Desktop page switch: ' + FXN[n]); }, true);
   document.addEventListener('click', e => { if (!e.target.closest('[data-dev="tips"]')) return; try { localStorage.removeItem('cb.hint'); } catch (er) {} if (window.CTDash) window.CTDash.toast('First-time tips will show again'); });
 
 
@@ -142,6 +183,7 @@
   window.CTMePaint = function () {
     let a = {}, pr = {}; try { a = JSON.parse(localStorage.getItem('cb.avatar')) || {}; pr = JSON.parse(localStorage.getItem('cb.profile')) || {}; } catch (e) {}
     const first = (pr.first || '').trim(), name = pr.show === 'full' && pr.last ? first + ' ' + pr.last : first;
+    if (!a.photo && !a.color) a.color = '#a50e37';   // the board's default color, so the avatar looks the same on every page
     ['app-avatar', 'am-av'].forEach(id => { const el = $(id); if (!el) return; if (a.photo) { el.style.background = 'url(' + a.photo + ') center/cover'; el.textContent = ''; } else if (a.color) { el.style.background = a.color; el.style.color = inkFor(a.color); if (first) el.textContent = first[0].toUpperCase(); } });
     const nm = document.querySelector('#am-name .am-nm'); if (nm && name) nm.textContent = name;
   };
@@ -167,7 +209,7 @@
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.ct-me'); if (!b) return; e.preventDefault(); e.stopImmediatePropagation(); if (window.CTMenu) window.CTMenu.open(b); }, true);
   // Entries' slim bar and Board's slim bar get one as soon as they exist
   const fit = setInterval(() => {
-    const st = document.querySelector('.ct-stick'); if (st && !st.querySelector('.ct-me')) st.appendChild(mkMe());
+    const st = document.querySelector('.ct-phead .ph-r'); if (st && !st.querySelector('.ct-me')) st.appendChild(mkMe());
     const sic = document.querySelector('.cbslim .sic'); if (sic && !sic.querySelector('.ct-me')) sic.appendChild(mkMe());
     if (st && st.querySelector('.ct-me') && sic && sic.querySelector('.ct-me')) clearInterval(fit);
   }, 700);

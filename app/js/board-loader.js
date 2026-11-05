@@ -22,11 +22,11 @@
     { src: 'assets/card-art/magby-wall.webp', focus: { x: .5, y: .3 } },
     { src: 'assets/card-art/dragonair-wall.webp', focus: { x: .5, y: .2 } }
   ];
-  let loading = null;
+  let loading = null, opened = false;
   function load() {
     if (window.CTBoard) return Promise.resolve();
     if (loading) return loading;
-    const V = '34.6'; // bump when board files change, so phones don't keep an old copy
+    const V = '37'; // bump when board files change, so phones don't keep an old copy
     const css = new Promise((res, rej) => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'board/board.css?v=' + V; l.onload = res; l.onerror = rej; document.head.appendChild(l); });
     const js = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'board/board.js?v=' + V; s.async = true; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
     loading = Promise.all([css, js]).then(() => { sync(); }).catch(e => { loading = null; throw e; });
@@ -38,7 +38,8 @@
     window.CTBoard.user({ name: (nm && nm.textContent) || (sess && sess.name) || '', email: sess && sess.email, premium: S.plan() === 'premium' });
   }
   async function open(then) {
-    try { await load(); sync(); window.CTBoard.refresh(); window.CTBoard.open(); if (then === 'stories') setTimeout(() => { const b = document.getElementById('cb-stories'); if (b) b.click(); }, 620); }
+    // the board is kept current by the listener below, so opening it never rebuilds it (no redraw when you switch pages)
+    try { await load(); sync(); window.CTBoard.open(); if (then === 'stories') setTimeout(() => { const b = document.getElementById('cb-stories'); if (b) b.click(); }, 620); }
     catch (e) { console.error('Card Board failed to load', e); }
   }
   // Keep the board current with the list

@@ -27,10 +27,16 @@
       from30: S.ymd(f30)
     };
   }
-  const inPeriod = (t, p) => p === 'all' || (p === 'month' ? t.date.startsWith(D.monthPrefix) : p === 'last' ? t.date.startsWith(D.prevPrefix) : t.date >= D.from30);
-  const periodLabel = p => (p === 'all' ? 'All time' : p === 'month' ? D.monthLabel : p === 'last' ? D.prevLabel : 'Last 30 days');
+  // a period is 'all', 'd30', or one month as 'm:YYYY-MM' (older saved values 'month'/'last' still work)
+  const monthOf = p => p && p.slice(0, 2) === 'm:' ? p.slice(2) : p === 'month' ? D.monthPrefix : p === 'last' ? D.prevPrefix : null;
+  // other ranges: 'r7:/r30:/rc:FROM:TO' (days, both ends included) and 'y:YYYY'
+  const rangeOf = p => { let r = /^r(?:7|30|c):(\d{4}-\d\d-\d\d):(\d{4}-\d\d-\d\d)$/.exec(p || ''); if (r) return [r[1], r[2]]; r = /^y:(\d{4})$/.exec(p || ''); return r ? [r[1] + '-01-01', r[1] + '-12-31'] : null; };
+  const rangeLabel = p => { const r = rangeOf(p); if (/^y:/.test(p)) return r[0].slice(0, 4); const f = d => new Date(d + 'T12:00:00').toLocaleString('en-US', { month: 'short', day: 'numeric' }); return r[0] === r[1] ? f(r[0]) : f(r[0]) + ' – ' + f(r[1]) + (r[1].slice(0, 4) !== String(new Date().getFullYear()) ? ', ' + r[1].slice(0, 4) : ''); };
+  const inPeriod = (t, p) => p === 'all' || (rangeOf(p) ? t.date >= rangeOf(p)[0] && t.date <= rangeOf(p)[1] : monthOf(p) ? t.date.startsWith(monthOf(p)) : p === 'month' ? t.date.startsWith(D.monthPrefix) : p === 'last' ? t.date.startsWith(D.prevPrefix) : t.date >= D.from30);
+  const periodLabel = p => (rangeOf(p) ? rangeLabel(p) : monthOf(p) ? ymLabel(monthOf(p), { month: 'long', year: 'numeric' }) : p === 'all' ? 'All time' : p === 'month' ? D.monthLabel : p === 'last' ? D.prevLabel : 'Last 30 days');
   const YM = new Map();
   const ymLabel = (k, fmt) => { const key = k + JSON.stringify(fmt); let v = YM.get(key); if (v == null) { v = new Date(k + '-15T12:00:00').toLocaleString('en-US', fmt); YM.set(key, v); } return v; };
+  const niceDate = d => { const dt = new Date(d + 'T12:00:00'); return dt.toLocaleString('en-US', dt.getFullYear() === new Date().getFullYear() ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' }); };
   const shortDate = d => Number(d.slice(5, 7)) + '/' + Number(d.slice(8, 10)) + '/' + d.slice(0, 4);
   const premium = () => S.plan() === 'premium';
 
@@ -49,6 +55,7 @@
     if (toastEl) toastEl.remove(); clearTimeout(toastT);
     const t = document.createElement('div'); t.className = 'app-toast'; t.setAttribute('role', 'status');
     const span = document.createElement('span'); span.textContent = text; t.appendChild(span);
+    if (opts.go) { const b = document.createElement('button'); b.type = 'button'; b.textContent = 'View'; b.addEventListener('click', () => { opts.go(); t.remove(); }); t.appendChild(b); }
     if (opts.undo) {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = 'Undo';
       b.addEventListener('click', doUndo);
@@ -60,7 +67,7 @@
   const upgradeNote = () => toast('Upgrading opens at launch. For now, switch plans under Testing tools in the account menu.');
 
   // ---------- data shaping (all in cents) ----------
-  function tileScope() { const all = S.all(); return premium() ? all.filter(t => inPeriod(t, $('ct-period').value)) : all.filter(t => t.date.startsWith(D.monthPrefix)); }
+  function tileScope() { const all = S.all(); return premium() ? all.filter(t => inPeriod(t, $('ct-period').value)) : all.filter(t => t.date.startsWith(monthOf($('ct-period').value) || D.monthPrefix)); }
   function monthKeys(fromKey, toKey) { const out = []; let [y, m] = fromKey.split('-').map(Number); for (let i = 0; i < 400; i++) { const k = y + '-' + pad(m); out.push(k); if (k >= toKey) break; m++; if (m > 12) { m = 1; y++; } } return out; }
   function monthsData() {
     let list, keys;
@@ -78,15 +85,27 @@
   function feesData() { const map = {}; tileScope().filter(t => t.type === 'sale').forEach(t => { const k = t.platform || 'No platform'; map[k] = (map[k] || 0) + t.amount - t.net; }); return Object.keys(map).sort((a, b) => map[b] - map[a]).map(k => ({ m: k, key: k, full: k, fees: map[k] })); }
 
   // ---------- totals ----------
+  // When a total changes (a new month, a new entry), the number counts up or down to its new value in about half a second,
+  // then lands exactly on the cent. The tile itself never changes.
+  const tweens = new Map();
+  function countTo(el, c) {
+    const old = el.dataset.c != null ? +el.dataset.c : null; el.dataset.c = c;
+    cancelAnimationFrame(tweens.get(el) || 0);
+    if (old === null || old === c || calm.matches || document.hidden || !el.getClientRects().length) { el.textContent = money(c); return; }
+    const t0 = performance.now(), D = 560;
+    const step = now => { const k = Math.min(1, (now - t0) / D), e = 1 - Math.pow(1 - k, 3); el.textContent = money(k < 1 ? Math.round(old + (c - old) * e) : c); if (k < 1) tweens.set(el, requestAnimationFrame(step)); };
+    tweens.set(el, requestAnimationFrame(step));
+  }
   function stats() {
     const t = S.totals(tileScope());
-    $('ct-sales').textContent = money(t.sales); $('ct-after').textContent = money(t.after); $('ct-spent').textContent = money(t.spent); $('ct-profit').textContent = money(t.profit);
+    countTo($('ct-sales'), t.sales); countTo($('ct-after'), t.after); countTo($('ct-spent'), t.spent); countTo($('ct-profit'), t.profit);
     const tile = $('ct-profit').parentElement; tile.classList.toggle('ct-positive', t.profit >= 0); tile.classList.toggle('ct-negative', t.profit < 0);
     const note = $('app-scope'), p = $('ct-period').value;
-    note.hidden = premium() || p === 'month' || !S.all().length;
+    note.hidden = premium() || !!monthOf(p) || !S.all().length;
     if (!note.hidden) note.innerHTML = 'Totals show ' + esc(D.monthLabel) + ' · <button type="button" data-upgrade>All time with Premium</button>';
     $('ct-ins-scope').textContent = premium() ? periodLabel(p) : 'This month';
     if (window.CTHome) window.CTHome.paint({ t, list: tileScope(), p, prem: premium() });
+    if (window.CTMetrics) window.CTMetrics.paint(tileScope());
   }
 
   // ---------- chart (same interaction as the demo) ----------
@@ -127,20 +146,21 @@
     const letter = (t.name.match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase();
     return '<span class="ct-card-art ct-art-ph" aria-hidden="true"><i>' + esc(letter) + '</i></span>';
   }
-  function detailsHtml(t) {
-    // Small labeled stats, like the board's tiles: label on top, the number under it
-    let pctLine = '';
-    const st = [], cell = (l, v, sub) => st.push('<div><small>' + l + '</small><span>' + v + '</span>' + (sub ? '<em>' + sub + '</em>' : '') + '</div>');
-    if (t.type === 'sale') {
-      const fee = t.amount - t.net, pct = t.amount ? Math.round(fee / t.amount * 1000) / 10 : 0;
-      if (t.fees != null) { cell('Fees', money(t.fees)); cell('Shipping', money(t.ship || 0)); }
-      else cell('Fees + ship', money(fee));
-      if (t.amount) pctLine = '<div class="ct-pct">Fees and shipping are ' + pct + '% of the sale</div>';
-    }
-    if (t.qty > 1) cell('Quantity', String(t.qty), money(Math.round(t.amount / t.qty)) + ' each');
+  // v37: the open row keeps only what the row doesn't already show, each fact under a small label (the date, the
+  // amounts and "after fees" are in the row itself). Sales: fees, shipping, condition. Purchases: condition. Plus any note.
+  function cellsHtml(t) {
+    const st = [], cell = (l, v) => st.push('<div><small>' + l + '</small><span>' + v + '</span></div>');
+    if (t.type === 'sale') { if (t.fees != null) { cell('Fees', money(t.fees)); cell('Shipping', money(t.ship || 0)); } else cell('Fees + ship', money(t.amount - t.net)); }
     if (t.condition) cell('Condition', esc(t.condition));
-    return '<div class="ct-open-actions"><div class="ct-row-expanded-info">' + (st.length ? '<div class="ct-stats-row">' + st.join('') + '</div>' : '') + pctLine + (t.note ? '<div class="ct-row-note">' + esc(t.note) + '</div>' : '') + '<div class="ct-demo-actions"><button type="button" data-act="edit">Edit</button><button type="button" data-act="dup">Duplicate</button><button type="button" data-act="del">Delete</button></div></div></div>';
+    return st.length ? '<div class="ct-stats-row">' + st.join('') + '</div>' : '';
   }
+  const ACTS = '<div class="ct-demo-actions"><button type="button" data-act="edit">Edit</button><button type="button" data-act="dup">Duplicate</button><button type="button" data-act="del">Delete</button></div>';
+  function detailsHtml(t) {
+    return '<div class="ct-open-actions"><div class="ct-row-expanded-info">' + cellsHtml(t) + (t.note ? '<div class="ct-row-note">' + esc(t.note) + '</div>' : '') + ACTS + '</div></div>';
+  }
+  const badgeOf = t => t.type === 'sale' ? 'Sale' : t.type === 'refund' ? 'Refund' : 'Purchase';
+  const amtText = t => (t.type === 'sale' ? '+' : '−') + money(t.amount);
+  const subText = t => t.type === 'sale' ? money(t.net) + ' after fees' : t.type === 'refund' ? 'Refunded' : 'Paid';
   const fullArt = img => { if (!img || img.tagName !== 'IMG' || img.dataset.loaded) return; img.dataset.loaded = 1; const u = img.dataset.full, pre = new Image(), t0 = performance.now(); pre.src = u; (pre.decode ? pre.decode() : new Promise((r, j) => { pre.onload = r; pre.onerror = j; })).then(() => setTimeout(() => { if (img.isConnected) img.src = u; }, Math.max(0, 380 - (performance.now() - t0)))).catch(() => { delete img.dataset.loaded; }); };
   function setBtn(btn, open) { const t = S.get(btn.dataset.tx); if (!t) return; btn.setAttribute('aria-expanded', open); btn.setAttribute('aria-label', (open ? 'Collapse ' : 'Expand ') + t.name); btn.querySelector('.ct-row-chevron').textContent = open ? '−' : '+'; }
 
@@ -191,6 +211,64 @@
     sel.value = ps.includes(cur) ? cur : 'all';
   }
 
+  // ---------- gallery view (v37): the card art, big. Same range, filters, platform and sort as the list ----------
+  let gal = false; try { gal = localStorage.getItem('ct.view') === 'gallery'; } catch (e) {}
+  const shortName = n => String(n || '').split(' - ')[0];
+  function tileHtml(t) {
+    const src = t.art && (t.art.detail || t.art.list);
+    return '<button type="button" class="ct-tile' + (t.id === justAdded ? ' ct-new' : '') + '" data-tile="' + t.id + '" aria-label="' + esc(t.name) + ', ' + badgeOf(t) + ', ' + amtText(t) + '">' +
+      '<span class="ct-tile-art">' + (src ? '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async">' : '<i>' + esc(t.name) + '</i>') + '</span>' +
+      '<b class="ct-tile-nm"><span class="ct-tile-full">' + esc(t.name) + (t.qty > 1 ? ' ×' + t.qty : '') + '</span><span class="ct-tile-short">' + esc(shortName(t.name)) + '</span></b>' +
+      '<small class="ct-tile-ln"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span><span class="ct-tile-meta">' + badgeOf(t) + ' · ' + niceDate(t.date) + '</span><span class="ct-tile-pl">' + esc(t.platform || badgeOf(t)) + '</span></small>' +
+      '<strong class="ct-tile-amt ' + t.type + '">' + amtText(t) + '</strong></button>';
+  }
+  function setView(v) {
+    gal = v === 'gallery'; try { localStorage.setItem('ct.view', v); } catch (e) {}
+    fbar.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === v)));
+    expanded = null; const l = $('ct-rows');
+    if (calm.matches) { render(); return; }
+    l.classList.add('ct-swap'); setTimeout(() => { render(); requestAnimationFrame(() => l.classList.remove('ct-swap')); }, 140);
+  }
+
+  // ---------- the details panel for a gallery card: centered on desktop, a sheet from the bottom on phones ----------
+  const gp = document.createElement('dialog'); gp.className = 'ct-gp'; gp.setAttribute('aria-label', 'Entry details');
+  document.body.appendChild(gp);
+  let gpId = null;
+  const gpList = () => [...$('ct-rows').querySelectorAll('[data-tile]')].map(b => b.dataset.tile);
+  function paintGP() {
+    const t = S.get(gpId); if (!t) { gp.close(); return; }
+    const src = t.art && (t.art.detail || t.art.list), ids = gpList(), i = ids.indexOf(gpId);
+    const X = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+    const A = d => '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + (d < 0 ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6') + '"/></svg>';
+    gp.innerHTML = '<div class="gp-in"><i class="gp-grab" aria-hidden="true"></i><button type="button" class="gp-x" data-gx aria-label="Close">' + X + '</button>' +
+      '<div class="gp-art">' + (src ? '<img src="' + esc(src) + '" alt="">' : '<i>' + esc(t.name) + '</i>') + '</div>' +
+      '<div class="gp-body"><small class="gp-line"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span>' + badgeOf(t) + ' · ' + (t.platform ? esc(t.platform) + ' · ' : '') + niceDate(t.date) + '</small>' +
+      '<h2 class="gp-nm">' + esc(t.name) + (t.qty > 1 ? ' ×' + t.qty : '') + '</h2>' +
+      '<div class="gp-amt"><strong class="' + t.type + '">' + amtText(t) + '</strong><span>' + subText(t) + '</span></div>' +
+      '<div class="ct-row-expanded-info">' + cellsHtml(t) + (t.note ? '<div class="ct-row-note">' + esc(t.note) + '</div>' : '') + ACTS.replace(/data-act=/g, 'data-gact=') + '</div></div>' +
+      (ids.length > 1 ? '<button type="button" class="gp-nav gp-prev" data-gstep="-1" aria-label="Previous card"' + (i <= 0 ? ' disabled' : '') + '>' + A(-1) + '</button><button type="button" class="gp-nav gp-next" data-gstep="1" aria-label="Next card"' + (i >= ids.length - 1 ? ' disabled' : '') + '>' + A(1) + '</button>' : '') + '</div>';
+  }
+  function openGP(id) { gpId = id; paintGP(); gp.classList.remove('out'); if (!gp.open) gp.showModal(); const x = gp.querySelector('[data-gx]'); if (x) x.focus({ preventScroll: true }); }
+  function closeGP(then) { if (!gp.open) { if (then) then(); return; } if (calm.matches) { gp.close(); if (then) then(); return; } gp.classList.add('out'); setTimeout(() => { gp.close(); gp.classList.remove('out'); gp.style.removeProperty('--dy'); if (then) then(); }, 200); }
+  function stepGP(d) { const ids = gpList(), i = ids.indexOf(gpId) + d; if (i < 0 || i >= ids.length) return; gpId = ids[i]; paintGP(); }
+  gp.addEventListener('click', e => {
+    if (e.target === gp) { closeGP(); return; }
+    if (e.target.closest('[data-gx]')) { closeGP(); return; }
+    const st = e.target.closest('[data-gstep]'); if (st) { stepGP(+st.dataset.gstep); return; }
+    const a = e.target.closest('[data-gact]'); if (a) { const id = gpId, k = a.dataset.gact; closeGP(() => doAct(k, id)); }
+  });
+  gp.addEventListener('cancel', e => { e.preventDefault(); closeGP(); });
+  gp.addEventListener('keydown', e => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); stepGP(e.key === 'ArrowLeft' ? -1 : 1); } });
+  // phones: drag the sheet down to close it
+  gp.addEventListener('pointerdown', e => {
+    if (!phone.matches || !e.target.closest('.gp-grab,.gp-art,.gp-line,.gp-nm')) return;
+    const y0 = e.clientY, inn = gp.querySelector('.gp-in'); let dy = 0; inn.style.transition = 'none';
+    const mv = ev => { dy = Math.max(0, ev.clientY - y0); inn.style.transform = 'translate3d(0,' + dy + 'px,0)'; };
+    const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); inn.style.transition = ''; if (dy > 90) { inn.style.transform = ''; gp.style.setProperty('--dy', dy + 'px'); closeGP(); } else inn.style.transform = ''; };
+    addEventListener('pointermove', mv, { passive: true }); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+  });
+  S.on(() => { if (gp.open) paintGP(); });
+
   // Older months behind "Show ..." aren't built until you open them, so the page stays light (sheets open faster, filters redraw faster)
   let earlierHTML = '';
   function render() {
@@ -200,17 +278,23 @@
     limits(); firstRun(); askPanel(); platformsSelect();
     $('ct-type').value = type;
     const q = $('ct-search').value.trim().toLowerCase(), platform = $('ct-platform').value, period = $('ct-period').value, sort = $('ct-sort').value;
-    let rows = all.filter(t => (type === 'all' || t.type === type) && (platform === 'all' || t.platform === platform) && (!q || (t.name + ' ' + t.platform + ' ' + t.note).toLowerCase().includes(q)) && inPeriod(t, period));
+    let rows = all.filter(t => (type === 'all' || t.type === type) && (platform === 'all' || t.platform === platform) && (!q || (t.name + ' ' + t.platform + ' ' + t.note).toLowerCase().includes(q)) && (q || inPeriod(t, period)));   // search always looks through every month
+    { const base = all.filter(t => (platform === 'all' || t.platform === platform) && (!q || (t.name + ' ' + t.platform + ' ' + t.note).toLowerCase().includes(q)) && (q || inPeriod(t, period)));
+      const n = { all: base.length, sale: 0, purchase: 0, refund: 0 }; base.forEach(t => { n[t.type] = (n[t.type] || 0) + 1; });
+      fbar.querySelectorAll('[data-fb]').forEach(c => { const k = c.dataset.fb; c.querySelector('em').textContent = n[k] ? n[k] : ''; c.classList.toggle('on', k === type); c.setAttribute('aria-pressed', String(k === type)); }); }
     rows.sort((a, b) => sort === 'high' ? b.amount - a.amount : sort === 'old' ? a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt) : b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
     stats(); chart();
     if (empty) return;
     const listFiltered = !!(q || type !== 'all' || platform !== 'all'), ft = S.totals(rows);
     const nw = x => '<span class="ct-nw">' + x + '</span>';
-    $('ct-count').innerHTML = esc(periodLabel(period)) + ' · ' + nw(rows.length + (rows.length === 1 ? ' entry' : ' entries')) + (listFiltered ? ' · ' + nw('Spent ' + money(ft.spent)) + ' · ' + nw('Profit ' + money(ft.profit)) : '');
+    const oneMonth = !q && !!monthOf(period) && sort !== 'high';
+    $('ct-rows').classList.toggle('ct-onemonth', oneMonth);
+    $('ct-rows').classList.toggle('ct-gal', gal);
+    $('ct-count').innerHTML = esc(q ? 'All months' : periodLabel(period)) + ' · ' + nw(rows.length + (rows.length === 1 ? ' entry' : ' entries')) + (listFiltered ? ' · ' + nw('Spent ' + money(ft.spent)) + ' · ' + nw('Profit ' + money(ft.profit)) : '');
     // Phones: newest entries stay visible (this month's, never fewer than three); older months tuck behind a "Show ..." button
     const cur = t => t.date.startsWith(D.monthPrefix);
     const keepN = Math.max(3, rows.filter(cur).length);
-    const collapse = phone.matches && period === 'all' && sort === 'new' && rows.length > keepN && !listFiltered;
+    const collapse = !gal && phone.matches && period === 'all' && sort === 'new' && rows.length > keepN && !listFiltered;
     const earlier = [...new Set(rows.slice(keepN).map(t => t.date.slice(0, 7)))].map(k => ymLabel(k, { month: 'long' })).filter((v, i, a) => a.indexOf(v) === i);
     const earlierNames = earlier.length > 3 ? 'earlier months' : earlier.length < 2 ? earlier.join('') : earlier.slice(0, -1).join(', ') + ' and ' + earlier[earlier.length - 1];
     const perMonth = {}; rows.forEach(t => { const k = t.date.slice(0, 7); perMonth[k] = (perMonth[k] || 0) + 1; });
@@ -221,11 +305,15 @@
     rows.forEach((t, i) => {
       const k = t.date.slice(0, 7), m = ymLabel(k, { month: 'long', year: 'numeric' });
       if (collapse && !marked && i >= keepN) { endGroup(); marked = true; chunks.push('\u0000'); current = ''; }
-      if (sort !== 'high' && m !== current) { endGroup(); current = m; chunks.push('<div class="ct-month">' + m + ' <span>' + perMonth[k] + (perMonth[k] === 1 ? ' entry' : ' entries') + '</span></div>'); }
+      if (sort !== 'high' && !oneMonth && m !== current) { endGroup(); current = m; chunks.push('<div class="ct-month">' + m + ' <span>' + perMonth[k] + (perMonth[k] === 1 ? ' entry' : ' entries') + '</span></div>'); }
+      if (gal) { chunks.push(tileHtml(t)); return; }
       const open = expanded === t.id, badge = t.type === 'sale' ? 'Sale' : t.type === 'refund' ? 'Refund' : 'Purchase';
       const after = t.type === 'sale' ? ' &nbsp; After fees <em>' + money(t.net) + '</em>' : '';
       const verb = t.type === 'sale' ? 'Sold' : t.type === 'refund' ? 'Refunded to buyer' : 'Paid';
-      chunks.push('<div class="ct-row ' + (open ? 'expanded' : '') + (t.id === justAdded ? ' ct-new' : '') + '"><button type="button" class="ct-row-toggle" data-tx="' + t.id + '" aria-expanded="' + open + '" aria-label="' + (open ? 'Collapse' : 'Expand') + ' ' + esc(t.name) + '">' + artHtml(t, open) + '<div class="ct-expanded-right"><div class="ct-row-meta">' + shortDate(t.date) + (t.platform ? ' · ' + esc(t.platform) : '') + '</div><div class="ct-row-name">' + esc(t.name) + (t.qty > 1 ? ' ×' + t.qty : '') + '</div><div class="ct-row-bottom">' + verb + ' <strong>' + money(t.amount) + '</strong>' + after + '</div></div><span class="ct-tag ' + t.type + '">' + badge + '</span><span class="ct-row-chevron" aria-hidden="true">' + (open ? '−' : '+') + '</span></button>' + (open ? detailsHtml(t) : '') + '</div>');
+      chunks.push('<div class="ct-row ' + (open ? 'expanded' : '') + (t.id === justAdded ? ' ct-new' : '') + '"><button type="button" class="ct-row-toggle" data-tx="' + t.id + '" aria-expanded="' + open + '" aria-label="' + (open ? 'Collapse' : 'Expand') + ' ' + esc(t.name) + '">' + artHtml(t, open) + '<div class="ct-expanded-right"><div class="ct-row-meta">' + shortDate(t.date) + (t.platform ? ' · ' + esc(t.platform) : '') + '</div><div class="ct-row-name">' + esc(t.name) + (t.qty > 1 ? ' ×' + t.qty : '') + '</div><div class="ct-row-bottom">' + verb + ' <strong>' + money(t.amount) + '</strong>' + after + '</div>' +
+        // desktop: one quiet line under the name (type, platform, date) and the money on the right edge
+        '<div class="ct-row-line"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span>' + badge + ' · ' + (t.platform ? esc(t.platform) + ' · ' : '') + niceDate(t.date) + '</div></div>' +
+        '<span class="ct-row-amt ' + t.type + '"><strong>' + (t.type === 'sale' ? '+' : '−') + money(t.amount) + '</strong><small>' + (t.type === 'sale' ? money(t.net) + ' after fees' : t.type === 'refund' ? 'Refunded' : 'Paid') + '</small></span><span class="ct-tag ' + t.type + '">' + badge + '</span><span class="ct-row-chevron" aria-hidden="true">' + (open ? '−' : '+') + '</span></button>' + (open ? detailsHtml(t) : '') + '</div>');
       lastRow = chunks.length - 1;
     });
     endGroup();
@@ -233,11 +321,20 @@
     let html = chunks.join('');
     if (collapse) { const parts = html.split('\u0000'); html = parts[0] + '<button type="button" class="ct-earlier-btn" aria-expanded="' + showEarlier + '" data-names="' + esc(earlierNames) + '"><span>' + (showEarlier ? 'Hide ' : 'Show ') + esc(earlierNames) + '</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><div class="ct-earlier' + (showEarlier ? ' open' : '') + '"' + (showEarlier ? '' : ' inert') + '><div>' + (showEarlier ? parts[1] : '') + '</div></div>'; earlierHTML = parts[1]; } else earlierHTML = '';
     const list = $('ct-rows'), keepScroll = list.scrollTop;
-    list.innerHTML = html || '<div class="ct-empty"><p>No entries match.</p><button type="button" data-clear-filters>Clear filters</button></div>';
+    list.innerHTML = html || (oneMonth && !listFiltered ? '<div class="ct-empty ct-empty-month"><p>No entries in ' + esc(ymLabel(monthOf(period), { month: 'long' })) + ' yet.</p>' + (monthOf(period) === D.monthPrefix ? '<button type="button" data-empty-add>+ Add New</button>' : '') + '</div>' : '<div class="ct-empty"><p>No entries match.</p><button type="button" data-clear-filters>Clear filters</button></div>');
     list.scrollTop = keepScroll;
     fadeSync();
   }
 
+  async function doAct(a, id) {
+    const t = S.get(id); if (!t) return;
+    if (a === 'edit') window.CTEditor.open(t, afterEditor);
+    else if (a === 'del') removeAnimated(id);
+    else if (a === 'dup') {
+      if (S.usage().blocked) { limitToast(); return; }
+      const c = await S.duplicate(id); justAdded = c.id; expanded = null; render(); usageToast('Entry duplicated');
+    }
+  }
   // One listener for everything in the list (rows are redrawn often)
   $('ct-rows').addEventListener('click', async e => {
     const eb = e.target.closest('.ct-earlier-btn');
@@ -251,28 +348,36 @@
       if (!opening && expanded != null && box.querySelector('[data-tx="' + expanded + '"]')) { list._skipPin = true; toggle(expanded); list._skipPin = false; }
       return;
     }
+    if (e.target.closest('[data-empty-add]')) { $('ct-add').click(); return; }
     if (e.target.closest('[data-clear-filters]')) { clearFilters(); return; }
     const act = e.target.closest('[data-act]');
     if (act) {
       e.stopPropagation();
-      const id = act.closest('.ct-row').querySelector('.ct-row-toggle').dataset.tx, t = S.get(id); if (!t) return;
-      if (act.dataset.act === 'edit') window.CTEditor.open(t, afterEditor);
-      else if (act.dataset.act === 'del') removeAnimated(id);
-      else if (act.dataset.act === 'dup') {
-        if (S.usage().blocked) { limitToast(); return; }
-        const c = await S.duplicate(id); justAdded = c.id; expanded = null; render(); usageToast('Entry duplicated');
-      }
+      doAct(act.dataset.act, act.closest('.ct-row').querySelector('.ct-row-toggle').dataset.tx);
       return;
     }
+    const tile = e.target.closest('[data-tile]'); if (tile) { openGP(tile.dataset.tile); return; }
     const tg = e.target.closest('.ct-row-toggle'); if (tg) toggle(tg.dataset.tx);
   });
   $('ct-rows').addEventListener('pointerover', e => { const tg = e.target.closest && e.target.closest('.ct-row-toggle'); const a = tg && tg.querySelector('img.ct-card-art'); if (a && !a.dataset.warm && !a.dataset.loaded) { a.dataset.warm = 1; const w = new Image(); w.src = a.dataset.full; } }, { passive: true });
   $('ct-rows').addEventListener('scroll', fadeSync, { passive: true });
 
   function clearFilters() {
-    type = 'all'; $('ct-search').value = ''; $('ct-search').dispatchEvent(new Event('input')); $('ct-platform').value = 'all'; $('ct-period').value = 'all';
+    type = 'all'; $('ct-search').value = ''; $('ct-search').dispatchEvent(new Event('input')); $('ct-platform').value = 'all';
     $$('[data-ct-type]').forEach(x => x.classList.toggle('ct-selected', x.dataset.ctType === 'all')); expanded = null; render();
   }
+
+  // ---------- the filter row (v36.2): chips with counts, then Platform and Sort, right above the list ----------
+  const fbar = document.createElement('div'); fbar.className = 'ct-fbar';
+  fbar.innerHTML = '<div class="fb-chips" role="group" aria-label="Show">' + [['all', 'All'], ['sale', 'Sales'], ['purchase', 'Purchases'], ['refund', 'Refunds']].map(x => '<button type="button" data-fb="' + x[0] + '" aria-pressed="false">' + x[1] + ' <em></em></button>').join('') + '</div><div class="fb-dds"></div>';
+  $('ct-rows').parentElement.insertBefore(fbar, $('ct-rows'));
+  fbar.querySelector('.fb-dds').append($('ct-platform'), $('ct-sort'));
+  { const v = document.createElement('div'); v.className = 'fb-view'; v.setAttribute('role', 'group'); v.setAttribute('aria-label', 'View');
+    const I = p => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
+    v.innerHTML = '<button type="button" data-view="list" aria-label="List" aria-pressed="' + !gal + '">' + I('<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>') + '</button><button type="button" data-view="gallery" aria-label="Gallery" aria-pressed="' + gal + '">' + I('<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>') + '</button>';
+    v.addEventListener('click', e => { const b = e.target.closest('[data-view]'); if (b && (b.dataset.view === 'gallery') !== gal) setView(b.dataset.view); });
+    fbar.appendChild(v); }
+  fbar.addEventListener('click', e => { const c = e.target.closest('[data-fb]'); if (!c) return; const b = root.querySelector('.ct-filters [data-ct-type="' + c.dataset.fb + '"]'); if (b) b.click(); });
 
   // ---------- filters ----------
   $$('[data-ct-type]').forEach(b => b.addEventListener('click', () => { type = b.dataset.ctType; expanded = null; $$('[data-ct-type]').forEach(x => x.classList.toggle('ct-selected', x === b)); render(); }));
@@ -342,7 +447,13 @@
 
   // ---------- add / edit ----------
   function afterEditor(result, entry) {
-    if (result === 'added') { justAdded = entry.id; expanded = null; render(); usageToast('Entry added'); }
+    if (result === 'added') {
+      justAdded = entry.id; expanded = null; render();
+      // saved into a month you're not looking at: say where it went, and offer to go there (the page never jumps on its own)
+      const pm = monthOf($('ct-period').value), em = entry.date.slice(0, 7);
+      if (pm && pm !== em && window.CTMonth) toast('Added to ' + ymLabel(em, { month: 'long' }), { go: () => window.CTMonth.set('m:' + em) });
+      else usageToast('Entry added');
+    }
     else if (result === 'edited') toast('Changes saved', { undo: true });
     else if (result === 'delete') removeAnimated(entry);
     else if (result === 'deleted') toast('Entry deleted', { undo: true });
@@ -415,7 +526,8 @@
   let off = null;
   function mount() {
     dates();
-    $('ct-period').value = pref.get('ct-period', 'all');
+    // always opens on the month you're in
+    if (window.CTMonth) window.CTMonth.set('m:' + D.monthPrefix, true); else $('ct-period').value = 'all';
     $('ct-sort').value = pref.get('ct-sort', 'new');
     if (off) off();
     off = S.on(reason => {
@@ -426,5 +538,5 @@
     render();
   }
 
-  window.CTDash = { mount, render, toast, exportCSV, upgradeNote, openImport };
+  window.CTDash = { monthOf: p => { dates(); return monthOf(p); }, mount, render, toast, exportCSV, upgradeNote, openImport };
 })();
