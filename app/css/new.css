@@ -271,3 +271,4 @@ html.bu-lock,html.bu-lock body{overflow:hidden;overscroll-behavior:none}
 .bu-amt input{border-radius:12px;transition:background-color .2s}
 @media (hover:none){.bu-amt input:not(:focus){text-decoration:underline dotted color-mix(in srgb,var(--ct-muted) 55%,transparent);text-underline-offset:8px;text-decoration-thickness:2px}}
 @media (prefers-reduced-motion:reduce){.bu-fast{transition:none}}
+.bu-off.sure{color:var(--bu-over,#c0392b)}

@@ -14,9 +14,12 @@
   window.CTBudgetCents = () => { const b = S.budget(); return b ? b.cents : null; };
 
   // ---------- the card ----------
+  let migrating = false;
   function paint() {
     const el = $('ct-budget'); if (!el) return;
     const b = S.budget(), m = month();
+    // one time: bring the card back for anyone who hid it under the old rules (turning off used to hide it for good)
+    if (!S.budgetFlag('v30') && !migrating) { migrating = true; (S.budgetFlag('dismissed') ? S.setBudgetFlag('dismissed', false) : Promise.resolve()).then(() => S.setBudgetFlag('v30', true)).then(() => { migrating = false; paint(); }); return; }
     if (!b) {
       if (S.budgetFlag('dismissed')) { el.hidden = true; return; }
       el.hidden = false; el.className = 'ct-budget is-unset';
@@ -161,9 +164,13 @@
     if (e.target === dlg || e.target.closest('[data-close]')) { shut(); return; }
     if (e.target.closest('#bu-alert')) { const s = $('bu-alert'); s.setAttribute('aria-checked', String(s.getAttribute('aria-checked') !== 'true')); return; }
     if (e.target.closest('#bu-save')) { const c = cents(); if (c <= 0) return; await S.setBudget({ cents: c, alert: $('bu-alert').getAttribute('aria-checked') === 'true' }); shut(); if (window.CTDash) window.CTDash.toast('Monthly budget set to ' + round$(c)); return; }
-    if (e.target.closest('#bu-off')) { await S.setBudget(null); await S.setBudgetFlag('dismissed', true); shut(); if (window.CTDash) window.CTDash.toast('Budget turned off. You can set one again from your profile menu.'); }
+    // turning off takes a second tap, so a stray tap under Save can't do it; the card goes back to "Set a monthly budget", it doesn't vanish
+    const off = e.target.closest('#bu-off');
+    if (off) { if (!off.classList.contains('sure')) { off.classList.add('sure'); off.textContent = 'Tap again to turn off'; clearTimeout(offT); offT = setTimeout(resetOff, 3000); return; }
+      resetOff(); await S.setBudget(null); shut(); if (window.CTDash) window.CTDash.toast('Budget turned off'); }
   });
-  dlg.addEventListener('close', () => { document.documentElement.classList.remove('bu-lock'); if (window.CTNav) window.CTNav.done('budget'); });
+  let offT = 0; function resetOff() { clearTimeout(offT); const o = $('bu-off'); o.classList.remove('sure'); o.textContent = 'Turn off budget'; }
+  dlg.addEventListener('close', () => { resetOff(); document.documentElement.classList.remove('bu-lock'); if (window.CTNav) window.CTNav.done('budget'); });
   dlg.addEventListener('cancel', e => { e.preventDefault(); shut(); });
   if (window.visualViewport) { visualViewport.addEventListener('resize', () => { if (dlg.open) fit(); }); visualViewport.addEventListener('scroll', () => { if (dlg.open) fit(); }); }
 
@@ -171,7 +178,7 @@
 
   document.addEventListener('click', e => {
     const c = e.target.closest('#ct-budget'); if (!c) return;
-    if (e.target.closest('.bu-x')) { S.setBudgetFlag('dismissed', true).then(paint); return; }
+    if (e.target.closest('.bu-x')) { S.setBudgetFlag('dismissed', true).then(paint); if (window.CTDash) window.CTDash.toast('Hidden. Set a budget anytime from your profile menu.'); return; }
     if (e.target.closest('.bu-open')) open(c);
   });
   window.CTBudget = { open, paint, shut };
