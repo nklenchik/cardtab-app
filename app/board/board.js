@@ -1176,6 +1176,14 @@ window.cbSyncPlan();
  if(src&&h){const t=src.cloneNode(true);t.className='cb-tabs';t.querySelectorAll('[aria-current]').forEach(x=>x.removeAttribute('aria-current'));const bt=t.querySelector('[data-tab="board"]');if(bt)bt.setAttribute('aria-current','page');h.after(t)}
 })();
 
+// v33.2: Premium can open right over the entries screen (Free tapping Stories), without opening the board underneath.
+// The window lives inside the board, which is inert while closed, so it's made reachable just while the window is up.
+;(()=>{const pms=$('pms');if(!pms)return;
+ window.CTPremiumOpen=function(ctx){if(!PM_OPEN)return;const closed=cbx.classList.contains('off');
+  if(closed){cbx.inert=false;cbx.removeAttribute('aria-hidden');cbx.classList.add('pmonly');
+   pms.addEventListener('close',function back(){pms.removeEventListener('close',back);if(cbx.classList.contains('off')){cbx.inert=true;cbx.setAttribute('aria-hidden','true')}cbx.classList.remove('pmonly')})}
+  PM_OPEN(ctx||null)};
+})();
 
 // ---- the app's side: one back-gesture history shared with the app, live data, open/refresh ----
 if(window.CTNav){navPush=(k,fn)=>window.CTNav.push('cb:'+k,fn);navDone=k=>{if(!navPopping)window.CTNav.done('cb:'+k)}}

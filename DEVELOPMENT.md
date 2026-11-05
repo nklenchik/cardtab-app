@@ -537,3 +537,4 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
   - Add New moves to a floating pink + above the bar on the right (phones); the header + and the floating search bar's + are gone, so search runs full width.
   - Desktop: the same tabs sit beside the title on Board and Stories (Board's own Stories button hides when they're there).
   - Cache tags ?v=33.1, board V=33.1. Test: tools/t129.
+- v33.2: on Free, tapping Stories in the bottom bar opens the Premium window right over the entries screen instead of opening Card Board and then popping Premium on top mid-animation (that overlap made it jump on iPhone). window.CTPremiumOpen() makes the board's window reachable while the board stays closed (inert/aria-hidden lifted just while it's up; .cbx.pmonly gives it pointer events back). Cache tags ?v=33.2, board V=33.2. Test: tools/t130.

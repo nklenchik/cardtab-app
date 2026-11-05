@@ -78,6 +78,8 @@
     if (window.ctBuzz) window.ctBuzz('tap');
     if (g === 'entries') { if (stOpen() && window.cbStoriesBack) window.cbStoriesBack(); if (cbOpen() && window.CTBoard) { setTimeout(() => window.CTBoard.close(), stOpen() ? 0 : 0); } else window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
     if (g === 'board') { if (stOpen() && window.cbStoriesBack) { window.cbStoriesBack(); return; } if (cbOpen()) { const c = document.querySelector('.cbx'); c.scrollTo({ top: 0, behavior: 'smooth' }); return; } }
+    // Free: Stories is Premium, so its window opens right here (no board opening underneath it)
+    if (g === 'stories' && S.plan() !== 'premium' && !cbOpen() && window.CTBoardLoader) { window.CTBoardLoader.load().then(() => { if (window.CTPremiumOpen) window.CTPremiumOpen('stories'); }).catch(() => {}); return; }
     if (g === 'stories' && cbOpen()) { if (!stOpen()) { const b = document.getElementById('cb-stories'); if (b) b.click(); } return; }
     const m = document.querySelector('#app-menu [data-go="' + g + '"]'); if (m) m.click();
   }
