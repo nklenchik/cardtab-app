@@ -123,6 +123,9 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
  .cstabs button[aria-current]{background:color-mix(in srgb,var(--brand) 16%,transparent);color:var(--brand)}}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cstabs button[aria-current]{background:rgba(255,128,165,.17);color:#ff8db0}}
 :root[data-theme="dark"] .cstabs button[aria-current]{background:rgba(255,128,165,.17);color:#ff8db0}
+/* v33.6: no back arrow: the app's bar (phones) and tabs (desktop) already take you back */
+@media(max-width:760px){.top .back{visibility:hidden!important;pointer-events:none}}
+@media(min-width:761px){.top .tl2:has(.cstabs) .back{display:none!important}}
 /* v31: shared window style: frosted blur behind every sheet, hairline around it */
 :root{--win-veil:rgba(10,8,6,.3);--win-edge:rgba(40,30,20,.1);--win-blur:blur(6px) saturate(1.1)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--win-veil:rgba(0,0,0,.42);--win-edge:rgba(255,255,255,.1)}}

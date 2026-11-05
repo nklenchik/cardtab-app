@@ -155,3 +155,5 @@ dialog.sheet.pms:focus{outline:none}
  .cbhint .ha .h2{background:var(--text);color:var(--card,#fff)}
 }
 @media (prefers-reduced-motion:reduce){.cbdone,.cbhint{transition:none}}
+/* v33.6 desktop: the tabs beside the title take you back, so the "‹ Dashboard" button goes */
+@media(min-width:761px){.cbx:has(.cb-tabs) #close{display:none!important}}

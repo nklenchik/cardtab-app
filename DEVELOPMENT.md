@@ -545,3 +545,4 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
   - While editing: Share/Ask and the top pill step aside and a floating pink Done sits bottom-right above the bar (.cbdone), under your thumb; tapping it leaves edit mode.
   - A tip teaches press-and-hold: "Press and hold any widget to move or resize it." with "Got it" (hides for this visit) and "Don't show again" (for good). It shows on the first 3 visits to the board and retires on its own once you've used edit mode (localStorage cb.hint {n, off, used}).
   - Cache tags ?v=33.5, board V=33.5. Test: tools/t133.
+- v33.6: no back arrows. Phones: Stories hides its back arrow too (Board already had Edit in that spot), so both pages have the same top row (page actions + avatar on the right). Desktop: the tabs beside the title take you back, so Board's "‹ Dashboard" and Stories' "‹ Card Board" buttons are gone. Cache tags ?v=33.6, board V=33.6.

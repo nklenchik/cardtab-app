@@ -1840,6 +1840,8 @@ dialog.sheet.pms:focus{outline:none}
  .cbhint .ha .h2{background:var(--text);color:var(--card,#fff)}
 }
 @media (prefers-reduced-motion:reduce){.cbdone,.cbhint{transition:none}}
+/* v33.6 desktop: the tabs beside the title take you back, so the "‹ Dashboard" button goes */
+@media(min-width:761px){.cbx:has(.cb-tabs) #close{display:none!important}}
 .tip{position:fixed;z-index:60;pointer-events:none;background:var(--text);color:var(--bg);border-radius:10px;padding:8px 11px;font-size:12.5px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;text-align:left}
 .tip.on{opacity:1}
 .note{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--text);color:var(--bg);border-radius:999px;padding:8px 14px;font-size:12px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}
