@@ -534,7 +534,11 @@ function placeRz(){if(!rz)return;rz.raf=0;const g=rz.g,W=g.r.width,x=rz.x,y=rz.y
     if(!first){buzz('tick');const before=rects();setSlotSize(rz.el,s);flip(before)}}}
 // keep the page scrolling when a finger or cursor nears the top or bottom edge
 function edgeScroll(clientY){const z=56,sp=clientY>innerHeight-z?Math.min(14,(clientY-(innerHeight-z))/3):clientY<z+60?-Math.min(14,(z+60-clientY)/3):0;return sp}
-function scrollLoop(){const st=rz||drag;if(!st)return;if(st.vy){cbx.scrollTop+=st.vy;if(rz){rz.y=clampH(rz.h0+(rz.cy-rz.sy)+(cbx.scrollTop-rz.st0));if(!rz.raf)rz.raf=requestAnimationFrame(placeRz)}if(drag)moveDrag(drag.cx,drag.cy)}st.loop=requestAnimationFrame(scrollLoop)}
+// desktop: scroll only after holding near the top or bottom edge for a moment, and slowly
+function calmEdge(cy){const r=cbx.getBoundingClientRect(),top=r.top+110,bot=r.bottom-60,now=performance.now();
+  const depth=cy>bot?cy-bot:cy<top?cy-top:0;if(!depth){drag.edgeT=0;return 0}if(!drag.edgeT)drag.edgeT=now;if(now-drag.edgeT<380)return 0;
+  const v=Math.min(8,Math.abs(depth)/5+1.5);return depth>0?v:-v}
+function scrollLoop(){const st=rz||drag;if(!st)return;if(drag&&drag.desk)drag.vy=calmEdge(drag.cy);if(st.vy){cbx.scrollTop+=st.vy;if(rz){rz.y=clampH(rz.h0+(rz.cy-rz.sy)+(cbx.scrollTop-rz.st0));if(!rz.raf)rz.raf=requestAnimationFrame(placeRz)}if(drag)moveDrag(drag.cx,drag.cy)}st.loop=requestAnimationFrame(scrollLoop)}
 const clampH=v=>Math.max(pxH(rz.g,1)*.75,Math.min(pxH(rz.g,2)+rz.g.row*.4,v));
 $('simple').addEventListener('pointerdown',e=>{
   if(!editing||e.button>0||e.target.closest('input'))return;
@@ -554,10 +558,27 @@ let pending=null;
 function startDrag(pd){pending=null;try{$('simple').setPointerCapture(pd.pid)}catch(e){}hideTip();const sim=$('simple'),g=sim.getBoundingClientRect(),r=pd.el.getBoundingClientRect();
   const fl=pd.el.cloneNode(true);fl.removeAttribute('data-id');fl.classList.add('floating');fl.setAttribute('aria-hidden','true');
   fl.style.cssText='position:absolute;left:0;top:0;width:'+r.width+'px;height:'+r.height+'px;margin:0';sim.appendChild(fl);
-  drag={id:pd.id,el:pd.el,fl,x:pd.x,y:pd.y,cx:pd.cx,cy:pd.cy,ox:r.left-g.left,oy:r.top-g.top,st0:cbx.scrollTop,vy:0,moved:false,skip:null};
+  drag={id:pd.id,el:pd.el,fl,x:pd.x,y:pd.y,cx:pd.cx,cy:pd.cy,ox:r.left-g.left,oy:r.top-g.top,w:r.width,h:r.height,st0:cbx.scrollTop,vy:0,moved:false,skip:null,desk:units()===4,cand:null,candT:0,edgeT:0};
   pd.el.classList.add('slot');$('cb').classList.add('dragging');buzz('tap');moveDrag(pd.cx,pd.cy);drag.loop=requestAnimationFrame(scrollLoop)}
+// Lay widgets out the way the grid does (each one in the first spot from the top where it fits), so we can try every
+// position for the one you're holding and pick the one whose landing spot is closest to it, before anything moves.
+function packGrid(order,u){const occ=[],out={};const free=(r,c,w,h)=>{for(let y=r;y<r+h;y++)for(let x=c;x<c+w;x++)if(occ[y]&&occ[y][x])return false;return true};
+  order.forEach(w=>{const d=DIM[eff(w.size)],ww=Math.min(d[0],u),hh=d[1];for(let r=0;;r++){let done=false;for(let c=0;c<=u-ww;c++)if(free(r,c,ww,hh)){for(let y=r;y<r+hh;y++){occ[y]=occ[y]||[];for(let x=c;x<c+ww;x++)occ[y][x]=1}out[w.id]={c,r,w:ww,h:hh};done=true;break}if(done)break}});return out}
+function deskDrag(fx,fy){const g=gridSpec(),cw=g.col+g.gap,rh=g.row+g.rgap,u=g.u;
+  const mx=(fx+drag.w/2)/cw,my=(fy+drag.h/2)/rh;// the held widget's center, in grid squares
+  const me=layout.find(w=>w.id===drag.id),others=layout.filter(w=>w.id!==drag.id),now0=packGrid(layout,u);
+  let best=null;for(let i=0;i<=others.length;i++){const ord=others.slice(0,i).concat([me]).concat(others.slice(i)),P=packGrid(ord,u),p=P[me.id];
+    const d=Math.hypot(p.c+p.w/2-mx,(p.r+p.h/2-my)*1.15);let shove=0;others.forEach(w=>{const a=now0[w.id],b=P[w.id];shove+=Math.abs(a.c-b.c)+Math.abs(a.r-b.r)});
+    const score=d+shove*.06;if(!best||score<best.score)best={score,d,ord,i}}
+  const cur=packGrid(layout,u)[me.id],curD=Math.hypot(cur.c+cur.w/2-mx,(cur.r+cur.h/2-my)*1.15);
+  const same=best.ord.every((w,k)=>w===layout[k]);if(same){drag.cand=null;return}
+  if(best.d>curD-.3){drag.cand=null;return}// only move when the new spot is clearly closer than where it sits now
+  const key=best.ord.map(w=>w.id).join(','),now=performance.now();if(drag.cand!==key){drag.cand=key;drag.candT=now;return}if(now-drag.candT<90)return;// a short pause, so passing over things doesn't shuffle them
+  const before=rects();layout=best.ord;const sim=$('simple');layout.forEach(w=>{const el=sim.querySelector('.w[data-id="'+w.id+'"]');if(el)sim.insertBefore(el,drag.fl)});
+  drag.moved=true;drag.cand=null;buzz('tick');flip(before)}
 function moveDrag(cx,cy){if(!drag)return;drag.cx=cx;drag.cy=cy;const dy=cy-drag.y+(cbx.scrollTop-drag.st0);
   drag.fl.style.transform='translate('+(drag.ox+cx-drag.x)+'px,'+(drag.oy+dy)+'px) scale(1.03)';
+  if(drag.desk){deskDrag(drag.ox+cx-drag.x,drag.oy+dy);return}
   const inside=el=>{const r=el.getBoundingClientRect();return cx>r.left&&cx<r.right&&cy>r.top&&cy<r.bottom};
   // after a swap, wait until you've left that widget before it can swap back, so nothing flickers
   if(drag.skip){const se=$('simple').querySelector('.w[data-id="'+drag.skip+'"]');if(se&&inside(se))return;drag.skip=null}
@@ -572,7 +593,7 @@ $('simple').addEventListener('pointermove',e=>{
   if(rz){const g=rz.g;rz.cy=e.clientY;rz.vy=edgeScroll(e.clientY);const dx=e.clientX-rz.sx;rz.x=Math.max(pxW(g,1)*.75,Math.min(g.r.width,rz.w0+(rz.ar?-dx:dx)));rz.y=clampH(rz.h0+(e.clientY-rz.sy)+(cbx.scrollTop-rz.st0));if(!rz.raf)rz.raf=requestAnimationFrame(placeRz);return}
   if(pending&&e.pointerId===pending.pid){const d=Math.hypot(e.clientX-pending.x,e.clientY-pending.y);pending.cx=e.clientX;pending.cy=e.clientY;
     if(pending.touch){if(d>9){clearTimeout(pending.t);pending=null}}else if(d>5){e.preventDefault();startDrag(pending)}return}
-  if(drag){drag.vy=edgeScroll(e.clientY);moveDrag(e.clientX,e.clientY)}});
+  if(drag){if(!drag.desk)drag.vy=edgeScroll(e.clientY);moveDrag(e.clientX,e.clientY)}});
 function endPointer(){
   if(pending){clearTimeout(pending.t);pending=null}
   if(rz){const r=rz;rz=null;if(r.raf)cancelAnimationFrame(r.raf);cancelAnimationFrame(r.loop);placeRzFinal(r);return}
