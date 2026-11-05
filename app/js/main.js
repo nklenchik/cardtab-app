@@ -55,6 +55,7 @@
   }
   const PHONE = matchMedia('(max-width:760px)'), bd = $('am-bd');
   function openMenu() { renderMenu(); menu.hidden = false; placeMenu(); if (PHONE.matches) { bd.hidden = false; document.documentElement.classList.add('am-lock'); } window.CTNav.push('menu', () => closeMenu(false, true)); av.setAttribute('aria-expanded', 'true'); const f = menu.querySelector('[role="menuitem"]'); if (f) f.focus({ preventScroll: true }); }
+  document.querySelector('#app-menu .am-x').addEventListener('click', e => { e.stopPropagation(); closeMenu(true); });
   function closeMenu(focus, fromPop) { if (menu.hidden) return; menu.hidden = true; bd.hidden = true; document.documentElement.classList.remove('am-lock'); if (!fromPop) window.CTNav.done('menu'); av.setAttribute('aria-expanded', 'false'); if (focus) av.focus(); }
   av.addEventListener('click', e => { e.stopPropagation(); menu.hidden ? openMenu() : closeMenu(); });
   document.addEventListener('click', e => { if (!menu.hidden && !e.target.closest('#app-menu')) closeMenu(); });

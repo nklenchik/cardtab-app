@@ -289,4 +289,11 @@ html.bu-lock,html.bu-lock body{overflow:hidden;overscroll-behavior:none}
 dialog::backdrop,.bu-sheet::backdrop{background:var(--win-veil)!important;-webkit-backdrop-filter:var(--win-blur);backdrop-filter:var(--win-blur)}
 .bu-p,.ed-form,#as .phone,.app-menu.am{border:1px solid var(--win-edge)!important}
 @media(max-width:760px){.ed-form,#as .phone{border-bottom-color:transparent!important}}
-
+/* v31.1: phones: a round close button in the profile menu's corner, and the same frosted blur behind phone menus as behind windows */
+.am-x{display:none}
+@media(max-width:760px){
+ .am-x{display:grid;place-items:center;flex:none;width:34px;height:34px;margin-left:auto;padding:0;border-radius:50%;border:1px solid var(--win-edge);background:color-mix(in srgb,currentColor 7%,transparent);color:inherit;opacity:.75;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s,opacity .15s}
+ .am-x:active{transform:scale(.92);opacity:1}
+}
+.am-bd{background:var(--win-veil)!important;-webkit-backdrop-filter:var(--win-blur);backdrop-filter:var(--win-blur)}
+@media(max-width:760px){.app-menu.am .amh{align-items:flex-start}.app-menu.am .am-x{margin-top:2px}}

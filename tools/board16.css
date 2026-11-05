@@ -99,3 +99,11 @@ dialog.sheet::backdrop{background:var(--win-veil)!important;-webkit-backdrop-fil
 dialog.sheet .awp{border:1px solid var(--win-edge)!important}
 
 dialog.sheet.pms .awp.pmp{border:1px solid var(--win-edge)!important}
+/* v31.1: phones: a round close button in the profile menu's corner, and the same frosted blur behind phone menus as behind windows */
+.am-x{display:none}
+@media(max-width:760px){
+ .am-x{display:grid;place-items:center;flex:none;width:34px;height:34px;margin-left:auto;padding:0;border-radius:50%;border:1px solid var(--win-edge);background:color-mix(in srgb,currentColor 7%,transparent);color:inherit;opacity:.75;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s,opacity .15s}
+ .am-x:active{transform:scale(.92);opacity:1}
+}
+.mbd{background:var(--win-veil)!important;-webkit-backdrop-filter:var(--win-blur);backdrop-filter:var(--win-blur)}
+@media(max-width:760px){#cb-amenu{position:fixed}#cb-amenu>.am-x{position:absolute!important;top:14px!important;right:14px!important;left:auto!important;z-index:2;display:grid!important;place-items:center;width:34px!important;height:34px!important;min-height:0!important;padding:0!important;margin:0!important;gap:0!important;border-radius:50%!important;border:1px solid var(--win-edge)!important;background:color-mix(in srgb,currentColor 7%,transparent)!important;font-size:0}#cb-amenu>.am-x svg{width:13px;height:13px;margin:0!important;opacity:1}#cb-amenu .amh{padding-right:56px}}

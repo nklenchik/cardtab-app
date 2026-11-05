@@ -64,3 +64,5 @@ new MutationObserver(()=>{if(cbx.classList.contains('off')){counted=false}else{c
 new MutationObserver(paintQuiet).observe($('cb'),{attributes:true,attributeFilter:['class']});
 window.cbSyncPlan();
 })();
+// v31.1: the profile menu's close button (phones)
+;(()=>{const x=document.querySelector('#cb-amenu .am-x');if(x)x.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();closeMenus()})})();
