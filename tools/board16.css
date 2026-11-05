@@ -85,3 +85,8 @@ html.cbfree #cr.pre .crcmp{display:none}
 .cbx #cb.rowtight .msum.v{gap:4px}
 .cbx #cb.rowtight .msum.v b{font-size:15px;margin-top:0}
 .cbx #cb.rowtight .msum.v small{font-size:11.5px}
+/* the slim top bar slides like the marketing site's header: an unhurried slide in that eases to a soft stop,
+   a slightly quicker slide away; no fade, so it reads as one solid bar moving */
+html[data-cbv="A"] .cbslim{opacity:1!important;will-change:transform;transition:transform .8s cubic-bezier(.4,0,.2,1),box-shadow .3s ease!important}
+html[data-cbv="A"] .cbslim.on{transition:transform .8s cubic-bezier(.22,.61,.36,1),box-shadow .3s ease!important;box-shadow:0 6px 24px rgba(0,0,0,.06)}
+@media (prefers-reduced-motion:reduce){html[data-cbv="A"] .cbslim,html[data-cbv="A"] .cbslim.on{transition-duration:.01s!important}}
