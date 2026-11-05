@@ -618,8 +618,14 @@ function endPointer(){
   const a=d.fl.animate([{transform:d.fl.style.transform},{transform:'translate('+tx+'px,'+ty+'px) scale(1)'}],{duration:240,easing:'cubic-bezier(.2,.7,.2,1)',fill:'forwards'});a.onfinish=done}
 function placeRzFinal(r){
   const size=r.s||r.s0,w=byId(r.id);$('cb').classList.remove('rzing');
-  buzz(size!==r.s0?'firm':'tick');if(eff(w.size)!==size)w.size=size;save();
-  const el=rebuild(r.id);if(!el){r.c.remove();return}el.classList.add('slot');markEdges();
+  buzz(size!==r.s0?'firm':'tick');if(eff(w.size)!==size)w.size=size;
+  const before=rects();
+  let el=rebuild(r.id);if(!el){r.c.remove();save();return}
+  // widened from the left corner of a right-hand widget: it takes the row and its left neighbour moves down, instead of the
+  // widget dropping to the next row. Everything that moves glides there (FLIP).
+  if(r.ar&&el.getBoundingClientRect().width>r.w0+12){const i=layout.findIndex(x=>x.id===r.id),prev=el.previousElementSibling;
+    if(i>0&&prev&&prev.matches('.w[data-id]')){const [it]=layout.splice(i,1);layout.splice(i-1,0,it);prev.before(el)}}
+  save();el.classList.add('slot');flip(before,r.id);markEdges();
   const gr=$('simple').getBoundingClientRect(),f=el.getBoundingClientRect();
   const finish=()=>{r.c.remove();el.classList.remove('slot');if(!calm.matches){el.classList.add('rz-in');setTimeout(()=>el.classList.remove('rz-in'),320)}};
   if(calm.matches){finish();return}

@@ -45,12 +45,11 @@
     phone: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M12 8.5v6M9 11.5h6"/></svg>'
   };
   function steps() {
-    if (iOS && browser === 'safari') return { who: 'iPhone · Safari', list: [[I.shareIOS, 'Tap <b>Share</b> at the bottom of Safari'], [I.plusSq, 'Scroll down and tap <b>Add to Home Screen</b>'], [I.check, 'Tap <b>Add</b> in the top right']] };
-    if (iOS && (browser === 'chrome' || browser === 'edge' || browser === 'firefox')) return { who: 'iPhone · ' + browser[0].toUpperCase() + browser.slice(1), list: [[I.shareIOS, 'Tap <b>Share</b> in the address bar'], [I.plusSq, 'Tap <b>Add to Home Screen</b>'], [I.check, 'Tap <b>Add</b>']] };
-    if (iOS) return { who: 'iPhone', list: [[I.safari, 'Open this page in <b>Safari</b> first (this app’s browser can’t add it)'], [I.shareIOS, 'In Safari, tap <b>Share</b> at the bottom'], [I.plusSq, 'Tap <b>Add to Home Screen</b>, then <b>Add</b>']] };
-    if (android && browser === 'samsung') return { who: 'Android · Samsung Internet', list: [[I.lines, 'Tap the <b>menu</b> at the bottom right'], [I.plusSq, 'Tap <b>Add page to</b>, then <b>Home screen</b>'], [I.check, 'Tap <b>Add</b>']] };
-    if (android) return { who: 'Android · ' + (browser === 'firefox' ? 'Firefox' : 'Chrome'), list: [[I.dots, 'Tap the <b>⋮ menu</b> at the top right'], [I.phone, 'Tap <b>Install app</b> (or <b>Add to Home screen</b>)'], [I.check, 'Tap <b>Install</b>']] };
-    return { who: 'Your phone', list: [[I.shareIOS, 'Open your browser’s <b>Share</b> or <b>⋮</b> menu'], [I.plusSq, 'Choose <b>Add to Home Screen</b>'], [I.check, 'Confirm']] };
+    // phrased for any browser: people use Safari, Chrome, Edge, Firefox and others
+    if (iOS && browser === 'inapp') return { who: 'iPhone', list: [[I.safari, 'Open this page in <b>your browser</b> first (this app’s viewer can’t add it)'], [I.shareIOS, 'Tap <b>Share</b> in your browser'], [I.plusSq, 'Tap <b>Add to Home Screen</b>, then <b>Add</b>']] };
+    if (iOS) return { who: 'iPhone', list: [[I.shareIOS, 'Tap <b>Share</b> in your browser (at the bottom or in the address bar)'], [I.plusSq, 'Tap <b>Add to Home Screen</b>'], [I.check, 'Tap <b>Add</b>']] };
+    if (android) return { who: 'Android', list: [[I.dots, 'Open <b>your browser’s menu</b> (⋮ or ≡)'], [I.phone, 'Tap <b>Install app</b> or <b>Add to Home screen</b>'], [I.check, 'Confirm with <b>Install</b> or <b>Add</b>']] };
+    return { who: 'Your phone', list: [[I.shareIOS, 'Open your browser’s <b>Share</b> or <b>menu</b>'], [I.plusSq, 'Choose <b>Add to Home Screen</b>'], [I.check, 'Confirm']] };
   }
 
   // ---------- the window with the steps ----------
