@@ -193,11 +193,21 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
   .lb .note{text-align:center;padding:0 8px}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* saving: Save all on desktop, the phone's choice sheet, and an offscreen spot where stories are drawn at full size */
+.svall{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 18px;margin-right:10px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap}
+.svall:disabled{opacity:.6;cursor:default}
+@media(max-width:760px){.svall{display:none}}
+.svrow{display:flex;align-items:center;gap:12px;width:100%;height:56px;padding:0 18px;margin-top:10px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-weight:800;font-size:15px;text-align:left;cursor:pointer}
+.svrow small{margin-left:auto;color:var(--muted);font-weight:700;font-size:12.5px}
+.svrow.all{background:var(--text);color:var(--bg);border-color:transparent}.svrow.all small{color:inherit;opacity:.65}
+#xhost{position:fixed;left:-20000px;top:0;width:360px;pointer-events:none}
+#xhost .sl{width:360px!important;max-width:none!important;border-radius:0!important;box-shadow:none!important;transform:none!important;transition:none!important;cursor:default}
 </style>
 
 <div class="wrap">
   <div class="top"><div class="tl2"><button class="back" type="button" aria-label="Back to Card Board"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span>Card Board</span></button><h1 class="ttl">Card Stories</h1></div>
-    <div class="tr"><div class="perw"><button class="pill" id="perb" aria-haspopup="true" aria-expanded="false"><span id="perl">Last 12 months</span><i>▾</i></button><div class="menu" id="perm" hidden role="menu"></div></div><button type="button" class="acct" id="csacct" aria-haspopup="true" aria-label="Account" hidden><span class="av" id="csav">N</span></button></div></div>
+    <div class="tr"><button type="button" class="svall" id="svall"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Save all 5</button><div class="perw"><button class="pill" id="perb" aria-haspopup="true" aria-expanded="false"><span id="perl">Last 12 months</span><i>▾</i></button><div class="menu" id="perm" hidden role="menu"></div></div><button type="button" class="acct" id="csacct" aria-haspopup="true" aria-label="Account" hidden><span class="av" id="csav">N</span></button></div></div>
   <div class="controls">
     <div class="thm" id="thm" role="group" aria-label="Story theme"></div>
   </div>
@@ -206,6 +216,8 @@ button{font-family:var(--f);color:inherit}button:focus-visible{outline:2px solid
   <p class="foot">On your board, a “Stories” button next to Ask and Share opens this page. Tap a story to make it bigger, then save or share it. “Showing” changes what a story says. Card art fills in once the art service is running.</p>
 </div>
 <div class="sheetw" id="ths" hidden><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ths-h"><div class="shh"><div><h2 id="ths-h">Themes</h2><p class="shs" id="ths-s"></p></div></div><div class="tgrid" id="tgrid"></div><button class="go" data-close>Done</button></div></div>
+<div class="sheetw" id="svs" hidden><div class="sheet sm" role="dialog" aria-modal="true" aria-labelledby="svs-h"><div class="shh"><h2 id="svs-h">Save to Photos</h2><button class="xx" data-close aria-label="Close">✕</button></div><button type="button" class="svrow" data-sv="one"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span>This story</span><small id="svs-one"></small></button><button type="button" class="svrow all" data-sv="all"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span>All 5 stories</span><small>In order</small></button></div></div>
+<div id="xhost" aria-hidden="true"></div>
 <div class="sheetw" id="crs" hidden><div class="sheet sm" role="dialog" aria-modal="true" aria-labelledby="crs-h"><div class="shh"><h2 id="crs-h">Custom dates</h2><button class="xx" data-close aria-label="Close">✕</button></div>
   <div class="spre" id="spre" role="radiogroup" aria-label="Dates"></div><div class="mpk" id="mpk"><div class="msum"><button type="button" class="mb2" id="mp-a"><small>From</small><b></b></button><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><button type="button" class="mb2" id="mp-b"><small>To</small><b></b></button></div><div class="mgrid" id="mgrid"></div><p class="crn" id="cr-n" role="status"></p><button class="go" id="cr-go">Show these months</button></div></div></div>
 <div class="csdock" id="csdock"><button type="button" data-d="save"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 14.5V19h14v-4.5"/></svg>Save</button><button type="button" class="p" data-d="share"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.8 5.6v3.1C8.5 9.2 5.3 12.6 4.6 18.4c2-3 5-4.4 9.2-4.5v3.1c0 .5.6.8 1 .4l5.2-5.1c.3-.3.3-.7 0-1l-5.2-5.1c-.4-.4-1-.1-1 .4z"/></svg>Share this story</button></div><div class="cstoast" id="cstoast" role="status"></div>
@@ -388,7 +400,7 @@ function navDone(k){if(navPopping)return;const i=NAV.findIndex(n=>n.k===k);if(i<
 addEventListener('popstate',()=>{if(navSkip>0){navSkip--;if(!navSkip)while(navWait>0){navWait--;navStep('w')}return}const t=NAV.pop();if(!t)return;navPopping=true;try{t.fn()}catch(e){}navPopping=false});
 const lb=$('lb');function enlarge(n){navPush('lb',()=>shut());const c=document.createElement('div');c.className='sl';c.setAttribute('role','img');c.setAttribute('aria-label',D.stories[n].name);c.innerHTML=storyHTML(n);paintStory(c,n);$('lbc').innerHTML='';$('lbc').appendChild(c);$('lbn').textContent='';lb.hidden=false;lb.classList.remove('out');lb.querySelector('[data-a="close"]').focus()}
 function shut(){if(lb.hidden)return;navDone('lb');lb.classList.add('out');setTimeout(()=>{lb.hidden=true},190)}
-lb.addEventListener('click',e=>{if(e.target===lb||e.target.classList.contains('box')||e.target.id==='lbc'||e.target.classList.contains('note')){shut();return}const b=e.target.closest('[data-a]');if(!b)return;if(b.dataset.a==='close')shut();else $('lbn').textContent=b.dataset.a==='save'?'In the app this saves the story as an image, sized for Instagram and TikTok.':'In the app this opens your phone’s share sheet.'});
+lb.addEventListener('click',e=>{if(e.target===lb||e.target.classList.contains('box')||e.target.id==='lbc'||e.target.classList.contains('note')){shut();return}const b=e.target.closest('[data-a]');if(!b)return;if(b.dataset.a==='close'){shut();return}const n=D.stories.findIndex(st=>st.name===($('lbc').firstChild||{}).getAttribute?.('aria-label'));saveStories([Math.max(0,n)],b.dataset.a==='share')});
 document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!lb.hidden)shut();else{const w=document.querySelector('.sheetw:not([hidden])');if(w)closeSheet(w.id);else if(!$('perm').hidden)closeMenu();else if(EMB)goBack()}});
 try{const t=+localStorage.getItem('cs.theme');if(t>0&&t<TH.length)setTheme(t)}catch(e){}
 // ---- linked to Card Board: same name, light/dark and time range; the back arrow returns to the board ----
@@ -398,7 +410,7 @@ document.querySelector('.top .back').addEventListener('click',()=>{if(EMB)goBack
 if(EMB){$('csacct').hidden=false;$('csacct').addEventListener('click',e=>{e.stopPropagation();closeMenu();try{parent.cbMenu($('csacct').getBoundingClientRect())}catch(err){}});
   document.addEventListener('pointerdown',e=>{if(e.target.closest('#csacct'))return;try{parent.cbMenuClose()}catch(err){}},true)}
 function syncAv(){try{const a=parent.document.getElementById('cb-av'),m=$('csav');m.textContent=a.textContent;m.style.backgroundImage=a.style.backgroundImage;m.style.backgroundColor=a.style.backgroundColor}catch(e){}}
-window.csMenu=function(a){if(a==='st-colors')openSheet('ths');else if(a==='st-save'){const t=$('cstoast');if(t){t.textContent='In the app this saves every story as an image';t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2200)}}};
+window.csMenu=function(a){if(a==='st-colors')openSheet('ths');else if(a==='st-save')saveStories(D.stories.map((_,i)=>i))};
 window.csSync=function(){
   syncAv();if(loadReal())allMonths=months('all');
   try{NAME=EMB&&parent.cbName?parent.cbName():((JSON.parse(localStorage.getItem('cb.profile')||'null')||{}).first||'').trim()}catch(e){}
@@ -412,8 +424,53 @@ window.csEnter=function(){if(matchMedia('(prefers-reduced-motion: reduce)').matc
   document.querySelectorAll('#track .cell').forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(26px) scale(.97)'},{opacity:1,transform:'none'}],{duration:560,delay:170+i*55,easing:'cubic-bezier(.2,.9,.25,1)',fill:'backwards'}))};
 if(EMB)document.querySelector('.foot').hidden=true;
 // thumb bar on phones: save or share the story you're looking at
-let toastT=0;$('csdock').addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(!b)return;const dots=[...$('dots').querySelectorAll('i')],n=Math.max(0,dots.findIndex(d=>d.classList.contains('on'))),nm=D.stories[n].name;
-  const m=b.dataset.d==='save'?'In the app this saves “'+nm+'” as an image, sized for Instagram and TikTok.':'In the app this opens your phone’s share sheet for “'+nm+'”.';
-  const t=$('cstoast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600)});
+let toastT=0;$('csdock').addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(!b)return;const n=curN();
+  if(b.dataset.d==='save'){$('svs-one').textContent=D.stories[n].name;openSheet('svs')}else saveStories([n],true)});
+// ---------- saving stories as images: 1080 × 1920, the size Instagram and TikTok stories use ----------
+let H2I=null;
+function lib(){if(window.htmlToImage)return Promise.resolve(window.htmlToImage);if(H2I)return H2I;
+  H2I=new Promise((res,rej)=>{let src;try{src=new URL('js/vendor/html-to-image.js',parent.document.baseURI).href}catch(e){rej(e);return}
+    const sc=document.createElement('script');sc.src=src;sc.onload=()=>window.htmlToImage?res(window.htmlToImage):rej(new Error('no lib'));sc.onerror=()=>{H2I=null;rej(new Error('load'))};document.head.appendChild(sc)});return H2I}
+// the images use the app's own copy of Manrope, built into each image, so they look right offline and on any phone
+let FCSS=null;
+function fontCSS(){if(FCSS)return FCSS;FCSS=(async()=>{try{const u=new URL('fonts/manrope-latin.woff2',parent.document.baseURI).href,b=await (await fetch(u)).blob();
+  const d=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(b)});
+  return '@font-face{font-family:Manrope;src:url('+d+') format("woff2");font-weight:500 800;font-style:normal}'}catch(e){return ''}})();return FCSS}
+const fname=n=>'Card Stories '+(n+1)+' - '+D.stories[n].name.replace(/[\\/:*?"<>|]/g,'').replace(/^\w/,c=>c.toUpperCase())+'.png';
+const isSafari=/^((?!chrome|android|crios|fxios).)*safari/i.test(navigator.userAgent);
+async function storyBlob(n){const h=await lib(),host=$('xhost');host.innerHTML='';const el=document.createElement('div');el.className='sl';el.innerHTML=storyHTML(n);paintStory(el,n);host.appendChild(el);
+  const urls=[...el.querySelectorAll('.card.art')].map(c=>(c.style.backgroundImage.match(/url\("?(.*?)"?\)$/)||[])[1]).filter(Boolean);
+  await Promise.all(urls.map(u=>new Promise(r=>{const i=new Image();i.onload=i.onerror=r;i.src=u})));
+  try{await document.fonts.ready}catch(e){}
+  const opt={pixelRatio:3,width:360,height:640,cacheBust:false,backgroundColor:getComputedStyle(el).backgroundColor,fontEmbedCSS:await fontCSS()};
+  let b=await h.toBlob(el,opt);if(isSafari)b=await h.toBlob(el,opt);// Safari can leave images out of the first pass
+  host.innerHTML='';return b}
+// a tiny zip (stored, no compression; the PNGs are already compressed) so desktop gets one download
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+const crc32=u=>{let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=CRC[(c^u[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0};
+async function zipOf(files){const enc=new TextEncoder(),parts=[],cen=[];let off=0;const d=new Date(),dt=((d.getFullYear()-1980)<<9|(d.getMonth()+1)<<5|d.getDate()),tm=(d.getHours()<<11|d.getMinutes()<<5|(d.getSeconds()>>1));
+  for(const f of files){const data=new Uint8Array(await f.blob.arrayBuffer()),nm=enc.encode(f.name),c=crc32(data),h=new DataView(new ArrayBuffer(30));
+    h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);h.setUint16(10,tm,true);h.setUint16(12,dt,true);h.setUint32(14,c,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);h.setUint16(26,nm.length,true);h.setUint16(28,0,true);
+    parts.push(h,nm,data);const e=new DataView(new ArrayBuffer(46));e.setUint32(0,0x02014b50,true);e.setUint16(4,20,true);e.setUint16(6,20,true);e.setUint16(8,0x0800,true);e.setUint16(10,0,true);e.setUint16(12,tm,true);e.setUint16(14,dt,true);e.setUint32(16,c,true);e.setUint32(20,data.length,true);e.setUint32(24,data.length,true);e.setUint16(28,nm.length,true);e.setUint32(42,off,true);
+    cen.push(e,nm);off+=30+nm.length+data.length}
+  const csz=cen.reduce((a,x)=>a+(x.byteLength||x.length),0),end=new DataView(new ArrayBuffer(22));end.setUint32(0,0x06054b50,true);end.setUint16(8,files.length,true);end.setUint16(10,files.length,true);end.setUint32(12,csz,true);end.setUint32(16,off,true);
+  return new Blob([...parts,...cen,end],{type:'application/zip'})}
+function download(blob,name){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
+function say(m,ms){const t=$('cstoast');if(!t)return;t.textContent=m;t.classList.add('on');clearTimeout(toastT);if(ms!==0)toastT=setTimeout(()=>t.classList.remove('on'),ms||2600)}
+const phoneUI=()=>matchMedia('(max-width:760px)').matches;
+let saving=false;
+async function saveStories(list,share){if(saving)return;if(!EMB){say('In the app this saves your stories as images, sized for Instagram and TikTok.');return}
+  saving=true;$('svall').disabled=true;const files=[];
+  try{for(let k=0;k<list.length;k++){say(list.length>1?'Making image '+(k+1)+' of '+list.length+'…':'Making your image…',0);const n=list[k];files.push({name:fname(n),blob:await storyBlob(n)})}
+    const ff=files.map(f=>new File([f.blob],f.name,{type:'image/png'}));
+    if((share||phoneUI())&&navigator.canShare&&navigator.canShare({files:ff})){say(list.length>1?'Your '+list.length+' stories are ready.':'Your story is ready.');try{await navigator.share({files:ff})}catch(e){}}
+    else if(files.length===1){download(files[0].blob,files[0].name);say('Saved “'+D.stories[list[0]].name+'”.')}
+    else{download(await zipOf(files),'Card Stories - '+D.lab.replace(/[\\/:*?"<>|]/g,'')+'.zip');say('Saved all '+files.length+' stories in one zip.')}}
+  catch(e){console.error(e);say('Couldn’t make the image. Try again.')}
+  finally{saving=false;$('svall').disabled=false;$('xhost').innerHTML=''}}
+const curN=()=>{const dots=[...$('dots').querySelectorAll('i')];return Math.max(0,dots.findIndex(d=>d.classList.contains('on')))};
+$('svall').addEventListener('click',()=>saveStories([0,1,2,3,4].slice(0,D.stories.length)));
+$('svs').addEventListener('click',e=>{const b=e.target.closest('[data-sv]');if(!b)return;const n=curN();closeSheet('svs');setTimeout(()=>saveStories(b.dataset.sv==='all'?D.stories.map((_,i)=>i):[n]),200)});
+
 })();
 </script>

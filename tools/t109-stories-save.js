@@ -1,0 +1,12 @@
+const pw=require('playwright');(async()=>{const b=await pw.chromium.launch();const W=+(process.argv[2]||1280);const ctx=await b.newContext({viewport:{width:W,height:W<500?760:900},acceptDownloads:true,isMobile:W<500,hasTouch:W<500});const p=await ctx.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('console',m=>{if(m.type()==='error')errs.push('console: '+m.text())});
+await p.goto('http://localhost:8765/index.html');await p.evaluate(()=>{localStorage.clear();localStorage.setItem('ct.session',JSON.stringify({email:'n@x.com',name:'Nick',via:'email',expires:Date.now()+864e5}))});await p.reload();await p.waitForTimeout(500);await p.evaluate(()=>CTStore.setPlan('premium'));await p.reload();await p.waitForTimeout(700);
+await p.evaluate(()=>document.querySelector('[data-dev=sample]').click());await p.waitForTimeout(600);await p.evaluate(()=>document.getElementById('ct-expand').click());await p.waitForTimeout(2600);
+await p.evaluate(()=>document.getElementById('cb-stories').click());await p.waitForTimeout(2500);
+const f=p.frames().find(x=>x!==p.mainFrame());
+const t0=Date.now();
+if(W>=761){const [d]=await Promise.all([p.waitForEvent('download',{timeout:60000}),f.evaluate(()=>document.getElementById('svall').click())]);await d.saveAs('dl/'+d.suggestedFilename());console.log('downloaded',d.suggestedFilename(),'in',Date.now()-t0,'ms');
+  const [d2]=await Promise.all([p.waitForEvent('download',{timeout:60000}),f.evaluate(()=>{document.querySelector('#track .sl').click()}).then(()=>p.waitForTimeout(500)).then(()=>f.evaluate(()=>document.querySelector('#lb [data-a=save]').click()))]);await d2.saveAs('dl/'+d2.suggestedFilename());console.log('single',d2.suggestedFilename())}
+else{await f.evaluate(()=>document.querySelector('#csdock [data-d=save]').click());await p.waitForTimeout(500);console.log('sheet open',await f.evaluate(()=>!document.getElementById('svs').hidden),await f.evaluate(()=>document.getElementById('svs-one').textContent));
+  await p.screenshot({path:'svs-sheet.png'});
+  const [d]=await Promise.all([p.waitForEvent('download',{timeout:60000}),f.evaluate(()=>document.querySelector('#svs [data-sv=all]').click())]);await d.saveAs('dl/ph-'+d.suggestedFilename());console.log('phone all ->',d.suggestedFilename(),Date.now()-t0,'ms')}
+console.log('toast',await f.evaluate(()=>document.getElementById('cstoast').textContent));console.log('errors',errs);await b.close()})();
