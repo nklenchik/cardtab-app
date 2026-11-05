@@ -58,6 +58,8 @@
   }
 
   // ---------- the sheet ----------
+  let open = () => {}, shut = () => {};
+  try {
   const dlg = $('bu-sheet'), inp = $('bu-amt'), pnl = dlg.querySelector('.bu-p');
   const calm = matchMedia('(prefers-reduced-motion: reduce)'), fine = matchMedia('(hover:hover) and (pointer:fine)');
   let from = null;// the card it opened from, so the window grows out of it and shrinks back into it
@@ -71,7 +73,7 @@
     const k = [{ transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + sx + ',' + sy + ')', opacity: 0 }, { transform: 'none', opacity: 1, offset: .6 }, { transform: 'none', opacity: 1 }];
     return pnl.animate(dir > 0 ? k : k.slice().reverse(), dir > 0 ? { duration: 500, easing: 'cubic-bezier(.32,.72,0,1)' } : { duration: 240, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
   }
-  function open(src) {
+  open = function (src) {
     from = src || null;
     const b = S.budget();
     inp.value = b ? (b.cents % 100 ? (b.cents / 100).toFixed(2) : String(b.cents / 100)) : '';
@@ -86,7 +88,7 @@
     grow(1);
   }
   let closing = false;
-  function shut() {
+  shut = function () {
     if (!dlg.open || closing) return; closing = true; inp.blur();
     const an = grow(-1), done = () => { closing = false; dlg.close(); if (an) an.cancel(); };
     if (an) an.onfinish = done; else done();
@@ -102,6 +104,7 @@
   // 3rd swipe stops only at $100s, 5th at $500s, 7th runs free.
   const R = (() => {
     const sc = $('bu-sc'), fastEl = $('bu-fast'), MAX = 5000, PX = 2;// 2px per dollar
+    if (!sc || !fastEl) return { place() {}, glide() {}, mark() {}, set() {}, touched: () => false };
     let h = ''; for (let v = 0; v <= MAX; v += 5) { const c = v % 50 ? (v % 25 ? '' : 'm') : 's' + (v % 100 ? '' : ' h') + (v % 500 ? '' : ' k'); h += '<i' + (c ? ' class="' + c + '"' : '') + '>' + (v % 50 ? '' : '<b>$' + NF0.format(v) + '</b>') + '</i>'; }
     sc.innerHTML = h;
     let touchedAt = 0, val = 150, own = false, glideRaf = 0, lastTick = -1, raf = 0;
@@ -163,6 +166,8 @@
   dlg.addEventListener('close', () => { document.documentElement.classList.remove('bu-lock'); if (window.CTNav) window.CTNav.done('budget'); });
   dlg.addEventListener('cancel', e => { e.preventDefault(); shut(); });
   if (window.visualViewport) { visualViewport.addEventListener('resize', () => { if (dlg.open) fit(); }); visualViewport.addEventListener('scroll', () => { if (dlg.open) fit(); }); }
+
+  } catch (err) { console.error('Budget window failed to set up', err); }
 
   document.addEventListener('click', e => {
     const c = e.target.closest('#ct-budget'); if (!c) return;
