@@ -108,8 +108,9 @@
 <dialog class="bu-sheet" id="bu-sheet" aria-labelledby="bu-h"><div class="bu-p">
   <div class="bu-hd"><h2 id="bu-h">Monthly budget</h2><button type="button" class="bu-xx" data-close aria-label="Close">✕</button></div>
   <label class="bu-amt"><span aria-hidden="true">$</span><input id="bu-amt" inputmode="decimal" autocomplete="off" placeholder="0" aria-label="Monthly budget in dollars"></label>
-  <p class="bu-per">for cards each month</p>
-  <div class="bu-quick" role="group" aria-label="Quick amounts"><button type="button" data-q="50">$50</button><button type="button" data-q="100">$100</button><button type="button" data-q="150">$150</button><button type="button" data-q="250">$250</button></div>
+  <p class="bu-per">Swipe the ruler, or tap the amount to type</p>
+  <div class="bu-ru"><div class="bu-sc" id="bu-sc" tabindex="0" role="slider" aria-label="Monthly budget" aria-valuemin="0" aria-valuemax="5000"></div><i class="bu-nd" aria-hidden="true"></i><span class="bu-fast" id="bu-fast" aria-hidden="true"></span></div>
+  <p class="bu-last" id="bu-last" hidden></p>
   <div class="bu-opt"><span>Heads-up at 80%<small>A quiet note when you get close</small></span><button type="button" class="swt" id="bu-alert" role="switch" aria-checked="true" aria-label="Heads-up at 80%"><i></i></button></div>
   <button type="button" class="bu-save" id="bu-save">Save budget</button>
   <button type="button" class="bu-off" id="bu-off" hidden>Turn off budget</button>
