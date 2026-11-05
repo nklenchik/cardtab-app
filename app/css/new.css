@@ -202,11 +202,11 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .bu-p:focus{outline:none}
 
 /* budget v2: roomier card, a press you can feel, and a centered window that sits in the visible part of the screen */
-.ct-budget{margin-top:16px;transition:transform .18s cubic-bezier(.2,.8,.2,1)}
+.ct-budget{margin-top:16px;margin-bottom:16px;transition:transform .18s cubic-bezier(.2,.8,.2,1)}
 .ct-budget:active:not(.is-unset){transform:scale(.985)}
 .ct-budget .bu-open{gap:14px;padding:18px 18px 16px}
 .ct-budget.is-unset .bu-open{gap:5px;padding:16px 50px 16px 18px}
-@media(max-width:760px){.ct-budget .bu-open{gap:15px;padding:18px 18px 17px}.ct-budget .bu-bar{height:9px}}
+@media(max-width:760px){.ct-budget .bu-open{gap:15px;padding:18px 18px 20px}.ct-budget .bu-bar{height:9px}}
 html.bu-lock,html.bu-lock body{overflow:hidden;overscroll-behavior:none}
 .bu-sheet{position:fixed;inset:0 0 auto 0;height:100%;overflow:hidden;overscroll-behavior:contain}
 .bu-sheet[open]{display:grid!important;place-items:center!important;padding:16px}
