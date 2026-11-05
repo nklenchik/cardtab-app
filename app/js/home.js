@@ -120,6 +120,7 @@
     stories: ['On Card Stories', [['save', 'Save all stories', () => clickIn(storyDoc(), '#svall')], ['themes', 'Story themes', () => clickIn(storyDoc(), '[data-all]')], ['share', 'Share this story', () => clickIn(storyDoc(), '#csdock [data-d="share"]')]]]
   };
   window.CTHomeMenu = function () {
+    window.CTMePaint();
     const cur = stOpen() ? 'stories' : cbOpen() ? 'board' : 'entries';
     document.querySelectorAll('#app-menu .amgo [data-go]').forEach(b => { const on = b.dataset.go === cur; b.classList.toggle('here', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
     const g = $('am-page'); if (!g) return; g.querySelectorAll('.am-pact').forEach(x => x.remove());
@@ -135,6 +136,28 @@
   // admin: show the first-time tips again
   document.addEventListener('click', e => { if (!e.target.closest('[data-dev="tips"]')) return; try { localStorage.removeItem('cb.hint'); } catch (er) {} if (window.CTDash) window.CTDash.toast('First-time tips will show again'); });
 
+
+  // ---------- you: one avatar and name everywhere (from the profile you save in Edit profile) ----------
+  const inkFor = hex => { const m = /^#?([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return '#fff'; const n = parseInt(m[1], 16), r = n >> 16, g = n >> 8 & 255, b = n & 255; return (r * 299 + g * 587 + b * 114) / 1000 > 160 ? '#1a1918' : '#fff'; };
+  window.CTMePaint = function () {
+    let a = {}, pr = {}; try { a = JSON.parse(localStorage.getItem('cb.avatar')) || {}; pr = JSON.parse(localStorage.getItem('cb.profile')) || {}; } catch (e) {}
+    const first = (pr.first || '').trim(), name = pr.show === 'full' && pr.last ? first + ' ' + pr.last : first;
+    ['app-avatar', 'am-av'].forEach(id => { const el = $(id); if (!el) return; if (a.photo) { el.style.background = 'url(' + a.photo + ') center/cover'; el.textContent = ''; } else if (a.color) { el.style.background = a.color; el.style.color = inkFor(a.color); if (first) el.textContent = first[0].toUpperCase(); } });
+    const nm = document.querySelector('#am-name .am-nm'); if (nm && name) nm.textContent = name;
+  };
+  setTimeout(() => window.CTMePaint(), 0); addEventListener('storage', e => { if (/^cb\.(avatar|profile)$/.test(e.key || '')) window.CTMePaint(); });
+  // tapping your name at the top of the menu opens Edit profile
+  document.addEventListener('click', e => { const h = e.target.closest('#app-menu .am-who'); if (!h || e.target.closest('.am-x')) return; e.stopPropagation(); if (window.CTMenu) window.CTMenu.close();
+    if (window.CTBoardLoader) window.CTBoardLoader.load().then(() => setTimeout(() => window.CTProfileOpen && window.CTProfileOpen(), 180)).catch(() => {}); });
+
+  // phones: swipe the profile sheet down to close it (only when it's scrolled to the top)
+  (function () { const m = $('app-menu'); if (!m) return; let y0 = null, dy = 0, t0 = 0;
+    m.addEventListener('touchstart', e => { if (!matchMedia('(max-width:760px)').matches || m.scrollTop > 0) { y0 = null; return; } y0 = e.touches[0].clientY; dy = 0; t0 = performance.now(); }, { passive: true });
+    m.addEventListener('touchmove', e => { if (y0 == null) return; dy = e.touches[0].clientY - y0; if (dy > 0) { m.style.animation = 'none'; m.style.transform = 'translateY(' + dy + 'px)'; if (e.cancelable) e.preventDefault(); } }, { passive: false });
+    m.addEventListener('touchend', () => { if (y0 == null) return; const v = dy / Math.max(1, performance.now() - t0); y0 = null;
+      if (dy > 90 || v > .6) { if (window.CTMenu) window.CTMenu.close(); return; }
+      if (dy > 0) { const a = m.animate([{ transform: 'translateY(' + dy + 'px)' }, { transform: 'none' }], { duration: 260, easing: 'cubic-bezier(.2,.9,.25,1)' }); m.style.transform = ''; a.onfinish = () => { m.style.animation = ''; }; } }, { passive: true });
+  })();
   window.CTHome = { paint };
   S.on(() => paint());
 })();

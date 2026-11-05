@@ -130,3 +130,12 @@ window.cbSyncPlan();
 })();
 // v34.1: warm Stories up in idle time (Premium), so the first slide into it never waits on loading
 ;(()=>{const s=$('cb-stories');if(!s)return;const warm=()=>{if(!cbFree())s.dispatchEvent(new Event('focus'))};(window.requestIdleCallback||(f=>setTimeout(f,2500)))(warm,{timeout:5000})})();
+// v34.2: the profile editor can open from the app's menu on any page (the board stays closed underneath if it was),
+// and every avatar in the app follows what you save here
+;(()=>{const av=$('av');if(!av)return;
+ window.CTProfileOpen=function(){const closed=cbx.classList.contains('off');
+  if(closed){cbx.inert=false;cbx.removeAttribute('aria-hidden');cbx.classList.add('pmonly');
+   av.addEventListener('close',function back(){av.removeEventListener('close',back);if(cbx.classList.contains('off')){cbx.inert=true;cbx.setAttribute('aria-hidden','true')}cbx.classList.remove('pmonly')})}
+  openAvatar()};
+ const a=$('cb-av');if(a)new MutationObserver(()=>{if(window.CTMePaint)window.CTMePaint()}).observe(a,{attributes:true,attributeFilter:['style'],childList:true,characterData:true,subtree:true});
+})();

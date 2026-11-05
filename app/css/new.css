@@ -457,4 +457,33 @@ dialog::backdrop,.bu-sheet::backdrop{background:var(--win-veil)!important;-webki
 .hs-si{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--tab-onbg);color:var(--tab-on)}
 .hs-ok{display:block;width:100%;height:48px;border-radius:999px;border:0;background:var(--ct-text);color:var(--s-bg,#fff);font:inherit;font-weight:800;font-size:15px;cursor:pointer}
 @media (prefers-reduced-motion:reduce){.ct-hint{transition:none}.hs-p{animation:none}}
+/* v34.2: phones: the profile menu is a bottom sheet (Threads-style): grab handle, each group a rounded card on a soft
+   background, slides up and swipes down. Desktop keeps the dropdown. One avatar size everywhere. */
+.app-avatar{width:38px!important;height:38px!important;font-size:15px!important;font-weight:800!important}
+.app-menu.am .am-edit{display:block;font-style:normal;font-size:12.5px;font-weight:750;color:var(--s-brand,#b0123d);margin-top:2px}
+.app-menu.am .am-who{cursor:pointer;border-radius:14px}
+@media (hover:hover) and (pointer:fine){.app-menu.am .am-who:hover{background:var(--am-hl)}}
+@media(max-width:760px){
+ :root{--sheet-bg:#efede8}
+ @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sheet-bg:#141311}}
+ :root[data-theme="dark"]{--sheet-bg:#141311}
+ .app-menu.am,.app-menu.am:not([hidden]){transform:none;top:auto!important;left:0!important;right:0!important;bottom:0!important;width:100%!important;min-width:0!important;max-width:none!important;max-height:min(88dvh,calc(100dvh - 40px - env(safe-area-inset-top,0px)))!important;border-radius:26px 26px 0 0!important;border:0!important;border-top:1px solid var(--win-edge)!important;background:var(--sheet-bg)!important;padding:22px 12px calc(14px + env(safe-area-inset-bottom,0px))!important;box-shadow:0 -12px 40px -16px rgba(0,0,0,.35)!important;transform-origin:bottom center!important;animation:amSheet .42s cubic-bezier(.2,.9,.25,1) both!important;will-change:transform}
+ .app-menu.am::before{content:"";position:absolute;top:8px;left:50%;width:38px;height:5px;margin-left:-19px;border-radius:999px;background:color-mix(in srgb,var(--ct-text) 22%,transparent)}
+ .app-menu.am .am-x{display:none!important}
+ .app-menu.am>.amh,.app-menu.am>.am-plan,.app-menu.am>.amg,.app-menu.am>.am-dev{background:var(--s-card);border-radius:18px!important;border:0!important;margin:0 0 10px!important}
+ .app-menu.am>.amh{padding:14px 14px!important}
+ .app-menu.am>.am-plan{padding:12px 14px!important}
+ .app-menu.am>.amg{padding:2px 0!important;overflow:hidden}
+ .app-menu.am>.amg>button,.app-menu.am>.amg>.amr{min-height:52px;padding-left:16px!important;padding-right:16px!important;position:relative}
+ .app-menu.am>.amg>button+button::before,.app-menu.am>.amg>.amr+.amr::before,.app-menu.am>.amg>button+.amr::before,.app-menu.am>.amg>.amr+button::before{content:"";position:absolute;top:0;left:48px;right:0;height:1px;background:var(--win-edge)}
+ .app-menu.am>.amg>.am-sub+button::before{display:none}
+ .app-menu.am>.am-dev{padding:4px 6px!important}
+ .am-bd{background:rgba(10,8,6,.34)!important}
+}
+@keyframes amSheet{from{transform:translateY(100%)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){.app-menu.am{animation:none!important}}
 
+@media(max-width:760px){
+ @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #app-menu.app-menu.am{background:var(--sheet-bg)!important;border-color:var(--win-edge)!important}}
+ :root[data-theme="dark"] #app-menu.app-menu.am{background:var(--sheet-bg)!important;border-color:var(--win-edge)!important}
+}

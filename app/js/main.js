@@ -59,7 +59,16 @@
   let anchor = null;
   function openMenu(src) { anchor = src || null; renderMenu(); menu.hidden = false; placeMenu(); if (PHONE.matches) { bd.hidden = false; document.documentElement.classList.add('am-lock'); } window.CTNav.push('menu', () => closeMenu(false, true)); av.setAttribute('aria-expanded', 'true'); const f = menu.querySelector('[role="menuitem"]'); if (f) f.focus({ preventScroll: true }); }
   document.querySelector('#app-menu .am-x').addEventListener('click', e => { e.stopPropagation(); closeMenu(true); });
-  function closeMenu(focus, fromPop) { if (menu.hidden) return; menu.hidden = true; bd.hidden = true; document.documentElement.classList.remove('am-lock'); if (!fromPop) window.CTNav.done('menu'); av.setAttribute('aria-expanded', 'false'); if (focus) av.focus(); }
+  const calmM = matchMedia('(prefers-reduced-motion: reduce)');
+  function closeMenu(focus, fromPop) {
+    if (menu.hidden) return;
+    // phones: the sheet slides back down (from wherever a swipe left it)
+    if (PHONE.matches && !calmM.matches && !menu.dataset.closing) { menu.dataset.closing = '1'; const from = menu.style.transform || 'none'; menu.style.animation = 'none';
+      const a = menu.animate([{ transform: from }, { transform: 'translateY(100%)' }], { duration: 240, easing: 'cubic-bezier(.4,0,.8,.6)', fill: 'forwards' }); bd.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 240, fill: 'forwards' });
+      a.onfinish = () => { delete menu.dataset.closing; menu.style.transform = ''; menu.style.animation = ''; a.cancel(); bd.getAnimations().forEach(x => x.cancel()); reallyClose(focus, fromPop); }; return; }
+    reallyClose(focus, fromPop);
+  }
+  function reallyClose(focus, fromPop) { if (menu.hidden) return; menu.hidden = true; bd.hidden = true; document.documentElement.classList.remove('am-lock'); if (!fromPop) window.CTNav.done('menu'); av.setAttribute('aria-expanded', 'false'); if (focus) av.focus(); }
   av.addEventListener('click', e => { e.stopPropagation(); menu.hidden ? openMenu() : closeMenu(); });
   // one profile menu everywhere: Card Board's and Stories' avatars open this same menu
   window.CTMenu = { open: src => { if (menu.hidden) openMenu(src); else closeMenu(); }, close: () => closeMenu(), get open_() { return !menu.hidden; } };
