@@ -1465,3 +1465,5 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 .del-sheet .del-go{width:100%;min-height:50px;border:0;border-radius:16px;background:#c62828;color:#fff;font:inherit;font-weight:800;font-size:16px;cursor:pointer;transition:opacity .2s}
 .del-sheet .del-go:disabled{opacity:.4;cursor:default}
 .del-sheet .del-cancel{display:block}
+/* v40: from 1200px the Stories style panel (inside the Stories page) replaces the theme chips in the header row */
+@media (min-width:1200px){.sh-chips{display:none!important}}

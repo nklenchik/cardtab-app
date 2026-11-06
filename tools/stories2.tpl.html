@@ -475,6 +475,40 @@ html.pg-moving *,html.pg-moving *::before{-webkit-backdrop-filter:none!important
 .st .svis > .artw{width:min(62%,240px,calc(100cqh * .64));margin:0 auto}
 .st .svis:has(> .wall){flex:1 1 0;min-height:96px;display:flex;flex-direction:column;justify-content:flex-end;margin-top:14px}
 .st .svis > .wall{height:auto;flex:0 1 250px;min-height:0}
+/* v40 style panel (wide desktop) */
+.spanel{display:none}
+@media(min-width:1200px){
+ html .controls{display:none!important}
+ .shelfrow{display:flex;gap:26px;align-items:flex-start}
+ .shelfrow>.shelf{flex:0 0 calc(400px + 28px + 3 * 150px + 24px);min-width:0}
+ .spanel{display:grid;gap:14px;flex:0 1 228px;min-width:200px;margin-top:6px;position:sticky;top:120px;background:var(--card,#fff);border:1px solid var(--line,rgba(0,0,0,.09));border-radius:20px;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.04)}
+}
+.spanel .sph{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:-4px}
+.spanel h4{margin:0;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted,#77736d)}
+.spanel .sph em{font-style:normal;font-weight:800;font-size:13px}
+.spanel .sptg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.spanel .spt{position:relative;aspect-ratio:1;border:0;border-radius:11px;padding:0;overflow:hidden;cursor:pointer;outline:2px solid transparent;outline-offset:2px;transition:outline-color .15s,transform .15s}
+.spanel .spt:hover{transform:translateY(-1px)}
+.spanel .spt.on{outline-color:currentColor}
+.spanel .spt i{position:absolute;border-radius:99px}.spanel .spt .t{left:18%;top:24%;width:46%;height:9%}.spanel .spt .a{width:46%;height:46%;right:-8%;bottom:-8%;border-radius:50%}
+.spanel .spt .lk{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.3);color:#fff}
+.spanel .spt .tg{position:absolute;left:3px;right:3px;bottom:3px;font-size:7.5px;font-weight:800;white-space:nowrap;overflow:hidden;background:var(--card,#fff);color:var(--text,#1a1918);border-radius:99px;padding:1px 0;text-align:center}
+.spanel .spall{aspect-ratio:1;padding:0;border:1px solid var(--line,rgba(0,0,0,.09));background:transparent;color:inherit;border-radius:11px;font:inherit;font-weight:800;font-size:11px;line-height:1.15;cursor:pointer}
+.spanel .spnote{margin:-4px 0 0;font-size:11.5px;line-height:1.35;color:var(--muted,#77736d);font-weight:600}
+.spanel .spnote button{border:0;background:none;padding:0;font:inherit;font-weight:800;color:var(--brand,#a50e37);cursor:pointer}
+.spanel .spbg{display:flex;background:var(--hl,rgba(0,0,0,.05));border-radius:99px;padding:3px}
+.spanel .spbg button{flex:1;position:relative;border:0;background:none;border-radius:99px;padding:7px 0;font:inherit;font-weight:700;font-size:12.5px;color:var(--muted,#77736d);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px}
+.spanel .spbg button[aria-checked=true]{background:var(--card,#fff);color:inherit;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.spanel .spbg .lk{display:inline-grid;color:var(--brand,#a50e37)}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:700;font-size:13px;line-height:1.25}
+.spanel .hrow{border-top:1px solid var(--line,rgba(0,0,0,.09));padding-top:12px}
+.hrow small{display:block;color:var(--muted,#77736d);font-weight:600;font-size:11.5px;margin-top:2px}
+.hswt{flex:none;width:44px;height:26px;border-radius:99px;border:0;background:var(--hl,rgba(0,0,0,.1));position:relative;cursor:pointer;transition:background .2s}
+.hswt i{position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.hswt[aria-checked=true]{background:#34c759}.hswt[aria-checked=true] i{transform:translateX(18px)}
+.hidew{margin-top:16px}
+@media(min-width:1280px){.shelfrow>.shelf{flex-basis:calc(400px + 28px + 3 * 170px + 24px)}}
+@media(min-width:1200px) and (max-width:1279px){.shelfrow .covers{grid-template-columns:repeat(3,minmax(0,150px))}.shelfrow .hero{height:calc(150px * 4.2 / 3 * 2 + 12px + 30px)}}
 </style>
 
 <div class="wrap">
@@ -796,42 +830,52 @@ function gameOf(e){try{if(parent.CardLookup){const r=parent.CardLookup.search({n
 // ---------- the six stories, from your numbers ----------
 const cntSpan=(n,pre,suf,dur)=>'<span data-count="'+n+'" data-pre="'+esc(pre||'')+'" data-suf="'+esc(suf||'')+'" data-d="150"'+(dur?' data-dur="'+dur+'"':'')+'>'+esc((pre||'')+NFR.format(n)+(suf||''))+'</span>';
 let SS=[];
-function buildStories(){const b=D,x=b.x,t=x.t,M=x.M,S=[];const lab=b.lab;
+// v40: neutral copy (style A). The stories are made to be posted, so nothing says "you" or "your": a label names the
+// topic, a big plain headline says what happened, and one short line gives the context. Hide amounts (a Stories
+// setting) swaps dollar figures for percentages and words, on screen and in anything saved.
+let hideAmt=false;try{hideAmt=localStorage.getItem('cs.hide')==='1'}catch(e){}
+const pctS=n=>(n>=0?'+':'−')+NFR.format(Math.abs(n))+'%';
+function buildStories(){const b=D,x=b.x,t=x.t,M=x.M,S=[];const H=hideAmt;
+  const per=x.one?mName(x.mo1):b.lab,perOf=x.one?'the month’s ':'';
   // 1 · the money: the line draws itself
   const cum=x.cum.length>1?x.cum:[0].concat(x.cum),mn=Math.min(0,...cum),mx=Math.max(1,...cum),pts=cum.map((v,i)=>[(i/Math.max(1,cum.length-1))*260,108-((v-mn)/(mx-mn||1))*96]);
-  const line='M'+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L'),pm=Math.round(t.profit/Math.max(1,M.length));
-  S.push({k:'The money',cover:signedS(t.profit),h:'You spent '+short(t.spent)+' and made back '+short(t.kept)+'.',big:cntSpan(Math.round(Math.abs(t.profit)/100),(t.profit<0?'−':'+')+'$',''),
-    line:t.spent?'That’s a '+x.roi+'% return'+(x.one?' in '+mName(x.mo1)+'.':', about '+short(Math.abs(pm))+' a month'+(pm<0?' in the red.':'.')):'Log a purchase and your money story starts here.',
+  const line='M'+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L'),up=t.profit>=0,ratio=t.spent?t.kept/t.spent:0;
+  const mh=!t.spent&&!t.kept?'Nothing logged yet.':H?(x.one?(x.roi>=100?'A strong month.':up?'A good month.':'A down month.'):(up?'Up overall.':'Down overall.')):(x.one?(up?'A '+short(t.profit)+' month.':'A down month.'):(up?'Up '+short(t.profit)+'.':'Down '+short(-t.profit)+'.'));
+  const ml=!t.spent?(t.kept?(H?'Sales, with nothing bought.':short(t.kept)+' back, nothing spent.'):'Log a purchase and the money story starts here.'):H?(up?'Money back was '+(Math.round(ratio*10)/10)+'× the money spent.':'Money back was '+Math.round(ratio*100)+'% of the money spent.'):short(t.spent)+' spent, '+short(t.kept)+' back.'+(x.roi>0?' A '+x.roi+'% return.':'');
+  S.push({k:per+' in cards',cover:H?pctS(x.roi):signedS(t.profit),h:mh,big:H?cntSpan(Math.abs(x.roi),up?'+':'−','%'):cntSpan(Math.round(Math.abs(t.profit)/100),(up?'+':'−')+'$',''),line:ml,
     vis:p=>'<svg class="spark" viewBox="0 0 260 120" preserveAspectRatio="none"><path class="ar" d="'+line+' L260 120 L0 120Z" fill="'+p.acc+'" opacity=".18"/><path class="ln" d="'+line+'" fill="none" stroke="'+p.acc+'" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" pathLength="1"/></svg>'});
-  // 2 · biggest win: the whole card slowly zooms; the price tag slides up and to the right
+  // 2 · top win: the whole card slowly zooms; the price tag slides up and to the right
   const f0=x.f0,bs=x.bigSale;
-  if(f0){const r=f0.cost?f0.kept/f0.cost:0;S.push({k:'Your biggest win',cover:'Biggest win',h:esc(sn(f0.name))+(r>=3?' tripled your money.':r>=2?' doubled your money.':' was your best flip.'),line:'Bought for '+short(f0.cost)+'. Sold for '+short(f0.gross)+'.',vis:p=>'<div class="artw"><div class="kb">'+cardEl(f0.name)+'<span class="stick" style="background:'+p.acc+';color:'+p.on+'">'+signed(f0.gain)+'</span></div></div>'})}
-  else if(bs)S.push({k:'Your biggest sale',cover:'Biggest sale',h:esc(sn(bs.name))+' sold for '+short(bs.amount)+'.',line:'On '+esc(bs.platform)+', '+dShort(bs.date)+'.',vis:p=>'<div class="artw"><div class="kb">'+cardEl(bs.name)+'<span class="stick" style="background:'+p.acc+';color:'+p.on+'">'+short(bs.amount)+'</span></div></div>'});
-  else S.push({k:'Your biggest win',cover:'Biggest win',h:'Your first win shows up here.',line:'Sell a card you logged buying, and it lands on this story.',vis:()=>''});
-  // 3 · where you buy: amounts count up, bars fill in
+  if(f0){const r=f0.cost?f0.kept/f0.cost:0,word=r>=3?'tripled':r>=2?'doubled':'';
+    S.push({k:'Top win',cover:'Top win',h:esc(sn(f0.name))+(word?' '+word+'.':' sold at a profit.'),line:H?(word?'Sold for more than '+(r>=3?'triple':'double')+' the price paid.':'Sold for more than the price paid.'):'Bought for '+short(f0.cost)+', sold for '+short(f0.gross)+'.',
+      vis:p=>'<div class="artw"><div class="kb">'+cardEl(f0.name)+'<span class="stick" style="background:'+p.acc+';color:'+p.on+'">'+(H?(Math.round(r*10)/10)+'×':signed(f0.gain))+'</span></div></div>'})}
+  else if(bs)S.push({k:'Top sale',cover:'Top sale',h:H?esc(sn(bs.name))+' was the top sale.':esc(sn(bs.name))+' sold for '+short(bs.amount)+'.',line:'Sold on '+esc(bs.platform)+'.',vis:p=>'<div class="artw"><div class="kb">'+cardEl(bs.name)+'<span class="stick" style="background:'+p.acc+';color:'+p.on+'">'+(H?'Sold':short(bs.amount))+'</span></div></div>'});
+  else S.push({k:'Top win',cover:'Top win',h:'No sales yet.',line:'Sell a card that was logged as a purchase, and it shows up here.',vis:()=>''});
+  // 3 · where the cards came from: amounts count up, bars fill in
   const pl=x.plats;
-  if(pl.length){const pct=Math.round(pl[0].v/Math.max(1,t.spent)*100);S.push({k:'Where you buy',cover:pl[0].k,h:pct>=40?'Most of your money goes to '+esc(pl[0].k)+'.':esc(pl[0].k)+' is where you buy most.',line:cntSpan(pct,'','%')+' of everything you spent.',
-    vis:p=>'<div class="plat">'+pl.slice(0,4).map((q,i)=>'<div><span>'+esc(q.k)+'<em data-count="'+Math.round(q.v/100)+'" data-pre="$" data-d="'+(350+i*120)+'">'+short(q.v)+'</em></span><i style="width:'+(q.v/pl[0].v*100).toFixed(1)+'%;background:'+(i?p.ink:p.acc)+';opacity:'+(i?.4:1)+';--d:'+(.35+i*.12)+'s"></i></div>').join('')+'</div>'})}
-  else S.push({k:'Where you buy',cover:'Platforms',h:'No purchases in this range.',line:'Your platforms show up once you log a purchase.',vis:()=>''});
-  // 4 · staying accountable: each checked month pulses as the count reaches it
+  if(pl.length){const pct=Math.round(pl[0].v/Math.max(1,t.spent)*100),tot=pl.reduce((a,q)=>a+q.v,0)||1;
+    S.push({k:'Where the cards came from',cover:pl[0].k,h:pct>=40?'Mostly from '+esc(pl[0].k)+'.':esc(pl[0].k)+' led the way.',line:cntSpan(pct,'','%')+' of '+perOf+'purchases came from '+esc(pl[0].k)+'.',
+    vis:p=>'<div class="plat">'+pl.slice(0,4).map((q,i)=>{const sh=Math.round(q.v/tot*100);return '<div><span>'+esc(q.k)+(H?'<em data-count="'+sh+'" data-suf="%" data-d="'+(350+i*120)+'">'+sh+'%</em>':'<em data-count="'+Math.round(q.v/100)+'" data-pre="$" data-d="'+(350+i*120)+'">'+short(q.v)+'</em>')+'</span><i style="width:'+(q.v/pl[0].v*100).toFixed(1)+'%;background:'+(i?p.ink:p.acc)+';opacity:'+(i?.4:1)+';--d:'+(.35+i*.12)+'s"></i></div>'}).join('')+'</div>'})}
+  else S.push({k:'Where the cards came from',cover:'Platforms',h:'No purchases yet.',line:'Platforms show up once a purchase is logged.',vis:()=>''});
+  // 4 · on budget: each checked month pulses as the count reaches it (never shows the budget amount)
   const unit=x.one?x.wk.map(w=>({ok:w.spent<=x.WB,l:String(w.d)})):x.by.slice(-12).map((m,i)=>({ok:m.spent<=BUDGET,l:mName(M.slice(-12)[i],{month:'narrow'})}));
-  const okN=unit.filter(u=>u.ok).length;let run=0,bestRun=0;unit.forEach(u=>{run=u.ok?run+1:0;bestRun=Math.max(bestRun,run)});
-  S.push({k:'Staying accountable',cover:okN+' of '+unit.length,h:okN/Math.max(1,unit.length)>=.5?'Your budget held up.':'Budget, still a work in progress.',big:cntSpan(okN,'',' of '+unit.length,2600),
-    line:(x.one?'weeks under budget in '+mName(x.mo1):'months under your '+short(BUDGET)+' budget')+(bestRun>1&&bestRun<unit.length?', with a best run of '+bestRun+' in a row.':'.'),
-    vis:p=>{let j=0;const cols=Math.min(6,unit.length);return '<div class="mo" style="grid-template-columns:repeat('+cols+',minmax(0,1fr))">'+unit.map(u=>{const tt=u.ok?(150+(1-Math.sqrt(1-((++j)-.5)/Math.max(1,okN))))*2600/1000:0;
+  const okN=unit.filter(u=>u.ok).length,unitW=x.one?'weeks':'months';let run=0,bestRun=0;unit.forEach(u=>{run=u.ok?run+1:0;bestRun=Math.max(bestRun,run)});
+  S.push({k:'On budget',cover:okN+' of '+unit.length,h:okN===unit.length&&unit.length?'Under budget every '+(x.one?'week':'month')+'.':okN/Math.max(1,unit.length)>=.5?'Under budget most '+unitW+'.':'Budget: a work in progress.',big:cntSpan(okN,'',' of '+unit.length,2600),
+    line:'Spending stayed under the '+(x.one?'weekly':'monthly')+' budget in '+okN+' of '+(x.one?'the month’s ':'the last ')+unit.length+' '+unitW+(bestRun>1&&bestRun<unit.length?', with '+bestRun+' in a row.':'.'),
+    vis:p=>{let j=0;const cols=Math.min(6,unit.length);return '<div class="mo" style="grid-template-columns:repeat('+cols+',minmax(0,1fr))">'+unit.map(u=>{if(u.ok)++j;
       return '<div><i class="'+(u.ok?'ok':'no')+'" style="background:'+(u.ok?p.acc:'transparent')+';border:2px solid '+p.acc+';color:'+p.on+(u.ok?';--d:'+(.15+(1-Math.sqrt(1-(j-.5)/Math.max(1,okN)))*2.6).toFixed(2)+'s':'')+'">'+(u.ok?'✓':'')+'</i>'+esc(u.l)+'</div>'}).join('')+'</div>'}});
-  // 5 · your collection
+  // 5 · in and out
   const pct5=x.nbE?Math.round(x.soldE/x.nbE*100):0,keep=x.hold.length,soldArt=[...new Set(x.L.filter(e=>e.type==='sale').map(e=>e.name))],fan=(soldArt.filter(artOf).concat(soldArt.filter(n=>!artOf(n)))).slice(0,3);
-  S.push({k:'Your collection',cover:pct5+'% sold',h:pct5>=50?'Most cards moved on.':'Your collection is growing.',big:cntSpan(pct5,'','%'),line:'of the cards you bought have sold. '+keep+' '+(keep===1?'is':'are')+' still in your collection.',
+  S.push({k:'In and out',cover:pct5+'% sold',h:pct5>=50?'Most cards moved on.':'The collection keeps growing.',big:cntSpan(pct5,'','%'),line:'of the cards bought have sold. '+keep+' '+(keep===1?'is':'are')+' still in the binder.',
     vis:()=>fan.length?'<div class="sfan">'+fan.map(cardEl).join('')+'</div>':''});
-  // 6 · your game: card art drifts past in a slow wall
+  // 6 · the game: card art drifts past in a slow wall
   const buys=x.L.filter(e=>e.type==='purchase'),g={};let all=0;buys.forEach(e=>{const q=e.qty||1;all+=q;const k=gameOf(e)||'other';g[k]=(g[k]||0)+q});
   const top=Object.keys(g).filter(k=>k!=='other').sort((a,b)=>g[b]-g[a])[0],gp=top?Math.round(g[top]/Math.max(1,all)*100):0;
   const arts=[...new Set(x.L.map(e=>e.name).filter(artOf))].slice(0,9);
   const col=(list,cls)=>'<div class="col'+(cls||'')+'">'+list.concat(list).map(cardEl).join('')+'</div>';
-  if(all&&top)S.push({k:'Your game',cover:top,h:gp>=60?'You collected a <u style="text-decoration-color:{acc}">lot</u> of '+esc(top)+'!':gp>50?'Mostly '+esc(top)+', with a little of everything.':gp===50?'Half '+esc(top)+', half everything else.':'A bit of everything, led by '+esc(top)+'.',big:cntSpan(gp,'','%'),line:'of your purchases were '+esc(top)+'. '+(g[top]===all?(all===1?'Your only card.':'All '+all+' cards.'):g[top]+' of your '+cnt(all,'card','cards')+'.'),
+  if(all&&top)S.push({k:'The game',cover:top,h:gp>=60?'A <u style="text-decoration-color:{acc}">lot</u> of '+esc(top)+'.':gp>50?'Mostly '+esc(top)+'.':gp===50?'Half '+esc(top)+', half everything else.':'A bit of everything, led by '+esc(top)+'.',big:cntSpan(gp,'','%'),line:'of purchases were '+esc(top)+'. '+(g[top]===all?(all===1?'1 card.':'All '+all+' cards.'):g[top]+' of '+cnt(all,'card','cards')+'.'),
     vis:()=>arts.length>=3?'<div class="wall">'+col(arts.filter((_,i)=>i%3===0))+col(arts.filter((_,i)=>i%3===1),' dn')+col(arts.filter((_,i)=>i%3===2))+'</div>':'<div class="sfan">'+[...new Set(buys.map(e=>e.name))].slice(0,3).map(cardEl).join('')+'</div>'});
-  else S.push({k:'Your cards',cover:all?cnt(all,'card','cards'):'Your cards',h:all?'You collected '+cnt(all,'card','cards')+'.':'Your cards show up here.',line:all?'Across every game you play.':'Log a purchase to start your collection story.',vis:()=>arts.length?'<div class="sfan">'+arts.slice(0,3).map(cardEl).join('')+'</div>':''});
+  else S.push({k:'The cards',cover:all?cnt(all,'card','cards'):'Cards',h:all?cnt(all,'card','cards')+' collected.':'No cards yet.',line:all?'Across every game.':'Log a purchase to start this story.',vis:()=>arts.length?'<div class="sfan">'+arts.slice(0,3).map(cardEl).join('')+'</div>':''});
   return S}
 function stHTML(s,i,on){const p=palN(i);return '<div class="st'+(on?' on':'')+(p.scrim?' scrim':'')+'" style="color:'+p.ink+'">'+bgSvg(bgStyle,p,i+1)+'<div class="sin">'+
   '<div class="brand"><mark style="--hl:'+p.acc+';color:'+p.on+'"><i>Made with</i><b>cardtab.app</b></mark></div><small>'+s.k+'</small><h4 class="pop">'+s.h.replace('{acc}',p.acc)+'</h4>'+(s.big?'<div class="sbig pop" style="color:'+p.acc+'">'+s.big+'</div>':'')+(s.line?'<p class="line pop">'+s.line+'</p>':'')+
@@ -840,7 +884,7 @@ function cvHTML(s,i,cls){const p=palN(i),long=String(s.cover).length>9;return '<
 // ---------- the shelf ----------
 const shelf=document.createElement('div');shelf.className='shelf';shelf.id='shelf';$('track').after(shelf);
 function paintShelf(){SS=buildStories();const p=palN(0),t=D.x.t;
-  shelf.innerHTML='<button type="button" class="hero" data-play="0" style="color:'+p.ink+'" aria-label="Play all '+SS.length+' stories">'+bgSvg(bgStyle,p,11,300,345)+'<span class="sin"><small>'+esc(D.lab)+'</small><span class="h4">Your cards, in '+SS.length+' stories</span><span class="sbig" style="color:'+p.acc+'">'+signedS(t.profit)+'</span><span class="sub">'+(t.spent?D.x.roi+'% return · ':'')+cnt(t.n,'entry','entries')+'</span></span>'+
+  shelf.innerHTML='<button type="button" class="hero" data-play="0" style="color:'+p.ink+'" aria-label="Play all '+SS.length+' stories">'+bgSvg(bgStyle,p,11,300,345)+'<span class="sin"><small>'+esc(D.lab)+'</small><span class="h4">Your cards, in '+SS.length+' stories</span><span class="sbig" style="color:'+p.acc+'">'+(hideAmt?pctS(D.x.roi):signedS(t.profit))+'</span><span class="sub">'+(t.spent&&!hideAmt?D.x.roi+'% return · ':'')+cnt(t.n,'entry','entries')+'</span></span>'+
     '<span class="play" style="background:'+p.acc+';color:'+p.on+'"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg></span></button>'+
     '<div class="covw"><div class="mh"><b>Stories</b><span>'+(matchMedia('(hover:none)').matches?'Tap':'Click')+' one to play</span></div><div class="covers">'+SS.map((s,i)=>cvHTML(s,i)).join('')+'</div></div>';
   if($('svall'))$('svall').lastChild.textContent='Save all '+SS.length;
@@ -1009,6 +1053,34 @@ pl.build=(b=>function(){b();if(!isFree()||!VMIME)return;const sh=plEl.querySelec
   const img=sh.querySelector('[data-shx="share"]');if(img)img.insertAdjacentHTML('beforebegin','<button type="button" class="vlock" data-vprem>Save video <span>Premium</span></button>');
   const n=sh.querySelector('.shn');if(n)n.textContent=(fLeft('image')?'1 free image this month':'Free image used this month')+', saved on Clean · video with Premium'})(pl.build.bind(pl));
 plEl.addEventListener('click',e=>{if(!e.target.closest('[data-vprem]'))return;e.stopPropagation();plEl.querySelector('.pshs').hidden=true;openPrem()},true);
+// ================= v40 Style panel (wide desktop) + Hide amounts =================
+// From 1200px wide, the theme chips give way to a panel beside the stories: a short list of themes (current, recent,
+// then popular) with "All 24 themes" for the rest, the background, and Hide amounts. Narrower screens keep the chips
+// and the theme sheet, which gets the Hide amounts switch too.
+(()=>{
+  const LOCKI='<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17 10V8A5 5 0 0 0 7 8v2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zM9 8a3 3 0 0 1 6 0v2H9z"/></svg>';
+  let recent=[];try{recent=JSON.parse(localStorage.getItem('cs.recent'))||[]}catch(e){}
+  const _st=setTheme;setTheme=function(i){_st(i);recent=[i].concat(recent.filter(x=>x!==i)).slice(0,6);try{localStorage.setItem('cs.recent',JSON.stringify(recent))}catch(e){}paintPanel()};
+  function shortList(){if(isFree())return freeThemes().slice();const out=[th];recent.concat(TH.map((_,i)=>i)).forEach(i=>{if(out.length<7&&!out.includes(i)&&TH[i])out.push(i)});return out}
+  const sw=i=>swCols(TH[i]);
+  // the panel sits beside the shelf
+  const row=document.createElement('div');row.className='shelfrow';shelf.before(row);row.appendChild(shelf);
+  const pan=document.createElement('aside');pan.className='spanel';pan.setAttribute('aria-label','Story style');row.appendChild(pan);
+  const swtHTML=id=>'<div class="hrow"><span>Hide amounts<small>Show % instead of $, in saved stories too</small></span><button type="button" class="hswt" role="switch" aria-checked="'+hideAmt+'" data-hide aria-label="Hide amounts"><i></i></button></div>';
+  window.paintPanel=paintPanel;function paintPanel(){const f=isFree(),list=shortList();
+    pan.innerHTML='<div class="sph"><h4>Theme</h4><em>'+esc(TH[th][0])+'</em></div><div class="sptg">'+list.map(i=>{const c=sw(i),lk=!themeOK(i);return '<button type="button" class="spt'+(i===th?' on':'')+'" data-i="'+i+'" aria-label="'+esc(TH[i][0])+(lk?', Premium':'')+'" aria-pressed="'+(i===th)+'" title="'+esc(TH[i][0])+'" style="background:'+c[0]+'"><i class="t" style="background:'+(c[1]||'#fff')+'"></i><i class="a" style="background:'+(c[2]||c[1]||'#fff')+'"></i>'+(lk?'<span class="lk">'+LOCKI+'</span>':'')+(f&&i===freeThemes()[1]?'<span class="tg">This month</span>':'')+'</button>'}).join('')+
+      '<button type="button" class="spall" data-all aria-label="All 24 themes">All<br>24</button></div>'+(f?'<p class="spnote">Free includes Jewel and a theme of the month. <button type="button" data-prem>All 24 with Premium</button></p>':'')+
+      '<div class="sph"><h4>Background</h4></div><div class="spbg" role="radiogroup" aria-label="Background">'+BGS.map(b=>'<button type="button" role="radio" aria-checked="'+(b===bgStyle)+'" data-bg="'+b+'">'+b+(f&&!bgOK(b)?'<span class="lk">'+LOCKI+'</span>':'')+'</button>').join('')+'</div>'+swtHTML()}
+  function setHide(v){hideAmt=v;try{localStorage.setItem('cs.hide',v?'1':'0')}catch(e){}paintShelf();paintPanel();document.querySelectorAll('[data-hide]').forEach(b=>b.setAttribute('aria-checked',v));if(pl.open)pl.build()}
+  pan.addEventListener('click',e=>{const t=e.target.closest('[data-i]');if(t){const i=+t.dataset.i;if(!themeOK(i)){openPrem();return}setTheme(i);return}
+    if(e.target.closest('[data-all]')){openSheet('ths');return}if(e.target.closest('[data-prem]')){openPrem();return}
+    const b=e.target.closest('[data-bg]');if(b){const k=b.dataset.bg;if(!bgOK(k)){say('Stickers come with Premium.');openPrem();return}bgStyle=k;try{localStorage.setItem('cs.bg',k)}catch(er){}paintShelf();paintPanel();if(typeof paintGrid==='function')paintGrid();return}
+    if(e.target.closest('[data-hide]'))setHide(!hideAmt)});
+  // the theme sheet (phones and narrower windows) gets the same switch, under the background
+  const bw=document.querySelector('.bgw');if(bw){const d=document.createElement('div');d.className='hidew';d.innerHTML=swtHTML();bw.after(d);d.addEventListener('click',e=>{if(e.target.closest('[data-hide]'))setHide(!hideAmt)})}
+  const _ps=paintShelf;paintShelf=function(){_ps();if(pan.isConnected)paintPanel()};
+  paintPanel();
+})();
 
 })();
 
