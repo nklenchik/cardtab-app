@@ -39,6 +39,7 @@
   }
   const fromCents = c => (c / 100).toFixed(2);
 
+  let dbName = null; // this account's database, so Delete account can remove it
   function hashId(str) { // short, stable id for an account (used to name its database)
     let h = 5381; for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) >>> 0;
     return h.toString(36);
@@ -150,7 +151,7 @@
 
     async open(acc) {
       account = acc;
-      const name = 'cardtab-' + hashId((acc.email || acc.id || 'local').toLowerCase());
+      const name = 'cardtab-' + hashId((acc.email || acc.id || 'local').toLowerCase()); dbName = name;
       try { db = await idbOpen(name); persistent = true; } catch (err) { db = null; persistent = false; console.warn('Card Tab: device storage unavailable, keeping entries in memory only', err); }
       await loadAll();
       if (!meta.createdAt) await putMeta('createdAt', new Date().toISOString());
@@ -164,6 +165,12 @@
       }
       undoStack.length = 0;
       emit('open');
+    },
+    // Delete account: removes everything this account keeps on this device. (Once accounts live on the server,
+    // this also asks the server to delete the account and cancel a Card Tab subscription, then emails a confirmation.)
+    async deleteAccount() {
+      const name = dbName; this.close(); dbName = null;
+      if (name && 'indexedDB' in window) await new Promise(res => { const r = indexedDB.deleteDatabase(name); r.onsuccess = r.onerror = r.onblocked = () => res(); });
     },
     close() { if (chan) chan.close(); chan = null; if (db) db.close(); db = null; entries = new Map(); meta = {}; undoStack.length = 0; },
 

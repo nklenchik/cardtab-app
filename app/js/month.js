@@ -277,7 +277,7 @@
       if (a && a.closest && a.closest('[role=slider],[role=tablist],[role=radiogroup],.bu-ru,.w,#cb-edit.on')) return false;
       if (document.querySelector('dialog[open]') || ($('app-menu') && !$('app-menu').hidden) || document.querySelector('#cb-edit.on')) return false;
     }
-    const order = ['entries', 'board', 'stories'].filter(t => t !== 'stories' || S.plan() === 'premium');
+    const order = ['entries', 'board', 'stories'];   // Stories is on both plans now
     const i = order.indexOf(tabNow());
     const to = num != null ? order[num] : order[i + idx];
     if (!to || to === order[i]) return false;

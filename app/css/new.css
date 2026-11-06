@@ -1455,3 +1455,13 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 /* v39.7: narrow phones swap long tile lines for a shorter wording instead of cutting them off */
 .ct-line .ct-short{display:none}
 @media (max-width:360px){.ct-line .ct-long{display:none}.ct-line .ct-short{display:inline}}
+
+/* v39.8 Delete account */
+.del-sheet .del-p{margin:0 0 12px;color:var(--mut,#77736d);font-size:14.5px;line-height:1.45}
+.del-sheet .del-prem{color:inherit;font-weight:600}
+.del-sheet .del-exp{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:46px;margin:4px 0 14px;border-radius:14px;border:1px solid var(--line,rgba(0,0,0,.12));background:transparent;color:inherit;font:inherit;font-weight:700;cursor:pointer}
+.del-sheet .del-ok{display:flex;align-items:center;gap:10px;min-height:44px;margin-bottom:12px;font-size:14.5px;cursor:pointer}
+.del-sheet .del-ok input{width:20px;height:20px;accent-color:#c62828;flex:none}
+.del-sheet .del-go{width:100%;min-height:50px;border:0;border-radius:16px;background:#c62828;color:#fff;font:inherit;font-weight:800;font-size:16px;cursor:pointer;transition:opacity .2s}
+.del-sheet .del-go:disabled{opacity:.4;cursor:default}
+.del-sheet .del-cancel{display:block}

@@ -30,6 +30,23 @@
     setTimeout(() => $('auth-email').focus({ preventScroll: true }), 50);
   }
 
+  // ---------- Delete account (from Edit profile) ----------
+  (function () {
+    const d = $('dela'); if (!d) return; const ok = $('dela-ok'), go = $('dela-go');
+    window.CTDeleteAccount = () => { ok.checked = false; go.disabled = true; $('dela-prem').hidden = S.plan() !== 'premium'; $('dela-exp').hidden = !S.all().length; d.showModal(); };
+    ok.addEventListener('change', () => { go.disabled = !ok.checked; });
+    d.addEventListener('click', e => { if (e.target === d || e.target.closest('[data-close]')) d.close(); });
+    $('dela-exp').addEventListener('click', () => Dash.exportCSV());
+    go.addEventListener('click', async () => {
+      if (!ok.checked) return; go.disabled = true; go.textContent = 'Deleting…';
+      try { await S.deleteAccount(); } catch (e) { console.error(e); }
+      // everything this device kept for Card Tab: profile, avatar, board layout, stories, notifications, settings
+      try { Object.keys(localStorage).filter(k => /^(cb|ct)\./.test(k)).forEach(k => localStorage.removeItem(k)); } catch (e) {}
+      d.close(); go.textContent = 'Delete account'; Sess.signOut(); showAuth();
+      Dash.toast('Your account was deleted.');
+    });
+  })();
+
   // ---------- account menu ----------
   function renderMenu() {
     const u = S.usage(), p = $('am-plan'), n = $('am-note');
@@ -100,7 +117,7 @@
   menu.addEventListener('click', async e => {
     const b = e.target.closest('button, summary'); if (!b) return;
     if (b.closest('#am-theme') || b.id === 'am-hap') return;
-    if (b.dataset.go) { closeMenu(); const g = b.dataset.go; if (g === 'entries') return; if (window.CTBoardLoader) window.CTBoardLoader.open(g === 'stories' ? 'stories' : null); else Dash.toast(g === 'board' ? 'Full-screen Card Board is part of Premium' : 'Card Stories is part of Premium'); return; }
+    if (b.dataset.go) { closeMenu(); const g = b.dataset.go; if (g === 'entries') return; if (window.CTBoardLoader) window.CTBoardLoader.open(g === 'stories' ? 'stories' : null); else Dash.toast((g === 'board' ? 'Card Board' : 'Card Stories') + ' is still loading. Try again in a moment.'); return; }
     if (b.dataset.soon) { closeMenu(); Dash.toast(b.dataset.soon + ' arrives in a later update.'); return; }
     if (b.id === 'am-budget') { closeMenu(); if (window.CTBudget) window.CTBudget.open(document.getElementById('ct-budget').hidden ? null : document.getElementById('ct-budget')); return; }
     if (b.id === 'am-plats') { closeMenu(); if (window.CTNotify) setTimeout(() => window.CTNotify.open('plats'), PHONE.matches ? 250 : 0); return; }

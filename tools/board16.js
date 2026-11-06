@@ -49,7 +49,11 @@ const lockAct=(el,ctx)=>el&&el.addEventListener('click',e=>{if(!cbFree())return;
 // v39.1: free users get a taste of Stories (last month, two themes, one video a month), so its button isn't locked
 lockAct($('cb-ask'),'ask');lockAct($('cb-share'),'share');
 $('cb-amenu').addEventListener('click',e=>{if(!cbFree())return;const b=e.target.closest('[data-am]');if(!b)return;const a=b.dataset.am;
-  if(a==='import'||a==='export'||a==='plan'){e.preventDefault();e.stopImmediatePropagation();closeMenus();setTimeout(()=>openPm(a==='plan'?null:a),calm.matches?0:120)}},true);
+  if(a==='import'||a==='plan'){e.preventDefault();e.stopImmediatePropagation();closeMenus();setTimeout(()=>openPm(a==='plan'?null:a),calm.matches?0:120)}},true);
+// v39.8: Free can export their entries as CSV (it's their data); images, PDF and Excel stay Premium
+{const exd=$('ex');if(exd){const markEx=()=>{exd.querySelectorAll('button[data-ex]').forEach(b=>{const lk=cbFree()&&b.dataset.ex!=='csv';b.classList.toggle('lockd',lk);const m=b.querySelector('.mlock');if(lk&&!m)b.insertAdjacentHTML('beforeend','<span class="mlock">'+LOCK_I+'</span>');if(!lk&&m)m.remove();if(lk)b.setAttribute('aria-label',b.textContent+', Premium');else b.removeAttribute('aria-label')})};
+  new MutationObserver(()=>{if(exd.open)markEx()}).observe(exd,{attributes:true,attributeFilter:['open']});
+  exd.addEventListener('click',e=>{if(!cbFree())return;const b=e.target.closest('button[data-ex]');if(!b||b.dataset.ex==='csv')return;e.preventDefault();e.stopImmediatePropagation();exd.close();setTimeout(()=>openPm('export'),calm.matches?0:120)},true)}}
 $('aw-list').addEventListener('click',e=>{const th=e.target.closest('.thumb.lockd');if(!th)return;e.preventDefault();e.stopImmediatePropagation();
   aw.close();setTimeout(()=>openPm(null),calm.matches?0:260)},true);
 // the time range menu: what Free covers first, then everything else under "With Premium", each with a lock
@@ -134,6 +138,8 @@ window.cbSyncPlan();
 // v34.2: the profile editor can open from the app's menu on any page (the board stays closed underneath if it was),
 // and every avatar in the app follows what you save here
 ;(()=>{const av=$('av');if(!av)return;
+ // v39.8: Delete account sits at the bottom of Edit profile (only in the app, where accounts exist)
+ {const dl=$('av-del');if(dl){dl.hidden=!window.CTDeleteAccount;dl.addEventListener('click',()=>{av.close();setTimeout(()=>window.CTDeleteAccount&&window.CTDeleteAccount(),calm.matches?0:200)})}}
  window.CTProfileOpen=function(){const closed=cbx.classList.contains('off');
   if(closed){cbx.inert=false;cbx.removeAttribute('aria-hidden');cbx.classList.add('pmonly');
    av.addEventListener('close',function back(){av.removeEventListener('close',back);if(cbx.classList.contains('off')){cbx.inert=true;cbx.setAttribute('aria-hidden','true')}cbx.classList.remove('pmonly')})}

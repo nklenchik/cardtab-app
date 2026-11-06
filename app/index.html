@@ -17,11 +17,11 @@
 <meta name="apple-mobile-web-app-title" content="Card Tab">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preload" href="fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/demo.css?v=39.7">
-<link rel="stylesheet" href="css/app.css?v=39.7">
-<link rel="stylesheet" href="css/addsheet.css?v=39.7">
-<link rel="stylesheet" href="css/soft.css?v=39.7">
-<link rel="stylesheet" href="css/new.css?v=39.7">
+<link rel="stylesheet" href="css/demo.css?v=39.8">
+<link rel="stylesheet" href="css/app.css?v=39.8">
+<link rel="stylesheet" href="css/addsheet.css?v=39.8">
+<link rel="stylesheet" href="css/soft.css?v=39.8">
+<link rel="stylesheet" href="css/new.css?v=39.8">
 </head>
 <body class="ct-demo">
 
@@ -125,6 +125,15 @@
   <button type="button" class="bu-save" id="bu-save">Save budget</button>
   <button type="button" class="bu-off" id="bu-off" hidden>Turn off budget</button>
 </div></dialog>
+<dialog class="bu-sheet del-sheet" id="dela" aria-labelledby="dela-h"><div class="bu-p">
+  <div class="bu-hd"><h2 id="dela-h">Delete your account?</h2><button type="button" class="bu-xx" data-close aria-label="Close">✕</button></div>
+  <p class="del-p">This deletes your entries, profile, budget, notifications and settings from Card Tab. It can’t be undone.</p>
+  <p class="del-p del-prem" id="dela-prem" hidden>Your Premium plan ends too. If you subscribed through Apple, cancel it in your iPhone’s Settings so you aren’t charged again.</p>
+  <button type="button" class="del-exp" id="dela-exp"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14"/></svg>Export my entries first</button>
+  <label class="del-ok"><input type="checkbox" id="dela-ok"><span>I understand this can’t be undone</span></label>
+  <button type="button" class="del-go" id="dela-go" disabled>Delete account</button>
+  <button type="button" class="bu-off del-cancel" data-close>Keep my account</button>
+</div></dialog>
 <dialog class="ed" id="ed" aria-labelledby="ed-h">
   <form class="ed-form" id="ed-form" novalidate>
     <div class="ed-head"><h2 id="ed-h">Add an entry</h2><button type="button" class="ed-x" data-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -212,28 +221,28 @@
 
 <div class="app-toasts" id="app-toasts" aria-live="polite"></div>
 
-<script src="js/store.js?v=39.7"></script>
-<script src="js/auth.js?v=39.7"></script>
+<script src="js/store.js?v=39.8"></script>
+<script src="js/auth.js?v=39.8"></script>
 <script>/* Set to the deployed Worker URL for live lookups and real art. Empty = built-in sample catalog. */window.CARDTAB_API="";</script>
-<script src="js/parser.js?v=39.7"></script>
-<script src="js/lookup.js?v=39.7"></script>
-<script src="js/editor.js?v=39.7"></script>
-<script src="js/addsheet.js?v=39.7"></script>
-<script src="js/xlsx-lite.js?v=39.7"></script>
-<script src="js/importer.js?v=39.7"></script>
-<script src="js/import-ui.js?v=39.7"></script>
-<script src="js/zoom.js?v=39.7"></script>
-<script src="js/notify.js?v=39.7"></script>
-<script src="js/motion.js?v=39.7"></script>
-<script src="js/dash.js?v=39.7"></script>
-<script src="js/budget.js?v=39.7"></script>
-<script src="js/home.js?v=39.7"></script>
-<script src="js/month.js?v=39.7"></script>
-  <script src="js/metrics.js?v=39.7"></script>
-<script src="js/shell.js?v=39.7"></script>
-<script src="js/toolbar.js?v=39.7"></script>
-<script src="js/board-loader.js?v=39.7"></script>
-<script src="js/install.js?v=39.7"></script>
-<script src="js/main.js?v=39.7"></script>
+<script src="js/parser.js?v=39.8"></script>
+<script src="js/lookup.js?v=39.8"></script>
+<script src="js/editor.js?v=39.8"></script>
+<script src="js/addsheet.js?v=39.8"></script>
+<script src="js/xlsx-lite.js?v=39.8"></script>
+<script src="js/importer.js?v=39.8"></script>
+<script src="js/import-ui.js?v=39.8"></script>
+<script src="js/zoom.js?v=39.8"></script>
+<script src="js/notify.js?v=39.8"></script>
+<script src="js/motion.js?v=39.8"></script>
+<script src="js/dash.js?v=39.8"></script>
+<script src="js/budget.js?v=39.8"></script>
+<script src="js/home.js?v=39.8"></script>
+<script src="js/month.js?v=39.8"></script>
+  <script src="js/metrics.js?v=39.8"></script>
+<script src="js/shell.js?v=39.8"></script>
+<script src="js/toolbar.js?v=39.8"></script>
+<script src="js/board-loader.js?v=39.8"></script>
+<script src="js/install.js?v=39.8"></script>
+<script src="js/main.js?v=39.8"></script>
 </body>
 </html>

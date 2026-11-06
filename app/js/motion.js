@@ -16,7 +16,7 @@
   window.CTNav = { push, done };
 
   const calm = matchMedia('(prefers-reduced-motion: reduce)'), phone = matchMedia('(max-width:760px)');
-  ['as', 'ed', 'imp', 'ntf', 'fix'].forEach(id => {
+  ['as', 'ed', 'imp', 'ntf', 'fix', 'dela'].forEach(id => {
     const d = document.getElementById(id); if (!d) return;
     const realClose = d.close.bind(d), realShow = d.showModal.bind(d), realShowN = d.show.bind(d);
     d.showModal = function () { clearTimeout(d._ct); d.classList.remove('closing'); if (!d.open) realShow(); push('dlg:' + id, () => d.close()); };

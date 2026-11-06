@@ -418,14 +418,14 @@
   $('ct-search').addEventListener('input', hintSync);
   setInterval(() => { if (document.hidden || root.hidden || $('ct-search').value || calm.matches) return; const old = wordBox.querySelector('.w:not(.above)'); wi = (wi + 1) % words.length; const next = document.createElement('span'); next.className = 'w below'; next.textContent = words[wi]; wordBox.appendChild(next); void next.offsetWidth; next.classList.remove('below'); if (old) { old.classList.add('above'); setTimeout(() => old.remove(), 600); } }, 3000);
 
-  // ---------- Premium notes: full-screen Card Board, Ask ----------
+  // ---------- Card Board opens from here on both plans; Ask note ----------
   const xb = $('ct-expand'), xp = $('ct-prem-pop'); let xt;
   const xset = o => { xp.hidden = !o; xb.setAttribute('aria-expanded', o ? 'true' : 'false'); clearTimeout(xt); if (o) xt = setTimeout(() => xset(false), 6000); };
   xb.addEventListener('click', e => {
     e.stopPropagation();
     // Card Board grows out of this panel on both plans (Free gets 4 widgets on the last 3 months)
     if (window.CTBoardLoader) { xset(false); window.CTBoardLoader.open(); return; }
-    $('ct-prem-pop-t').innerHTML = premium() ? 'Full-screen Card Board is coming in a later update.' : 'Full-screen Card Board is part of Premium. <a href="#" data-upgrade>Upgrade &rarr;</a>';
+    $('ct-prem-pop-t').innerHTML = 'Card Board is still loading. Try again in a moment.';
     xset(xp.hidden);
   });
   document.addEventListener('click', e => { if (!xp.hidden && !e.target.closest('#ct-prem-pop')) xset(false); });

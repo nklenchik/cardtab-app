@@ -73,7 +73,7 @@ function buildStories(){const b=D,x=b.x,t=x.t,M=x.M,S=[];const lab=b.lab;
   const top=Object.keys(g).filter(k=>k!=='other').sort((a,b)=>g[b]-g[a])[0],gp=top?Math.round(g[top]/Math.max(1,all)*100):0;
   const arts=[...new Set(x.L.map(e=>e.name).filter(artOf))].slice(0,9);
   const col=(list,cls)=>'<div class="col'+(cls||'')+'">'+list.concat(list).map(cardEl).join('')+'</div>';
-  if(all&&top)S.push({k:'Your game',cover:top,h:gp>=60?'You collected a <u style="text-decoration-color:{acc}">lot</u> of '+esc(top)+'!':'Mostly '+esc(top)+', with a little of everything.',big:cntSpan(gp,'','%'),line:'of your purchases were '+esc(top)+'. '+cnt(all,'card','cards')+' in all.',
+  if(all&&top)S.push({k:'Your game',cover:top,h:gp>=60?'You collected a <u style="text-decoration-color:{acc}">lot</u> of '+esc(top)+'!':gp>50?'Mostly '+esc(top)+', with a little of everything.':gp===50?'Half '+esc(top)+', half everything else.':'A bit of everything, led by '+esc(top)+'.',big:cntSpan(gp,'','%'),line:'of your purchases were '+esc(top)+'. '+(g[top]===all?(all===1?'Your only card.':'All '+all+' cards.'):g[top]+' of your '+cnt(all,'card','cards')+'.'),
     vis:()=>arts.length>=3?'<div class="wall">'+col(arts.filter((_,i)=>i%3===0))+col(arts.filter((_,i)=>i%3===1),' dn')+col(arts.filter((_,i)=>i%3===2))+'</div>':'<div class="sfan">'+[...new Set(buys.map(e=>e.name))].slice(0,3).map(cardEl).join('')+'</div>'});
   else S.push({k:'Your cards',cover:all?cnt(all,'card','cards'):'Your cards',h:all?'You collected '+cnt(all,'card','cards')+'.':'Your cards show up here.',line:all?'Across every game you play.':'Log a purchase to start your collection story.',vis:()=>arts.length?'<div class="sfan">'+arts.slice(0,3).map(cardEl).join('')+'</div>':''});
   return S}
@@ -223,37 +223,26 @@ const _paintShelf=paintShelf;paintShelf=function(){if(isFree()){if(!freeStart){f
     if(per!=='lm'){const p=palN(0);SS=[];shelf.innerHTML='<div class="plock" style="color:'+p.ink+'">'+bgSvg('Blobs',p,5,400,300)+'<div class="sin"><small>'+esc(D.lab)+'</small><span class="h4">Longer recaps come with Premium.</span><p>Free Stories cover last month. Premium adds your year, the last 12 months and any dates you pick.</p><div class="pla"><button type="button" class="b1" data-lm>Show last month</button><button type="button" class="b2" data-prem>See Premium</button></div></div></div>';return}}
   else freeStart=false;_paintShelf()};
 shelf.addEventListener('click',e=>{if(e.target.closest('[data-lm]'))setPer('lm');else if(e.target.closest('[data-prem]')){try{parent.CTPremiumOpen&&parent.CTPremiumOpen('stories')}catch(er){}}});
-// videos: one a month for free users (counted in the account, reset with the 20 free entries)
-const vUsed=()=>{try{const m=parent.CTStore.meta('storiesVideo');return m&&m.month===ym()?m.n:0}catch(e){return 0}};
-const vLeft=()=>isFree()?Math.max(0,1-vUsed()):Infinity;
-const _shareVideo=shareVideo;shareVideo=async function(n,share){if(isFree()&&vLeft()<1){let on='next month';try{on=parent.CTStore.usage().resetsOn}catch(e){}pl.toast('Your free video for '+mName(ym())+' is used. More on '+on+', or go Premium.');return}
-  await _shareVideo(n,share);if(isFree()){try{await parent.CTStore.setMeta('storiesVideo',{month:ym(),n:vUsed()+1})}catch(e){}}};
-// the share sheet says how many free videos are left
-const _build=pl.build.bind(pl);pl.build=function(){_build();if(isFree()&&VMIME){const n=plEl.querySelector('.pshs .shn');if(n)n.textContent=vLeft()?'1 free video this month · images any time':'Free video used this month · images any time'}};
 // the cardtab.app mark: Premium gets plain text in the lower right; free keeps the highlight up top
 const _stHTML=stHTML;stHTML=function(s,i,on){let h=_stHTML(s,i,on);if(!isFree()){const p=palN(i);h=h.replace(/<div class="brand">[\s\S]*?<\/div>/,'').replace('<div class="sin">','<div class="sin"><span class="pmark" style="color:'+p.ink+'">cardtab.app</span>')}return h};
 // keep the plan in step when it changes (Premium turned on or off)
 const _cs2=window.csSync;window.csSync=function(){_cs2();paintChips();paintShelf();tellParent()};
 paintChips();paintShelf();
-// ================= v39.2 Free downloads: Clean background, one video and one image a month =================
+// ================= v39.2 Free downloads: Clean background, one image a month (video is Premium, below) =================
 // Free users can look at their stories with Blobs in the app; anything they save or share is drawn on Clean.
-// They get one video and one image each month, counted in the account and reset with their 20 free entries.
+// They get one image each month, counted in the account and reset with their 20 free entries.
 const fUse=()=>{try{const m=parent.CTStore.meta('storiesFree');return m&&m.month===ym()?m:{month:ym(),video:0,image:0}}catch(e){return {month:ym(),video:0,image:0}}};
 const fLeft=k=>isFree()?Math.max(0,1-(fUse()[k]||0)):Infinity;
 async function fBump(k){if(!isFree())return;try{const m=fUse();m[k]=(m[k]||0)+1;await parent.CTStore.setMeta('storiesFree',m)}catch(e){}}
 const resetOn=()=>{try{return parent.CTStore.usage().resetsOn}catch(e){return 'next month'}};
 const withClean=async fn=>{const b=bgStyle;if(isFree())bgStyle='Clean';try{return await fn()}finally{bgStyle=b}};
-// videos (replaces the v39.1 one-video rule with the shared count)
-shareVideo=async function(n,share){if(isFree()&&fLeft('video')<1){pl.toast('Your free video for '+mName(ym())+' is used. More on '+resetOn()+', or go Premium.');return}
-  await withClean(()=>_shareVideo(n,share));await fBump('video')};
 // images
 const _saveStories=saveStories;saveStories=async function(list,share){
   if(isFree()){if(list.length>1){(pl.open?pl.toast.bind(pl):say)('Free includes one image a month. Open a story and tap Share to save it.');return}
     if(fLeft('image')<1){(pl.open?pl.toast.bind(pl):say)('Your free image for '+mName(ym())+' is used. More on '+resetOn()+', or go Premium.');return}}
   await withClean(()=>_saveStories(list,share));if(isFree())await fBump('image')};
 // the share sheet says what's left; the background picker says downloads use Clean
-pl.build=(b=>function(){b();if(!isFree())return;const n=plEl.querySelector('.pshs .shn');if(n){const v=fLeft('video'),i=fLeft('image');
-  n.textContent=(v&&i?'1 free video and 1 free image this month':v?'1 free video left this month':i?'1 free image left this month':'Free video and image used this month')+' · saved on the Clean background'}})(pl.build.bind(pl));
+pl.build=(b=>function(){b();if(!isFree())return;const n=plEl.querySelector('.pshs .shn');if(n)n.textContent=(fLeft('image')?'1 free image this month':'Free image used this month')+', saved on Clean'})(pl.build.bind(pl));
 new MutationObserver(()=>{if(!isFree())return;const r=$('bgrow');if(r&&!r.parentElement.querySelector('.bgnote')){r.insertAdjacentHTML('afterend','<p class="bgnote">On Free, saved images use Clean. Video comes with Premium.</p>')}}).observe($('bgrow'),{childList:true});
 // ================= v39.3 Video saving is Premium =================
 // Free users watch their stories on Clean or Blobs and save one image a month on Clean; saving or sharing video is Premium.

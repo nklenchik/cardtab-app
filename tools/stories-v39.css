@@ -196,3 +196,8 @@
  html .top{width:auto!important;margin:0 0 14px!important}
  html .controls{justify-items:start;margin-bottom:20px}
 }
+/* v39.8 short screens (Display Zoom, app browsers): the art takes only the room left under the words, never covers them */
+.st .svis:has(> .artw){flex:1 1 0;min-height:0;container-type:size;display:flex;align-items:center;justify-content:center;margin-top:18px}
+.st .svis > .artw{width:min(62%,240px,calc(100cqh * .64));margin:0 auto}
+.st .svis:has(> .wall){flex:1 1 0;min-height:96px;display:flex;flex-direction:column;justify-content:flex-end;margin-top:14px}
+.st .svis > .wall{height:auto;flex:0 1 250px;min-height:0}

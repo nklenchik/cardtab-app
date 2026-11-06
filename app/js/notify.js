@@ -172,7 +172,7 @@
     const d = new Date(), keys = [0, 1, 2].map(i => { const x = new Date(d.getFullYear(), d.getMonth() - i, 1); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0'); });
     const near = keys.filter(k => (k === keys[0] ? S.usage().used : monthCount(k)) >= S.WARN_AT).length;
     let tip = null;
-    if (near >= 2) tip = { title: 'You’ve been close to your 20 free entries ' + (near === 3 ? 'three months running' : 'more than once lately'), body: 'Premium has no monthly limit, plus Card Board and Stories for every month.' };
+    if (near >= 2) tip = { title: 'You’ve been close to your 20 free entries ' + (near === 3 ? 'three months running' : 'more than once lately'), body: 'Premium has no monthly limit, plus every date range on Card Board and Stories.' };
     else if ((tp.taps || []).filter(t => now() - t < 30 * DAY).length >= 5) tip = { title: 'Looking at Premium features?', body: 'Premium unlocks Import, every Board period and Card Stories. Try it when it opens at launch.' };
     if (!tip) return;
     checking = true;
@@ -188,7 +188,7 @@
         { id: 'demo:renew', kind: 'renew', cat: 'billing', ts: t - 6 * DAY, when: d.toLocaleString('en-US', { month: 'short', day: 'numeric' }) },
         { id: 'demo:exp', kind: 'cardexp', cat: 'billing', ts: t - 3 * DAY, last4: '4242', when: 'next month' },
         { id: 'demo:fail', kind: 'payfail', cat: 'billing', ts: t - 60 * 6e4 },
-        { id: 'demo:tip', kind: 'tip', cat: 'tips', ts: t - 5 * 36e5, title: 'You’ve been close to your 20 free entries three months running', body: 'Premium has no monthly limit, plus Card Board and Stories for every month.' }
+        { id: 'demo:tip', kind: 'tip', cat: 'tips', ts: t - 5 * 36e5, title: 'You’ve been close to your 20 free entries three months running', body: 'Premium has no monthly limit, plus every date range on Card Board and Stories.' }
       ].concat(um ? [{ id: 'demo:found', kind: 'found', cat: 'cards', ts: t - 2 * 36e5, entryId: um.id, typed: um.name, card: 'Charizard ex - 199/165 - SV: Scarlet & Violet 151' }] : []));
       s.read = {};
     });
