@@ -295,7 +295,7 @@ html.pg-moving .cbx #cb .wq.k-feat .ttl,html.pg-moving .cbx #cb .fpc,html.pg-mov
  dialog.drawer .askp{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;margin:0!important}
 }
 
-/* v38 phones: "Fit more" — number widgets half height, the big card shorter; charts and lists keep their size.
+/* v38 phones: "Fit more" (off while editing, so resizing snaps to the real sizes) — number widgets half height, the big card shorter; charts and lists keep their size.
    Rows become 52px units: small widgets 3 units (same size as before), number widgets 2, large ones 4. */
 .cb-fitsw{display:none}
 @media(max-width:600px){
@@ -305,8 +305,8 @@ html.pg-moving .cbx #cb .wq.k-feat .ttl,html.pg-moving .cbx #cb .fpc,html.pg-mov
  .cbx .cb-fitsw[aria-checked="true"]{color:var(--text,#22221f)}
  .cbx .cb-fitsw[aria-checked="true"] i{background:var(--green,#3f9a2a)}
  .cbx .cb-fitsw[aria-checked="true"] i::after{transform:translateX(12px)}
- html.cb-fit .cbx #cb .simple{grid-auto-rows:52px;gap:10px}
- html.cb-fit .cbx #cb .simple>.szS,html.cb-fit .cbx #cb .simple>.szM,html.cb-fit .cbx #cb .simple>.szB,html.cb-fit .cbx #cb .simple>.mkw{grid-row:span 3}
- html.cb-fit .cbx #cb .simple>.szL,html.cb-fit .cbx #cb .simple>.szX{grid-row:span 4}
- html.cb-fit .cbx #cb .simple>.szS.fs{grid-row:span 2}
+ html.cb-fit .cbx #cb:not(.editing) .simple{grid-auto-rows:52px;gap:10px}
+ html.cb-fit .cbx #cb:not(.editing) .simple>.szS,html.cb-fit .cbx #cb:not(.editing) .simple>.szM,html.cb-fit .cbx #cb:not(.editing) .simple>.szB,html.cb-fit .cbx #cb:not(.editing) .simple>.mkw{grid-row:span 3}
+ html.cb-fit .cbx #cb:not(.editing) .simple>.szL,html.cb-fit .cbx #cb:not(.editing) .simple>.szX{grid-row:span 4}
+ html.cb-fit .cbx #cb:not(.editing) .simple>.szS.fs{grid-row:span 2}
 }

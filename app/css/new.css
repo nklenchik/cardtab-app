@@ -1407,3 +1407,24 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 
 /* v38.1 phones: the tiles step aside while you search */
 .ct-stats.q-hide{display:none!important}
+/* v38.2 with All notifications off, the category switches show off and grey (their own choices are kept for later) */
+.ntf-set.dim .swt,.ntf-set.dim .swt[aria-checked="true"]{background:var(--s-dot);opacity:.6}
+.ntf-set.dim .swt i,.ntf-set.dim .swt[aria-checked="true"] i{transform:none;box-shadow:none}
+
+/* ===== v38.2 card art viewer ===== */
+.ct-row.expanded img.ct-card-art,.ct-gp .gp-art img{cursor:zoom-in;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s}
+@media(hover:hover){.ct-row.expanded img.ct-card-art:hover,.ct-gp .gp-art img:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 12px 28px rgba(0,0,0,.22)}}
+.zm{position:fixed;inset:0;z-index:150;display:none;touch-action:none;-webkit-user-select:none;user-select:none;overscroll-behavior:contain}
+.zm.on{display:block}
+.zm-bg{position:absolute;inset:0;background:rgba(8,7,6,.86);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);opacity:var(--bg,1);animation:zmFade .3s ease-out both}
+.zm.out .zm-bg{animation:zmFadeOut .26s ease-in both}
+.zm-img{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,.55);cursor:zoom-in;will-change:transform;background:#222}
+.zm.zoomed .zm-img{cursor:grab;border-radius:6px}.zm.drag .zm-img{cursor:grabbing}
+.zm-x{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:calc(14px + env(safe-area-inset-right,0px));width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.12);color:#fff;display:grid;place-items:center;cursor:pointer;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);animation:zmFade .3s ease-out both}
+.zm-tip{position:absolute;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom,0px));margin:0;text-align:center;color:rgba(255,255,255,.7);font:700 12.5px Manrope,system-ui,sans-serif;pointer-events:none;animation:zmTip 3.2s ease both}
+.zm.zoomed .zm-tip,.zm.out .zm-tip,.zm.out .zm-x{opacity:0;transition:opacity .2s}
+@keyframes zmFade{from{opacity:0}}
+@keyframes zmFadeOut{to{opacity:0}}
+@keyframes zmTip{0%{opacity:0}12%,75%{opacity:1}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.zm-bg,.zm-x,.zm-tip{animation:none}}
+.zm.zoomed .zm-tip,.zm.out .zm-tip{visibility:hidden}

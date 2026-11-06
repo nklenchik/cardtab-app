@@ -266,6 +266,7 @@
   function closeGP(then) { if (!gp.open) { if (then) then(); return; } if (calm.matches) { gp.close(); if (then) then(); return; } gp.classList.add('out'); setTimeout(() => { gp.close(); gp.classList.remove('out'); gp.style.removeProperty('--dy'); if (then) then(); }, 200); }
   function stepGP(d) { const ids = gpList(), i = ids.indexOf(gpId) + d; if (i < 0 || i >= ids.length) return; gpId = ids[i]; paintGP(); }
   gp.addEventListener('click', e => {
+    const zart = e.target.closest('.gp-art img'); if (zart && window.CTZoom) { window.CTZoom.open(zart.src, zart); return; }
     if (e.target === gp) { closeGP(); return; }
     if (e.target.closest('[data-gx]')) { closeGP(); return; }
     const st = e.target.closest('[data-gstep]'); if (st) { stepGP(+st.dataset.gstep); return; }
@@ -370,6 +371,9 @@
       doAct(act.dataset.act, act.closest('.ct-row').querySelector('.ct-row-toggle').dataset.tx);
       return;
     }
+    // the card art in an open entry opens the art viewer (instead of closing the entry)
+    const zart = e.target.closest('.ct-row.expanded img.ct-card-art');
+    if (zart && window.CTZoom) { e.stopPropagation(); window.CTZoom.open(zart.dataset.full || zart.src, zart); return; }
     const tile = e.target.closest('[data-tile]'); if (tile) { openGP(tile.dataset.tile); return; }
     const tg = e.target.closest('.ct-row-toggle'); if (tg) toggle(tg.dataset.tx);
   });
