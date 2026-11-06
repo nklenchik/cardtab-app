@@ -8,6 +8,8 @@
      At most one every two weeks, and none for a month after one is dismissed.
    Every fix is a suggestion the person confirms. Nothing here ever changes an amount. */
 (function () {
+  // opening a window puts focus on the window itself, not its close button (no blue ring on tap)
+  function calmFocus(d) { const f = d.querySelector('.ed-form, .ntf-form, form') || d; f.tabIndex = -1; f.style.outline = 'none'; try { f.focus({ preventScroll: true }); } catch (e) {} }
   'use strict';
   const S = window.CTStore; if (!S) return;
   const $ = id => document.getElementById(id);
@@ -173,8 +175,8 @@
     });
     $('fix-none').addEventListener('click', async () => { if (!entry) return; await S._artPatch(entry.id, { art: null, artFrom: 'none', artV2: 1 }); if (window.CTArtFill) window.CTArtFill.learn(entry); d.close(); toast('No card art for this entry.', true); });
     return {
-      open(e) { mode = 'fix'; entry = e; $('fix-h').textContent = 'Match your card'; $('fix-none').hidden = true; $('fix-lede').innerHTML = 'You typed <b>“' + esc(e.name) + '”</b>. Pick the right card and we’ll add its name and art. Amounts stay the same.'; $('fix-q').value = e.name; search(); d.showModal(); },
-      change(e) { mode = 'card'; entry = e; $('fix-h').textContent = 'Change card'; $('fix-none').hidden = false; $('fix-lede').innerHTML = 'Pick the printing that matches <b>“' + esc(e.name) + '”</b>. Your entry stays as you typed it; only the card and its art change. Entries with the same name will use your pick too.'; $('fix-q').value = (e.source || e.name); search(); d.showModal(); }
+      open(e) { mode = 'fix'; entry = e; $('fix-h').textContent = 'Match your card'; $('fix-none').hidden = true; $('fix-lede').innerHTML = 'You typed <b>“' + esc(e.name) + '”</b>. Pick the right card and we’ll add its name and art. Amounts stay the same.'; $('fix-q').value = e.name; search(); d.showModal(); calmFocus(d); },
+      change(e) { mode = 'card'; entry = e; $('fix-h').textContent = 'Change card'; $('fix-none').hidden = false; $('fix-lede').innerHTML = 'Pick the printing that matches <b>“' + esc(e.name) + '”</b>. Your entry stays as you typed it; only the card and its art change. Entries with the same name will use your pick too.'; $('fix-q').value = (e.source || e.name); search(); d.showModal(); calmFocus(d); }
     };
   })();
 

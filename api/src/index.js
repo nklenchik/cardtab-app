@@ -97,10 +97,17 @@ async function art(env, ctx, id, size) {
   let obj = await env.ART.get(k);
   if (!obj) {
     const row = await env.DB.prepare('SELECT tcgplayer_id FROM cards WHERE id=?').bind(id).first();
-    if (!row || !row.tcgplayer_id) return new Response('no art', { status: 404 });
+    // why there's no art travels in a header, so it can be checked from a browser
+    if (!row) return new Response('no art', { status: 404, headers: { 'x-art-why': 'card not saved', ...cors(env) } });
+    if (!row.tcgplayer_id) return new Response('no art', { status: 404, headers: { 'x-art-why': 'no tcgplayer id from the card database', ...cors(env) } });
     // Fetch the source once, resized and converted to WebP by Cloudflare. Only our copy is kept.
-    const r = await fetch(`${CDN}${row.tcgplayer_id}_in_1000x1000.jpg`, { cf: { image: { width: sz.width, format: 'webp', quality: sz.quality, metadata: 'none' } } });
-    if (!r.ok) return new Response('no art', { status: 404 });
+    // Not every product has the large image, so smaller ones are tried too.
+    let r = null;
+    for (const f of ['_in_1000x1000.jpg', '_400w.jpg', '_200w.jpg']) {
+      r = await fetch(`${CDN}${row.tcgplayer_id}${f}`, { cf: { image: { width: sz.width, format: 'webp', quality: sz.quality, metadata: 'none' } } });
+      if (r.ok) break;
+    }
+    if (!r || !r.ok) return new Response('no art', { status: 404, headers: { 'x-art-why': 'tcgplayer has no image (' + (r ? r.status : 0) + ')', ...cors(env) } });
     const buf = await r.arrayBuffer(), type = r.headers.get('content-type') || 'image/jpeg';
     // only keep a copy when Cloudflare actually resized it (it can't on the workers.dev address); otherwise show it, keep nothing, try again next time
     if (!/webp/i.test(type)) return new Response(buf, { headers: { 'content-type': type, 'cache-control': 'public, max-age=3600', ...cors(env) } });
