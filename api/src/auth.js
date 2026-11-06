@@ -9,8 +9,10 @@
    GET  /auth/me            the signed-in person, or 401
    POST /auth/logout        end this session
    POST /auth/delete        delete the account and every session
-   POST /auth/plan {plan}   admins only: switch your own plan for testing */
+   POST /auth/plan {plan}   admins only: switch your own plan for testing
+   POST /auth/sync          send and receive entries and settings (see sync.js) */
 import { signInEmail, sendMail } from './email.js';
+import { handleSync, deleteSynced } from './sync.js';
 
 const DAY = 86400, SESSION_DAYS = 30, LINK_MIN = 15;
 const now = () => Math.floor(Date.now() / 1000);
@@ -140,9 +142,10 @@ export async function handleAuth(env, req, path) {
   }
   if (!me) return out(env, req, { error: 'Sign in first.' }, 401);
   if (path === '/auth/delete' && req.method === 'POST') {
-    await env.DB.batch([env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(me.id), env.DB.prepare('DELETE FROM login_tokens WHERE email=?').bind(me.email), env.DB.prepare('DELETE FROM users WHERE id=?').bind(me.id)]);
+    await env.DB.batch([...(await deleteSynced(env, me.id)), env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(me.id), env.DB.prepare('DELETE FROM login_tokens WHERE email=?').bind(me.email), env.DB.prepare('DELETE FROM users WHERE id=?').bind(me.id)]);
     return out(env, req, { ok: true }, 200, { 'set-cookie': setCookie(env, 'ct_s', '', 0) });
   }
+  if (path === '/auth/sync' && req.method === 'POST') return handleSync(env, req, me, (body, status = 200) => out(env, req, body, status));
   if (path === '/auth/plan' && req.method === 'POST') {
     if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);
     const b = await req.json().catch(() => ({})), plan = b.plan === 'premium' ? 'premium' : 'free';
