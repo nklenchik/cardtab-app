@@ -20,6 +20,11 @@
   const SPARK = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2 5.3 5.5 1.9-5.5 2-2 5.3-2-5.3-5.5-2 5.5-1.9z"/><path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>';
   const QI = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg>';
 
+  // any open window or sheet (dialog) marks the page, so phones can switch off the glass blur underneath while it's up
+  (function () {
+    const sync = () => document.documentElement.classList.toggle('sheet-up', !!document.querySelector('dialog[open]'));
+    new MutationObserver(sync).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['open'] });
+  })();
   // ---------- the header ----------
   const sh = document.createElement('header'); sh.className = 'ct-shell'; sh.dataset.page = 'entries';
   sh.innerHTML = '<div class="sh-in"><div class="sh-brand"><img src="assets/logo-128.webp" alt="" width="30" height="30"><span class="sh-name"><span>Card Tab</span></span></div>' +
