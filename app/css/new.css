@@ -1399,3 +1399,11 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 .ntf-li small{font-size:12px;color:var(--muted,#77736d);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ntf-art{width:32px;aspect-ratio:5/7;border-radius:4px;flex:none}
 @media(min-width:761px){.ntf .ntf-form{width:min(460px,calc(100vw - 32px))}}
+
+/* v38.1 phones: Add New opens as a normal layer (not the browser's pop-up layer), like the profile menu */
+.as-bd{position:fixed;inset:0;z-index:130;background:var(--win-veil);-webkit-backdrop-filter:var(--win-blur);backdrop-filter:var(--win-blur);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s ease,visibility 0s .3s}
+.as-bd.on{opacity:1;visibility:visible;transition:opacity .35s ease-out,visibility 0s}
+#as.nm[open]{position:fixed;inset:0;z-index:131;display:flex}
+
+/* v38.1 phones: the tiles step aside while you search */
+.ct-stats.q-hide{display:none!important}

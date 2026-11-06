@@ -96,6 +96,38 @@
     addEventListener('scroll', () => set(false), { passive: true }); addEventListener('resize', () => set(false));
   })();
 
+  // phones: while you search, the four tiles fade away and the list slides up into their place, so results and the
+  // search box are both in view; they come back the same way when the search is empty and closed. Transform and
+  // opacity only: the tiles fade, then everything below glides from where it was to where it lands.
+  (function () {
+    const PHQ = matchMedia('(max-width:760px)'), calmQ = matchMedia('(prefers-reduced-motion: reduce)');
+    const tiles = document.querySelector('.ct-stats'), q = $('ct-search'), sh = document.querySelector('.ct-shell'); if (!tiles || !q) return;
+    const fq = sh && sh.querySelector('.sh-field input');
+    let hidden = false, busy = null;
+    const below = () => { const out = []; let n = tiles.nextElementSibling; while (n) { out.push(n); n = n.nextElementSibling; }
+      let p = tiles.parentElement; n = p && p.nextElementSibling; while (n) { out.push(n); n = n.nextElementSibling; } return out.filter(x => x.offsetParent); };
+    const searching = () => PHQ.matches && (!!q.value.trim() || document.activeElement === q || (fq && document.activeElement === fq) || (sh && sh.classList.contains('q-on')));
+    function glide(els, before) { els.forEach((el, i) => { const dy = before[i] - el.getBoundingClientRect().top; if (Math.abs(dy) < 1) return;
+      el.animate([{ transform: 'translateY(' + dy + 'px)' }, { transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.2,.8,.2,1)' }); }); }
+    function set(v) {
+      if (v === hidden) return; hidden = v; if (busy) { busy.cancel(); busy = null; }
+      const els = below();
+      if (calmQ.matches) { tiles.classList.toggle('q-hide', v); return; }
+      if (v) {
+        busy = tiles.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-8px) scale(.98)' }], { duration: 170, easing: 'ease-in', fill: 'forwards' });
+        busy.onfinish = () => { busy = null; const before = els.map(el => el.getBoundingClientRect().top); tiles.classList.add('q-hide'); tiles.getAnimations().forEach(a => a.cancel()); glide(els, before); };
+      } else {
+        const before = els.map(el => el.getBoundingClientRect().top); tiles.classList.remove('q-hide'); glide(els, before);
+        tiles.animate([{ opacity: 0, transform: 'translateY(-8px) scale(.98)' }, { opacity: 1, transform: 'none' }], { duration: 300, delay: 120, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'backwards' });
+      }
+    }
+    const check = () => setTimeout(() => set(searching()), 0);
+    ['focusin', 'focusout'].forEach(t => document.addEventListener(t, e => { if (e.target === q || e.target === fq) check(); }));
+    q.addEventListener('input', check);
+    if (sh) new MutationObserver(check).observe(sh, { attributes: true, attributeFilter: ['class'] });
+    PHQ.addEventListener('change', check);
+  })();
+
   // the Spent tile opens the budget window, growing out of the tile
   document.addEventListener('click', e => { const tile = e.target.closest('.ct-budtile'); if (tile && window.CTBudget) window.CTBudget.open(tile); });
   document.addEventListener('keydown', e => { const tile = e.target.closest && e.target.closest('.ct-budtile'); if (tile && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); if (window.CTBudget) window.CTBudget.open(tile); } });

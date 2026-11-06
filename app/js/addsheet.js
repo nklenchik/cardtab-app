@@ -91,8 +91,15 @@
   // While the sheet is sliding in or out, nothing resizes it: the keyboard rises (or drops) under the moving sheet, and the
   // sheet settles above the keyboard once, after the slide. Resizing on every keyboard step is what made it stutter.
   let moving = false, settle = 0;
-  function fit() { if (!dlg.open || !vv || moving) return; dlg.style.height = vv.height + 'px'; dlg.style.top = vv.offsetTop + 'px'; }
-  dlg.addEventListener('closing', () => { moving = true; clearTimeout(settle); });
+  function fit() { if (!dlg.open || !vv || moving) return;
+    // only follow the visible area while the keyboard is up; otherwise sit at the top of the screen. (Inside some app
+    // viewers the visible area reports an offset even with no keyboard, which pushed the sheet down.)
+    const kb = vv.height < innerHeight * .85;
+    dlg.style.height = kb ? vv.height + 'px' : ''; dlg.style.top = kb ? Math.max(0, vv.offsetTop) + 'px' : ''; }
+  const PHN = matchMedia('(max-width:760px)');
+  const bd = document.createElement('div'); bd.className = 'as-bd'; bd.setAttribute('aria-hidden', 'true'); document.body.appendChild(bd);
+  dlg.addEventListener('closing', () => { moving = true; clearTimeout(settle); bd.classList.remove('on'); });
+  dlg.addEventListener('close', () => bd.classList.remove('on'));
   dlg.addEventListener('close', () => { dlg.classList.remove('go'); moving = false; clearTimeout(settle); dlg.style.height = ''; dlg.style.top = ''; dlg.classList.remove('moving'); });
   if (vv) { vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
 
@@ -206,7 +213,9 @@
     if (touch && mode === 'together') { const k = kbMem(); if (k) dlg.style.height = k + 'px'; }
     moving = true; dlg.classList.remove('go'); dlg.classList.add('moving');
     const tOpen = performance.now();
-    dlg.showModal();
+    // phones: opens as a normal layer over the page with its own blurred backdrop, like the profile menu (the browser's
+    // pop-up layer misbehaves inside some phone app viewers). Desktop keeps the standard pop-up window.
+    if (PHN.matches) { dlg.classList.add('nm'); bd.classList.add('on'); dlg.show(); } else { dlg.classList.remove('nm'); dlg.showModal(); }
     diag.run(tOpen, performance.now());
     // phones: the sheet waits one painted frame off screen before it slides, so iPhone has it drawn before the slide's
     // first frame (otherwise the opening of the slide is skipped and it looks like a hang)

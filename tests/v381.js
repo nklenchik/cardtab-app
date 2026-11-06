@@ -1,0 +1,33 @@
+const { chromium, devices } = require('playwright');
+(async () => { const b = await chromium.launch(); const p = await (await b.newContext({ ...devices['iPhone 13'] })).newPage();
+ const errs = []; p.on('pageerror', e => errs.push(e.message)); const ok = (n, v, d) => console.log((v ? 'PASS ' : 'FAIL ') + n + (d ? '  — ' + d : ''));
+ await p.goto('http://localhost:8765/index.html'); await p.evaluate(() => localStorage.setItem('ct.session', JSON.stringify({ email: 'v@x.test', via: 'email', at: Date.now(), exp: Date.now() + 864e5 })));
+ await p.reload(); await p.waitForTimeout(1200); await p.evaluate(() => document.querySelector('[data-dev=sample]').click()); await p.waitForTimeout(1500);
+ await p.evaluate(() => document.getElementById('ct-fab').click()); await p.waitForTimeout(900);
+ const st = await p.evaluate(() => { const d = document.getElementById('as'), ph = d.querySelector('.phone'); return { open: d.open, modal: d.matches(':modal'), nm: d.classList.contains('nm'), z: getComputedStyle(d).zIndex, top: Math.round(ph.getBoundingClientRect().top), bd: getComputedStyle(document.querySelector('.as-bd')).opacity, blur: getComputedStyle(document.querySelector('.as-bd')).backdropFilter }; });
+ ok('Add New opens as a normal layer on phones', st.open && !st.modal && st.nm, JSON.stringify(st));
+ ok('Sheet sits at the top', st.top >= 8 && st.top <= 16, 'top ' + st.top);
+ ok('Blurred backdrop shows', st.bd === '1' && /blur/.test(st.blur));
+ await p.screenshot({ path: 'tests/out-phone/v381-add.png' });
+ // above header and tab bar?
+ const topEl = await p.evaluate(() => { const el = document.elementFromPoint(200, 30); return el && (el.closest('#as') ? 'sheet' : el.className); });
+ ok('Sheet is above the header', topEl === 'sheet', topEl);
+ await p.evaluate(() => document.querySelector('#as [data-as-close]').click()); await p.waitForTimeout(700);
+ ok('Closing hides the backdrop', await p.evaluate(() => !document.getElementById('as').open && getComputedStyle(document.querySelector('.as-bd')).opacity === '0'));
+ await p.evaluate(() => document.getElementById('ct-fab').click()); await p.waitForTimeout(800);
+ await p.evaluate(() => history.back()); await p.waitForTimeout(800);
+ ok('Back gesture closes it', await p.evaluate(() => !document.getElementById('as').open));
+ // search
+ await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(300);
+ const listTop0 = await p.evaluate(() => Math.round(document.querySelector('.ct-row').getBoundingClientRect().top));
+ await p.locator('#ct-search').focus(); await p.waitForTimeout(700);
+ ok('Tiles hide while searching', await p.evaluate(() => document.querySelector('.ct-stats').classList.contains('q-hide')));
+ await p.keyboard.type('char'); await p.waitForTimeout(600);
+ const listTop1 = await p.evaluate(() => Math.round(document.querySelector('.ct-row').getBoundingClientRect().top));
+ ok('Results move up into view', listTop1 < listTop0, listTop0 + ' → ' + listTop1);
+ await p.screenshot({ path: 'tests/out-phone/v381-search.png' });
+ await p.evaluate(() => document.activeElement.blur()); await p.waitForTimeout(500);
+ ok('Tiles stay hidden while there is a search', await p.evaluate(() => document.querySelector('.ct-stats').classList.contains('q-hide')));
+ await p.evaluate(() => { const q = document.getElementById('ct-search'); q.value = ''; q.dispatchEvent(new Event('input', { bubbles: true })); }); await p.waitForTimeout(700);
+ ok('Tiles come back when the search is cleared', await p.evaluate(() => !document.querySelector('.ct-stats').classList.contains('q-hide')));
+ ok('No errors', !errs.length, errs.join(' | ')); await b.close(); })();
