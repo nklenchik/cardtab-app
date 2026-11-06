@@ -82,7 +82,7 @@
   $('am-artnow').addEventListener('click', async () => {
     const b = $('am-artnow'), r = $('am-art-r'); if (!window.CTArtFill || b.disabled) return;
     b.disabled = true; b.textContent = 'Filling in card art…'; r.hidden = false; r.textContent = 'Checking every entry without art. This can take a few minutes; you can keep using the app.';
-    const off = window.CTArtFill.onChange(pg => { if (pg.running && pg.total) r.textContent = pg.done + ' of ' + pg.total + ' cards checked, ' + pg.found + ' entries filled in'; });
+    const off = window.CTArtFill.onChange(pg => { if (pg.running && pg.total) r.textContent = pg.done + ' of ' + pg.total + ' cards checked, ' + pg.found + ' entries filled in' + (pg.waiting ? ' · the card database asked us to slow down, continuing in a few seconds' : ''); });
     try { artRep = (await window.CTArtFill.force()) || []; } finally { off(); b.disabled = false; b.textContent = 'Fill missing card art now'; }
     const c = k => artRep.filter(x => x.result === k).length;
     r.textContent = artRep.length ? 'Done: ' + c('filled') + ' filled, ' + c('unclear') + ' with several possible cards, ' + c('not found') + ' not found' + (c('lookup failed') ? ', ' + c('lookup failed') + ' lookups failed' : '') + (c('monthly limit reached') ? '. Stopped: this month’s card lookups are used up' : '') + '.' : 'Every entry already has art (or a card you picked).';

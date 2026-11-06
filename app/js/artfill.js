@@ -33,7 +33,8 @@
   function needs(e) {
     if (e.deleted || !e.name || isPick(e)) return false;
     if (e.artFrom === 'lookup' && !e.artV2) return true;                 // filled in by the old rules: re-check once
-    if (!e.artV4 && (e.artFrom === 'lookup' || !e.art)) return true;    // v42.14: everything the art fill set (or couldn't) is checked once with the improved rules; lookups are saved on our server, so it's free
+    if (!e.artV4 && !e.art) return true;                                  // v42.14: missing art gets one more try with the improved rules
+    if (!e.artV4 && e.artFrom === 'lookup') { const p = parsedOf(e); if (p.set && !p.number && !/,|\/\//.test(p.name)) return true; }   // and plain names with a set (where wrong art came from) get one re-check
     if (e.art && (e.art.list || e.art.detail)) return false;
     if (!force && e.artTry && Date.now() - Date.parse(e.artTry) < RETRY_DAYS * 864e5) return false;
     return true;
@@ -138,7 +139,7 @@
         let cards = null;
         for (let tries = 0; tries < 3; tries++) {
           try { cards = await lookup(g.p); break; }
-          catch (err) { if (err.later) { held = true; break; } if (err.busy) { await sleep(BUSY_WAIT); continue; } cards = null; break; }
+          catch (err) { if (err.later) { held = true; break; } if (err.busy) { prog.waiting = true; emit(); await sleep(force ? 20000 : BUSY_WAIT); prog.waiting = false; emit(); continue; } cards = null; break; }
         }
         // nothing found for a long name with extra parts ("Son Goku, Nimbus Master, Collector's Selection Vol. 2"): try just the card's name
         if (cards && !cards.length && !held && (g.p.name.match(/,/g) || []).length >= 2) { const short = Object.assign({}, g.p, { name: g.p.name.split(',').slice(0, 2).join(',').trim() }); try { cards = await lookup(short); } catch (err) { if (err.later) held = true; } }
@@ -153,7 +154,7 @@
           got: card ? [card.n, card.num, card.s, card.r].filter(Boolean).join(' · ') : (cards || []).slice(0, 4).map(c => [c.n, c.num, c.s, c.r].filter(Boolean).join(' · ')) });
         if (card) prog.found += g.ids.length;
         prog.done++; emit();
-        await sleep(force ? 1300 : GAP);
+        await sleep(force ? 2600 : GAP);
       }
     } finally { running = false; force = false; emit(); if (heldUntil > Date.now() && on) { clearTimeout(timer); timer = setTimeout(run, heldUntil - Date.now()); } else if (again && on) { again = false; clearTimeout(timer); timer = setTimeout(run, 600); } }
   }
