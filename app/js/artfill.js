@@ -36,6 +36,8 @@
     if (e.artFrom === 'lookup' && !e.artV2) return true;                 // filled in by the old rules: re-check once
     if (!e.artV4 && !e.art) return true;                                  // v42.14: missing art gets one more try with the improved rules
     if (!e.artV4 && e.artFrom === 'lookup') { const p = parsedOf(e); if (p.set && !p.number && !/,|\/\//.test(p.name)) return true; }   // and plain names with a set (where wrong art came from) get one re-check
+    // v42.18: art picked from a different set than the one the entry names ("Gogeta... - Collector's Selection Vol. 3" got Vicious Rejuvenation) gets one re-check
+    if (!e.artV5 && e.artFrom === 'lookup') { const es = sigWords(parsedOf(e).set), cs = new Set(sigWords(e.cardName || '')); if (es.length && !es.some(w => cs.has(w))) return true; }
     if (e.art && (e.art.list || e.art.detail)) return false;
     if (!force && e.artTry && Date.now() - Date.parse(e.artTry) < RETRY_DAYS * 864e5) return false;
     return true;
@@ -151,8 +153,8 @@
         const card = cards ? clearMatch(cards, g.p, g.e) : null, now = new Date().toISOString();
         for (const id of g.ids) {
           const cur = S.get(id); if (!cur || !needs(cur) || picks().has(textKey(cur))) continue;
-          if (card) await S._artPatch(id, { art: { list: card.art.list, detail: card.art.detail }, artFrom: 'lookup', cardId: card.id, cardName: [card.n, card.num, card.s].filter(Boolean).join(' - '), artV2: 1, artV3: 1, artV4: 1 });
-          else if (cards) await S._artPatch(id, { art: null, artFrom: null, cardId: null, artTry: now, artV2: 1, artV3: 1, artV4: 1 });   // unclear: placeholder, try again in a few days
+          if (card) await S._artPatch(id, { art: { list: card.art.list, detail: card.art.detail }, artFrom: 'lookup', cardId: card.id, cardName: [card.n, card.num, card.s].filter(Boolean).join(' - '), artV2: 1, artV3: 1, artV4: 1, artV5: 1 });
+          else if (cards) await S._artPatch(id, { art: null, artFrom: null, cardId: null, artTry: now, artV2: 1, artV3: 1, artV4: 1, artV5: 1 });   // unclear: placeholder, try again in a few days
         }
         if (force) report.push({ entry: g.e.name, looked: [g.p.name, g.p.number, g.p.set].filter(Boolean).join(' | '), n: g.ids.length, result: card ? 'filled' : cards ? (cards.length ? 'unclear' : 'not found') : 'lookup failed',
           got: card ? [card.n, card.num, card.s, card.r].filter(Boolean).join(' · ') : (cards || []).slice(0, 4).map(c => [c.n, c.num, c.s, c.r].filter(Boolean).join(' · ')) });

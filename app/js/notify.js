@@ -144,7 +144,9 @@
     document.body.appendChild(d);
     let entry = null, list = [], mode = 'fix', qt = 0, tok = 0;
     const listName = c => [c.n, c.num, c.s].filter(Boolean).join(' - ');
-    const artBg = c => c.art && c.art.list ? 'center/cover no-repeat url("' + c.art.list + '")' : 'linear-gradient(150deg,hsl(' + (c.h || 210) + ',62%,62%),hsl(' + (((c.h || 210) + 40) % 360) + ',55%,38%))';
+    // the card's picture over the cranberry placeholder, so a picture that can't load still shows the placeholder
+    const PH = 'linear-gradient(150deg,#d9577a,#a50e37 55%,#6e0723)';
+    const artBg = c => (c.art && c.art.list ? 'center/cover no-repeat url("' + c.art.list + '"), ' : '') + PH;
     function search() {
       const q = $('fix-q').value.trim(), p = window.CardParser ? window.CardParser.parse(q) : { name: q };
       // the real card search when it's switched on (app.cardtab.app), otherwise the built-in catalog
