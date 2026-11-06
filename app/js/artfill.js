@@ -85,8 +85,6 @@
     const es = sigWords(p.set);
     if (es.length && !p.number) ok = ok.filter(c => /,|\/\//.test(c.n) || sigWords(c.s + ' ' + c.n).some(w => es.some(x => x === w || x.startsWith(w) || w.startsWith(x))));
     if (ok.length <= 1) return ok[0] || null;
-    // the card it already shows is still one of the right ones: keep it
-    if (e.cardId) { const was = ok.find(c => c.id === e.cardId); if (was) return was; }
     // the set: as named, then a set (or a version in brackets) that appears in the entry, then the entry's set inside the card's
     const narrow = (list, f) => { const x = list.filter(f); return x.length ? x : list; };
     if (p.set) ok = narrow(ok, c => norm(c.s) === norm(p.set));
@@ -94,6 +92,8 @@
     // ...or the set that shares the most words with the entry ("History of Son Goku" -> Theme Selection: History of Son Goku)
     if (ok.length > 1) { const tw = new Set(words(text)), sc = c => sigWords(c.s).filter(w => tw.has(w)).length, best = Math.max(...ok.map(sc)); if (best > 0 && ok.filter(c => sc(c) === best).length < ok.length) ok = ok.filter(c => sc(c) === best); }
     if (ok.length > 1 && p.set) ok = narrow(ok, c => norm(c.s).includes(norm(p.set)));
+    // the card it already shows is still one of the right ones (after the set is taken into account): keep it
+    if (e.cardId) { const was = ok.find(c => c.id === e.cardId); if (was) return was; }
     // words in the entry like SPR, SLR, Silver Foil, 1st
     for (const [inEntry, inCard] of HINTS) if (ok.length > 1 && inEntry.test(text)) ok = narrow(ok, c => inCard.test(c.n + ' ' + c.r));
     // the card whose name holds every word of the entry's card name (Sleeved Booster Pack, not Booster Pack)
