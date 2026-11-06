@@ -83,7 +83,7 @@ function featBody(ctx,s,w){const m=FEAT[w.metric]?w.metric:'win',F=FEAT[m],L=car
   const big=show==='%'?'':'<div class="fbig num'+(F.good?' g':F.bad?' r':'')+'">'+F.num(c,ctx,L)+(show==='both'&&s!=='S'?'<span class="fpc">'+esc(F.pc(c,ctx,L))+'</span>':'')+'</div>';
   const onlyPc=show==='%'?'<div class="fbig num'+(F.good?' g':F.bad?' r':'')+'">'+esc(F.pc(c,ctx,L))+'</div>':'';
   return '<div class="fw drill'+(PVMODE?' in':'')+'"'+dd({t:c.e.name,sub:'Every entry for this card',card:c.k})+' role="button" tabindex="0" data-fw data-lk="'+esc(lk)+'">'+
-    '<img class="fwi" src="'+esc(src)+'" alt="" decoding="async" draggable="false" style="--fx:'+f[0]+'%;--fy:'+f[1]+'%;--fz:'+z+'" data-wall="'+(c.art.wall?1:0)+'">'+
+    '<img class="fwi" src="'+esc(src)+'" alt="" decoding="async" draggable="false" style="--fx:'+f[0]+'%;--fy:'+f[1]+'%;--fz:'+z+'" data-wall="'+(c.art.wall?1:0)+'" data-focus="'+(c.art.focus?1:0)+'" data-meta="'+esc([c.e.cardId,c.e.cardName,c.e.name].filter(Boolean).join(' '))+'">'+
     '<div class="fwt"><h4 class="fn">'+esc(nameOf(c))+'</h4>'+(s==='S'?'':'<p class="fl">'+esc(F.line(c,ctx,L))+'</p>')+big+onlyPc+'</div></div>'}
 // ---- Best sellers: a podium of the top three, shown as the top halves of the cards ----
 function bestBody(ctx,s,w){const L=cardStats(ctx).filter(c=>c.sold&&c.b>0&&c.g>0).sort((a,b)=>b.g-a.g),n=s==='S'?1:s==='M'||s==='B'?2:3,top=L.slice(0,n);
@@ -282,7 +282,7 @@ const row=(inner,detail,open,drill)=>'<div class="r" '+(open?'data-row':'data-ti
 // v37: At a glance, the same quick numbers as Entries (and the same picks), for the board's period and platform
 NEWW.glance=function(ctx,s){const rows=window.CTMetrics&&CTMetrics.rows?CTMetrics.rows(ctx.inP):[];if(!rows.length)return '<p class="eg">Nothing in this period yet.</p>';
   const n={S:2,M:2,B:3,L:5,X:6}[s]||3,cls=s==='B'?' gl3':s==='X'?' gl2':'';
-  return '<div class="gl'+cls+'">'+rows.slice(0,n).map(r=>'<div class="glr'+(r.art?' gla':'')+'">'+(r.art&&!maskNames()?'<div class="glbg" style="background-image:url(\''+esc(r.art)+'\')"></div>':(r.icon?'<span class="glic">'+r.icon+'</span>':'<span class="glic ct-cardph" aria-hidden="true"></span>'))+
+  return '<div class="gl'+cls+'">'+rows.slice(0,n).map(r=>'<div class="glr'+(r.art?' gla':'')+'">'+(r.art&&!maskNames()?'<div class="glbg" data-meta="'+esc(r.meta||'')+'" style="background-image:url(\''+esc(r.art)+'\')"></div>':(r.icon?'<span class="glic">'+r.icon+'</span>':'<span class="glic ct-cardph" aria-hidden="true"></span>'))+
     '<div class="gltx"><small>'+esc(r.label)+'</small><em>'+esc(maskNames()&&r.art?'A card from your collection':r.title)+'</em></div><div class="glv"><b class="num'+(r.green?' g':'')+'">'+hideMoney(esc(r.value))+'</b>'+(r.sub?'<span>'+hideMoney(esc(r.sub))+'</span>':'')+'</div></div>').join('')+'</div>'};
 // ---------- widget bodies: one layout per metric per size ----------
 function body(k,ctx,s,w){
