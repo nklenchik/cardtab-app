@@ -1979,6 +1979,22 @@ html.pg-moving .cbx #cb .wq.k-feat .ttl,html.pg-moving .cbx #cb .fpc,html.pg-mov
  dialog.drawer[open]{position:fixed!important;inset:0!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;overflow:hidden!important}
  dialog.drawer .askp{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;margin:0!important}
 }
+
+/* v38 phones: "Fit more" — number widgets half height, the big card shorter; charts and lists keep their size.
+   Rows become 52px units: small widgets 3 units (same size as before), number widgets 2, large ones 4. */
+.cb-fitsw{display:none}
+@media(max-width:600px){
+ .cbx .cb-fitsw{display:inline-flex;align-items:center;gap:8px;margin-left:auto;border:1px solid var(--s-hair,rgba(40,30,20,.1));background:var(--s-card,#fff);color:var(--muted,#77736d);font:800 12.5px Manrope,system-ui,sans-serif;border-radius:999px;padding:5px 6px 5px 12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+ .cbx .cb-fitsw i{position:relative;width:32px;height:20px;border-radius:999px;background:var(--s-dot,#d9d6cf);transition:background .25s}
+ .cbx .cb-fitsw i::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+ .cbx .cb-fitsw[aria-checked="true"]{color:var(--text,#22221f)}
+ .cbx .cb-fitsw[aria-checked="true"] i{background:var(--green,#3f9a2a)}
+ .cbx .cb-fitsw[aria-checked="true"] i::after{transform:translateX(12px)}
+ html.cb-fit .cbx #cb .simple{grid-auto-rows:52px;gap:10px}
+ html.cb-fit .cbx #cb .simple>.szS,html.cb-fit .cbx #cb .simple>.szM,html.cb-fit .cbx #cb .simple>.szB,html.cb-fit .cbx #cb .simple>.mkw{grid-row:span 3}
+ html.cb-fit .cbx #cb .simple>.szL,html.cb-fit .cbx #cb .simple>.szX{grid-row:span 4}
+ html.cb-fit .cbx #cb .simple>.szS.fs{grid-row:span 2}
+}
 .tip{position:fixed;z-index:60;pointer-events:none;background:var(--text);color:var(--bg);border-radius:10px;padding:8px 11px;font-size:12.5px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;text-align:left}
 .tip.on{opacity:1}
 .note{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--text);color:var(--bg);border-radius:999px;padding:8px 14px;font-size:12px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}

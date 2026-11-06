@@ -60,6 +60,9 @@
         st.dt = setTimeout(() => window.CardLookup.remote(p).then(r => { if (tok !== st.tok) return; st.busy = false; st.list = r.list; st.sel = r.pick; st.why = r.why || ''; render(); }), 280);
         st.list = []; st.sel = -1;
       } else { const r = window.CardLookup.search(p); st.list = r.list; st.sel = r.pick; st.why = r.why || ''; }
+      // nothing matched: offer the closest spellings ("Did you mean") before adding it as typed
+      st.dym = false;
+      if (!st.list.length && !st.busy && window.CardLookup.suggest) { const sg = window.CardLookup.suggest(p); if (sg.length) { st.list = sg; st.sel = -1; st.why = ''; st.dym = true; } }
     }
     st.parsed = p;
     const typed = '<button type="button" class="addtyped" data-typed>Add “' + esc(t.length > 40 ? t.slice(0, 40) + '…' : t) + '” as typed</button>';
@@ -68,10 +71,10 @@
     if (!st.list.length) { res.innerHTML = '<div class="none">No match yet. Keep typing, or add the number.</div>' + typed; setGo(false, 'Pick a card'); return; }
     // Results are a short list: tap the one that's yours and go straight to price ("Change" on the price step undoes a wrong tap)
     const pre = st.list.length === 1 || (st.why && st.why !== 'one');
-    if (st.list.length === 1) st.sel = 0;
-    let h = '<div class="lsl">' + (st.list.length === 1 ? 'One match · tap it or press Enter' : st.list.length + ' printings · tap yours') + '</div><div class="lst">';
+    if (st.list.length === 1 && !st.dym) st.sel = 0;
+    let h = '<div class="lsl">' + (st.dym ? 'No exact match · did you mean' : st.list.length === 1 ? 'One match · tap it or press Enter' : st.list.length + ' printings · tap yours') + '</div><div class="lst">';
     st.list.forEach((c, i) => {
-      h += '<button type="button" class="li" data-i="' + i + '"><span class="art" style="background:' + artBg(c) + '"></span><span class="t"><span class="n">' + esc(c.n) + (c.r ? ' · ' + esc(c.r) : '') + '</span><span class="m">' + esc([c.s, c.num].filter(Boolean).join(' · ')) + (pre && i === 0 ? '<b class="bm">' + (st.list.length === 1 ? 'Match' : 'Best match') + '</b>' : '') + '</span></span><span class="go" aria-hidden="true"></span></button>';
+      h += '<button type="button" class="li" data-i="' + i + '"><span class="art" style="background:' + artBg(c) + '"></span><span class="t"><span class="n">' + esc(c.n) + (c.r ? ' · ' + esc(c.r) : '') + '</span><span class="m">' + esc([c.s, c.num].filter(Boolean).join(' · ')) + (pre && !st.dym && i === 0 ? '<b class="bm">' + (st.list.length === 1 ? 'Match' : 'Best match') + '</b>' : '') + '</span></span><span class="go" aria-hidden="true"></span></button>';
     });
     h += '</div>' + typed;
     res.innerHTML = h; setGo(st.sel > -1, st.sel < 0 ? 'Pick a card' : 'Continue to price');
@@ -129,7 +132,7 @@
     const sale = st.type === 'sale', c = st.card, v = S.toCents(price.value), fe = S.toCents(fees.value) || 0, sh = S.toCents(ship.value) || 0, k = v - fe - sh;
     const name = c.typed ? c.n : listName(c);
     try {
-      const e = await S.add({ type: st.type, name, platform: $('as-plat').value, qty: st.qty, amount: v, fees: sale ? fe : null, ship: sale ? sh : null, condition: COND_FULL[CONDS[st.cond]], art: c.art || null, note: st.grade ? 'Graded ' + st.grade : '' });
+      const e = await S.add({ type: st.type, name, platform: $('as-plat').value, qty: st.qty, amount: v, fees: sale ? fe : null, ship: sale ? sh : null, condition: COND_FULL[CONDS[st.cond]], art: c.art || null, note: st.grade ? 'Graded ' + st.grade : '', unmatched: !!c.typed });
       const amt = sale ? k : v;
       st.rows.unshift({ n: c.n, m: (c.typed ? '' : c.s + ' · ') + (st.qty > 1 ? '×' + st.qty + ' · ' : '') + CONDS[st.cond], h: c.h, art: c.art, sale, amt, qty: st.qty, isNew: true, id: e.id });
       st.total += sale ? amt : -amt; window.ctBuzz && window.ctBuzz();

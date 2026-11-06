@@ -103,12 +103,15 @@
     if (b.dataset.go) { closeMenu(); const g = b.dataset.go; if (g === 'entries') return; if (window.CTBoardLoader) window.CTBoardLoader.open(g === 'stories' ? 'stories' : null); else Dash.toast(g === 'board' ? 'Full-screen Card Board is part of Premium' : 'Card Stories is part of Premium'); return; }
     if (b.dataset.soon) { closeMenu(); Dash.toast(b.dataset.soon + ' arrives in a later update.'); return; }
     if (b.id === 'am-budget') { closeMenu(); if (window.CTBudget) window.CTBudget.open(document.getElementById('ct-budget').hidden ? null : document.getElementById('ct-budget')); return; }
+    if (b.id === 'am-ntf' || b.id === 'am-ntfset') { closeMenu(); if (window.CTNotify) setTimeout(() => window.CTNotify.open(b.id === 'am-ntfset' ? 'settings' : 'list'), PHONE.matches ? 250 : 0); return; }
     if (b.id === 'am-export') { closeMenu(); Dash.exportCSV(); return; }
     if (b.id === 'am-import') { closeMenu(); Dash.openImport(); return; }
     if (b.id === 'am-out') { Sess.signOut(); showAuth(); return; }
     if (b.dataset.plan) { await S.setPlan(b.dataset.plan); Dash.toast(b.dataset.plan === 'premium' ? 'Now testing as Premium' : 'Now testing as Free'); return; }
     const d = b.dataset.dev; if (!d) return;
     if (d === 'sample') { await S._loadSample(sampleEntries()); Dash.toast('Loaded ' + sampleEntries().length + ' sample entries (they don’t count toward the limit)'); }
+    else if (d === 'ntfdemo') { await window.CTNotify.demo(); Dash.toast('Sample notifications added. Look for the dot on your picture.'); }
+    else if (d === 'ntfclear') { await window.CTNotify.clearDemo(); Dash.toast('Notifications cleared'); }
     else if (d === 'near') { await S._setUsage(17); Dash.toast('Usage set to 17 of 20'); }
     else if (d === 'full') { await S._setUsage(20); Dash.toast('Usage set to 20 of 20'); }
     else if (d === 'usage0') { await S._setUsage(0); Dash.toast('Usage reset to 0'); }

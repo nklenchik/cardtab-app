@@ -78,6 +78,21 @@
     lab(); new MutationObserver(lab).observe($('cb-platl'), { childList: true, characterData: true, subtree: true });
     b.addEventListener('click', () => openDD(b, cbPlat.list(), cbPlat.get(), (k, l) => cbPlat.set(k, l)));
     T('board').appendChild(w);
+    // phones: "Fit more" — the number widgets (Profit, Sales, Spent, Fees) go half height and the big card a bit shorter,
+    // so more fits on one screen. Charts and lists keep their size. Remembered on this device.
+    const fitOn = () => { try { return localStorage.getItem('ct.cbfit') === '1'; } catch (e) { return false; } };
+    const fit = document.createElement('button'); fit.type = 'button'; fit.className = 'cb-fitsw'; fit.setAttribute('role', 'switch');
+    fit.innerHTML = '<span>Fit more</span><i aria-hidden="true"></i>';
+    const paintFit = () => { const on = fitOn(); fit.setAttribute('aria-checked', String(on)); document.documentElement.classList.toggle('cb-fit', on); };
+    fit.addEventListener('click', () => { try { localStorage.setItem('ct.cbfit', fitOn() ? '0' : '1'); } catch (e) {} paintFit(); window.ctBuzz && window.ctBuzz(); });
+    const pw = $('cb-plat') && $('cb-plat').parentElement; if (pw && pw.parentElement) pw.parentElement.insertBefore(fit, pw.nextSibling);
+    paintFit();
+    // a number widget only goes short when the widget beside it does too, so no gap opens under it
+    const KPI = /\bk-(profit|sales|spent|fees)\b/;
+    const pair = () => { const g = document.querySelector('#cb .simple'); if (!g) return; let row = [];
+      const settle = () => { const short = row.length === 2 ? row.every(w => KPI.test(w.className)) : row.length === 1 && KPI.test(row[0].className); row.forEach(w => w.classList.toggle('fs', short)); row = []; };
+      [...g.children].forEach(w => { if (!w.classList.contains('szS')) { settle(); return; } row.push(w); if (row.length === 2) settle(); }); settle(); };
+    const grid = document.querySelector('#cb .simple'); if (grid) { new MutationObserver(pair).observe(grid, { childList: true }); pair(); }
   }
 
   // ---------- Stories: its own range and the themes, from inside its frame ----------

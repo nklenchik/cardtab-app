@@ -51,6 +51,8 @@
   let toastEl = null, toastT = 0;
   function toast(text, opts) {
     opts = opts || {};
+    // a Free user who tapped something that's part of Premium (feeds the occasional Premium tip)
+    if (/Premium/.test(text) && S.plan() === 'free' && window.CTNotify) window.CTNotify.premiumTap();
     const box = $('app-toasts');
     if (toastEl) toastEl.remove(); clearTimeout(toastT);
     const t = document.createElement('div'); t.className = 'app-toast'; t.setAttribute('role', 'status');

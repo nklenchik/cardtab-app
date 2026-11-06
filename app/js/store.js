@@ -105,6 +105,7 @@
       } else { e.net = cents(e.net); }
     } else { e.net = null; e.fees = null; e.ship = null; }
     e.art = e.art || null;
+    if (e.unmatched) e.unmatched = true; else delete e.unmatched;
     if (e.source != null) e.source = String(e.source).slice(0, 400);
     if (e.artSource != null) e.artSource = /^https?:\/\//i.test(e.artSource) ? String(e.artSource).slice(0, 500) : null;
     const errors = {};
@@ -278,6 +279,18 @@
       const q = v => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
       const rows = this.all().slice().reverse().map(e => [e.date, e.type, e.platform, e.name, e.qty, fromCents(e.amount), e.type === 'sale' && e.fees != null ? fromCents(e.fees) : '', e.type === 'sale' && e.ship != null ? fromCents(e.ship) : '', e.type === 'sale' ? fromCents(e.net) : '', e.condition, e.note].map(q).join(','));
       return [cols.join(',')].concat(rows).join('\n');
+    },
+
+    // ---------- small per-account settings (notifications and the like) ----------
+    meta(k) { const v = meta[k]; return v == null ? null : clone(v); },
+    async setMeta(k, v) { await putMeta(k, v); changed('meta'); },
+    // Unmatched cards: Fix sets the card's name and art (never the amounts); Leave keeps it as typed. One Undo puts it back.
+    async matchCard(id, patch) {
+      const cur = entries.get(id); if (!cur || cur.deleted) return null;
+      const before = clone(cur), e = Object.assign(clone(cur), patch || {}, { updatedAt: new Date().toISOString() });
+      delete e.unmatched; await putEntry(e);
+      pushUndo(patch ? 'Card fixed' : 'Kept as typed', async () => { before.updatedAt = new Date().toISOString(); await putEntry(before); });
+      changed('update'); return clone(e);
     },
 
     // ---------- testing tools (local mode only) ----------

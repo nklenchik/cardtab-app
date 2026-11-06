@@ -52,5 +52,20 @@
       return rank(cards, p);
     }).catch(function () { return search(p); });
   }
-  root.CardLookup = { search: search, rank: rank, remote: remote };
+  // "Did you mean": when nothing matches, the closest names by spelling (a letter or two off), best first.
+  // A number typed alongside ("199") lifts the printing whose number starts with it.
+  function lev(a, b) { var m = a.length, n = b.length, d = [], i, j; for (i = 0; i <= m; i++) d[i] = [i]; for (j = 1; j <= n; j++) d[0][j] = j;
+    for (i = 1; i <= m; i++) for (j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return d[m][n]; }
+  function close(w, nm) { var best = 0; nm.forEach(function (h) { var L = Math.max(w.length, h.length), s = 1 - lev(w, h.slice(0, Math.max(w.length, Math.min(h.length, w.length + 2)))) / L; if (s > best) best = s; }); return best; }
+  function suggest(p, cat) {
+    cat = cat || CAT; var all = words(p && p.name), digits = all.filter(function (w) { return /^\d+$/.test(w); });
+    var pn = all.filter(function (w) { return !/^\d+$/.test(w); }); if (!pn.length) return [];
+    var num = norm(p.number || digits[0] || '');
+    var sc = cat.map(function (c) { var nm = words(c.n), s = 0, k = 0;
+      pn.forEach(function (w) { if (w.length < 3) return; k++; s += close(w, nm); });
+      s = k ? s / k : 0; if (num && norm(c.num).indexOf(num) === 0) s += .15; return { c: c, s: s }; })
+      .filter(function (x) { return x.s >= .7; }).sort(function (a, b) { return b.s - a.s; });
+    return sc.slice(0, 3).map(function (x) { return x.c; });
+  }
+  root.CardLookup = { search: search, rank: rank, remote: remote, suggest: suggest };
 })(typeof window !== 'undefined' ? window : this);

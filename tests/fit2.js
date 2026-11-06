@@ -1,0 +1,16 @@
+const { chromium, devices } = require('playwright');
+const W = +(process.argv[2] || 390), DARK = process.argv[3] === 'dark';
+(async () => { const b = await chromium.launch(); const p = await (await b.newContext({ ...devices['iPhone 13'], viewport: { width: W, height: 844 }, colorScheme: DARK ? 'dark' : 'light' })).newPage();
+ const errs = []; p.on('pageerror', e => errs.push(e.message));
+ await p.goto('http://localhost:8765/index.html'); await p.evaluate(() => localStorage.setItem('ct.session', JSON.stringify({ email: 'b5@x.test', via: 'email', at: Date.now(), exp: Date.now() + 864e5 })));
+ await p.reload(); await p.waitForTimeout(1200);
+ await p.evaluate(async () => { await CTStore.setPlan('premium'); document.querySelector('[data-dev=sample]').click(); }); await p.waitForTimeout(1500);
+ await p.evaluate(() => { [...document.querySelectorAll('.ct-tbar button')].find(x => /board/i.test(x.textContent)).click(); }); await p.waitForTimeout(3000);
+ await p.evaluate(() => document.querySelectorAll('.cbhint').forEach(h => h.remove()));
+ const sizes = () => p.evaluate(() => [...document.querySelectorAll('#cb .simple>.w')].map(w => (w.dataset.k) + ' ' + Math.round(w.getBoundingClientRect().width) + 'x' + Math.round(w.getBoundingClientRect().height)).join(' | '));
+ console.log('off:', await sizes()); await p.screenshot({ path: 'tests/out-phone/fit2-off-' + W + (DARK ? 'd' : '') + '.png' });
+ await p.locator('.cb-fitsw').click(); await p.waitForTimeout(700);
+ console.log('on: ', await sizes(), '| switch', await p.locator('.cb-fitsw').getAttribute('aria-checked'));
+ await p.screenshot({ path: 'tests/out-phone/fit2-on-' + W + (DARK ? 'd' : '') + '.png' });
+ console.log('page wider than screen:', await p.evaluate(() => document.documentElement.scrollWidth > innerWidth), 'errors', errs);
+ await b.close(); })();
