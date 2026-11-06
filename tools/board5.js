@@ -165,7 +165,7 @@ const row=(inner,detail,open,drill)=>'<div class="r" '+(open?'data-row':'data-ti
 // v37: At a glance, the same quick numbers as Entries (and the same picks), for the board's period and platform
 NEWW.glance=function(ctx,s){const rows=window.CTMetrics&&CTMetrics.rows?CTMetrics.rows(ctx.inP):[];if(!rows.length)return '<p class="eg">Nothing in this period yet.</p>';
   const n={S:2,M:2,B:3,L:5,X:6}[s]||3,cls=s==='B'?' gl3':s==='X'?' gl2':'';
-  return '<div class="gl'+cls+'">'+rows.slice(0,n).map(r=>'<div class="glr'+(r.art?' gla':'')+'">'+(r.art&&!maskNames()?'<div class="glbg" style="background-image:url(\''+esc(r.art)+'\')"></div>':'<span class="glic">'+(r.icon||'')+'</span>')+
+  return '<div class="gl'+cls+'">'+rows.slice(0,n).map(r=>'<div class="glr'+(r.art?' gla':'')+'">'+(r.art&&!maskNames()?'<div class="glbg" style="background-image:url(\''+esc(r.art)+'\')"></div>':(r.icon?'<span class="glic">'+r.icon+'</span>':'<span class="glic ct-cardph" aria-hidden="true"></span>'))+
     '<div class="gltx"><small>'+esc(r.label)+'</small><em>'+esc(maskNames()&&r.art?'A card from your collection':r.title)+'</em></div><div class="glv"><b class="num'+(r.green?' g':'')+'">'+hideMoney(esc(r.value))+'</b>'+(r.sub?'<span>'+hideMoney(esc(r.sub))+'</span>':'')+'</div></div>').join('')+'</div>'};
 // ---------- widget bodies: one layout per metric per size ----------
 function body(k,ctx,s,w){

@@ -19,7 +19,7 @@
   const sum = (l, f) => l.reduce((s, e) => s + f(e), 0);
   // each metric: a name for the list, and what its row shows for the entries in range (null hides the row)
   const M = {
-    best: { name: 'Best sale', row: l => { const b = sales(l).sort((a, z) => z.net - a.net)[0]; return b && { art: b.art && (b.art.detail || b.art.list), label: 'Best sale', title: short(b.name), value: '+' + money(b.net), green: 1, sub: 'sold ' + money(b.amount) }; } },
+    best: { name: 'Best sale', row: l => { const b = sales(l).sort((a, z) => z.net - a.net)[0]; return b && { art: (b.art && (b.art.detail || b.art.list)) || null, label: 'Best sale', title: short(b.name), value: '+' + money(b.net), green: 1, sub: 'sold ' + money(b.amount) }; } },
     platform: { name: 'Top platform', row: l => { const m = {}; sales(l).forEach(e => { const k = e.platform || 'No platform'; m[k] = m[k] || { a: 0, n: 0 }; m[k].a += e.amount; m[k].n++; }); const t = Object.entries(m).sort((a, z) => z[1].a - a[1].a)[0]; return t && { icon: IC.tag, label: 'Top platform', title: t[0], value: money(t[1].a), sub: t[1].n + (t[1].n === 1 ? ' sale' : ' sales') }; } },
     fees: { name: 'Fees and shipping', row: l => { const s = sales(l), a = sum(s, e => e.amount), f = sum(s, e => e.amount - e.net); return a ? { icon: IC.pct, label: 'Fees and shipping', title: 'of what you sold', value: (Math.round(f / a * 1000) / 10) + '%', sub: money(f) } : null; } },
     avg: { name: 'Average sale', row: l => { const s = sales(l); return s.length ? { icon: IC.bars, label: 'Average sale', title: s.length + (s.length === 1 ? ' sale' : ' sales'), value: money(Math.round(sum(s, e => e.amount) / s.length)) } : null; } },
@@ -43,7 +43,7 @@
     if (list) last = list;
     const rows = get().map(k => M[k].row(last)).filter(Boolean);
     card.hidden = !rows.length && !last.length;
-    card.querySelector('.qm-rows').innerHTML = rows.length ? rows.map(r => '<div class="qm-row' + (r.art ? ' qm-art' : '') + '">' + (r.art ? '<div class="qm-bg" style="background-image:url(\'' + esc(r.art) + '\')"></div>' : '<span class="qm-ic">' + r.icon + '</span>') +
+    card.querySelector('.qm-rows').innerHTML = rows.length ? rows.map(r => '<div class="qm-row' + (r.art ? ' qm-art' : '') + '">' + (r.art ? '<div class="qm-bg" style="background-image:url(\'' + esc(r.art) + '\')"></div>' : (r.icon ? '<span class="qm-ic">' + r.icon + '</span>' : '<span class="qm-ic ct-cardph" aria-hidden="true"></span>')) +
       '<div class="qm-tx"><small>' + esc(r.label) + '</small><em>' + esc(r.title) + '</em></div><div class="qm-v"><strong' + (r.green ? ' class="g"' : '') + '>' + esc(r.value) + '</strong>' + (r.sub ? '<span>' + esc(r.sub) + '</span>' : '') + '</div></div>').join('')
       : '<p class="qm-none">Nothing in this range yet.</p>';
     fit();
