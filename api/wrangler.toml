@@ -22,7 +22,8 @@ API_URL = "https://api.cardtab.app"
 MAIL_FROM = "login@cardtab.app"
 # Admins (testing tools, plan switch). Comma-separated; checked on the server.
 ADMIN_EMAILS = "nklenchik@gmail.com"
-# GOOGLE_CLIENT_ID goes here once Google is set up; the client secret is a secret:  wrangler secret put GOOGLE_CLIENT_SECRET
+# Google sign-in. The client secret is a secret:  wrangler secret put GOOGLE_CLIENT_SECRET
+GOOGLE_CLIENT_ID = "402189262163-0kb6qq7l9igfmvgiqp81plvjk5572to8.apps.googleusercontent.com"
 # Email: either Cloudflare Email Service (add a [[send_email]] binding named EMAIL) or  wrangler secret put RESEND_API_KEY
 
 # Secret (never put it in this file):  wrangler secret put JUSTTCG_API_KEY
