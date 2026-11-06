@@ -162,9 +162,14 @@
   function frost() {
     fk = false; sh.style.setProperty('--sh-bg', Math.min(1, scrollOf(cur) / 18).toFixed(3)); tbScroll();
     // phones, Entries: the search icon fades in as the big search bar slides up under the header
-    if (PH() && search && cur === 'entries') { const r = search.getBoundingClientRect(), hb = sh.getBoundingClientRect().bottom; const k = Math.max(0, Math.min(1, (hb - r.top) / Math.max(1, r.height))); qBtn.style.setProperty('--k', k.toFixed(3)); qBtn.style.pointerEvents = k > .6 ? 'auto' : 'none'; }
+    if (PH() && search && cur === 'entries') { const r = search.getBoundingClientRect(), hb = sh.getBoundingClientRect().bottom; const raw = (hb - r.top) / Math.max(1, r.height);
+      // v42.10: a small dead zone, so the last few pixels of a scroll (or iPhone's bounce) never leave a faint icon behind
+      const k = Math.max(0, Math.min(1, (raw - .15) / .8)); qBtn.style.setProperty('--k', k.toFixed(3)); qBtn.style.pointerEvents = k > .6 ? 'auto' : 'none'; qBtn.style.visibility = k > 0 ? '' : 'hidden'; }
+    else if (qBtn.style.visibility !== 'hidden') { qBtn.style.setProperty('--k', '0'); qBtn.style.visibility = 'hidden'; qBtn.style.pointerEvents = 'none'; }
   }
-  const kick = () => { if (!fk) { fk = true; requestAnimationFrame(frost); } };
+  let fEnd = 0;
+  // ...and once more after scrolling settles, since iPhone can stop a fling without a final scroll event
+  const kick = () => { if (!fk) { fk = true; requestAnimationFrame(frost); } clearTimeout(fEnd); fEnd = setTimeout(() => requestAnimationFrame(frost), 140); };
   addEventListener('scroll', kick, { passive: true });
   document.addEventListener('scroll', kick, { passive: true, capture: true });
   let fdBound = null;
