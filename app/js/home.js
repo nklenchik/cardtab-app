@@ -39,7 +39,9 @@
 
     const n = list.filter(e => e.type === 'sale').length;
     line(sales, n ? n + (n === 1 ? ' sale' : ' sales') : 'No sales yet');
-    line(after, t.sales ? money(t.sales - t.after) + ' in fees' : '');
+    // fees and shipping only; a refund you gave is named on its own, not counted as a fee
+    if (t.refunds) line(after, (t.sales ? money(t.fees) + ' in fees\n' : '') + money(t.refunds) + ' refunded', 'two');
+    else line(after, t.sales ? money(t.fees) + ' in fees' : '');
 
     // --- budget, inside the Spent tile ---
     const b = S.budget();
@@ -69,6 +71,30 @@
     }
     if (!shown) line(profit, t.sales ? Math.round(t.profit / t.sales * 100) + '% of sales' : '');
   }
+
+  // Profit: tap the word for what it means. It's money in minus money out, not profit on each card.
+  (function () {
+    const btn = document.querySelector('.ct-why'); if (!btn) return;
+    const pop = document.createElement('div'); pop.id = 'ct-whypop'; pop.className = 'ct-whypop'; pop.setAttribute('role', 'note'); pop.hidden = true;
+    pop.innerHTML = '<b>Money in minus money out</b><p>What your sales brought in after fees and shipping, minus what you spent and any refunds. Cards you still own aren\'t counted, so a month of buying shows below zero.</p>';
+    document.body.appendChild(pop);
+    let open = false;
+    function place() {
+      const r = btn.getBoundingClientRect(), w = Math.min(280, innerWidth - 24);
+      pop.style.width = w + 'px';
+      pop.style.left = Math.max(12, Math.min(r.left - 8, innerWidth - w - 12)) + 'px';
+      pop.style.top = (r.bottom + 8) + 'px';
+    }
+    function set(on) {
+      if (on === open) return; open = on; btn.setAttribute('aria-expanded', String(on));
+      if (on) { pop.hidden = false; place(); requestAnimationFrame(() => pop.classList.add('in')); }
+      else { pop.classList.remove('in'); setTimeout(() => { if (!open) pop.hidden = true; }, 180); }
+    }
+    btn.addEventListener('click', e => { e.stopPropagation(); set(!open); });
+    document.addEventListener('pointerdown', e => { if (open && !e.target.closest('.ct-why,.ct-whypop')) set(false); }, true);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && open) { set(false); btn.focus(); } });
+    addEventListener('scroll', () => set(false), { passive: true }); addEventListener('resize', () => set(false));
+  })();
 
   // the Spent tile opens the budget window, growing out of the tile
   document.addEventListener('click', e => { const tile = e.target.closest('.ct-budtile'); if (tile && window.CTBudget) window.CTBudget.open(tile); });

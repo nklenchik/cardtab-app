@@ -1302,3 +1302,16 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
  dialog::backdrop{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgba(10,8,6,.45)!important}
  html.sheet-up .ct-tbar,html.sheet-up .ct-shell::before,html.sheet-up .ct-shell{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 }
+
+/* v37.21 Profit: tap for what it means */
+.ct-stats small .ct-why{all:unset;display:inline-flex;align-items:center;gap:4px;cursor:pointer;color:inherit;font:inherit;border-radius:6px;-webkit-tap-highlight-color:transparent}
+.ct-stats small .ct-why svg{opacity:.7;transition:opacity .15s}
+.ct-stats small .ct-why:hover svg,.ct-stats small .ct-why[aria-expanded="true"] svg{opacity:1}
+.ct-stats small .ct-why:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+.ct-whypop{position:fixed;z-index:96;padding:12px 14px;border-radius:14px;background:var(--ct-surface,#fff);color:var(--ct-text,#1a1918);border:1px solid color-mix(in srgb,var(--ct-text,#1a1918) 12%,transparent);box-shadow:0 10px 30px rgba(0,0,0,.18);font-size:13px;line-height:1.45;opacity:0;transform:translateY(-4px);transition:opacity .18s ease,transform .18s cubic-bezier(.2,.8,.2,1);pointer-events:none}
+.ct-whypop.in{opacity:1;transform:none;pointer-events:auto}
+.ct-whypop b{display:block;font-size:13.5px;margin-bottom:3px}
+.ct-whypop p{margin:0;color:var(--ct-muted,#77736d)}
+
+/* v37.21 fees and refunds on two short lines, so neither gets cut off on narrow phones */
+.ct-line.is-two{height:auto;line-height:18px;padding-top:2px;white-space:pre-line}
