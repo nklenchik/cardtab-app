@@ -1596,3 +1596,15 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 
 /* v42.7 while a Stories sheet is open, the app page behind Stories stays put too */
 html.cs-modal,html.cs-modal body{overflow:hidden!important;overscroll-behavior:none}
+
+/* v42.8 every window leaves the way the profile menu does on phones: it falls down (.24s) while the dim behind fades */
+@keyframes ct-fall{to{transform:translateY(100%)}}
+@keyframes ct-fallFar{to{transform:translateY(100vh)}}
+@media(max-width:760px){
+ #dela.closing .bu-p{animation:ct-fall .24s cubic-bezier(.4,0,.8,.6) both!important}
+ #aw.closing .awp{animation:ct-fall .24s cubic-bezier(.4,0,.8,.6) both!important}
+ .hs-sheet.closing .hs-p{animation:ct-fallFar .26s cubic-bezier(.4,0,.8,.6) both!important}
+}
+@media(min-width:761px){.hs-sheet.closing .hs-p,#dela.closing .bu-p{animation:ct-sheetOut .24s cubic-bezier(.4,0,1,1) both!important}}
+#dela.closing::backdrop,#aw.closing::backdrop,.hs-sheet.closing::backdrop{animation:ct-bdOut .24s ease-in both!important}
+@media(prefers-reduced-motion:reduce){#dela.closing .bu-p,#aw.closing .awp,.hs-sheet.closing .hs-p{animation:none!important}}

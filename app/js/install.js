@@ -63,6 +63,11 @@
     $('hs-steps').innerHTML = s.list.map((x, i) => '<li><span class="hs-n">' + (i + 1) + '</span><span class="hs-si" aria-hidden="true">' + x[0] + '</span><span>' + x[1] + '</span></li>').join('');
     $('hs-install').hidden = !deferred;
   }
+  // v42.8 falls away like the other windows instead of vanishing
+  { const realClose = dlg.close.bind(dlg); dlg.close = function (v) { if (!dlg.open || dlg.classList.contains('closing')) return;
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) { realClose(v); return; }
+      dlg.classList.add('closing'); setTimeout(() => { dlg.classList.remove('closing'); if (dlg.open) realClose(v); }, 260); };
+    dlg.addEventListener('cancel', e => { e.preventDefault(); dlg.close(); }); }
   function openSheet() { paintSheet(); hideCard(); if (window.CTMenu) window.CTMenu.close(); dlg.showModal(); try { dlg.querySelector('.hs-p').focus({ preventScroll: true }); } catch (e) {} }
   dlg.addEventListener('click', async e => {
     if (e.target === dlg || e.target.closest('[data-close]')) { dlg.close(); return; }
