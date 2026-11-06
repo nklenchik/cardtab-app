@@ -3,7 +3,8 @@
    GET /art/:id/:size                          -> our own copy of the card art as WebP (size: list | detail)
    /auth/*                                     -> sign-in (see auth.js)
    Nothing here is exposed to the app except our own ids and our own image URLs. */
-import { handleAuth } from './auth.js';
+import { handleAuth, currentUser } from './auth.js';
+import { gate, count } from './budget.js';
 const JT = 'https://api.justtcg.com';
 const CDN = 'https://tcgplayer-cdn.tcgplayer.com/product/';
 const DAY = 86400;
@@ -24,10 +25,13 @@ export function pickByNumber(cards, number) {
   const hit = cards.filter(c => numKey(c.number) === numKey(number));
   return hit.length ? hit : [];
 }
-const cors = (env) => ({ 'access-control-allow-origin': env.ALLOWED_ORIGIN || '*', 'vary': 'origin' });
+// the app sends its sign-in cookie with lookups (so background art fill can be paced per account); that needs an exact origin
+const cors = (env) => (env.ALLOWED_ORIGIN && env.ALLOWED_ORIGIN !== '*' ? { 'access-control-allow-origin': env.ALLOWED_ORIGIN, 'access-control-allow-credentials': 'true', 'vary': 'origin' } : { 'access-control-allow-origin': '*', 'vary': 'origin' });
 const json = (env, body, status = 200, extra = {}) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...cors(env), ...extra } });
 
-async function jt(env, path) {
+// ctl (optional): { calls, ok() } — ok() decides once whether this lookup may ask JustTCG at all; calls counts what it asked
+async function jt(env, path, ctl) {
+  if (ctl) { if (!ctl.calls) await ctl.ok(); ctl.calls++; }
   const r = await fetch(JT + path, { headers: { 'x-api-key': env.JUSTTCG_API_KEY, accept: 'application/json' } });
   // keep JustTCG's own words when it says no (rate limit, bad key, plan limits), so we can tell which it is
   if (!r.ok) { let why = ''; try { why = (await r.text()).slice(0, 200); } catch (e) {}
@@ -35,15 +39,26 @@ async function jt(env, path) {
   return r.json();
 }
 let GAMES = null;
-async function gameId(env, game) {
+async function gameId(env, game, ctl) {
   if (!game) return '';
-  if (!GAMES) GAMES = (await jt(env, '/v1/games')).data || [];
+  if (!GAMES) GAMES = (await jt(env, '/v1/games', ctl)).data || [];
   const want = { 'Pokémon': /pok/i, 'Dragon Ball Super': /dragon ball.*super.*card|dragon-ball-super-card/i, 'Fusion World': /fusion/i }[game];
   const g = GAMES.find(x => want && (want.test(x.id) || want.test(x.name)));
   return g ? g.id : '';
 }
 
-async function search(env, q) {
+const rowCard = r => normCard({ id: r.id, game: r.game, name: r.name, set_name: r.set_name, number: r.number, rarity: r.rarity, tcgplayerId: r.tcgplayer_id });
+const words = s => norm(s).split(' ').filter(w => w.length > 2);
+// Our own catalog: every card anyone has looked up is kept. With a name and a number, a printing we already know answers
+// the lookup without asking JustTCG. (Without a number we always ask, so a search never misses printings we haven't seen.)
+async function fromCatalog(env, q, needNumber = true) {
+  const ws = words(q.name); if (!ws.length || (needNumber && !q.number)) return [];
+  const long = ws.slice().sort((a, b) => b.length - a.length)[0];
+  const rows = (await env.DB.prepare('SELECT * FROM cards WHERE lower(name) LIKE ? LIMIT 200').bind('%' + long + '%').all()).results || [];
+  return rows.filter(r => { const nm = norm(r.name); return ws.every(w => nm.includes(w)) && (!q.number || numKey(r.number) === numKey(q.number)); }).slice(0, 12).map(rowCard);
+}
+
+async function search(env, q, ctl) {
   const key = lookupKey(q), now = Math.floor(Date.now() / 1000);
   const hit = await env.DB.prepare('SELECT ids, fetched_at FROM lookups WHERE key=?').bind(key).first();
   // found cards are kept 30 days; "nothing found" only 6 hours, so a miss can be retried soon
@@ -51,20 +66,22 @@ async function search(env, q) {
     const ids = JSON.parse(hit.ids); if (!ids.length) return [];
     const rows = await env.DB.prepare(`SELECT * FROM cards WHERE id IN (${ids.map(() => '?').join(',')})`).bind(...ids).all();
     const by = Object.fromEntries(rows.results.map(r => [r.id, r]));
-    return ids.map(i => by[i]).filter(Boolean).map(r => normCard({ id: r.id, game: r.game, name: r.name, set_name: r.set_name, number: r.number, rarity: r.rarity, tcgplayerId: r.tcgplayer_id }));
+    return ids.map(i => by[i]).filter(Boolean).map(rowCard);
   }
-  const game = await gameId(env, q.game), g = game ? `&game=${encodeURIComponent(game)}` : '';
+  const known = await fromCatalog(env, q);
+  if (known.length) { await env.DB.prepare('INSERT OR REPLACE INTO lookups (key,ids,fetched_at) VALUES (?,?,?)').bind(key, JSON.stringify(known.map(c => c.id)), now).run(); return known; }
+  const game = await gameId(env, q.game, ctl), g = game ? `&game=${encodeURIComponent(game)}` : '';
   const base = `/v1/cards?limit=20&include_price_history=false${g}`;
   let cards = [];
   if (q.name) {
-    cards = (await jt(env, `${base}&q=${encodeURIComponent(q.name)}`)).data || [];
+    cards = (await jt(env, `${base}&q=${encodeURIComponent(q.name)}`, ctl)).data || [];
     if (q.number) { const f = pickByNumber(cards, q.number); cards = f; }
   }
   if (!cards.length && q.number) {
     const vs = numVariants(q.number);
     // name + number as one search, then the number on its own, in each way it might be written
-    for (const v of vs) { if (cards.length) break; cards = pickByNumber((await jt(env, `${base}&q=${encodeURIComponent((q.name ? q.name + ' ' : '') + v)}`)).data || [], q.number); }
-    for (const v of vs) { if (cards.length) break; cards = pickByNumber((await jt(env, `${base}&number=${encodeURIComponent(v)}`)).data || [], q.number); }
+    for (const v of vs) { if (cards.length || (ctl && ctl.calls >= 4)) break; cards = pickByNumber((await jt(env, `${base}&q=${encodeURIComponent((q.name ? q.name + ' ' : '') + v)}`, ctl)).data || [], q.number); }
+    for (const v of vs) { if (cards.length || (ctl && ctl.calls >= 4)) break; cards = pickByNumber((await jt(env, `${base}&number=${encodeURIComponent(v)}`, ctl)).data || [], q.number); }
     if (q.name && cards.length) { const nm = norm(q.name); const named = cards.filter(c => norm(c.name).includes(nm)); if (named.length) cards = named; }
   }
   cards = cards.slice(0, 12);
@@ -102,7 +119,20 @@ export default {
       if (u.pathname === '/api/lookup') {
         const q = { name: u.searchParams.get('name') || '', number: u.searchParams.get('number') || '', set: u.searchParams.get('set') || '', game: u.searchParams.get('game') || '' };
         if (!q.name && !q.number) return json(env, { error: 'name or number required' }, 400);
-        const cards = await search(env, q);
+        if (!q.number && norm(q.name).replace(/ /g, '').length < 3) return json(env, { cards: [] });   // too short to be worth a lookup
+        const me = await currentUser(env, req).catch(() => null);
+        const who = { src: u.searchParams.get('src') === 'fill' ? 'fill' : 'type', plan: me && me.plan === 'premium' ? 'premium' : 'free', user: me ? me.id : '' };
+        let why = '';
+        const ctl = { calls: 0, async ok() { why = await gate(env, who); if (why) throw Object.assign(new Error(why), { held: why }); } };
+        let cards;
+        try { cards = await search(env, q, ctl); }
+        catch (e) {
+          if (!e.held) throw e;
+          // background fill waits for another day; typing over the limit still gets every printing we've already saved
+          if (who.src === 'fill') { await count(env, who, 0); return json(env, { later: true }, 429, { 'retry-after': '21600' }); }
+          cards = await fromCatalog(env, q, false);
+        }
+        const done = count(env, who, ctl.calls); ctx && ctx.waitUntil ? ctx.waitUntil(done) : await done;
         return json(env, { cards: cards.map(c => ({ ...c, art: { list: `/art/${c.id}/list`, detail: `/art/${c.id}/detail` } })) });
       }
       const m = u.pathname.match(/^\/art\/([^/]+)\/(list|detail)$/);

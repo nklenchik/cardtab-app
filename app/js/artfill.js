@@ -10,7 +10,8 @@
   'use strict';
   const S = window.CTStore, Sess = window.CTSession, L = window.CardLookup, P = window.CardParser;
   if (!S || !Sess || !L || !P) return;
-  const GAP = 3500, RETRY_DAYS = 4, BUSY_WAIT = 60000;
+  const GAP = 3500, RETRY_DAYS = 4, BUSY_WAIT = 60000, LATER = 3 * 3600e3;
+  let heldUntil = 0;
   let on = false, running = false, timer = 0, prog = { done: 0, total: 0, found: 0 }, listeners = new Set();
   const norm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
   const words = s => norm(s).split(' ').filter(w => w.length > 2 && !/^(the|and|for|holo|rare|card|pokemon|japanese|japan|promo|ex|gx|v)$/.test(w));
@@ -61,8 +62,8 @@
   async function lookup(p) {
     const base = window.CARDTAB_API;
     const q = '?name=' + encodeURIComponent(p.name || '') + '&number=' + encodeURIComponent(p.number || '') + '&set=' + encodeURIComponent(p.set || '') + '&game=' + encodeURIComponent(p.game || '');
-    const r = await fetch(base + '/api/lookup' + q);
-    if (r.status === 429) { const err = new Error('busy'); err.busy = true; throw err; }
+    const r = await fetch(base + '/api/lookup' + q + '&src=fill', { credentials: 'include' });
+    if (r.status === 429) { let j = {}; try { j = await r.json(); } catch (e) {} const err = new Error('busy'); if (j.later) err.later = true; else err.busy = true; throw err; }
     if (!r.ok) throw new Error('lookup ' + r.status);
     const j = await r.json();
     return (j.cards || []).map(c => ({ id: c.id, n: c.n, s: c.s, num: c.num, r: c.r, g: c.g, h: 210, art: { list: base + c.art.list, detail: base + c.art.detail } }));
@@ -77,6 +78,7 @@
   async function run() {
     if (running) { again = true; return; }
     if (!on || !window.CARDTAB_API) return;
+    if (heldUntil > Date.now()) { await applyPicks(); return; }
     running = true;
     try {
       // 1) your picks first: every entry with the same text as one you changed gets the same card, no lookup needed
@@ -87,13 +89,15 @@
       const groups = new Map();
       left.forEach(e => { const p = parsedOf(e), k = [norm(p.name), numKey(p.number), norm(p.set), /japan/i.test(e.source || e.name) ? 'jp' : ''].join('|'); if (!groups.has(k)) groups.set(k, { p, ids: [], e }); groups.get(k).ids.push(e.id); });
       prog = { done: 0, total: groups.size, found: 0 }; emit();
+      let held = false;
       for (const g of groups.values()) {
         if (!on) break;
         let cards = null;
         for (let tries = 0; tries < 3; tries++) {
           try { cards = await lookup(g.p); break; }
-          catch (err) { if (err.busy) { await sleep(BUSY_WAIT); continue; } cards = null; break; }
+          catch (err) { if (err.later) { held = true; break; } if (err.busy) { await sleep(BUSY_WAIT); continue; } cards = null; break; }
         }
+        if (held) { heldUntil = Date.now() + LATER; break; }   // today's share is used up: stop quietly and pick up where we left off in a few hours
         const card = cards ? clearMatch(cards, g.p, g.e) : null, now = new Date().toISOString();
         for (const id of g.ids) {
           const cur = S.get(id); if (!cur || !needs(cur) || picks().has(textKey(cur))) continue;
@@ -104,7 +108,7 @@
         prog.done++; emit();
         await sleep(GAP);
       }
-    } finally { running = false; emit(); if (again && on) { again = false; clearTimeout(timer); timer = setTimeout(run, 600); } }
+    } finally { running = false; emit(); if (heldUntil > Date.now() && on) { clearTimeout(timer); timer = setTimeout(run, heldUntil - Date.now()); } else if (again && on) { again = false; clearTimeout(timer); timer = setTimeout(run, 600); } }
   }
 
   window.CTArtFill = {

@@ -36,3 +36,7 @@ CREATE TABLE IF NOT EXISTS user_meta (
   PRIMARY KEY (user_id, k)
 );
 CREATE TABLE IF NOT EXISTS sync_state ( user_id TEXT PRIMARY KEY, seq INTEGER NOT NULL DEFAULT 0 );
+-- card data budget (v42.6): requests made to JustTCG per day, by why (type | fill) and plan, plus lookups answered (reqs)
+CREATE TABLE IF NOT EXISTS usage ( day TEXT NOT NULL, src TEXT NOT NULL, plan TEXT NOT NULL, calls INTEGER NOT NULL DEFAULT 0, reqs INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day, src, plan) );
+CREATE TABLE IF NOT EXISTS usage_user ( day TEXT NOT NULL, user_id TEXT NOT NULL, calls INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day, user_id) );
+CREATE INDEX IF NOT EXISTS cards_name ON cards(name);

@@ -28,6 +28,7 @@
   // what the server says about you: admin tools only for admins (decided on the server), and your plan
   function applyServer(session) {
     $('am-dev').hidden = !((session && session.role === 'admin') || (Sess.LOCAL_MODE && !PUBLIC_HOST));
+    $('am-cd').hidden = !(Sess.REAL && session && session.role === 'admin');
     if (Sess.REAL && session && session.plan && S.plan && S.plan() !== session.plan) S.setPlan(session.plan);
   }
   function showAuth() {
@@ -63,6 +64,16 @@
     const el = $('am-art'); if (!el) return;
     el.hidden = !(pg.running && pg.total > 0);
     if (!el.hidden) el.querySelector('span').textContent = 'Adding card art: ' + pg.done + ' of ' + pg.total + ' cards checked, ' + pg.found + (pg.found === 1 ? ' entry' : ' entries') + ' filled in';
+  });
+
+  // ---------- Admin: card data use this billing month (JustTCG requests), loaded when the Admin section opens ----------
+  const cdFmt = d => new Date(d + 'T12:00:00Z').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  $('am-dev').addEventListener('toggle', async () => {
+    if (!$('am-dev').open || $('am-cd').hidden) return;
+    try { const r = await Sess.api('/auth/usage'), t = r.days[0] && r.days[0].day === new Date().toISOString().slice(0, 10) ? r.days[0] : { type: 0, fill: 0 };
+      $('am-cd-v').textContent = r.month.toLocaleString() + ' of ' + r.limit.toLocaleString();
+      $('am-cd-s').textContent = 'Resets ' + cdFmt(r.resets) + ' · today ' + r.today + ' (typing ' + t.type + ', art ' + t.fill + ') · today’s share ' + r.todayShare + ' · ' + r.savedPct + '% answered from saved lookups';
+    } catch (e) { $('am-cd-v').textContent = 'Couldn’t load'; $('am-cd-s').textContent = ''; }
   });
 
   // ---------- Delete account (from Edit profile) ----------

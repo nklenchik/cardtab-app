@@ -45,11 +45,11 @@
     return { list: list, pick: -1 };
   }
     // Live lookup against our own API (Worker). Falls back to the built-in catalog if the API is not set up or fails.
-  function remote(p) {
+  function remote(p, src) {
     var base = root.CARDTAB_API;
     if (!base || !p || !p.name && !p.number) return Promise.resolve(search(p));
-    var q = '?name=' + encodeURIComponent(p.name || '') + '&number=' + encodeURIComponent(p.number || '') + '&set=' + encodeURIComponent(p.set || '') + '&game=' + encodeURIComponent(p.game || '');
-    return fetch(base + '/api/lookup' + q).then(function (r) { if (!r.ok) throw new Error('lookup'); return r.json(); }).then(function (j) {
+    var q = '?name=' + encodeURIComponent(p.name || '') + '&number=' + encodeURIComponent(p.number || '') + '&set=' + encodeURIComponent(p.set || '') + '&game=' + encodeURIComponent(p.game || '') + (src ? '&src=' + src : '');
+    return fetch(base + '/api/lookup' + q, { credentials: 'include' }).then(function (r) { if (!r.ok) throw new Error('lookup'); return r.json(); }).then(function (j) {
       var cards = (j.cards || []).map(function (c) { return { id: c.id, n: c.n, s: c.s, num: c.num, r: c.r, g: c.g, h: 210, art: { list: base + c.art.list, detail: base + c.art.detail } }; });
       return rank(cards, p);
     }).catch(function () { return search(p); });

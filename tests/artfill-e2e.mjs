@@ -11,7 +11,7 @@ const mails = [];
 const realFetch = globalThis.fetch;
 let jtCalls = 0;
 globalThis.fetch = async (url, opt) => { const u = String(url); if (u.includes('api.justtcg.com')) { jtCalls++; if (/q=Raichu/.test(u)) return new Response(JSON.stringify({ data: [{ id: 'pokemon-base-set-raichu-holo-rare', game: 'Pokemon', name: 'Raichu', set_name: 'Base Set', number: '014/102', rarity: 'Holo Rare', tcgplayerId: 42354 }, { id: 'pokemon-jungle-raichu', game: 'Pokemon', name: 'Raichu', set_name: 'Jungle', number: '14/64', rarity: 'Rare', tcgplayerId: 1 }] })); return new Response(JSON.stringify({ data: [] })); } if (u.includes('tcgplayer-cdn')) return new Response('no', { status: 404 }); return realFetch(url, opt); };
-const env = { DB: { prepare: stmt, async batch(l) { for (const s of l) await s.run(); } }, ADMIN_EMAILS: 'nklenchik@gmail.com', EMAIL: { async send(m) { mails.push(m); } }, ART: { async get() { return null; } } };
+const env = { DB: { prepare: stmt, async batch(l) { for (const s of l) await s.run(); } }, ALLOWED_ORIGIN: 'https://app.cardtab.app', ADMIN_EMAILS: 'nklenchik@gmail.com', EMAIL: { async send(m) { mails.push(m); } }, ART: { async get() { return null; } } };
 const out = []; const ok = (c, m) => out.push((c ? 'PASS ' : 'FAIL ') + m);
 const b = await chromium.launch();
 async function ctxFor(w) {
@@ -51,5 +51,14 @@ const ms = await p.evaluate(() => CTStore.all().filter(x => x.name === 'Mystery 
 ok(ms.length === 2 && ms.every(x => x.from === 'pick' && /raichu/.test(x.art || '')), 'Change card: your pick is used for both entries with that text ' + JSON.stringify(ms));
 await p.evaluate(() => window.CTArtFill.now()); await p.waitForTimeout(1500);
 ok(await p.evaluate(() => CTStore.all().filter(x => x.name === 'Mystery Promo Thing').every(x => x.artFrom === 'pick')), 'the background job never overrides a pick');
+// today's art share used up: the app makes no lookups, shows nothing, and leaves the entry to try later
+sq.prepare("INSERT INTO usage (day,src,plan,calls,reqs) VALUES (?, 'fill', 'free', 100000, 1) ON CONFLICT(day,src,plan) DO UPDATE SET calls=calls+100000").run(new Date().toISOString().slice(0, 10));
+sq.prepare("INSERT INTO usage (day,src,plan,calls,reqs) VALUES ('2026-01-01', 'type', 'none', 0, 1)").run();
+const jb = jtCalls;
+await p.evaluate(() => CTStore.importMany([{ type: 'purchase', name: 'Blastoise - 2/102 - Base Set', amount: '9.00', date: '2026-10-06' }]));
+await p.evaluate(() => window.CTArtFill.now()); await p.waitForTimeout(3000);
+const bl = await p.evaluate(() => { const e = CTStore.all().find(x => /Blastoise/.test(x.name)); return { art: !!e.art, tried: !!e.artTry }; });
+const line = await p.evaluate(() => { const el = document.getElementById('am-art'); return el ? el.hidden : true; });
+ok(jtCalls === jb && !bl.art && !bl.tried && line, 'when today’s art share is used up: no lookups, nothing shown, tried again later ' + JSON.stringify(bl));
 ok(!errs.length, 'no page errors ' + errs.slice(0, 2).join(' | '));
 console.log(out.join('\n')); await b.close();

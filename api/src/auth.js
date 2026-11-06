@@ -11,6 +11,7 @@
    POST /auth/delete        delete the account and every session
    POST /auth/plan {plan}   admins only: switch your own plan for testing
    POST /auth/sync          send and receive entries and settings (see sync.js) */
+import { report } from './budget.js';
 import { signInEmail, sendMail } from './email.js';
 import { handleSync, deleteSynced } from './sync.js';
 
@@ -146,6 +147,10 @@ export async function handleAuth(env, req, path) {
     return out(env, req, { ok: true }, 200, { 'set-cookie': setCookie(env, 'ct_s', '', 0) });
   }
   if (path === '/auth/sync' && req.method === 'POST') return handleSync(env, req, me, (body, status = 200) => out(env, req, body, status));
+  if (path === '/auth/usage') {   // card data use this billing month (admins)
+    if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);
+    return out(env, req, await report(env));
+  }
   if (path === '/auth/plan' && req.method === 'POST') {
     if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);
     const b = await req.json().catch(() => ({})), plan = b.plan === 'premium' ? 'premium' : 'free';

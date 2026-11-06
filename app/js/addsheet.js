@@ -58,9 +58,11 @@
     const sig = [p.name, p.number, p.set, p.rarity].join('|');
     if (sig !== st.sig) {
       st.sig = sig;
-      if (window.CARDTAB_API) {
+      // v42.6: ask the card database only once there's something worth asking: 3+ letters of a name, or a card number
+      const worth = !!p.number || String(p.name || '').replace(/[^a-z0-9]/gi, '').length >= 3;
+      if (window.CARDTAB_API && worth) {
         st.busy = true; const tok = ++st.tok; clearTimeout(st.dt);
-        st.dt = setTimeout(() => window.CardLookup.remote(p).then(r => { if (tok !== st.tok) return; st.busy = false; st.list = r.list; st.sel = r.pick; st.why = r.why || ''; render(); }), 280);
+        st.dt = setTimeout(() => window.CardLookup.remote(p).then(r => { if (tok !== st.tok) return; st.busy = false; st.list = r.list; st.sel = r.pick; st.why = r.why || ''; render(); }), 450);
         st.list = []; st.sel = -1;
       } else { const r = window.CardLookup.search(p); st.list = r.list; st.sel = r.pick; st.why = r.why || ''; }
       // nothing matched: offer the closest spellings ("Did you mean") before adding it as typed

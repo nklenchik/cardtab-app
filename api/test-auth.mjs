@@ -66,6 +66,8 @@ r = await call('/auth/google/callback?code=abc&state=' + state, { cookie: gck })
 assert.equal(r.status, 302); assert.match(r.headers.get('location'), /^https:\/\/app\.cardtab\.app\/\?signedin=google/);
 const gc = (r.headers.get('set-cookie') || '').match(/ct_s=[\w-]+/)[0];
 j = await (await call('/auth/me', { cookie: gc })).json(); assert.equal(j.user.email, 'nklenchik@gmail.com'); assert.equal(j.user.name, 'Nick'); assert.equal(j.user.plan, 'premium', 'same account as the email sign-in');
+// card data readout: admins only
+r = await call('/auth/usage', { cookie: gc }); assert.equal(r.status, 200); j = await r.json(); assert.equal(j.limit, 10000); assert.ok(j.resets);
 // delete account
 assert.equal((await call('/auth/delete', { method: 'POST', cookie: gc })).status, 200);
 assert.equal((await call('/auth/me', { cookie: c1 })).status, 401, 'every session ends');
