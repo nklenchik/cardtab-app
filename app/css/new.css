@@ -1574,20 +1574,26 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 /* v42.5 the notifications back arrow and gear: no focus box on tap (keyboard users still get a soft ring) */
 .ntf-back,.ntf-gear,#ntf .ntf-form{outline:none!important}
 .ntf-back:focus-visible,.ntf-gear:focus-visible{box-shadow:0 0 0 2px color-mix(in srgb,var(--brand,#a50e37) 45%,transparent);border-radius:8px}
-/* v42.5 Import: a soft glow around the window until a file is chosen or dropped (only opacity animates) */
-.imp-form.s1{position:relative}
-.imp-btn{position:relative}
-.imp-form.s1 .imp-btn{overflow:visible!important}
-@media(hover:hover) and (pointer:fine){.imp-form.s1::after{content:"";position:absolute;inset:8px;border-radius:20px;pointer-events:none;border:1.5px dashed color-mix(in srgb,var(--brand,#a50e37) 40%,transparent);
- box-shadow:0 0 22px 2px color-mix(in srgb,var(--brand,#a50e37) 22%,transparent),inset 0 0 22px 2px color-mix(in srgb,var(--brand,#a50e37) 10%,transparent);
+/* v42.9 Import: centered on every screen, with a soft glow pulsing around its outside edge until a file is chosen or dropped.
+   Only the glow's opacity animates. Step 1 is short, so the window doesn't need to scroll there and the glow can sit outside it. */
+@keyframes impGlow{0%,100%{opacity:.25}50%{opacity:1}}
+@keyframes impIn{from{opacity:0;transform:translateY(22px) scale(.96)}to{opacity:1;transform:none}}
+.imp-form.s1{position:relative;overflow:visible!important}
+.imp-form.s1::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+ box-shadow:0 0 0 1.5px color-mix(in srgb,var(--brand,#a50e37) 32%,transparent),0 0 30px 6px color-mix(in srgb,var(--brand,#a50e37) 30%,transparent);
  animation:impGlow 2.6s ease-in-out infinite;will-change:opacity}
-.imp-form.s1.over{outline:none}
-.imp-form.s1.over::after{animation:none;opacity:1;border-style:solid}
+.imp-form.s1.over{outline:2px dashed color-mix(in srgb,var(--brand,#a50e37) 55%,transparent);outline-offset:-10px}
+.imp-form.s1.over::after{animation:none;opacity:1}
+@media(prefers-reduced-motion:reduce){.imp-form.s1::after{animation:none;opacity:.7}}
+@media(max-width:760px){
+ #imp[open]{display:grid!important;place-items:center!important;padding:16px!important}
+ #imp .imp-form{position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;width:100%!important;max-width:420px!important;
+  max-height:calc(100dvh - 32px)!important;border-radius:26px!important;border:1px solid var(--win-edge)!important;padding:14px 18px 22px!important;transform-origin:center!important;
+  box-shadow:0 24px 60px -18px rgba(0,0,0,.4)!important;animation:impIn .42s cubic-bezier(.2,.8,.2,1) both!important}
+ #imp.closing .imp-form{animation:ct-fallFar .26s cubic-bezier(.4,0,.8,.6) both!important}
+ #imp .imp-btn{margin-top:22px}
 }
-/* phones and tablets (no dragging): the glow sits around Choose file instead */
-@media not ((hover:hover) and (pointer:fine)){.imp-form.s1 .imp-btn::after{content:"";position:absolute;inset:-5px;border-radius:999px;pointer-events:none;box-shadow:0 0 20px 3px color-mix(in srgb,var(--brand,#a50e37) 38%,transparent);animation:impGlow 2.6s ease-in-out infinite;will-change:opacity}}
-@keyframes impGlow{0%,100%{opacity:.3}50%{opacity:1}}
-@media(prefers-reduced-motion:reduce){.imp-form.s1::after,.imp-form.s1 .imp-btn::after{animation:none;opacity:.7}}
+@media(max-width:760px) and (prefers-reduced-motion:reduce){#imp .imp-form{animation:none!important}}
 @media not ((hover:hover) and (pointer:fine)){.imp-or{display:none}}
 
 /* v42.6 admin: card data use */
