@@ -8,6 +8,20 @@
   const dlg = document.getElementById('ed'), form = document.getElementById('ed-form');
   const f = n => form.elements[n];
   let editing = null, type = 'purchase', onDone = null;
+  const PHONE = matchMedia('(max-width:760px)');
+  // v37.6: on phones the form reads like the profile sheet: a grab handle, the title pinned at the top, the fields in
+  // rounded groups, and Save pinned at the bottom. Group the fields once (desktop shows them exactly as before).
+  (function group() {
+    const kids = [...form.children], at = sel => form.querySelector(sel);
+    const wrap = (els, cls) => { els = els.filter(Boolean); if (!els.length) return; const g = document.createElement('div'); g.className = 'ed-g' + (cls ? ' ' + cls : ''); els[0].before(g); els.forEach(e => g.appendChild(e)); };
+    const rows = kids.filter(k => k.classList.contains('ed-row'));
+    const nameF = f('name').closest('.ed-f'), condF = f('condition').closest('.ed-f'), noteF = f('note').closest('.ed-f');
+    wrap([nameF], 'ed-g-name');
+    wrap([rows[0], at('#ed-net-f')], 'ed-g-money');
+    wrap([rows[1], condF], 'ed-g-when');
+    wrap([noteF], 'ed-g-note');
+    const grab = document.createElement('i'); grab.className = 'ed-grab'; grab.setAttribute('aria-hidden', 'true'); at('.ed-head').prepend(grab);
+  })();
 
   const AMOUNT_LABEL = { purchase: 'Total paid', sale: 'Sold for', refund: 'Refunded to buyer' };
 
@@ -63,7 +77,9 @@
     left.hidden = !!editing || !(u.warn);
     left.textContent = u.left === 1 ? '1 free entry left this month.' : u.left + ' free entries left this month.';
     dlg.showModal();
-    requestAnimationFrame(() => { (editing ? f('amount') : f('name')).focus({ preventScroll: true }); });
+    // phones: no keyboard jumping up while the sheet slides in; tap a field when you're ready
+    if (!PHONE.matches) requestAnimationFrame(() => { (editing ? f('amount') : f('name')).focus({ preventScroll: true }); });
+    else { form.scrollTop = 0; requestAnimationFrame(() => { const x = form.querySelector('.ed-x'); if (x) x.focus({ preventScroll: true }); }); }
   }
   function close() { if (dlg.open) dlg.close(); editing = null; }
 
@@ -88,6 +104,17 @@
     if (!editing) return; const id = editing.id; close(); if (onDone) onDone('delete', id); else await S.remove(id);
   });
   form.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', close));
+  // phones: drag the sheet down by its top to close it
+  form.querySelector('.ed-head').addEventListener('pointerdown', e => {
+    if (!PHONE.matches || e.target.closest('button')) return;
+    const y0 = e.clientY; let dy = 0; form.style.transition = 'none';
+    const mv = ev => { dy = Math.max(0, ev.clientY - y0); form.style.transform = 'translate3d(0,' + dy + 'px,0)'; };
+    const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up);
+      form.style.transition = 'transform .22s cubic-bezier(.2,.8,.2,1)';
+      if (dy > 90) { form.style.transform = 'translate3d(0,100%,0)'; setTimeout(() => { close(); form.style.transform = ''; form.style.transition = ''; }, 200); }
+      else { form.style.transform = ''; setTimeout(() => { form.style.transition = ''; }, 230); } };
+    addEventListener('pointermove', mv, { passive: true }); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+  });
   dlg.addEventListener('click', e => { if (e.target === dlg) close(); }); // tap outside the sheet
   // Tidy money as you leave the field: "12.5" becomes "12.50"
   ['amount', 'fees', 'ship'].forEach(n => f(n).addEventListener('blur', () => { const c = S.toCents(f(n).value); if (c != null && c >= 0) f(n).value = S.fromCents(c); }));

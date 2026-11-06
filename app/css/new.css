@@ -1142,3 +1142,47 @@ body:has(#view-app[hidden]) .ct-shell,body:has(#view-app[hidden]) .ct-tbar,body:
  .sh-pillbtn span{display:none}
  .sh-pillbtn{width:36px;padding:0!important;justify-content:center}
 }
+
+/* ===== v37.6: the entry form on phones, styled like the profile sheet ===== */
+.ed-g{display:contents}
+.ed-grab{display:none}
+@media(max-width:760px){
+ .ed[open]{align-items:flex-end;padding:0;margin:0;width:100%;max-width:100%;height:100%;max-height:100%}
+ .ed .ed-form{width:100%!important;max-height:min(90dvh,calc(100dvh - 40px - env(safe-area-inset-top,0px)))!important;background:var(--sheet-bg)!important;border:0!important;border-top:1px solid var(--win-edge)!important;border-radius:26px 26px 0 0!important;padding:0 12px!important;gap:10px!important;box-shadow:0 -12px 40px -16px rgba(0,0,0,.35)!important;overscroll-behavior:contain}
+ /* the top: grab handle and title, pinned while the fields scroll */
+ .ed .ed-head{position:sticky;top:0;z-index:3;margin:0 -12px;padding:22px 16px 8px;background:var(--sheet-bg);touch-action:none}
+ .ed .ed-grab{display:block;position:absolute;top:8px;left:50%;width:38px;height:5px;margin-left:-19px;border-radius:999px;background:color-mix(in srgb,var(--ct-text) 22%,transparent)}
+ .ed .ed-head h2{font-size:20px;font-weight:800;letter-spacing:-.02em}
+ .ed .ed-x{width:32px;height:32px;margin:0;background:var(--s-card);border:1px solid var(--s-hair)}
+ /* Purchase / Sale / Refund */
+ .ed .ed-seg{background:var(--s-card);border-radius:16px;padding:4px}
+ .ed .ed-seg button{padding:10px 4px;border-radius:12px;font-size:14.5px;font-weight:700}
+ .ed .ed-pill{top:4px;bottom:4px;left:4px;width:calc((100% - 8px)/3);border-radius:12px;background:var(--s-track);box-shadow:none}
+ /* each group is a rounded card, like the profile sheet's */
+ .ed .ed-g{display:grid;gap:12px;background:var(--s-card);border-radius:18px;padding:14px}
+ .ed .ed-g .ed-row{gap:10px}
+ .ed .ed-f{gap:6px;font-size:12.5px}
+ .ed .ed-f>span:first-child{font-weight:700}
+ /* every field the same: same height, same corners, same fill — text, money, date, select */
+ .ed .ed-f input,.ed .ed-f select,.ed .ed-f textarea{-webkit-appearance:none;appearance:none;height:46px;min-height:46px;border-radius:12px!important;border:1px solid transparent!important;background:var(--s-track)!important;color:var(--ct-text);font:inherit;font-size:16px!important;font-weight:600;padding:0 14px;box-shadow:none!important;margin:0}
+ .ed .ed-money input{padding-left:28px}
+ .ed .ed-money i{left:14px;font-size:16px}
+ .ed .ed-f input:focus,.ed .ed-f select:focus,.ed .ed-f textarea:focus{border-color:#5b9fe3!important;outline:none}
+ .ed .ed-f input[type=date]{display:block;width:100%;text-align:left;line-height:46px}
+ .ed .ed-f input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
+ .ed .ed-f input[type=date]::-webkit-calendar-picker-indicator{opacity:.5}
+ .ed .ed-f select{padding-right:38px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 14px center!important;background-size:14px!important}
+ .ed .ed-f textarea{height:auto;min-height:72px;padding:12px 14px;line-height:1.4}
+ .ed .ed-keep{font-size:12.5px;margin-top:-2px}
+ .ed .ed-left{margin:0;border-radius:14px}
+ /* the bottom: Save, pinned */
+ .ed .ed-foot{position:sticky;bottom:0;z-index:3;margin:2px -12px 0;padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px));background:var(--sheet-bg);gap:10px}
+ .ed .ed-cancel{display:none}
+ .ed .ed-del{padding:0 14px;height:50px;font-weight:700;font-size:15px}
+ .ed .ed-save{flex:1;height:50px;border-radius:999px;font-size:16px}
+}
+@media(max-width:760px){
+ .ed .ed-f select{background:var(--s-track) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 14px center/14px!important}
+}
+@media(max-width:350px){.ed .ed-g-when .ed-row{grid-template-columns:minmax(0,1fr)}}
+.ed .ed-f select{border-radius:12px!important}
