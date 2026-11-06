@@ -22,8 +22,9 @@ const json = (env, body, status = 200, extra = {}) => new Response(JSON.stringif
 
 async function jt(env, path) {
   const r = await fetch(JT + path, { headers: { 'x-api-key': env.JUSTTCG_API_KEY, accept: 'application/json' } });
-  if (r.status === 429) throw Object.assign(new Error('rate'), { status: 429 });
-  if (!r.ok) throw Object.assign(new Error('justtcg ' + r.status), { status: 502 });
+  // keep JustTCG's own words when it says no (rate limit, bad key, plan limits), so we can tell which it is
+  if (!r.ok) { let why = ''; try { why = (await r.text()).slice(0, 200); } catch (e) {}
+    throw Object.assign(new Error('justtcg ' + r.status), { status: r.status === 429 ? 429 : 502, upstream: r.status, why }); }
   return r.json();
 }
 let GAMES = null;
@@ -95,7 +96,7 @@ export default {
       if (m) return art(env, ctx, decodeURIComponent(m[1]), m[2]);
       return new Response('not found', { status: 404 });
     } catch (e) {
-      return json(env, { error: e.status === 429 ? 'busy, try again in a moment' : 'lookup failed' }, e.status || 500, e.status === 429 ? { 'retry-after': '20' } : {});
+      return json(env, { error: e.status === 429 ? 'busy, try again in a moment' : 'lookup failed', upstream: e.upstream || null, detail: e.why || String(e.message || '') }, e.status || 500, e.status === 429 ? { 'retry-after': '20' } : {});
     }
   }
 };
