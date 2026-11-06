@@ -577,3 +577,12 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 - Marketing site stays on Worker `yellow-haze-2874` (cardtab.app). www.cardtab.app CNAME + redirect rule to cardtab.app.
 - Testing tools hidden on the public app except for nklenchik@gmail.com. Sign-in is still local mode (device only).
 - To do: Image Transformations on the zone; DMARC with the login email; real auth + sync; payments.
+
+## Sign-in live (2026-11-06)
+- Worker routes /auth/* (api/src/auth.js, email.js). D1 tables users, sessions, login_tokens (schema.sql). Cookie ct_s on .cardtab.app, 30 days, HttpOnly; only hashes stored.
+- Admins: ADMIN_EMAILS var in wrangler.toml (nklenchik@gmail.com). Admin tools in the app appear only when /auth/me says role=admin.
+- Google: Cloud project "Card Tab", client 402189262163-…; secret GOOGLE_CLIENT_SECRET. Consent screen in Testing (test user: nklenchik@gmail.com). To go live: Branding (logo, cardtab.app, /privacy, /terms, authorized domain cardtab.app), then Publish app.
+- Email: Resend (RESEND_API_KEY secret) once cardtab.app verifies; or a Cloudflare send_email binding named EMAIL (Workers Paid).
+- App: real sign-in only on *.cardtab.app; pages.dev redirects to app.cardtab.app; everywhere else stays in test mode.
+- Tests: api/test-auth.mjs (offline, SQLite), tests/auth-e2e.mjs (browser against the real auth code).
+- Legal: cardtab-site branch `legal` has the app section in privacy.html and a new terms.html (not published yet).
