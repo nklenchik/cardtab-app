@@ -1219,3 +1219,5 @@ body:has(#view-app[hidden]) .ct-shell,body:has(#view-app[hidden]) .ct-tbar,body:
  #as#as .search,#as#as .sel select,#as#as #as-plat{background-color:var(--s-card)!important;border-color:transparent!important}
  #as#as .search:focus-within{border-color:#5b9fe3!important}
 }
+/* v37.9: while a sheet or window is open, the page behind it can't scroll (no scrolling "past" a sheet on phones) */
+html:has(dialog[open]),html:has(dialog[open]) body{overflow:hidden!important;overscroll-behavior:none}
