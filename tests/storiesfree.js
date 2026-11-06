@@ -14,7 +14,7 @@ const { chromium, devices } = require('playwright');
  ok('Free story has the highlight mark up top', await S.evaluate(() => { window.csPlay(0); return !!document.querySelector('.pl .st .brand mark') && !document.querySelector('.pl .st .pmark'); }));
  await p.waitForTimeout(900); await p.screenshot({ path: 'tests/out-phone/free-story.png' });
  await S.evaluate(() => document.querySelector('.pl [data-share]').click()); await p.waitForTimeout(300);
- ok('Share sheet says 1 free video', /1 free video this month/.test(await S.evaluate(() => document.querySelector('.pl .pshs .shn').textContent)));
+ ok('Share sheet says 1 free video', /1 free video/.test(await S.evaluate(() => document.querySelector('.pl .pshs .shn').textContent)));
  await S.evaluate(() => document.querySelector('.pl [data-shx=""]').click()); await S.evaluate(() => document.querySelector('.pl [data-x]').click()); await p.waitForTimeout(500);
  // a longer range shows the Premium note
  await S.evaluate(() => window.csRange.set('l12')); await p.waitForTimeout(500);
@@ -33,7 +33,7 @@ const { chromium, devices } = require('playwright');
  await p.screenshot({ path: 'tests/out-phone/free-sheet.png' });
  await S.evaluate(() => document.querySelector('#ths [data-close]').click()); await p.waitForTimeout(400);
  // one video a month
- await p.evaluate(async () => CTStore.setMeta('storiesVideo', { month: new Date().toISOString().slice(0, 7), n: 1 }));
+ await p.evaluate(async () => CTStore.setMeta('storiesFree', { month: new Date().toISOString().slice(0, 7), video: 1, image: 0 }));
  await S.evaluate(() => { window.csPlay(1); }); await p.waitForTimeout(700);
  await S.evaluate(() => document.querySelector('.pl [data-share]').click()); await p.waitForTimeout(300);
  ok('Sheet says the free video is used', /used/.test(await S.evaluate(() => document.querySelector('.pl .pshs .shn').textContent)));

@@ -172,3 +172,4 @@
 .topt{position:relative}
 .topt .lk{position:absolute;top:6px;right:6px;width:18px;height:18px;margin:0}.topt .lk svg{width:11px;height:11px}
 .topt .tm{position:absolute;top:5px;right:6px;margin:0;font-size:8.5px;padding:1px 6px;line-height:1.4}
+.bgnote{margin:8px 2px 0;font-size:12px;font-weight:650;color:var(--muted,#8a857e)}

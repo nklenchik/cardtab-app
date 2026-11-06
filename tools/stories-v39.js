@@ -235,3 +235,23 @@ const _stHTML=stHTML;stHTML=function(s,i,on){let h=_stHTML(s,i,on);if(!isFree())
 // keep the plan in step when it changes (Premium turned on or off)
 const _cs2=window.csSync;window.csSync=function(){_cs2();paintChips();paintShelf();tellParent()};
 paintChips();paintShelf();
+// ================= v39.2 Free downloads: Clean background, one video and one image a month =================
+// Free users can look at their stories with Blobs in the app; anything they save or share is drawn on Clean.
+// They get one video and one image each month, counted in the account and reset with their 20 free entries.
+const fUse=()=>{try{const m=parent.CTStore.meta('storiesFree');return m&&m.month===ym()?m:{month:ym(),video:0,image:0}}catch(e){return {month:ym(),video:0,image:0}}};
+const fLeft=k=>isFree()?Math.max(0,1-(fUse()[k]||0)):Infinity;
+async function fBump(k){if(!isFree())return;try{const m=fUse();m[k]=(m[k]||0)+1;await parent.CTStore.setMeta('storiesFree',m)}catch(e){}}
+const resetOn=()=>{try{return parent.CTStore.usage().resetsOn}catch(e){return 'next month'}};
+const withClean=async fn=>{const b=bgStyle;if(isFree())bgStyle='Clean';try{return await fn()}finally{bgStyle=b}};
+// videos (replaces the v39.1 one-video rule with the shared count)
+shareVideo=async function(n,share){if(isFree()&&fLeft('video')<1){pl.toast('Your free video for '+mName(ym())+' is used. More on '+resetOn()+', or go Premium.');return}
+  await withClean(()=>_shareVideo(n,share));await fBump('video')};
+// images
+const _saveStories=saveStories;saveStories=async function(list,share){
+  if(isFree()){if(list.length>1){(pl.open?pl.toast.bind(pl):say)('Free includes one image a month. Open a story and tap Share to save it.');return}
+    if(fLeft('image')<1){(pl.open?pl.toast.bind(pl):say)('Your free image for '+mName(ym())+' is used. More on '+resetOn()+', or go Premium.');return}}
+  await withClean(()=>_saveStories(list,share));if(isFree())await fBump('image')};
+// the share sheet says what's left; the background picker says downloads use Clean
+pl.build=(b=>function(){b();if(!isFree())return;const n=plEl.querySelector('.pshs .shn');if(n){const v=fLeft('video'),i=fLeft('image');
+  n.textContent=(v&&i?'1 free video and 1 free image this month':v?'1 free video left this month':i?'1 free image left this month':'Free video and image used this month')+' · saved on the Clean background'}})(pl.build.bind(pl));
+new MutationObserver(()=>{if(!isFree())return;const r=$('bgrow');if(r&&!r.parentElement.querySelector('.bgnote')){r.insertAdjacentHTML('afterend','<p class="bgnote">On Free, saved images and videos use Clean.</p>')}}).observe($('bgrow'),{childList:true});
