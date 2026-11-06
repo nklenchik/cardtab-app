@@ -223,7 +223,7 @@
 
 <script src="js/store.js?v=40.2"></script>
 <script src="js/auth.js?v=40.2"></script>
-<script>/* Set to the deployed Worker URL for live lookups and real art. Empty = built-in sample catalog. */window.CARDTAB_API="";</script>
+<script>/* Live card lookups and real art come from our Worker, which only answers app.cardtab.app. Anywhere else (test copies) uses the built-in sample catalog. */window.CARDTAB_API=/(^|\.)cardtab\.app$/i.test(location.hostname)?"https://card-tab-api.nklenchik.workers.dev":"";</script>
 <script src="js/parser.js?v=40.2"></script>
 <script src="js/lookup.js?v=40.2"></script>
 <script src="js/editor.js?v=40.2"></script>
