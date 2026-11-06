@@ -1050,3 +1050,48 @@ html.pg-moving .ct-shell::before{-webkit-backdrop-filter:none;backdrop-filter:no
  .gp-nav{display:none}
 }
 @media(prefers-reduced-motion:reduce){.ct-gp .gp-in,.ct-gp::backdrop{animation:none!important}}
+
+/* ===== v37.1: the open row, modeled on the website's card ===== */
+/* open: the date line moves above the name, the name gets the full width (the right-hand amount steps aside), and the
+   money reads as a short receipt beside the art: Sold, Fees and shipping, a dashed line, You kept */
+.ct-demo .ct-row:not(.expanded) .ct-money{display:none}
+.ct-demo .ct-row.expanded .ct-row-amt{display:none!important}
+.ct-demo .ct-row.expanded .ct-expanded-right{display:flex!important;flex-direction:column;min-width:0;flex:1}
+.ct-demo .ct-row.expanded .ct-row-line{order:-1;margin:0 0 6px!important}
+.ct-demo .ct-row.expanded .ct-row-name{display:block!important;-webkit-line-clamp:unset!important;overflow:visible!important}
+.ct-money{display:grid;gap:8px;margin-top:14px;max-width:440px;width:100%}
+.ct-mr{display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-size:15px;font-weight:600;color:var(--ct-text)}
+.ct-mr b{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ct-mr.neg b{color:var(--tab-on,#b0123d)}
+.ct-mdash{display:block;border-top:1.5px dashed var(--s-hair);margin:6px 0 4px}
+.ct-mr.kept span{font-size:16.5px;font-weight:800}
+.ct-mr.kept b{font-size:27px;font-weight:800;letter-spacing:-.02em;color:var(--bu-ok)}
+.ct-mr.paid b{font-size:19px;font-weight:800}
+.ct-facts{display:flex;flex-wrap:wrap;gap:6px}
+.ct-facts span{font-size:12.5px;font-weight:700;color:var(--ct-muted);background:var(--s-track);border-radius:999px;padding:4px 11px}
+.ct-demo .ct-row .ct-open-actions .ct-facts+.ct-demo-actions,.ct-demo .ct-row .ct-open-actions .ct-row-note+.ct-demo-actions{margin-top:14px}
+.ct-demo .ct-row .ct-open-actions .ct-row-note{margin-top:10px}
+@media(min-width:761px){
+ .ct-demo .ct-row.expanded .ct-row-name{font-size:20px}
+ .ct-demo .ct-row.expanded .ct-open-actions{margin-top:2px}
+ .ct-demo .ct-row.expanded .ct-demo-actions{margin-top:16px}
+}
+@media(max-width:760px){
+ .ct-demo .ct-row.expanded .ct-row-name{font-size:17px!important;line-height:1.28}
+ .ct-demo .ct-row.expanded .ct-row-line{font-size:12.5px}
+ .ct-money{gap:6px;margin-top:12px}
+ .ct-mr{font-size:14px}
+ .ct-mr.kept span{font-size:15px}
+ .ct-mr.kept b{font-size:22px}
+ .ct-mr.paid b{font-size:17px}
+ .ct-demo .ct-row.expanded .ct-open-actions{margin-top:4px}
+}
+/* the gallery's details panel uses the same receipt */
+.ct-gp .ct-money{margin-top:16px}
+.ct-gp .ct-facts{margin-top:16px}
+.ct-gp .ct-row-expanded-info>.ct-row-note{margin-top:12px}
+@media(max-width:760px){.ct-gp .ct-money{grid-column:2;margin-top:10px}.ct-gp .gp-art{grid-row:2/5}.ct-gp .ct-facts{margin-top:14px}}
+/* the header's page buttons only take the room of the page you're on (the others fade out on top, at the right) */
+.sh-acts{position:relative}
+.sha:not(.on){position:absolute;right:0;top:50%;margin-top:-20px;width:auto}
+@media(max-width:760px){.sha:not(.on){margin-top:-18px}}
