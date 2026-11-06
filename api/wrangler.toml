@@ -2,6 +2,9 @@ name = "card-tab-api"
 main = "src/index.js"
 compatibility_date = "2025-01-01"
 
+# Runs on api.cardtab.app (inside the cardtab.app zone) so Cloudflare Image Transformations can resize the art.
+routes = [{ pattern = "api.cardtab.app", custom_domain = true }]
+
 # Create these once (see README): a D1 database and an R2 bucket.
 [[d1_databases]]
 binding = "DB"

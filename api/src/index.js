@@ -66,7 +66,7 @@ async function search(env, q) {
 
 async function art(env, ctx, id, size) {
   const sz = SIZES[size]; if (!sz || !/^[\w-]{3,80}$/.test(id)) return new Response('not found', { status: 404 });
-  const k = `art/${id}/${size}.webp`;
+  const k = `art/v2/${id}/${size}.webp`;   // v2: copies made before resizing was switched on are ignored
   let obj = await env.ART.get(k);
   if (!obj) {
     const row = await env.DB.prepare('SELECT tcgplayer_id FROM cards WHERE id=?').bind(id).first();
@@ -74,7 +74,9 @@ async function art(env, ctx, id, size) {
     // Fetch the source once, resized and converted to WebP by Cloudflare. Only our copy is kept.
     const r = await fetch(`${CDN}${row.tcgplayer_id}_in_1000x1000.jpg`, { cf: { image: { width: sz.width, format: 'webp', quality: sz.quality, metadata: 'none' } } });
     if (!r.ok) return new Response('no art', { status: 404 });
-    const buf = await r.arrayBuffer();
+    const buf = await r.arrayBuffer(), type = r.headers.get('content-type') || 'image/jpeg';
+    // only keep a copy when Cloudflare actually resized it (it can't on the workers.dev address); otherwise show it, keep nothing, try again next time
+    if (!/webp/i.test(type)) return new Response(buf, { headers: { 'content-type': type, 'cache-control': 'public, max-age=3600', ...cors(env) } });
     await env.ART.put(k, buf, { httpMetadata: { contentType: 'image/webp', cacheControl: 'public, max-age=31536000, immutable' } });
     return new Response(buf, { headers: { 'content-type': 'image/webp', 'cache-control': 'public, max-age=31536000, immutable', ...cors(env) } });
   }
