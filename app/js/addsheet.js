@@ -202,7 +202,9 @@
     dlg.style.top = ''; dlg.style.height = '';
     if (touch && mode === 'together') { const k = kbMem(); if (k) dlg.style.height = k + 'px'; }
     moving = true; dlg.classList.remove('go'); dlg.classList.add('moving');
+    const tOpen = performance.now();
     dlg.showModal();
+    diag.run(tOpen, performance.now());
     // phones: the sheet waits one painted frame off screen before it slides, so iPhone has it drawn before the slide's
     // first frame (otherwise the opening of the slide is skipped and it looks like a hang)
     requestAnimationFrame(() => requestAnimationFrame(() => dlg.classList.add('go')));
@@ -211,6 +213,35 @@
     clearTimeout(settle); settle = setTimeout(() => { moving = false; dlg.classList.remove('moving'); fit(); kbSave(); }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 480);
   }
   function close() { if (dlg.open) dlg.close(); }
+
+  // ---------- testing tool: a timing readout for opening Add New (Profile › testing tools). Shows where the wait goes on a real phone. ----------
+  const diagOn = () => { try { return localStorage.getItem('ct.diag') === '1'; } catch (e) { return false; } };
+  const diagBtn = () => document.querySelector('[data-dev="diag"]');
+  const diagPaint = () => { const b = diagBtn(); if (b) b.textContent = 'Add New timing readout: ' + (diagOn() ? 'On' : 'Off'); };
+  diagPaint();
+  document.addEventListener('click', e => { if (!e.target.closest('[data-dev="diag"]')) return; e.stopPropagation(); try { localStorage.setItem('ct.diag', diagOn() ? '0' : '1'); } catch (er) {} diagPaint(); if (window.CTDash) window.CTDash.toast('Timing readout ' + (diagOn() ? 'on: tap + to see it' : 'off')); });
+  let tTap = 0;
+  document.addEventListener('pointerdown', e => { if (e.target.closest('#ct-fab,#ct-add')) tTap = performance.now(); }, true);
+  const diag = { run(tOpen, tShown) {
+    if (!diagOn()) return;
+    const ph = dlg.querySelector('.phone'), t0 = tTap && tOpen - tTap < 3000 ? tTap : tOpen, m = { tap: t0, open: tOpen, shown: tShown };
+    requestAnimationFrame(() => { m.shown = performance.now(); }); // the first frame drawn with the window open
+    let box = dlg.querySelector('.as-diag'); if (!box) { box = document.createElement('div'); box.className = 'as-diag'; dlg.appendChild(box); }
+    box.textContent = 'Timing…';
+    let last = performance.now(), gap = 0, frames = 0, live = true;
+    (function f() { const n = performance.now(); gap = Math.max(gap, n - last); last = n; frames++; if (live) requestAnimationFrame(f); })();
+    const ms = v => Math.round(v) + ' ms';
+    ph.addEventListener('animationstart', () => { m.start = performance.now(); frames = 0; }, { once: true });
+    ph.addEventListener('animationend', () => { m.end = performance.now(); live = false;
+      box.innerHTML = '<b>Add New timing</b>' +
+        '<span>Tap → open: ' + ms(m.open - m.tap) + '</span>' +
+        '<span>Open → first frame: ' + ms(m.shown - m.open) + '</span>' +
+        '<span>First frame → slide starts: ' + ms((m.start || m.end) - m.shown) + '</span>' +
+        '<span>Slide: ' + ms(m.end - (m.start || m.end)) + ' · ' + frames + ' frames</span>' +
+        '<span>Longest freeze: ' + ms(gap) + '</span>' +
+        '<span><b>Total: ' + ms(m.end - m.tap) + '</b></span>';
+    }, { once: true });
+  } };
 
   window.CTAddSheet = { open, close, get isOpen() { return dlg.open; } };
 })();

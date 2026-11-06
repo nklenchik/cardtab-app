@@ -1324,3 +1324,7 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
  #as #as-s1 .body{-webkit-mask:none;mask:none}
 }
 @media(max-width:760px) and (prefers-reduced-motion:reduce){#as .phone{transform:none}}
+
+/* testing tool: Add New timing readout */
+.as-diag{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:5;display:grid;gap:2px;padding:10px 12px;border-radius:14px;background:#111;color:#f4f4f1;font:600 12.5px/1.4 ui-monospace,Menlo,monospace;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.as-diag b{font-weight:800}
