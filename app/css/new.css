@@ -1529,3 +1529,6 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 .ct-cardph{position:relative;overflow:hidden;background:linear-gradient(150deg,#d9577a 0%,#a50e37 55%,#6e0723 100%)!important;color:transparent!important}
 .ct-cardph::before{content:"";position:absolute;left:50%;top:50%;width:38%;height:54%;transform:translate(-50%,-50%) rotate(-6deg);border-radius:3px;border:1.6px solid rgba(255,255,255,.75);box-shadow:inset 0 0 0 2px rgba(255,255,255,.12)}
 .ct-cardph::after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.22) 45%,transparent 60%)}
+/* v42.2 budget window: the blurred backdrop fades in at the same unhurried pace as the window */
+.bu-sheet::backdrop{animation-duration:.55s!important;animation-timing-function:cubic-bezier(.22,1,.36,1)!important}
+.bu-sheet.closing::backdrop{animation-duration:.3s!important}

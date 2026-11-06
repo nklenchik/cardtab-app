@@ -60,7 +60,7 @@
         : sel ? (over ? 'Over by ' + money(used - b.cents) : pct + '% of ' + round$(b.cents))
         : shortName(cur) + (over ? ' · over by ' + money(used - b.cents) : ' · ' + pct + '% of ' + round$(b.cents));
       line(spent, txt, kind);
-      spent.style.setProperty('--fill', sel ? Math.min(1, used / b.cents).toFixed(4) : '0');
+      spent.style.setProperty('--fill', Math.min(1, used / b.cents).toFixed(4));   // the month the line talks about (this month in longer ranges)
       spent.dataset.bud = kind;
       spent.setAttribute('aria-label', 'Spent ' + money(t.spent) + '. Budget: ' + money(used) + ' of ' + round$(b.cents) + (thisMonth ? ' this month, ' : ' in ' + shortName(bk) + ', ') + pct + '% used. Edit budget');
     } else {

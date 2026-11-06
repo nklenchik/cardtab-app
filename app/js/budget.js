@@ -73,8 +73,11 @@
     const a = from.getBoundingClientRect(), b = pnl.getBoundingClientRect();
     if (!a.width || !b.width) return null;
     const dx = (a.left + a.width / 2) - (b.left + b.width / 2), dy = (a.top + a.height / 2) - (b.top + b.height / 2), sx = a.width / b.width, sy = Math.min(1, a.height / b.height);
-    const k = [{ transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + sx + ',' + sy + ')', opacity: 0 }, { transform: 'none', opacity: 1, offset: .6 }, { transform: 'none', opacity: 1 }];
-    return pnl.animate(dir > 0 ? k : k.slice().reverse(), dir > 0 ? { duration: 500, easing: 'cubic-bezier(.32,.72,0,1)' } : { duration: 240, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
+    // v42.2: slower and more fluid. The window travels out of the card over the whole animation (it used to finish
+    // in the first 60%), fades in during the first third, and settles with a long, soft ease-out. Closing stays quicker.
+    const from0 = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sx + ',' + sy + ')';
+    if (dir > 0) return pnl.animate([{ transform: from0, opacity: 0 }, { opacity: 1, offset: .35 }, { transform: 'none', opacity: 1 }], { duration: 720, easing: 'cubic-bezier(.22,1,.36,1)' });
+    return pnl.animate([{ transform: 'none', opacity: 1 }, { opacity: 1, offset: .55 }, { transform: from0, opacity: 0 }], { duration: 320, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
   }
   open = function (src) {
     from = src || null;

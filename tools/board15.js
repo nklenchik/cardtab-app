@@ -54,6 +54,9 @@ const LOWRES=new Set();
 function featBody(ctx,s,w){const m=FEAT[w.metric]?w.metric:'win',F=FEAT[m],L=cardStats(ctx),c=F.pick(L,ctx);
   if(!c)return '<div class="fwnone"><p>'+F.none+'</p></div>';
   const show=w.show||'both',src=maskNames()?'':artSrc(c,'wall'),lk=w.id+'|'+c.k+'|'+s;
+  // no art yet: the same full-art layout on a Card Tab cranberry card, until the art fills in (v42.2)
+  if(!src&&!maskNames()){const big0=show==='%'?'':'<div class="fbig num'+(F.good?' g':F.bad?' r':'')+'">'+F.num(c,ctx,L)+(show==='both'&&s!=='S'?'<span class="fpc">'+esc(F.pc(c,ctx,L))+'</span>':'')+'</div>',only0=show==='%'?'<div class="fbig num'+(F.good?' g':F.bad?' r':'')+'">'+esc(F.pc(c,ctx,L))+'</div>':'';
+    return '<div class="fw fwph in drill"'+dd({t:c.e.name,sub:'Every entry for this card',card:c.k})+' role="button" tabindex="0"><div class="fwi ct-cardph" aria-hidden="true"></div><div class="fwt"><h4 class="fn">'+esc(nameOf(c))+'</h4>'+(s==='S'?'':'<p class="fl">'+esc(F.line(c,ctx,L))+'</p>')+big0+only0+'</div></div>'}
   if(!src||LOWRES.has(lk))return '<div class="fwcard">'+cardHero(c,F,ctx,L,w,s)+'</div>';
   const f=c.art.focus||[50,c.art.wall?50:28],z=c.art.wall?1:(s==='S'?1.9:s==='L'?1.35:1.2);
   const big=show==='%'?'':'<div class="fbig num'+(F.good?' g':F.bad?' r':'')+'">'+F.num(c,ctx,L)+(show==='both'&&s!=='S'?'<span class="fpc">'+esc(F.pc(c,ctx,L))+'</span>':'')+'</div>';

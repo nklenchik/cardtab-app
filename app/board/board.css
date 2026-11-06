@@ -1683,6 +1683,10 @@ dialog.sheet .awp{background:var(--cb-alt)}
 
 /* Featured: the art clips to the tile's rounded corners on its own layer, so the tile itself doesn't clip its edit controls (remove ✕, resize corner) */
 .cbx #cb .wq.k-feat .fw,.cbx #cb .wq.k-feat .fwcard,.cbx #cb .wq.k-feat .fwnone{border-radius:20px;overflow:hidden;-webkit-mask-image:-webkit-radial-gradient(white,black)}
+/* v42.2 Featured card without art yet: cranberry card, its outline drawn large and soft */
+.cbx #cb .fw.fwph .fwi{opacity:1;transform:none}
+.cbx #cb .fw.fwph .fwi::before{width:26%;height:auto;aspect-ratio:5/7;left:72%;top:42%;border-width:2px;border-radius:8px;opacity:.55}
+.cbx #cb .k-feat.eS .fw.fwph .fwi::before{left:76%;top:34%;width:30%}
 
 /* ---------- v16 free plan ---------- */
 /* Premium sheet: the art leads, fading into the sheet; the price sits in a pill */
