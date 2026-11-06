@@ -1120,3 +1120,5 @@ html.cs-modal .csx{z-index:120!important}
 }
 .ct-gp .ct-pacts,.ct-gp .ct-dtot{display:none}
 @media(min-width:761px){.ct-demo .ct-row .ct-row-line{display:block!important;overflow:hidden;text-overflow:ellipsis}.ct-demo .ct-row .ct-row-line .ct-dot{vertical-align:1px;margin-right:7px}}
+/* the sign-in page has no app header (nothing to switch to before you are in) */
+body:has(#view-app[hidden]) .ct-shell,body:has(#view-app[hidden]) .ct-tbar,body:has(#view-app[hidden]) #ct-fab{display:none!important}
