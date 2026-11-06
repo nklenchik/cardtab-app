@@ -1280,3 +1280,6 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
  html.tb-away .ct-fab{transform:translate3d(0,calc(100% + 24px + env(safe-area-inset-bottom,0px)),0)!important;transition:transform .6s cubic-bezier(.4,0,.2,1),opacity .2s!important}
 }
 @media(prefers-reduced-motion:reduce){.ct-fab{transition-duration:.01s!important}}
+/* v37.17: the tab bar and Add New sit above Board and Stories too (Stories' layer is z 90), under the header (95);
+   an open Stories sheet still covers them (it lifts Stories to 120) */
+@media(max-width:760px){.ct-tbar{z-index:92!important}.ct-fab{z-index:93!important}html:has(dialog[open]) .ct-tbar,html:has(dialog[open]) .ct-fab{z-index:40!important}}

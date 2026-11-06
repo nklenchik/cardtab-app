@@ -125,7 +125,7 @@
   }
   window.CTTabGo = go;
   document.addEventListener('click', e => { const a = e.target.closest('[data-tab]'); if (!a) return; go(a.dataset.tab, a); });
-  document.addEventListener('click', e => { if (e.target.closest('#ct-fab')) { const a = $('ct-add'); if (a) a.click(); } });
+  document.addEventListener('click', e => { if (e.target.closest('#ct-fab')) { e.preventDefault(); if (window.CTOpenAdd) window.CTOpenAdd(); else { const a = $('ct-add'); if (a) a.click(); } } });
   // keep the bar's highlight on the page you're on
   function syncTabs() {
     const cur = stOpen() ? 'stories' : cbOpen() ? 'board' : 'entries';

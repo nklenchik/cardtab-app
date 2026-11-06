@@ -201,7 +201,7 @@
     let mode = 'after'; try { mode = localStorage.getItem('ct.kbmode') || 'after'; } catch (e) {}
     dlg.style.top = ''; dlg.style.height = '';
     if (touch && mode === 'together') { const k = kbMem(); if (k) dlg.style.height = k + 'px'; }
-    else if (touch && vv) { dlg.style.height = vv.height + 'px'; dlg.style.top = vv.offsetTop + 'px'; }   // start at exactly the visible screen, so the sheet's bottom is never below it
+    else if (touch && vv && vv.height > 200) dlg.style.height = Math.min(vv.height, innerHeight) + 'px';   // start no taller than the visible screen, so the sheet's bottom is never below it
     moving = true; dlg.classList.add('moving');
     dlg.showModal();
     if (!touch || mode === 'together') inp.focus({ preventScroll: true });

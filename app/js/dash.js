@@ -479,6 +479,7 @@
     });
   }
   $('ct-add').addEventListener('click', openAdd);
+  window.CTOpenAdd = openAdd;   // the phone's round + calls this directly, from any page
   $('af-primary').addEventListener('click', () => { if (premium()) openImport(); else openAdd(); });
   $('af-secondary').addEventListener('click', () => { if (premium()) openAdd(); else toast('Import is part of Premium. Upgrading opens at launch.'); });
 
