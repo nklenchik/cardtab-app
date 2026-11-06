@@ -81,7 +81,13 @@
   }
   function setOrder(v, focusK) { put(v); drawPop(focusK); paint(); }
   // the picker floats above everything, under Edit, and never runs off the bottom of the window (it scrolls inside instead)
-  function placePop() { if (!pop) return; const r = btn.getBoundingClientRect(), below = innerHeight - r.bottom - 24, above = r.top - 24;
+  function placePop() { if (!pop) return;
+    // wide screens: beside the At a glance card, lined up with it, kept fully inside the window (like a side panel)
+    if (WIDE.matches) { const c = card.getBoundingClientRect(), H = Math.min(pop.scrollHeight, innerHeight - 140);
+      pop.classList.add('qm-side'); pop.style.left = Math.round(c.right + 14) + 'px'; pop.style.right = 'auto'; pop.style.bottom = 'auto';
+      pop.style.top = Math.round(Math.max(124, Math.min(c.top, innerHeight - H - 16))) + 'px'; pop.style.maxHeight = Math.round(innerHeight - 140) + 'px'; return; }
+    pop.classList.remove('qm-side'); pop.style.left = 'auto';
+    const r = btn.getBoundingClientRect(), below = innerHeight - r.bottom - 24, above = r.top - 24;
     pop.style.right = Math.max(12, Math.round(innerWidth - r.right)) + 'px';
     if (below < Math.min(pop.scrollHeight, 360) && above > below) { pop.style.top = 'auto'; pop.style.bottom = Math.round(innerHeight - r.top + 8) + 'px'; pop.style.maxHeight = Math.round(above) + 'px'; }
     else { pop.style.bottom = 'auto'; pop.style.top = Math.round(r.bottom + 8) + 'px'; pop.style.maxHeight = Math.round(Math.max(160, below)) + 'px'; } }
