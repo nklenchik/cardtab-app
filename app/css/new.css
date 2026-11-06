@@ -1220,7 +1220,7 @@ body:has(#view-app[hidden]) .ct-shell,body:has(#view-app[hidden]) .ct-tbar,body:
  #as#as .search:focus-within{border-color:#5b9fe3!important}
 }
 /* v37.9: while a sheet or window is open, the page behind it can't scroll (no scrolling "past" a sheet on phones) */
-html:has(dialog[open]),html:has(dialog[open]) body{overflow:hidden!important;overscroll-behavior:none}
+/* (v37.18: no page lock here — on iPhone it made sheets stall and jump; each sheet holds its own scrolling instead) */
 /* v37.10: phones — the tab bar slides down out of the way while you scroll down, and back up when you scroll up */
 @media(max-width:760px){
  .ct-tbar{transition:transform .32s cubic-bezier(.2,.8,.2,1)}
@@ -1282,4 +1282,8 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 @media(prefers-reduced-motion:reduce){.ct-fab{transition-duration:.01s!important}}
 /* v37.17: the tab bar and Add New sit above Board and Stories too (Stories' layer is z 90), under the header (95);
    an open Stories sheet still covers them (it lifts Stories to 120) */
-@media(max-width:760px){.ct-tbar{z-index:92!important}.ct-fab{z-index:93!important}html:has(dialog[open]) .ct-tbar,html:has(dialog[open]) .ct-fab{z-index:40!important}}
+@media(max-width:760px){.ct-tbar{z-index:92!important}.ct-fab{z-index:93!important}}
+
+/* v37.18: Add a card is sized to the screen you can actually see (dynamic viewport), so its bottom is never below the
+   screen; while you type, the keyboard-aware sizing takes over */
+@media(max-width:760px){#as{height:100dvh;max-height:100dvh;overscroll-behavior:contain}}
