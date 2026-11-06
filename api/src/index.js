@@ -108,6 +108,13 @@ async function art(env, ctx, id, size) {
       r = await fetch(`${CDN}${row.tcgplayer_id}${f}`, { cf: { image: { width: sz.width, format: 'webp', quality: sz.quality, metadata: 'none' } } });
       if (r.ok) break;
     }
+    // no image for this printing (TCGplayer often has none for reprints like "2nd Edition" or "Revision Pack"):
+    // use another printing of the same card, same name and number, that has one
+    if (!r || !r.ok) {
+      const me = await env.DB.prepare('SELECT name, number FROM cards WHERE id=?').bind(id).first();
+      const sibs = me ? (await env.DB.prepare('SELECT tcgplayer_id FROM cards WHERE number=? AND id<>? AND tcgplayer_id<>\'\' AND lower(name)=lower(?) LIMIT 4').bind(me.number, id, me.name).all()).results || [] : [];
+      for (const sb of sibs) { r = await fetch(`${CDN}${sb.tcgplayer_id}_in_1000x1000.jpg`, { cf: { image: { width: sz.width, format: 'webp', quality: sz.quality, metadata: 'none' } } }); if (r.ok) break; }
+    }
     if (!r || !r.ok) return new Response('no art', { status: 404, headers: { 'x-art-why': 'tcgplayer has no image (' + (r ? r.status : 0) + ')', ...cors(env) } });
     const buf = await r.arrayBuffer(), type = r.headers.get('content-type') || 'image/jpeg';
     // only keep a copy when Cloudflare actually resized it (it can't on the workers.dev address); otherwise show it, keep nothing, try again next time
