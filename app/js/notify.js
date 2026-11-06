@@ -47,6 +47,8 @@
   function paintDot() {
     // the dot sits on the bell in the header (next to Ask); the menu row keeps its count
     const n = unread();
+    // phones: no bell in the header; the dot sits on your profile picture and the list lives in the profile menu
+    const av = $('app-avatar'); if (av) av.classList.toggle('has-ntf', n > 0);
     document.querySelectorAll('.sh-bell').forEach(bl => { bl.classList.toggle('has-ntf', n > 0); bl.setAttribute('aria-label', n ? 'Notifications, ' + n + ' new' : 'Notifications'); });
     const b = $('am-ntf-n'); if (b) { b.textContent = n; b.hidden = !n; }
   }

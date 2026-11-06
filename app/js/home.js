@@ -209,7 +209,7 @@
   const clickIn = (doc, sel) => { const el = doc && doc.querySelector(sel); if (el) el.click(); };
   const PAGE = {
     board: ['On Card Board', [['edit', 'Edit board', () => clickIn(document, '#cb-edit')], ['share', 'Share board', () => clickIn(document, '#cb-share')], ['ask', 'Ask your board', () => clickIn(document, '#cb-ask')]]],
-    stories: ['On Card Stories', [['save', 'Save all stories', () => clickIn(storyDoc(), '#svall')], ['themes', 'Story themes', () => clickIn(storyDoc(), '[data-all]')], ['share', 'Share this story', () => clickIn(storyDoc(), '#csdock [data-d="share"]')]]]
+    stories: ['On Card Stories', [['save', 'Save all stories', () => clickIn(storyDoc(), '#svall')], ['themes', 'Story themes', () => clickIn(storyDoc(), '[data-all]')], ['share', 'Play stories', () => { try { const f = document.querySelector('#csx iframe'); f && f.contentWindow.csPlay && f.contentWindow.csPlay(0); } catch (e) {} }]]]
   };
   window.CTHomeMenu = function () {
     window.CTMePaint();

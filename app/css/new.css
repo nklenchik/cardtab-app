@@ -1447,3 +1447,7 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 .ntf-addp input{flex:1;min-width:0;height:44px;border-radius:14px;border:1.5px solid var(--s-hair);background:var(--s-card);padding:0 14px;font:600 16px Manrope,system-ui,sans-serif;color:var(--text);outline:none}
 .ntf-addp input:focus{border-color:var(--brand,#b0123d)}
 .ntf-addp .ntf-btn{height:44px;padding:0 18px}
+
+/* v39.5 phones: no bell in the header (it's in the profile menu); the dot shows on your picture instead. Desktop keeps the bell. */
+@media(max-width:760px){.sh-bell{display:none!important}.app-avatar.has-ntf::after{display:block!important}}
+@media(min-width:761px){.app-avatar.has-ntf::after{display:none!important}}

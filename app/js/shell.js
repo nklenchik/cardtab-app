@@ -70,8 +70,9 @@
     G('board').append(eb, proxy('Share your board', share.querySelector('svg').outerHTML, () => share.click()));
     const saveAll = document.createElement('button'); saveAll.type = 'button'; saveAll.className = 'sh-pillbtn sh-save';
     saveAll.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14"/></svg><span>Save all</span>';
-    saveAll.addEventListener('click', () => { const d = frameDoc(); const b = d && (PH() ? d.querySelector('#csdock [data-d="save"]') : d.getElementById('svall')); if (b) b.click(); });
-    const sShare = proxy('Share this story', '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.8 5.6v3.1C8.5 9.2 5.3 12.6 4.6 18.4c2-3 5-4.4 9.2-4.5v3.1c0 .5.6.8 1 .4l5.2-5.1c.3-.3.3-.7 0-1l-5.2-5.1c-.4-.4-1-.1-1 .4z"/></svg>', () => { const d = frameDoc(); const b = d && d.querySelector('#csdock [data-d="share"]'); if (b) b.click(); }, 'sh-sshare');
+    saveAll.addEventListener('click', () => { const d = frameDoc(); const b = d && d.getElementById('svall'); if (b) b.click(); }); // all six stories, on every screen
+    // v39.6: the stories play from here; each one has its own Share inside the player
+    const sShare = proxy('Play stories', '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>', () => { try { const f = document.querySelector('#csx iframe'); f && f.contentWindow.csPlay && f.contentWindow.csPlay(0); } catch (e) {} });
     G('stories').append(saveAll, sShare);
     placeAll();
   }
