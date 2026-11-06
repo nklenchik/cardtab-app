@@ -17,13 +17,16 @@
     await S.open({ email: session.email });
     av.textContent = (displayName(session)[0] || '?').toUpperCase();
     whoName = displayName(session); $('am-name').textContent = whoName; $('am-email').textContent = session.email.endsWith('.local') ? 'Signed in on this device' : session.email;
-    // Admin tools: you (and local testing) only
-    // testing tools: always for Nick; for anyone else only on test copies (never on app.cardtab.app or the pages.dev address)
-    $('am-dev').hidden = !(/^(nklenchik@gmail\.com)$/i.test((session && session.email) || '') || (Sess.LOCAL_MODE && !PUBLIC_HOST));
+    applyServer(session);
     Dash.mount();
     if (!S.persistent) Dash.toast('This browser isn’t letting Card Tab save on the device, so entries last until you close the tab.');
     else if (isNew && !S.all().length) Dash.toast('Welcome to Card Tab');
     history.replaceState(null, '', location.pathname);
+  }
+  // what the server says about you: admin tools only for admins (decided on the server), and your plan
+  function applyServer(session) {
+    $('am-dev').hidden = !((session && session.role === 'admin') || (Sess.LOCAL_MODE && !PUBLIC_HOST));
+    if (Sess.REAL && session && session.plan && S.plan && S.plan() !== session.plan) S.setPlan(session.plan);
   }
   function showAuth() {
     S.close(); closeMenu();
@@ -41,6 +44,7 @@
     $('dela-exp').addEventListener('click', () => Dash.exportCSV());
     go.addEventListener('click', async () => {
       if (!ok.checked) return; go.disabled = true; go.textContent = 'Deleting…';
+      if (Sess.REAL) { try { await Sess.api('/auth/delete', {}); } catch (e) { go.disabled = false; go.textContent = 'Delete account'; Dash.toast(e.status === 401 ? 'Sign in again, then delete your account.' : 'Couldn’t delete your account right now. Try again.'); return; } }
       try { await S.deleteAccount(); } catch (e) { console.error(e); }
       // everything this device kept for Card Tab: profile, avatar, board layout, stories, notifications, settings
       try { Object.keys(localStorage).filter(k => /^(cb|ct)\./.test(k)).forEach(k => localStorage.removeItem(k)); } catch (e) {}
@@ -127,7 +131,7 @@
     if (b.id === 'am-export') { closeMenu(); Dash.exportCSV(); return; }
     if (b.id === 'am-import') { closeMenu(); Dash.openImport(); return; }
     if (b.id === 'am-out') { Sess.signOut(); showAuth(); return; }
-    if (b.dataset.plan) { await S.setPlan(b.dataset.plan); Dash.toast(b.dataset.plan === 'premium' ? 'Now testing as Premium' : 'Now testing as Free'); return; }
+    if (b.dataset.plan) { if (Sess.REAL) { try { const j = await Sess.api('/auth/plan', { plan: b.dataset.plan }); Sess.fromUser(j.user, (Sess.current() || {}).via); } catch (er) { Dash.toast(er.message); return; } } await S.setPlan(b.dataset.plan); Dash.toast(b.dataset.plan === 'premium' ? 'Now testing as Premium' : 'Now testing as Free'); return; }
     const d = b.dataset.dev; if (!d) return;
     if (d === 'sample') { await S._loadSample(sampleEntries()); Dash.toast('Loaded ' + sampleEntries().length + ' sample entries (they don’t count toward the limit)'); }
     else if (d === 'ntfdemo') { await window.CTNotify.demo(); Dash.toast('Sample notifications added. Look for the dot on your picture.'); }
@@ -172,6 +176,14 @@
   }
 
   // ---------- go ----------
-  const s = Sess.current();
-  if (s) showApp(s, false); else showAuth();
+  // 1) a sign-in link or the return from Google, 2) the copy of who you are (checked with the server in the background),
+  // 3) a session cookie without a copy (new device after Google), 4) the sign-in page
+  (async () => {
+    const fromUrl = await Sess.fromUrl();
+    if (fromUrl && fromUrl.session) { showApp(fromUrl.session, fromUrl.isNew); return; }
+    const s = Sess.current();
+    if (s) { await showApp(s, false); if (Sess.REAL) Sess.check().then(c => { if (!c) { showAuth(); if (fromUrl && fromUrl.error && auth) auth.error(fromUrl.error); } else applyServer(c); }); return; }
+    if (Sess.REAL) { const c = await Sess.check(); if (c) { showApp(c, false); return; } }
+    showAuth(); if (fromUrl && fromUrl.error && auth) auth.error(fromUrl.error);
+  })();
 })();

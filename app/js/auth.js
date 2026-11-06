@@ -1,15 +1,24 @@
-/* Card Tab sign-in (Drop 1: local mode).
-   Real sign-in is Google plus an emailed sign-in link, no passwords (single-use link, about 15 minutes,
-   device session about 30 days). That needs the backend and the login@cardtab.app sender, which come after
-   the Cloudflare move. Until then LOCAL_MODE signs you in on this device only, so the screens can be used for real.
-*/
+/* Card Tab sign-in.
+   On app.cardtab.app it's real: Google, or an emailed link + 6-digit code (no passwords). The server keeps the session
+   in an HttpOnly cookie for 30 days and says who's an admin; this file keeps a small copy of who you are so the app
+   opens instantly, then checks it with the server.
+   Anywhere else (test copies, previews) it stays in local mode: either button signs you in on this device only. */
 (function () {
   'use strict';
-  const LOCAL_MODE = true;
+  const REAL = /(^|\.)cardtab\.app$/i.test(location.hostname);
+  const LOCAL_MODE = !REAL;
+  const API = REAL ? 'https://api.cardtab.app' : '';
   const KEY = 'ct.session', DAYS = 30;
 
+  async function api(path, body) {
+    const r = await fetch(API + path, body === undefined ? { credentials: 'include' } : { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    let j = {}; try { j = await r.json(); } catch (e) {}
+    if (!r.ok) throw Object.assign(new Error(j.error || 'Something went wrong. Try again.'), { status: r.status });
+    return j;
+  }
+
   const Session = {
-    LOCAL_MODE,
+    LOCAL_MODE, REAL, API,
     get() {
       try {
         const s = JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -17,55 +26,91 @@
         return s;
       } catch (e) { return null; }
     },
-    signIn({ email, name, via }) {
-      const s = { email: String(email).trim().toLowerCase(), name: name || '', via: via || 'email', expires: Date.now() + DAYS * 864e5 };
+    signIn({ email, name, via, role, plan, id }) {
+      const s = { email: String(email).trim().toLowerCase(), name: name || '', via: via || 'email', role: role || 'user', plan: plan || '', id: id || '', expires: Date.now() + DAYS * 864e5 };
       try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* private window: session lasts until the tab closes */ }
       Session._mem = s; return s;
     },
-    signOut() { try { localStorage.removeItem(KEY); } catch (e) {} Session._mem = null; },
-    current() { return Session.get() || Session._mem || null; }
+    fromUser(u, via) { return Session.signIn({ email: u.email, name: u.name, via: via || 'email', role: u.role, plan: u.plan, id: u.id }); },
+    signOut() { if (REAL) api('/auth/logout', {}).catch(() => {}); try { localStorage.removeItem(KEY); } catch (e) {} Session._mem = null; },
+    current() { return Session.get() || Session._mem || null; },
+    // the server's answer about who's signed in (null when signed out). Network trouble keeps the copy we have.
+    async check() { if (!REAL) return Session.current(); try { const j = await api('/auth/me'); return Session.fromUser(j.user, (Session.current() || {}).via); } catch (e) { if (e.status === 401) { try { localStorage.removeItem(KEY); } catch (er) {} Session._mem = null; return null; } return Session.current(); } },
+    // links from the sign-in email (?login=…) and the return from Google (?signedin=google / ?signin_error=…)
+    async fromUrl() {
+      const q = new URLSearchParams(location.search), clean = () => history.replaceState(null, '', location.pathname);
+      if (!REAL) return null;
+      if (q.get('login')) { const t = q.get('login'); clean(); try { const j = await api('/auth/email/verify', { token: t }); return { session: Session.fromUser(j.user, 'email'), isNew: j.isNew }; } catch (e) { return { error: e.message }; } }
+      if (q.get('signedin') === 'google') { const isNew = q.has('new'); clean(); const s = await Session.check(); if (s) { s.via = 'google'; Session.signIn(s); } return s ? { session: s, isNew } : { error: 'Google sign-in didn’t finish. Try again.' }; }
+      if (q.get('signin_error')) { const k = q.get('signin_error'); clean(); return { error: k === 'google_off' ? 'Google sign-in isn’t switched on yet. Use your email for now.' : 'Google sign-in didn’t finish. Try again.' }; }
+      return null;
+    },
+    api
   };
 
   // ---------- sign-in page ----------
   function mountAuth(root, onSignedIn) {
     const $ = s => root.querySelector(s);
-    const seg = $('.auth-seg'), pill = $('.auth-pill'), email = $('#auth-email'), go = $('#auth-go');
-    let mode = 'in';
+    const card = $('.auth-card'), seg = $('.auth-seg'), pill = $('.auth-pill'), email = $('#auth-email'), go = $('#auth-go'), err = $('#auth-err');
+    const code = $('#auth-code'), codeGo = $('#auth-code-go'), again = $('#auth-again');
+    let mode = 'in', sentTo = '', againT = 0;
+    const label = () => mode === 'up' ? 'Email me a sign-up link' : 'Email me a sign-in link';
     function setMode(m) {
       mode = m;
       seg.querySelectorAll('button').forEach(b => { const on = b.dataset.m === m; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
       pill.style.transform = m === 'up' ? 'translateX(100%)' : 'none';
       $('#auth-h').textContent = m === 'up' ? 'Start tracking free' : 'Welcome back';
       $('#auth-sub').textContent = m === 'up' ? '20 entries a month, free. No card needed.' : 'Pick up where you left off.';
-      go.textContent = m === 'up' ? 'Email me a sign-up link' : 'Email me a sign-in link';
+      go.textContent = label();
       $('#auth-fine').textContent = m === 'up' ? 'No password to set up. We email you a link that creates your account.' : 'No password to remember. We email you a link that signs you in.';
       $('#auth-early').hidden = m !== 'up';
-      $('#auth-err').hidden = true;
+      showErr('');
     }
+    function showErr(t) { err.textContent = t || 'Enter a valid email address.'; err.hidden = !t; }
+    function busy(btn, on, text) { btn.disabled = on; if (text) btn.textContent = text; }
     seg.addEventListener('click', e => { const b = e.target.closest('button'); if (b) setMode(b.dataset.m); });
     const valid = v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
-    function submit() {
+    function sentState(on) {
+      card.classList.toggle('sent', on);
+      if (on) { $('#auth-sent-t').textContent = sentTo; code.value = ''; setTimeout(() => code.focus({ preventScroll: true }), 60); startAgain(); }
+      else { clearInterval(againT); setTimeout(() => email.focus({ preventScroll: true }), 60); }
+    }
+    function startAgain() { let n = 30; again.disabled = true; again.textContent = 'Send again in ' + n; clearInterval(againT);
+      againT = setInterval(() => { n--; if (n <= 0) { clearInterval(againT); again.disabled = false; again.textContent = 'Send again'; } else again.textContent = 'Send again in ' + n; }, 1000); }
+    async function submit() {
       const v = email.value.trim();
-      if (!valid(v)) { $('#auth-err').hidden = false; email.focus(); return; }
-      if (LOCAL_MODE) { onSignedIn(Session.signIn({ email: v, via: 'email' }), mode === 'up'); return; }
-      // Real flow (later): POST /auth/link, then show the "Check your inbox" state
-      $('#auth-sent-t').textContent = 'We sent a link to ' + v + '. It works for 15 minutes.';
-      $('#auth-sent').hidden = false;
+      if (!valid(v)) { showErr('Enter a valid email address.'); email.focus(); return; }
+      if (LOCAL_MODE) { onSignedIn(Session.signIn({ email: v, via: 'email', role: 'admin' }), mode === 'up'); return; }
+      busy(go, true, 'Sending…');
+      try { await api('/auth/email/start', { email: v, mode }); sentTo = v.toLowerCase(); sentState(true); }
+      catch (e) { showErr(e.message); }
+      finally { busy(go, false, label()); }
+    }
+    async function submitCode() {
+      const c = code.value.replace(/\D/g, '');
+      if (c.length !== 6) { $('#auth-code-err').textContent = 'Enter the 6 digits from the email.'; $('#auth-code-err').hidden = false; return; }
+      busy(codeGo, true, 'Checking…');
+      try { const j = await api('/auth/email/verify', { email: sentTo, code: c }); clearInterval(againT); onSignedIn(Session.fromUser(j.user, 'email'), j.isNew); }
+      catch (e) { $('#auth-code-err').textContent = e.message; $('#auth-code-err').hidden = false; }
+      finally { busy(codeGo, false, 'Sign in'); }
     }
     go.addEventListener('click', submit);
     email.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
-    email.addEventListener('input', () => { $('#auth-err').hidden = true; });
+    email.addEventListener('input', () => showErr(''));
+    codeGo.addEventListener('click', submitCode);
+    code.addEventListener('input', () => { $('#auth-code-err').hidden = true; const d = code.value.replace(/\D/g, ''); if (d.length === 6) submitCode(); });
+    code.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submitCode(); } });
+    $('#auth-back').addEventListener('click', () => sentState(false));
+    again.addEventListener('click', async () => { again.disabled = true; try { await api('/auth/email/start', { email: sentTo, mode }); startAgain(); $('#auth-code-err').hidden = true; } catch (e) { $('#auth-code-err').textContent = e.message; $('#auth-code-err').hidden = false; again.disabled = false; again.textContent = 'Send again'; } });
     $('.auth-g').addEventListener('click', () => {
-      if (LOCAL_MODE) {
-        const v = email.value.trim();
-        onSignedIn(Session.signIn({ email: valid(v) ? v : 'you@cardtab.local', name: '', via: 'google' }), mode === 'up');
-      }
+      if (LOCAL_MODE) { const v = email.value.trim(); onSignedIn(Session.signIn({ email: valid(v) ? v : 'you@cardtab.local', name: '', via: 'google', role: 'admin' }), mode === 'up'); return; }
+      location.href = API + '/auth/google/start?mode=' + mode;
     });
     $('#auth-local').hidden = !LOCAL_MODE;
     // The marketing site links here with ?signup to open on Create account
     const qs = new URLSearchParams(location.search);
     setMode(qs.has('signup') || qs.get('mode') === 'signup' ? 'up' : 'in');
-    return { reset() { email.value = ''; setMode('in'); } };
+    return { reset() { email.value = ''; card.classList.remove('sent'); clearInterval(againT); setMode('in'); }, error(t) { card.classList.remove('sent'); showErr(t); } };
   }
 
   window.CTSession = Session;
