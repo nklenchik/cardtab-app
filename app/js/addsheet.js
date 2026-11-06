@@ -90,7 +90,7 @@
   let moving = false, settle = 0;
   function fit() { if (!dlg.open || !vv || moving) return; dlg.style.height = vv.height + 'px'; dlg.style.top = vv.offsetTop + 'px'; }
   dlg.addEventListener('closing', () => { moving = true; clearTimeout(settle); });
-  dlg.addEventListener('close', () => { moving = false; clearTimeout(settle); dlg.style.height = ''; dlg.style.top = ''; dlg.classList.remove('moving'); });
+  dlg.addEventListener('close', () => { dlg.classList.remove('go'); moving = false; clearTimeout(settle); dlg.style.height = ''; dlg.style.top = ''; dlg.classList.remove('moving'); });
   if (vv) { vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
 
   function show(step) { $('as-s1').style.display = step === 1 ? 'flex' : 'none'; $('as-s2').style.display = step === 2 ? 'flex' : 'none'; }
@@ -201,11 +201,14 @@
     let mode = 'after'; try { mode = localStorage.getItem('ct.kbmode') || 'after'; } catch (e) {}
     dlg.style.top = ''; dlg.style.height = '';
     if (touch && mode === 'together') { const k = kbMem(); if (k) dlg.style.height = k + 'px'; }
-    moving = true; dlg.classList.add('moving');
+    moving = true; dlg.classList.remove('go'); dlg.classList.add('moving');
     dlg.showModal();
+    // phones: the sheet waits one painted frame off screen before it slides, so iPhone has it drawn before the slide's
+    // first frame (otherwise the opening of the slide is skipped and it looks like a hang)
+    requestAnimationFrame(() => requestAnimationFrame(() => dlg.classList.add('go')));
     if (!touch || mode === 'together') inp.focus({ preventScroll: true });
     else { const sh = dlg.querySelector('.sheet'); sh.tabIndex = -1; sh.focus({ preventScroll: true }); } // no stray focus ring on the close button
-    clearTimeout(settle); settle = setTimeout(() => { moving = false; dlg.classList.remove('moving'); fit(); kbSave(); }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 440);
+    clearTimeout(settle); settle = setTimeout(() => { moving = false; dlg.classList.remove('moving'); fit(); kbSave(); }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 480);
   }
   function close() { if (dlg.open) dlg.close(); }
 

@@ -1314,3 +1314,13 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 
 /* v37.21 fees and refunds on two short lines, so neither gets cut off on narrow phones */
 .ct-line.is-two{height:auto;line-height:18px;padding-top:2px;white-space:pre-line}
+
+/* v37.23 phones: Add New slides only once it's drawn (the .go class arrives one frame after opening), and drops the
+   things iPhone is slow to draw on a full-screen layer: the big shadow and the faded edge on the results list */
+@media(max-width:760px){
+ #as .phone{animation:none;transform:translateY(100vh);box-shadow:none}
+ #as.go .phone{animation:ct-shUpFar .42s cubic-bezier(.2,.8,.2,1) both}
+ #as.go.closing .phone,#as.closing .phone{animation:ct-shDownFar .26s cubic-bezier(.4,0,1,1) both}
+ #as #as-s1 .body{-webkit-mask:none;mask:none}
+}
+@media(max-width:760px) and (prefers-reduced-motion:reduce){#as .phone{transform:none}}
