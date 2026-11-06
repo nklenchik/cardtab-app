@@ -146,7 +146,8 @@
     const listName = c => [c.n, c.num, c.s].filter(Boolean).join(' - ');
     // the card's picture over the cranberry placeholder, so a picture that can't load still shows the placeholder
     const PH = 'linear-gradient(150deg,#d9577a,#a50e37 55%,#6e0723)';
-    const artBg = c => (c.art && c.art.list ? 'center/cover no-repeat url("' + c.art.list + '"), ' : '') + PH;
+    // (single quotes inside: this goes into a style="..." attribute, where a double quote would cut it off)
+    const artBg = c => (c.art && c.art.list ? "center/cover no-repeat url('" + String(c.art.list).replace(/['"()\\\s]/g, encodeURIComponent) + "'), " : '') + PH;
     function search() {
       const q = $('fix-q').value.trim(), p = window.CardParser ? window.CardParser.parse(q) : { name: q };
       // the real card search when it's switched on (app.cardtab.app), otherwise the built-in catalog
