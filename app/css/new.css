@@ -1214,3 +1214,8 @@ body:has(#view-app[hidden]) .ct-shell,body:has(#view-app[hidden]) .ct-tbar,body:
  #as .save{height:50px;border-radius:999px;font-size:16px}
 }
 @media(max-width:760px){#as .search{border:1.5px solid transparent!important}#as .search:focus-within{border-color:#5b9fe3!important}#as .phone{height:calc(100% - 40px)!important}}
+@media(max-width:760px){#as[open]{align-items:flex-end!important}}
+@media(max-width:760px){
+ #as#as .search,#as#as .sel select,#as#as #as-plat{background-color:var(--s-card)!important;border-color:transparent!important}
+ #as#as .search:focus-within{border-color:#5b9fe3!important}
+}
