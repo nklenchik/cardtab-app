@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>/* the pages.dev address is only for Cloudflare; people use app.cardtab.app */if(/\.pages\.dev$/i.test(location.hostname))location.replace("https://app.cardtab.app"+location.pathname+location.search);</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Card Tab</title>
 <meta name="description" content="Keep tabs on every dollar in and out of your card collection.">
@@ -32,15 +33,25 @@
     <div class="auth-seg" role="tablist" aria-label="Sign in or create an account"><span class="auth-pill" aria-hidden="true"></span><button type="button" role="tab" class="on" data-m="in">Sign in</button><button type="button" role="tab" data-m="up">Create account</button></div>
     <h1 id="auth-h">Welcome back</h1>
     <p class="auth-sub" id="auth-sub">Pick up where you left off.</p>
+    <div class="auth-form">
     <button type="button" class="auth-g"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23 12.3c0-.8-.1-1.5-.2-2.2H12v4.2h6.2a5.3 5.3 0 0 1-2.3 3.5v2.9h3.7c2.2-2 3.4-4.9 3.4-8.4z"/><path fill="#34A853" d="M12 24c3.1 0 5.7-1 7.6-2.8l-3.7-2.9c-1 .7-2.3 1.1-3.9 1.1-3 0-5.5-2-6.4-4.7H1.8v3A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.6 14.7a7.2 7.2 0 0 1 0-4.6v-3H1.8a12 12 0 0 0 0 10.6z"/><path fill="#EA4335" d="M12 4.8c1.7 0 3.2.6 4.4 1.7l3.3-3.3A12 12 0 0 0 1.8 7.1l3.8 3c.9-2.7 3.4-5.3 6.4-5.3z"/></svg>Continue with Google</button>
     <div class="auth-or"><span>or</span></div>
     <label class="auth-f"><span>Email</span><input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email" inputmode="email" enterkeyhint="go"></label>
     <p class="auth-err" id="auth-err" role="alert" hidden>Enter a valid email address.</p>
     <button type="button" class="ct-add app-big auth-go" id="auth-go">Email me a sign-in link</button>
     <p class="auth-fine" id="auth-fine">No password to remember. We email you a link that signs you in.</p>
-    <div class="auth-sent" id="auth-sent" hidden><b>Check your inbox</b><span id="auth-sent-t"></span></div>
+    </div>
+    <div class="auth-sent" id="auth-sent">
+      <b class="auth-sent-h">Check your inbox</b>
+      <p class="auth-sent-p">We sent a sign-in link to <strong id="auth-sent-t"></strong>. Tap it, or enter the 6-digit code from the email.</p>
+      <label class="auth-f"><span>Code</span><input id="auth-code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="123 456" enterkeyhint="go" aria-label="6-digit code"></label>
+      <p class="auth-err" id="auth-code-err" role="alert" hidden></p>
+      <button type="button" class="ct-add app-big auth-go" id="auth-code-go">Sign in</button>
+      <p class="auth-sent-more"><button type="button" class="auth-link" id="auth-back">Use a different email</button><span aria-hidden="true">·</span><button type="button" class="auth-link" id="auth-again" disabled>Send again</button></p>
+      <p class="auth-fine">The link and code work once, for 15 minutes. Check your spam folder if it isn't there in a minute.</p>
+    </div>
     <p class="auth-early" id="auth-early" hidden>On the early access list? Use the same email to lock in $4/mo.</p>
-    <p class="auth-local" id="auth-local" hidden>Local mode: sign-in emails and Google sign-in are switched on after launch setup. For now either button signs you in on this device only, and your entries stay on this device.</p>
+    <p class="auth-local" id="auth-local" hidden>Test copy: either button signs you in on this device only. Real sign-in runs on app.cardtab.app.</p>
   </div>
 </main>
 

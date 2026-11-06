@@ -1489,3 +1489,17 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
  #as.nm .other{margin-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
 }
 @media(max-width:760px) and (prefers-reduced-motion:reduce){#as.nm .phone{opacity:1;animation:none!important}}
+
+/* ===== v41.1 real sign-in: after the email goes out, the card turns into "Check your inbox" with a code field ===== */
+.auth-sent{display:none}
+.auth-card.sent .auth-form,.auth-card.sent .auth-seg,.auth-card.sent #auth-h,.auth-card.sent #auth-sub,.auth-card.sent .auth-early{display:none!important}
+.auth-card.sent .auth-sent{display:grid;gap:12px;background:none;padding:0;animation:ct-fsIn .28s cubic-bezier(.2,.8,.2,1) both}
+.auth-sent-h{font-size:24px;font-weight:800;letter-spacing:-.02em;color:var(--text)}
+.auth-sent-p{margin:-4px 0 0;color:var(--muted);font-size:14.5px;line-height:1.45}
+.auth-sent-p strong{color:var(--text);font-weight:700;word-break:break-all}
+#auth-code{font-size:24px!important;font-weight:800;letter-spacing:.22em;text-align:center;font-variant-numeric:tabular-nums}
+.auth-sent-more{margin:0;display:flex;flex-wrap:wrap;gap:6px 10px;justify-content:center;align-items:center;color:var(--muted);font-size:13.5px}
+.auth-link{border:0;background:none;padding:6px 2px;font:inherit;font-weight:700;color:var(--text);cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}
+.auth-link:disabled{color:var(--muted);text-decoration:none;cursor:default;font-variant-numeric:tabular-nums}
+.auth-go:disabled{opacity:.6}
+#auth-code::placeholder{color:var(--muted);opacity:.35;font-weight:700}
