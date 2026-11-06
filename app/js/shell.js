@@ -160,7 +160,7 @@
     if (dy > 8) { tbSet(true); tbY = y; } else if (dy < -6) { tbSet(false); tbY = y; }
   }
   function frost() {
-    fk = false; sh.style.setProperty('--sh-bg', Math.min(1, scrollOf(cur) / 18).toFixed(3)); tbScroll();
+    fk = false; sh.style.setProperty('--sh-bg', Math.max(0, Math.min(1, (scrollOf(cur) - 3) / 18)).toFixed(3)); /* v42.11: no frost until really scrolled (a Home Screen app can sit a pixel or two off the top) */ tbScroll();
     // phones, Entries: the search icon fades in as the big search bar slides up under the header
     if (PH() && search && cur === 'entries') { const r = search.getBoundingClientRect(), hb = sh.getBoundingClientRect().bottom; const raw = (hb - r.top) / Math.max(1, r.height);
       // v42.10: a small dead zone, so the last few pixels of a scroll (or iPhone's bounce) never leave a faint icon behind
