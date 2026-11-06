@@ -14,7 +14,7 @@ const { chromium, devices } = require('playwright');
  ok('Free story has the highlight mark up top', await S.evaluate(() => { window.csPlay(0); return !!document.querySelector('.pl .st .brand mark') && !document.querySelector('.pl .st .pmark'); }));
  await p.waitForTimeout(900); await p.screenshot({ path: 'tests/out-phone/free-story.png' });
  await S.evaluate(() => document.querySelector('.pl [data-share]').click()); await p.waitForTimeout(300);
- ok('Share sheet says 1 free video', /1 free video/.test(await S.evaluate(() => document.querySelector('.pl .pshs .shn').textContent)));
+ ok('Share sheet says 1 free image', /1 free image/.test(await S.evaluate(() => document.querySelector('.pl .pshs .shn').textContent)));
  await S.evaluate(() => document.querySelector('.pl [data-shx=""]').click()); await S.evaluate(() => document.querySelector('.pl [data-x]').click()); await p.waitForTimeout(500);
  // a longer range shows the Premium note
  await S.evaluate(() => window.csRange.set('l12')); await p.waitForTimeout(500);
@@ -36,9 +36,9 @@ const { chromium, devices } = require('playwright');
  await p.evaluate(async () => CTStore.setMeta('storiesFree', { month: new Date().toISOString().slice(0, 7), video: 1, image: 0 }));
  await S.evaluate(() => { window.csPlay(1); }); await p.waitForTimeout(700);
  await S.evaluate(() => document.querySelector('.pl [data-share]').click()); await p.waitForTimeout(300);
- ok('Sheet says only the image is left', /1 free image left/.test(await S.evaluate(() => document.querySelector('.pl .pshs .shn').textContent)));
+ ok('Sheet still offers the free image', /1 free image/.test(await S.evaluate(() => document.querySelector('.pl .pshs .shn').textContent)));
  await S.evaluate(() => document.querySelector('.pl [data-shx="vsave"]').click()); await p.waitForTimeout(500);
- ok('Second video is refused with a note', /is used/.test(await S.evaluate(() => document.querySelector('.pl .ptoast').textContent)), await S.evaluate(() => document.querySelector('.pl .ptoast').textContent));
+ ok('Video is Premium for free users', /comes with Premium/.test(await S.evaluate(() => document.querySelector('.pl .ptoast').textContent)), await S.evaluate(() => document.querySelector('.pl .ptoast').textContent));
  await S.evaluate(() => document.querySelector('.pl [data-x]').click()); await p.waitForTimeout(400);
  // Premium: plain cardtab.app in the lower right, all themes
  await p.evaluate(async () => { await CTStore.setPlan('premium'); if (window.CTBoardLoader) window.CTBoardLoader.sync(); });

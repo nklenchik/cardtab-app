@@ -255,3 +255,12 @@ const _saveStories=saveStories;saveStories=async function(list,share){
 pl.build=(b=>function(){b();if(!isFree())return;const n=plEl.querySelector('.pshs .shn');if(n){const v=fLeft('video'),i=fLeft('image');
   n.textContent=(v&&i?'1 free video and 1 free image this month':v?'1 free video left this month':i?'1 free image left this month':'Free video and image used this month')+' · saved on the Clean background'}})(pl.build.bind(pl));
 new MutationObserver(()=>{if(!isFree())return;const r=$('bgrow');if(r&&!r.parentElement.querySelector('.bgnote')){r.insertAdjacentHTML('afterend','<p class="bgnote">On Free, saved images and videos use Clean.</p>')}}).observe($('bgrow'),{childList:true});
+// ================= v39.3 Video saving is Premium =================
+// Free users watch their stories on Clean or Blobs and save one image a month on Clean; saving or sharing video is Premium.
+const openPrem=()=>{try{parent.CTPremiumOpen&&parent.CTPremiumOpen('stories')}catch(e){}};
+shareVideo=(orig=>async function(n,share){if(isFree()){pl.toast('Saving video comes with Premium.');openPrem();return}return orig(n,share)})(shareVideo);
+pl.build=(b=>function(){b();if(!isFree()||!VMIME)return;const sh=plEl.querySelector('.pshs');if(!sh)return;
+  sh.querySelectorAll('[data-shx="vshare"],[data-shx="vsave"]').forEach(x=>x.remove());
+  const img=sh.querySelector('[data-shx="share"]');if(img)img.insertAdjacentHTML('beforebegin','<button type="button" class="vlock" data-vprem>Save video <span>Premium</span></button>');
+  const n=sh.querySelector('.shn');if(n)n.textContent=(fLeft('image')?'1 free image this month':'Free image used this month')+', saved on Clean · video with Premium'})(pl.build.bind(pl));
+plEl.addEventListener('click',e=>{if(!e.target.closest('[data-vprem]'))return;e.stopPropagation();plEl.querySelector('.pshs').hidden=true;openPrem()},true);
