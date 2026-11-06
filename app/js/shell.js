@@ -98,7 +98,7 @@
   }
 
   // ---------- the pages, side by side ----------
-  const layerOf = p => p === 'entries' ? [document.querySelector('#view-app .ct-app'), PH() ? $('ct-fab') : null].filter(Boolean) : p === 'board' ? [document.querySelector('.cbx')].filter(Boolean) : [$('csx')].filter(Boolean);
+  const layerOf = p => p === 'entries' ? [document.querySelector('#view-app .ct-app')].filter(Boolean) : p === 'board' ? [document.querySelector('.cbx')].filter(Boolean) : [$('csx')].filter(Boolean);
   const W = () => document.documentElement.clientWidth || innerWidth;
   const restX = (p, c) => (ORDER[p] - ORDER[c]) * W();
   const tx = x => x ? 'translate3d(' + x + 'px,0,0)' : 'none';

@@ -81,7 +81,7 @@
   // the page name gets its own box, so it can fade and rise on its own when you switch pages (the logo stays put)
   (function () { const br = document.querySelector('.ct-demo-top .ct-brand'); if (!br || br.querySelector('.ct-bname')) return; const n = [...br.childNodes].find(x => x.nodeType === 3 && x.textContent.trim()); if (n) { const sp = document.createElement('span'); sp.className = 'ct-bname'; sp.textContent = n.textContent.trim(); br.replaceChild(sp, n); } })();
   // the parts of the Entries page that move together when the pages slide (the bottom bar stays put)
-  window.CTPageEls = () => [document.querySelector('#view-app .ct-app'), document.querySelector('.ct-phead.on'), document.querySelector('.ct-sumbar.on'), PH() ? $('ct-fab') : null].filter(Boolean);
+  window.CTPageEls = () => [document.querySelector('#view-app .ct-app'), document.querySelector('.ct-phead.on'), document.querySelector('.ct-sumbar.on')].filter(Boolean);
   // desktop: while the pages slide, the tabs hold still. One copy sits on top in the same spot and its highlight glides
   // from the page you left to the one you picked; the real tabs on both pages step aside until the slide ends.
   const tabsOf = pg => { if (pg === 'entries') return document.querySelector('.ct-demo-top .ct-tabs'); if (pg === 'board') return document.querySelector('.cbx .cb-tabs');

@@ -1268,3 +1268,15 @@ body>.qm-pop{position:fixed;left:auto;z-index:120;overflow-y:auto;overscroll-beh
 body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin:left center;animation:qmSide .22s cubic-bezier(.2,.8,.2,1) both}
 @keyframes qmSide{from{opacity:0;transform:translate3d(-8px,0,0) scale(.98)}}
 @media(prefers-reduced-motion:reduce){body>.qm-pop.qm-side{animation:none}}
+
+/* ===== v37.16: phones — Add New is a round red button beside the tab bar, on every page; it tucks away with the bar
+   while you scroll down. The top bar stays put. ===== */
+@media(max-width:760px){
+ html.tb-away .ct-shell{transform:none!important}
+ .ct-tbar{right:calc(max(14px,env(safe-area-inset-right,0px)) + 70px)!important}
+ .ct-fab{right:max(14px,env(safe-area-inset-right,0px))!important;bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;width:62px!important;height:62px!important;border-radius:50%!important;z-index:56!important;
+  will-change:transform;transition:transform .8s cubic-bezier(.22,.61,.36,1),opacity .2s!important}
+ .ct-fab:active{transform:scale(.92)}
+ html.tb-away .ct-fab{transform:translate3d(0,calc(100% + 24px + env(safe-area-inset-bottom,0px)),0)!important;transition:transform .6s cubic-bezier(.4,0,.2,1),opacity .2s!important}
+}
+@media(prefers-reduced-motion:reduce){.ct-fab{transition-duration:.01s!important}}
