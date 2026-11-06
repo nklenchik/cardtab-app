@@ -1451,3 +1451,7 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 /* v39.5 phones: no bell in the header (it's in the profile menu); the dot shows on your picture instead. Desktop keeps the bell. */
 @media(max-width:760px){.sh-bell{display:none!important}.app-avatar.has-ntf::after{display:block!important}}
 @media(min-width:761px){.app-avatar.has-ntf::after{display:none!important}}
+
+/* v39.7: narrow phones swap long tile lines for a shorter wording instead of cutting them off */
+.ct-line .ct-short{display:none}
+@media (max-width:360px){.ct-line .ct-long{display:none}.ct-line .ct-short{display:inline}}

@@ -191,3 +191,8 @@
 @media(max-width:360px){.tgrid .topt{flex-direction:column;align-items:flex-start;justify-content:center;gap:7px;padding:12px 30px 12px 12px}.tgrid .topt:has(.tm){padding-top:22px}}
 /* v39.5 Premium mark: a touch smaller and softer */
 .st .pmark{font-size:12px;font-weight:700;opacity:.82}
+/* v39.7 desktop 761–1099px (no header toolbar row yet): period pill and theme chips sit together, lined up with the shelf */
+@media(min-width:761px) and (max-width:1099px){
+ html .top{width:auto!important;margin:0 0 14px!important}
+ html .controls{justify-items:start;margin-bottom:20px}
+}

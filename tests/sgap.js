@@ -1,0 +1,10 @@
+const { chromium } = require('playwright');
+(async () => { const b = await chromium.launch(); const w=+process.argv[2]||1024;
+ const p = await (await b.newContext({ viewport: { width: w, height: 860 } })).newPage();
+ await p.goto('http://localhost:8765/index.html'); await p.evaluate(() => localStorage.setItem('ct.session', JSON.stringify({ email: 'a@x.test', via: 'email', at: Date.now(), exp: Date.now() + 864e5 })));
+ await p.reload(); await p.waitForTimeout(1200);
+ await p.evaluate(async () => { await CTStore.setPlan('premium'); document.querySelector('[data-dev=sample]').click(); }); await p.waitForTimeout(1200);
+ await p.evaluate(() => { [...document.querySelectorAll('.sh-tabs button, .ct-tabs button')].find(x => x.offsetParent && /stories/i.test(x.textContent)).click(); }); await p.waitForTimeout(4000);
+ let S=null; for (const x of p.frames()) if (await x.evaluate(()=>!!document.getElementById('shelf')).catch(()=>false)) S=x;
+ const r0=await S.evaluate(()=>document.documentElement.className+' | top mb='+getComputedStyle(document.querySelector('.top')).marginBottom+' | has rule='+[...document.styleSheets].some(s=>{try{return [...s.cssRules].some(r=>r.cssText.includes('1099'))}catch(e){return false}}));console.log(r0);const r = await S.evaluate(() => { const out=[]; const walk=(el,d)=>{ if(d>5)return; for(const c of el.children){const r=c.getBoundingClientRect(); if(r.height&&r.top<330) out.push(' '.repeat(d)+c.tagName+'#'+c.id+'.'+[...c.classList].join('.')+' top='+Math.round(r.top)+' h='+Math.round(r.height)+' mt='+getComputedStyle(c).marginTop+' pt='+getComputedStyle(c).paddingTop); walk(c,d+1);} }; walk(document.body,0); return out.slice(0,40).join('\n'); });
+ console.log(r); await p.screenshot({path:'tests/out-desktop/sgap-'+w+'.png'}); await b.close(); })();

@@ -321,7 +321,10 @@ const customLabel=()=>{const sameY=custom.from.slice(0,4)===custom.to.slice(0,4)
   if(v.plat&&(v.plat==='all'||E.some(e=>e.platform===v.plat))){plat=v.plat;$('cb-platl').textContent=plat==='all'?'All platforms':plat}}catch(e){}})();
 fitFreePeriod();
 // v37: the board follows the date you pick on Entries (one date for both pages); the app calls this whenever it changes
-window.cbLinkRange=function(from,to,label){window.cbLinked=true;if(from){custom={from,to};period='custom'}else period='all';const l=$('cb-perl');if(l)l.textContent=label;render(false);if(window.CTPage&&CTPage.cur==='board')grow()};
+window.cbLinkRange=function(from,to,label){window.cbLinked=true;
+/* v39.7: Free keeps the Board to the last 3 months, even when it follows the Entries date */
+if(cbFree()){const min=rangeFor('l3')[0];if(!from||to<min||from<min){if(from&&to>=min&&from<min){from=min}else{from=null;to=null}if(!from){period='l3';const l=$('cb-perl');if(l)l.textContent='Last 3 months';if(!cbLinkRange.told){cbLinkRange.told=1;toast('Free shows the last 3 months here')}render(false);if(window.CTPage&&CTPage.cur==='board')grow();return}custom={from,to};period='custom';const l=$('cb-perl');if(l)l.textContent=customLabel();render(false);if(window.CTPage&&CTPage.cur==='board')grow();return}}
+if(from){custom={from,to};period='custom'}else period='all';const l=$('cb-perl');if(l)l.textContent=label;render(false);if(window.CTPage&&CTPage.cur==='board')grow()};
 window.cbPlat={list:()=>[['all','All platforms']].concat([...new Set(E.map(e=>e.platform))].sort().map(p=>[p,p])),get:()=>plat,set:(k,l)=>{plat=k;$('cb-platl').textContent=l;saveView();render(false);grow()}};
 function openCustom(){cr.classList.remove('pre','cust');$('cr-h').textContent='Custom dates';const [a,b]=rangeFor(period);cal={from:custom.from||a,to:custom.to||b,pick:'from',cmp:compare};cal.view=cal.to.slice(0,7);drawCal();cr.showModal()}
 function drawCal(){const mn=startDate(),mx=TODAY,v=cal.view,dow=new Date(v+'-01T12:00:00').getDay(),nd=+lastDay(v).slice(8);

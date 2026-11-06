@@ -63,7 +63,8 @@
   // ---------- Board: same date as Entries, platform in the row ----------
   function linkBoard() { if (!window.cbLinkRange) return; const [a, b] = CTMonth.bounds(); window.cbLinkRange(CTMonth.isAll() ? null : a, b, CTMonth.label()); }
   $('ct-period').addEventListener('change', linkBoard);
-  if (window.CTStore) CTStore.on(() => { if (CTMonth.isAll()) linkBoard(); });
+  // a plan change re-links too, so Free goes back to the last 3 months and Premium gets the full date back
+  if (window.CTStore) CTStore.on(r => { if (CTMonth.isAll() || r === 'plan') linkBoard(); });
   let boardDone = false;
   function wireBoard() {
     if (boardDone || !window.cbLinkRange || !$('cb-per')) return; boardDone = true;

@@ -465,6 +465,11 @@ html.pg-moving *,html.pg-moving *::before{-webkit-backdrop-filter:none!important
 @media(max-width:360px){.tgrid .topt{flex-direction:column;align-items:flex-start;justify-content:center;gap:7px;padding:12px 30px 12px 12px}.tgrid .topt:has(.tm){padding-top:22px}}
 /* v39.5 Premium mark: a touch smaller and softer */
 .st .pmark{font-size:12px;font-weight:700;opacity:.82}
+/* v39.7 desktop 761–1099px (no header toolbar row yet): period pill and theme chips sit together, lined up with the shelf */
+@media(min-width:761px) and (max-width:1099px){
+ html .top{width:auto!important;margin:0 0 14px!important}
+ html .controls{justify-items:start;margin-bottom:20px}
+}
 </style>
 
 <div class="wrap">
@@ -543,7 +548,6 @@ function model(){const M=months(per),set=new Set(M),L=E.filter(e=>set.has(e.date
   const vBudgetW=one?'<div class="bars">'+wk.map(x=>'<i class="'+(x.spent>WB?'o':'')+'" style="height:'+Math.max(1,x.spent/wmax*100).toFixed(1)+'%"></i>').join('')+'<div class="bl" style="bottom:'+(WB/wmax*100).toFixed(1)+'%"></div></div><div class="mon">'+wk.map(x=>'<span>'+x.d+'</span>').join('')+'</div>':'';
   const vBudget='<div class="bars">'+by.slice(-12).map(x=>'<i class="'+(x.spent>BUDGET?'o':'')+'" style="height:'+Math.max(1,x.spent/bmax*100).toFixed(1)+'%"></i>').join('')+'<div class="bl" style="bottom:'+(BUDGET/bmax*100).toFixed(1)+'%"></div></div><div class="mon">'+M.slice(-12).map(m=>'<span>'+mName(m,{month:'narrow'})+'</span>').join('')+'</div>';
   const vBars=plats.slice(0,4).map((x,i)=>'<div class="rr"><div class="rt"><span>'+esc(x.k)+'</span><span>'+short(x.v)+'</span></div><div class="bk"><i style="width:'+(x.v/plats[0].v*100).toFixed(1)+'%"></i></div></div>').join('');
-  // v39: the raw numbers too, so the new stories can show one thing each
   return {lab,x:{t,roi,f0,bigSale,plats,by,M,under,one,wk,WB,nbE,soldE,hold,hv,L,cum,mo1},stories:[
    {name:'The money',opts:[
      {k:'Profit',top:'<p class="p">You spent '+short(t.spent)+' and made back '+short(t.kept)+'.</p><div class="num" style="font-size:17cqmin">'+signedS(t.profit)+'</div><div class="chips"><span class="chip">'+roi+'% ROI</span><span class="chip o">'+(one?'in '+mName(mo1):short(Math.round(t.profit/Math.max(1,M.length)))+' a month')+'</span></div>',vis:vMoney},

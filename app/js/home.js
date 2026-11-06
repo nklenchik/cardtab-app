@@ -17,11 +17,18 @@
   const shortName = k => new Date(+k.slice(0, 4), +k.slice(5, 7) - 1, 1).toLocaleString('en-US', { month: 'short' });
   const monthTotals = k => S.totals(S.all().filter(e => e.date.startsWith(k)));
 
-  function line(tile, text, kind) {
+  // short = an optional shorter wording that narrow phones show instead, so the line never gets cut off
+  function line(tile, text, kind, short) {
     let el = tile.querySelector('.ct-line');
     if (!el) { el = document.createElement('span'); el.className = 'ct-line'; tile.appendChild(el); }
     el.className = 'ct-line' + (kind ? ' is-' + kind : '');
-    el.textContent = text; el.hidden = !text;
+    el.textContent = '';
+    if (short && text) {
+      const a = document.createElement('span'), b = document.createElement('span');
+      a.className = 'ct-long'; a.textContent = text; b.className = 'ct-short'; b.textContent = short; b.setAttribute('aria-hidden', 'true');
+      el.append(a, b);
+    } else el.textContent = text;
+    el.hidden = !text;
   }
 
   let last = null;
@@ -57,7 +64,7 @@
       spent.dataset.bud = kind;
       spent.setAttribute('aria-label', 'Spent ' + money(t.spent) + '. Budget: ' + money(used) + ' of ' + round$(b.cents) + (thisMonth ? ' this month, ' : ' in ' + shortName(bk) + ', ') + pct + '% used. Edit budget');
     } else {
-      line(spent, 'Set a monthly budget', 'set');
+      line(spent, 'Set a monthly budget', 'set', 'Set budget');
       spent.style.setProperty('--fill', '0'); delete spent.dataset.bud;
       spent.setAttribute('aria-label', 'Spent ' + money(t.spent) + '. Set a monthly budget');
     }
@@ -67,7 +74,7 @@
     if (sel) {
       const base = sel, prevK = prevOf(sel);
       const prev = monthTotals(prevK);
-      if (prev.entries) { const d = monthTotals(base).profit - prev.profit; line(profit, (d < 0 ? '▼ ' : '▲ ') + money(d) + ' vs ' + shortName(prevK), d < 0 ? 'dn' : 'up'); shown = true; }
+      if (prev.entries) { const d = monthTotals(base).profit - prev.profit; line(profit, (d < 0 ? '▼ ' : '▲ ') + money(d) + ' vs ' + shortName(prevK), d < 0 ? 'dn' : 'up', (d < 0 ? '▼ ' : '▲ ') + money(d)); shown = true; }
     }
     if (!shown) line(profit, t.sales ? Math.round(t.profit / t.sales * 100) + '% of sales' : '');
   }
