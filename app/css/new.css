@@ -1221,3 +1221,9 @@ body:has(#view-app[hidden]) .ct-shell,body:has(#view-app[hidden]) .ct-tbar,body:
 }
 /* v37.9: while a sheet or window is open, the page behind it can't scroll (no scrolling "past" a sheet on phones) */
 html:has(dialog[open]),html:has(dialog[open]) body{overflow:hidden!important;overscroll-behavior:none}
+/* v37.10: phones — the tab bar slides down out of the way while you scroll down, and back up when you scroll up */
+@media(max-width:760px){
+ .ct-tbar{transition:transform .32s cubic-bezier(.2,.8,.2,1)}
+ html.tb-away .ct-tbar{transform:translate3d(0,calc(100% + 24px + env(safe-area-inset-bottom,0px)),0)}
+}
+@media(prefers-reduced-motion:reduce){.ct-tbar{transition:none}}

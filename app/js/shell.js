@@ -129,8 +129,23 @@
   // ---------- the frosted background, from the page you're on ----------
   const scrollOf = p => { if (p === 'entries') return window.scrollY; if (p === 'board') { const c = document.querySelector('.cbx'); return c ? c.scrollTop : 0; } const d = frameDoc(); return d && d.defaultView ? d.defaultView.scrollY : 0; };
   let fk = false;
+  // phones: the tab bar slides away while you scroll down (you're reading) and comes back the moment you scroll up,
+  // at the top or bottom of a page, and whenever you switch pages. The + button stays put.
+  const extentOf = p => { if (p === 'entries') return [document.documentElement.scrollHeight, innerHeight];
+    if (p === 'board') { const c = document.querySelector('.cbx'); return c ? [c.scrollHeight, c.clientHeight] : [0, 0]; }
+    const d = frameDoc(); return d && d.documentElement ? [d.documentElement.scrollHeight, d.defaultView.innerHeight] : [0, 0]; };
+  let tbY = 0, tbPage = null, tbHidden = false;
+  function tbSet(hide) { if (hide === tbHidden) return; tbHidden = hide; document.documentElement.classList.toggle('tb-away', hide); }
+  function tbScroll() {
+    if (!PH() || document.querySelector('dialog[open]')) { tbY = scrollOf(cur); return; }
+    const y = scrollOf(cur), [sh2, vh] = extentOf(cur);
+    if (tbPage !== cur) { tbPage = cur; tbY = y; tbSet(false); return; }
+    const dy = y - tbY;
+    if (y < 40 || y + vh >= sh2 - 6) { tbSet(false); tbY = y; return; }
+    if (dy > 8) { tbSet(true); tbY = y; } else if (dy < -6) { tbSet(false); tbY = y; }
+  }
   function frost() {
-    fk = false; sh.style.setProperty('--sh-bg', Math.min(1, scrollOf(cur) / 18).toFixed(3));
+    fk = false; sh.style.setProperty('--sh-bg', Math.min(1, scrollOf(cur) / 18).toFixed(3)); tbScroll();
     // phones, Entries: the search icon fades in as the big search bar slides up under the header
     if (PH() && search && cur === 'entries') { const r = search.getBoundingClientRect(), hb = sh.getBoundingClientRect().bottom; const k = Math.max(0, Math.min(1, (hb - r.top) / Math.max(1, r.height))); qBtn.style.setProperty('--k', k.toFixed(3)); qBtn.style.pointerEvents = k > .6 ? 'auto' : 'none'; }
   }
