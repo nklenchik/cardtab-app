@@ -17,5 +17,12 @@ bucket_name = "card-tab-art"
 
 [vars]
 ALLOWED_ORIGIN = "https://app.cardtab.app"
+APP_URL = "https://app.cardtab.app"
+API_URL = "https://api.cardtab.app"
+MAIL_FROM = "login@cardtab.app"
+# Admins (testing tools, plan switch). Comma-separated; checked on the server.
+ADMIN_EMAILS = "nklenchik@gmail.com"
+# GOOGLE_CLIENT_ID goes here once Google is set up; the client secret is a secret:  wrangler secret put GOOGLE_CLIENT_SECRET
+# Email: either Cloudflare Email Service (add a [[send_email]] binding named EMAIL) or  wrangler secret put RESEND_API_KEY
 
 # Secret (never put it in this file):  wrangler secret put JUSTTCG_API_KEY
