@@ -62,7 +62,7 @@
     while (k > 1 && stuck + card.offsetTop + card.offsetHeight > room) { rows[--k].hidden = true; }
     shownN = k; note();
   }
-  function note() { const n = card.querySelector('.qm-fitnote'); if (n) { const t = get().length; n.textContent = t > shownN ? shownN + ' of ' + t + ' fit your screen' : 'As many as fit your screen'; } }
+  function note() { const n = document.querySelector('.qm-pop .qm-fitnote'); if (n) { const t = get().length; n.textContent = t > shownN ? shownN + ' of ' + t + ' fit your screen' : 'As many as fit your screen'; } }
   let rz = 0; addEventListener('resize', () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(fit); });
   WIDE.addEventListener('change', fit);
   // Edit: pick which ones show
@@ -80,10 +80,17 @@
     if (focusK) { const g = pop.querySelector('[data-row="' + focusK + '"] .qm-grip'); if (g) g.focus(); }
   }
   function setOrder(v, focusK) { put(v); drawPop(focusK); paint(); }
+  // the picker floats above everything, under Edit, and never runs off the bottom of the window (it scrolls inside instead)
+  function placePop() { if (!pop) return; const r = btn.getBoundingClientRect(), below = innerHeight - r.bottom - 24, above = r.top - 24;
+    pop.style.right = Math.max(12, Math.round(innerWidth - r.right)) + 'px';
+    if (below < Math.min(pop.scrollHeight, 360) && above > below) { pop.style.top = 'auto'; pop.style.bottom = Math.round(innerHeight - r.top + 8) + 'px'; pop.style.maxHeight = Math.round(above) + 'px'; }
+    else { pop.style.bottom = 'auto'; pop.style.top = Math.round(r.bottom + 8) + 'px'; pop.style.maxHeight = Math.round(Math.max(160, below)) + 'px'; } }
+  addEventListener('resize', () => { if (pop) placePop(); });
+  addEventListener('scroll', () => { if (pop && !dragging) closePop(); }, { passive: true });
   btn.addEventListener('click', () => {
     if (pop) { closePop(); return; }
     pop = document.createElement('div'); pop.className = 'qm-pop'; pop.setAttribute('role', 'menu');
-    card.appendChild(pop); btn.setAttribute('aria-expanded', 'true'); drawPop();
+    document.body.appendChild(pop); btn.setAttribute('aria-expanded', 'true'); drawPop(); placePop();
     pop.addEventListener('click', e => {
       const b = e.target.closest('[data-k]'); if (!b || dragging) return; let v = get(); const k = b.dataset.k;
       if (v.includes(k)) { if (v.length > 1) v = v.filter(x => x !== k); } else v.push(k);
@@ -115,7 +122,7 @@
     });
   });
   let dragging = false;
-  document.addEventListener('pointerdown', e => { if (pop && !e.target.closest('.ct-qm')) closePop(); }, true);
+  document.addEventListener('pointerdown', e => { if (pop && !e.target.closest('.ct-qm') && !e.target.closest('.qm-pop')) closePop(); }, true);
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && pop) { closePop(); btn.focus(); } });
   window.CTMetrics = { paint, rows: list => get().map(k => M[k].row(list || [])).filter(Boolean) };   // rows: the Board's At a glance widget uses the same picks
 })();

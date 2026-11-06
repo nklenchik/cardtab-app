@@ -1262,3 +1262,5 @@ html:has(dialog[open]),html:has(dialog[open]) body{overflow:hidden!important;ove
 }
 @media(prefers-reduced-motion:reduce){.ct-tbar,.ct-shell{transition-duration:.01s!important}}
 #ed .ed-f select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 14px center!important;background-size:14px!important;padding-right:38px!important}
+/* v37.14: the At a glance picker floats over the page and scrolls inside when it's taller than the window */
+body>.qm-pop{position:fixed;left:auto;z-index:120;overflow-y:auto;overscroll-behavior:contain;width:240px}
