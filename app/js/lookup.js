@@ -17,12 +17,14 @@
   ];
   var RARITY_FULL = { SPR: 'special rare', SCR: 'secret rare', SLR: 'special leader rare', SEC: 'secret rare', SR: 'super rare', TPR: 'promo' };
   function norm(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim(); }
+  // card numbers compare without leading zeros in each part, so 14/102 matches 014/102
+  function numKey(s) { return norm(s).split(' ').map(function (x) { return x.replace(/^0+(?=\d)/, ''); }).join(' '); }
   function words(s) { return norm(s).split(' ').filter(function (w) { return w.length > 1; }); }
   function hit(hay, needle) { return needle.length && needle.every(function (w) { return hay.some(function (h) { return h.indexOf(w) === 0 || w.indexOf(h) === 0; }); }); }
 
   function score(c, p) {
     var sc = 0, nm = words(c.n), pn = words(p.name);
-    if (p.number && norm(p.number) === norm(c.num)) sc += 3;
+    if (p.number && numKey(p.number) === numKey(c.num)) sc += 3;
     if (pn.length && hit(nm, pn)) sc += 3; else if (pn.length && pn.some(function (w) { return nm.indexOf(w) > -1; })) sc += 1;
     if (p.set && hit(words(c.s), words(p.set))) sc += 2;
     if (p.rarity && norm(c.r).indexOf(RARITY_FULL[p.rarity] || '~') > -1) sc += 1;
@@ -60,10 +62,10 @@
   function suggest(p, cat) {
     cat = cat || CAT; var all = words(p && p.name), digits = all.filter(function (w) { return /^\d+$/.test(w); });
     var pn = all.filter(function (w) { return !/^\d+$/.test(w); }); if (!pn.length) return [];
-    var num = norm(p.number || digits[0] || '');
+    var num = numKey(p.number || digits[0] || '');
     var sc = cat.map(function (c) { var nm = words(c.n), s = 0, k = 0;
       pn.forEach(function (w) { if (w.length < 3) return; k++; s += close(w, nm); });
-      s = k ? s / k : 0; if (num && norm(c.num).indexOf(num) === 0) s += .15; return { c: c, s: s }; })
+      s = k ? s / k : 0; if (num && numKey(c.num).indexOf(num) === 0) s += .15; return { c: c, s: s }; })
       .filter(function (x) { return x.s >= .7; }).sort(function (a, b) { return b.s - a.s; });
     return sc.slice(0, 3).map(function (x) { return x.c; });
   }

@@ -8,13 +8,18 @@ const DAY = 86400;
 const SIZES = { list: { width: 240, quality: 78 }, detail: { width: 640, quality: 82 } };
 
 export function norm(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim(); }
-export function lookupKey(q) { return [norm(q.game), norm(q.name), norm(q.number), norm(q.set)].join('|'); }
+export function numKey(s) { return norm(s).split(' ').map(x => x.replace(/^0+(?=\d)/, '')).join(' '); }
+// the ways a card number gets written: as typed, without leading zeros, and padded to the set size (14/102 -> 014/102)
+export function numVariants(n) { const out = [String(n || '').trim()], m = /^0*(\d+)\s*\/\s*(\d+)$/.exec(out[0]);
+  if (m) { out.push(m[1] + '/' + m[2], m[1].padStart(m[2].length, '0') + '/' + m[2]); }
+  return [...new Set(out.filter(Boolean))]; }
+export function lookupKey(q) { return ['v2', norm(q.game), norm(q.name), numKey(q.number), norm(q.set)].join('|'); }
 export function normCard(c) {
   return { id: c.id, g: c.game, n: c.name, s: c.set_name, num: c.number, r: c.rarity, tcg: c.tcgplayerId ? String(c.tcgplayerId) : '' };
 }
 export function pickByNumber(cards, number) {
   const want = norm(number); if (!want) return cards;
-  const hit = cards.filter(c => norm(c.number) === want || norm(c.number).replace(/^0+/, '') === want.replace(/^0+/, ''));
+  const hit = cards.filter(c => numKey(c.number) === numKey(number));
   return hit.length ? hit : [];
 }
 const cors = (env) => ({ 'access-control-allow-origin': env.ALLOWED_ORIGIN || '*', 'vary': 'origin' });
@@ -39,7 +44,8 @@ async function gameId(env, game) {
 async function search(env, q) {
   const key = lookupKey(q), now = Math.floor(Date.now() / 1000);
   const hit = await env.DB.prepare('SELECT ids, fetched_at FROM lookups WHERE key=?').bind(key).first();
-  if (hit && now - hit.fetched_at < 30 * DAY) {
+  // found cards are kept 30 days; "nothing found" only 6 hours, so a miss can be retried soon
+  if (hit && now - hit.fetched_at < (hit.ids === '[]' ? DAY / 4 : 30 * DAY)) {
     const ids = JSON.parse(hit.ids); if (!ids.length) return [];
     const rows = await env.DB.prepare(`SELECT * FROM cards WHERE id IN (${ids.map(() => '?').join(',')})`).bind(...ids).all();
     const by = Object.fromEntries(rows.results.map(r => [r.id, r]));
@@ -53,9 +59,11 @@ async function search(env, q) {
     if (q.number) { const f = pickByNumber(cards, q.number); cards = f; }
   }
   if (!cards.length && q.number) {
-    cards = (await jt(env, `${base}&q=${encodeURIComponent((q.name ? q.name + ' ' : '') + q.number)}`)).data || [];
-    cards = pickByNumber(cards, q.number);
-    if (!cards.length) cards = pickByNumber((await jt(env, `${base}&number=${encodeURIComponent(q.number)}`)).data || [], q.number);
+    const vs = numVariants(q.number);
+    // name + number as one search, then the number on its own, in each way it might be written
+    for (const v of vs) { if (cards.length) break; cards = pickByNumber((await jt(env, `${base}&q=${encodeURIComponent((q.name ? q.name + ' ' : '') + v)}`)).data || [], q.number); }
+    for (const v of vs) { if (cards.length) break; cards = pickByNumber((await jt(env, `${base}&number=${encodeURIComponent(v)}`)).data || [], q.number); }
+    if (q.name && cards.length) { const nm = norm(q.name); const named = cards.filter(c => norm(c.name).includes(nm)); if (named.length) cards = named; }
   }
   cards = cards.slice(0, 12);
   const stmts = cards.map(c => env.DB.prepare('INSERT OR REPLACE INTO cards (id,game,name,set_name,number,rarity,tcgplayer_id,fetched_at) VALUES (?,?,?,?,?,?,?,?)').bind(c.id, c.game, c.name, c.set_name || c.set, c.number, c.rarity, c.tcgplayerId ? String(c.tcgplayerId) : '', now));
