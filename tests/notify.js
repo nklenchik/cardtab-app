@@ -8,7 +8,7 @@ const MODE = process.argv[2] || 'phone', DARK = process.argv[3] === 'dark';
  await p.goto('http://localhost:8765/index.html'); await p.evaluate(() => localStorage.setItem('ct.session', JSON.stringify({ email: 'n@x.test', via: 'email', at: Date.now(), exp: Date.now() + 864e5 })));
  await p.reload(); await p.waitForTimeout(1300);
  const add = async () => p.evaluate(() => (document.getElementById('ct-fab').offsetParent ? document.getElementById('ct-fab') : document.getElementById('ct-add')).click());
- ok('No dot on a new account', !(await p.evaluate(() => document.getElementById('app-avatar').classList.contains('has-ntf'))));
+ ok('No dot on a new account', !(await p.evaluate(() => document.querySelector('.sh-bell').classList.contains('has-ntf'))));
  // Add New: typo shows did-you-mean; add it as typed anyway
  await add(); await p.waitForTimeout(700);
  await p.fill('#as-in', 'Charzard ex 199'); await p.waitForTimeout(400);
@@ -19,7 +19,7 @@ const MODE = process.argv[2] || 'phone', DARK = process.argv[3] === 'dark';
  await p.fill('#as-price', '45.00'); await p.locator('#as-save').click(); await p.waitForTimeout(600);
  await p.evaluate(() => document.querySelector('#as [data-as-close]').click()); await p.waitForTimeout(900);
  ok('Entry is flagged as not matched', await p.evaluate(() => CTStore.all().filter(e => e.unmatched).length === 1));
- ok('Dot shows on the picture', await p.evaluate(() => document.getElementById('app-avatar').classList.contains('has-ntf')));
+ ok('Dot shows on the bell', await p.evaluate(() => document.querySelector('.sh-bell').classList.contains('has-ntf')));
  await out('2-dot');
  // menu row and count
  await p.locator('#app-avatar').click(); await p.waitForTimeout(700);
@@ -30,7 +30,7 @@ const MODE = process.argv[2] || 'phone', DARK = process.argv[3] === 'dark';
  const body = (await p.locator('#ntf-body').innerText()).replace(/\s+/g, ' ');
  ok('Lists the unmatched card', /wasn’t matched/.test(body) && /Charzard ex 199/.test(body), body.slice(0, 120));
  await out('4-list');
- ok('Dot clears once the list is opened', !(await p.evaluate(() => document.getElementById('app-avatar').classList.contains('has-ntf'))));
+ ok('Dot clears once the list is opened', !(await p.evaluate(() => document.querySelector('.sh-bell').classList.contains('has-ntf'))));
  // fix it
  await p.locator('#ntf [data-act="fix"]').click(); await p.waitForTimeout(900);
  ok('Fix window opens with the typed name', await p.evaluate(() => document.getElementById('fix').open && document.getElementById('fix-q').value === 'Charzard ex 199'));
@@ -47,7 +47,7 @@ const MODE = process.argv[2] || 'phone', DARK = process.argv[3] === 'dark';
  await p.evaluate(() => CTNotify.close()); await p.waitForTimeout(500);
  // samples: billing + tips (Free) + found
  await p.evaluate(async () => { await CTStore.add({ type: 'purchase', name: 'Moonbreon', amount: 12000, unmatched: true }); await CTNotify.demo(); }); await p.waitForTimeout(500);
- ok('Sample notices raise the dot', await p.evaluate(() => document.getElementById('app-avatar').classList.contains('has-ntf')));
+ ok('Sample notices raise the dot', await p.evaluate(() => document.querySelector('.sh-bell').classList.contains('has-ntf')));
  await p.evaluate(() => CTNotify.open('list')); await p.waitForTimeout(900);
  const b2 = (await p.locator('#ntf-body').innerText()).replace(/\s+/g, ' ');
  ok('Billing, cards and tips groups show', /Account and billing/i.test(b2) && /Your cards/i.test(b2) && /Tips and offers/i.test(b2));
