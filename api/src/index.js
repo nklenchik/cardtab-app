@@ -26,7 +26,7 @@ export function pickByNumber(cards, number) {
   return hit.length ? hit : [];
 }
 // the app sends its sign-in cookie with lookups (so background art fill can be paced per account); that needs an exact origin
-const cors = (env) => (env.ALLOWED_ORIGIN && env.ALLOWED_ORIGIN !== '*' ? { 'access-control-allow-origin': env.ALLOWED_ORIGIN, 'access-control-allow-credentials': 'true', 'vary': 'origin' } : { 'access-control-allow-origin': '*', 'vary': 'origin' });
+const cors = (env) => (env.ALLOWED_ORIGIN && env.ALLOWED_ORIGIN !== '*' ? { 'access-control-allow-origin': env.ALLOWED_ORIGIN, 'access-control-allow-credentials': 'true', 'access-control-expose-headers': 'x-art-why', 'vary': 'origin' } : { 'access-control-allow-origin': '*', 'access-control-expose-headers': 'x-art-why', 'vary': 'origin' });
 const json = (env, body, status = 200, extra = {}) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...cors(env), ...extra } });
 
 // ctl (optional): { calls, ok() } — ok() decides once whether this lookup may ask JustTCG at all; calls counts what it asked

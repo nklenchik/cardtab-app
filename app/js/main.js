@@ -94,6 +94,25 @@
     setTimeout(() => { $('am-art-copy').textContent = 'Copy art report'; }, 1600);
   });
 
+  // ---------- Admin: check that every entry's card picture actually loads ----------
+  let picRep = [];
+  $('am-pic').addEventListener('click', async () => {
+    const b = $('am-pic'), r = $('am-pic-r'); if (b.disabled) return; b.disabled = true; r.hidden = false;
+    const seen = new Map(); S.all().forEach(e => { if (!e.deleted && e.art && e.art.list && !seen.has(e.art.list)) seen.set(e.art.list, e); });
+    const list = [...seen.entries()]; picRep = []; let done = 0;
+    for (const [url, e] of list) {
+      try { const res = await fetch(url, { cache: 'no-store' }); if (!res.ok) picRep.push({ entry: e.name, card: e.cardName || '', url, why: res.headers.get('x-art-why') || ('status ' + res.status) }); }
+      catch (er) { picRep.push({ entry: e.name, card: e.cardName || '', url, why: 'could not reach the server' }); }
+      done++; if (done % 5 === 0 || done === list.length) r.textContent = done + ' of ' + list.length + ' pictures checked, ' + picRep.length + ' not loading';
+    }
+    r.textContent = list.length + ' pictures checked, ' + picRep.length + ' not loading.'; b.disabled = false; $('am-pic-copy').hidden = !picRep.length;
+  });
+  $('am-pic-copy').addEventListener('click', async () => {
+    const t = picRep.map(x => 'NO PICTURE  ' + x.entry + '\n   card: ' + x.card + '\n   why: ' + x.why + '\n   ' + x.url).join('\n');
+    try { await navigator.clipboard.writeText(t); } catch (e) { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (er) {} ta.remove(); }
+    $('am-pic-copy').textContent = 'Copied'; setTimeout(() => { $('am-pic-copy').textContent = 'Copy picture report'; }, 1600);
+  });
+
   // ---------- Delete account (from Edit profile) ----------
   (function () {
     const d = $('dela'); if (!d) return; const ok = $('dela-ok'), go = $('dela-go');

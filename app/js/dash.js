@@ -144,7 +144,7 @@
 
   // ---------- entries list ----------
   function artHtml(t, open) {
-    if (t.art && (t.art.list || t.art.detail)) return '<img class="ct-card-art" src="' + esc(open ? (t.art.detail || t.art.list) : (t.art.list || t.art.detail)) + '" data-full="' + esc(t.art.detail || t.art.list) + '" alt="" width="44" height="61" loading="lazy">';
+    if (t.art && (t.art.list || t.art.detail)) return '<img class="ct-card-art" src="' + esc(open ? (t.art.detail || t.art.list) : (t.art.list || t.art.detail)) + '" data-full="' + esc(t.art.detail || t.art.list) + '" alt="" width="44" height="61" loading="lazy" onerror="window.CTArtBroken&&CTArtBroken(this)">';
     const letter = (t.name.match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase();
     return '<span class="ct-card-art ct-art-ph" aria-hidden="true"><i>' + esc(letter) + '</i></span>';
   }
@@ -558,5 +558,7 @@
     render();
   }
 
+  // a card picture that won't load: show the placeholder in its place
+  window.CTArtBroken = img => { if (img.dataset.failed) return; img.dataset.failed = '1'; const ph = document.createElement('span'); ph.className = (img.className || '') + ' ct-art-ph'; ph.style.width = (img.width || 44) + 'px'; ph.style.height = (img.height || 61) + 'px'; img.replaceWith(ph); };
   window.CTDash = { monthOf: p => { dates(); return monthOf(p); }, mount, render, toast, exportCSV, upgradeNote, openImport };
 })();
