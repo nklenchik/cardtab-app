@@ -36,7 +36,7 @@ const { chromium, devices } = require('playwright');
  await p.evaluate(async () => CTStore.setMeta('storiesFree', { month: new Date().toISOString().slice(0, 7), video: 1, image: 0 }));
  await S.evaluate(() => { window.csPlay(1); }); await p.waitForTimeout(700);
  await S.evaluate(() => document.querySelector('.pl [data-share]').click()); await p.waitForTimeout(300);
- ok('Sheet says the free video is used', /used/.test(await S.evaluate(() => document.querySelector('.pl .pshs .shn').textContent)));
+ ok('Sheet says only the image is left', /1 free image left/.test(await S.evaluate(() => document.querySelector('.pl .pshs .shn').textContent)));
  await S.evaluate(() => document.querySelector('.pl [data-shx="vsave"]').click()); await p.waitForTimeout(500);
  ok('Second video is refused with a note', /is used/.test(await S.evaluate(() => document.querySelector('.pl .ptoast').textContent)), await S.evaluate(() => document.querySelector('.pl .ptoast').textContent));
  await S.evaluate(() => document.querySelector('.pl [data-x]').click()); await p.waitForTimeout(400);
