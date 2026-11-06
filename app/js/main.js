@@ -16,6 +16,7 @@
     vAuth.hidden = true; vApp.hidden = false; document.title = 'Card Tab';
     await S.open({ email: session.email });
     av.textContent = (displayName(session)[0] || '?').toUpperCase();
+    if (window.CTMePaint) window.CTMePaint();   // v42.12: a profile photo, when there is one, replaces the letter right away
     whoName = displayName(session); $('am-name').textContent = whoName; $('am-email').textContent = session.email.endsWith('.local') ? 'Signed in on this device' : session.email;
     applyServer(session);
     if (window.CTSync && Sess.REAL) window.CTSync.start();
@@ -111,7 +112,7 @@
     // Import: Premium sees it from day one; Free only sees a Premium-tagged link later (see store.showImport)
     const im = $('am-import'); im.hidden = !S.showImport();
     im.querySelector('span').innerHTML = 'Import a spreadsheet' + (u.plan === 'premium' ? '' : ' <span class="af-lock">Premium</span>');
-    const ai = $('am-av'); ai.textContent = av.textContent; ai.style.cssText = av.style.cssText;
+    const ai = $('am-av'); ai.textContent = av.textContent; ai.style.cssText = av.style.cssText; if (window.CTMePaint) window.CTMePaint();
     if (window.CTHomeMenu) window.CTHomeMenu();
   }
   function placeMenu() {

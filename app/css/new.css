@@ -1614,3 +1614,6 @@ html.cs-modal,html.cs-modal body{overflow:hidden!important;overscroll-behavior:n
 @media(min-width:761px){.hs-sheet.closing .hs-p,#dela.closing .bu-p{animation:ct-sheetOut .24s cubic-bezier(.4,0,1,1) both!important}}
 #dela.closing::backdrop,#aw.closing::backdrop,.hs-sheet.closing::backdrop{animation:ct-bdOut .24s ease-in both!important}
 @media(prefers-reduced-motion:reduce){#dela.closing .bu-p,#aw.closing .awp,.hs-sheet.closing .hs-p{animation:none!important}}
+
+/* v42.12 a profile photo never shows the letter on top of it */
+#app-avatar.has-photo,#am-av.has-photo{color:transparent!important;font-size:0!important}

@@ -31,6 +31,7 @@
   function needs(e) {
     if (e.deleted || !e.name || isPick(e)) return false;
     if (e.artFrom === 'lookup' && !e.artV2) return true;                 // filled in by the old rules: re-check once
+    if (!e.art && e.artV2 && !e.artV3) return true;                      // v42.12: emptied by the stricter rules: try again now with the printing rule
     if (e.art && (e.art.list || e.art.detail)) return false;
     if (e.artTry && Date.now() - Date.parse(e.artTry) < RETRY_DAYS * 864e5) return false;
     return true;
@@ -53,12 +54,21 @@
       return true;
     });
     if (ok.length <= 1) return ok[0] || null;
+    // the card it already shows is still one of the right ones: keep it
+    if (e.cardId) { const was = ok.find(c => c.id === e.cardId); if (was) return was; }
     if (p.set) { const exact = ok.filter(c => norm(c.s) === norm(p.set)); if (exact.length === 1) return exact[0]; }
-    if (!p.number) return null;                                          // several printings and no number: don't guess
     const ids = new Set(ok.map(c => norm(c.n) + '|' + numKey(c.num) + '|' + norm(c.s)));
-    return ids.size === 1 ? ok[0] : null;
+    if (ids.size === 1) return ok[0];
+    // v42.12: several printings of the very same card (same name; Dragon Ball leaders and reprints often have many):
+    // use the standard printing. It's the right card either way, and "Change card" picks a specific printing.
+    const same = ok.filter(c => norm(c.n) === norm(p.name));
+    if (same.length && new Set(same.map(c => norm(c.n))).size === 1) return standard(same);
+    return null;                                                          // different cards with similar names: don't guess
   }
 
+  // the everyday printing first: not an alternate art, special or secret rare, promo, or premium box version
+  const FANCY = /alt(ernate)?\s*art|special|secret|\b(spr|scr|sr|gdr|ser)\b|serial|gold|god rare|promo|foil|premium|collector|anniversary|championship|judge|prize|stamp|reprint/i;
+  function standard(list) { const plain = list.filter(c => !FANCY.test((c.r || '') + ' ' + (c.s || '') + ' ' + (c.n || ''))); return (plain.length ? plain : list)[0]; }
   async function lookup(p) {
     const base = window.CARDTAB_API;
     const q = '?name=' + encodeURIComponent(p.name || '') + '&number=' + encodeURIComponent(p.number || '') + '&set=' + encodeURIComponent(p.set || '') + '&game=' + encodeURIComponent(p.game || '');
@@ -101,8 +111,8 @@
         const card = cards ? clearMatch(cards, g.p, g.e) : null, now = new Date().toISOString();
         for (const id of g.ids) {
           const cur = S.get(id); if (!cur || !needs(cur) || picks().has(textKey(cur))) continue;
-          if (card) await S._artPatch(id, { art: { list: card.art.list, detail: card.art.detail }, artFrom: 'lookup', cardId: card.id, cardName: [card.n, card.num, card.s].filter(Boolean).join(' - '), artV2: 1 });
-          else if (cards) await S._artPatch(id, { art: null, artFrom: null, cardId: null, artTry: now, artV2: 1 });   // unclear: placeholder, try again in a few days
+          if (card) await S._artPatch(id, { art: { list: card.art.list, detail: card.art.detail }, artFrom: 'lookup', cardId: card.id, cardName: [card.n, card.num, card.s].filter(Boolean).join(' - '), artV2: 1, artV3: 1 });
+          else if (cards) await S._artPatch(id, { art: null, artFrom: null, cardId: null, artTry: now, artV2: 1, artV3: 1 });   // unclear: placeholder, try again in a few days
         }
         if (card) prog.found += g.ids.length;
         prog.done++; emit();

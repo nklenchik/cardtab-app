@@ -249,7 +249,7 @@
     let a = {}, pr = {}; try { a = JSON.parse(localStorage.getItem('cb.avatar')) || {}; pr = JSON.parse(localStorage.getItem('cb.profile')) || {}; } catch (e) {}
     const first = (pr.first || '').trim(), name = pr.show === 'full' && pr.last ? first + ' ' + pr.last : first;
     if (!a.photo && !a.color) a.color = '#a50e37';   // the board's default color, so the avatar looks the same on every page
-    ['app-avatar', 'am-av'].forEach(id => { const el = $(id); if (!el) return; if (a.photo) { el.style.background = 'url(' + a.photo + ') center/cover'; el.textContent = ''; } else if (a.color) { el.style.background = a.color; el.style.color = inkFor(a.color); if (first) el.textContent = first[0].toUpperCase(); } });
+    ['app-avatar', 'am-av'].forEach(id => { const el = $(id); if (!el) return; if (a.photo) { el.style.background = 'url(' + a.photo + ') center/cover'; el.textContent = ''; el.classList.add('has-photo'); } else if (a.color) { el.classList.remove('has-photo'); el.style.background = a.color; el.style.color = inkFor(a.color); if (first) el.textContent = first[0].toUpperCase(); } });
     const nm = document.querySelector('#am-name .am-nm'); if (nm && name) nm.textContent = name;
   };
   setTimeout(() => window.CTMePaint(), 0); addEventListener('storage', e => { if (/^cb\.(avatar|profile)$/.test(e.key || '')) window.CTMePaint(); });
