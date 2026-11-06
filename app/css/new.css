@@ -1511,3 +1511,15 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 .auth-sent>*{min-width:0}
 .auth-sent .auth-f input{width:100%;min-width:0;box-sizing:border-box}
 .auth-sent-p strong{word-break:normal;overflow-wrap:anywhere}
+
+/* ===== v42 sync status ===== */
+.am-sync{display:flex;align-items:center;gap:8px;margin:2px 16px 8px;padding:8px 10px;border-radius:12px;background:var(--s-card,rgba(0,0,0,.03));font-size:12.5px;line-height:1.35;color:var(--muted)}
+.am-sync i{flex:none;width:8px;height:8px;border-radius:50%;background:#34c759}
+.am-sync[data-s="syncing"] i,.am-sync[data-s="pending"] i{background:#f5a623;animation:ct-syncP 1s ease-in-out infinite alternate}
+.am-sync[data-s="offline"] i,.am-sync[data-s="offline-pending"] i{background:var(--muted)}
+.am-sync[data-s="error"] i{background:#e8323f}
+@keyframes ct-syncP{from{opacity:.4}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.am-sync i{animation:none!important}}
+/* a small cloud-off badge on your picture when changes are waiting to save */
+#app-avatar{position:relative}
+#app-avatar.sync-off::before{content:"";position:absolute;left:-3px;bottom:-3px;width:16px;height:16px;border-radius:50%;background:var(--muted) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M7 18h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 9.5 4.3 4.3 0 0 0 7 18z'/%3E%3Cpath d='M4 4l16 16'/%3E%3C/svg%3E") center/10px no-repeat;box-shadow:0 0 0 2px var(--bg)}

@@ -70,9 +70,15 @@
 
   function emit(reason) { listeners.forEach(fn => { try { fn(reason); } catch (e) { console.error(e); } }); }
 
-  async function putEntry(e) { entries.set(e.id, e); if (db) await reqP(db.transaction('entries', 'readwrite').objectStore('entries').put(e)); }
+  // _d = changed here and not yet sent to the account (sync); copies that came from another device are saved without it
+  async function putEntry(e, fromSync) { if (fromSync) delete e._d; else e._d = 1; entries.set(e.id, e); if (db) await reqP(db.transaction('entries', 'readwrite').objectStore('entries').put(e)); }
   async function dropEntry(id) { entries.delete(id); if (db) await reqP(db.transaction('entries', 'readwrite').objectStore('entries').delete(id)); }
-  async function putMeta(k, v) { meta[k] = v; if (db) await reqP(db.transaction('meta', 'readwrite').objectStore('meta').put({ k, v })); }
+  const SYNC_META = ['budget', 'budgetFlags', 'customPlatforms', 'notif', 'storiesFree'];   // settings that follow you to other devices
+  async function rawMeta(k, v) { meta[k] = v; if (db) await reqP(db.transaction('meta', 'readwrite').objectStore('meta').put({ k, v })); }
+  async function putMeta(k, v, fromSync, t) {
+    await rawMeta(k, v);
+    if (SYNC_META.includes(k)) { const mt = Object.assign({}, meta._mt, { [k]: t || new Date().toISOString() }), md = Object.assign({}, meta._md); if (fromSync) delete md[k]; else md[k] = 1; await rawMeta('_mt', mt); await rawMeta('_md', md); }
+  }
   function changed(reason) { emit(reason); if (chan) chan.postMessage({ reason }); }
 
   async function loadAll() {
@@ -123,8 +129,10 @@
   // ---------- plan + usage ----------
   function plan() { return meta.plan === 'premium' ? 'premium' : 'free'; }
   function usageRaw() {
-    const u = meta.usage, m = ym(new Date());
-    return u && u.month === m ? u : { month: m, used: 0 };
+    const m = ym(new Date()), t = meta.usageTest;   // usageTest: the testing tool's override
+    if (t && t.month === m) return { month: m, used: t.used };
+    let used = 0; entries.forEach(e => { if (!e.deleted && e.counted !== false && String(e.createdAt).slice(0, 7) === m) used++; });
+    return { month: m, used };
   }
   function usage() {
     const u = usageRaw(), p = plan(), now = new Date();
@@ -134,7 +142,7 @@
     const left = Math.max(0, FREE_LIMIT - u.used);
     return { plan: p, used: u.used, limit: FREE_LIMIT, left, warn: u.used >= WARN_AT && u.used < FREE_LIMIT, blocked: u.used >= FREE_LIMIT, resetsOn };
   }
-  async function bumpUsage(d) { const u = usageRaw(); await putMeta('usage', { month: u.month, used: Math.max(0, u.used + d) }); }
+  async function bumpUsage(d) { const t = meta.usageTest; if (t && t.month === ym(new Date())) await rawMeta('usageTest', { month: t.month, used: Math.max(0, t.used + d) }); }   // otherwise usage follows the entries
 
   // ---------- undo ----------
   function pushUndo(label, run) { undoStack.push({ label, run }); if (undoStack.length > 30) undoStack.shift(); }
@@ -218,7 +226,7 @@
       const t = new Date().toISOString();
       e.id = uid(); e.createdAt = t; e.updatedAt = t; e.deleted = false; e.counted = true;
       await putEntry(e); await bumpUsage(1);
-      pushUndo((opts && opts.label) || 'Entry added', async () => { await dropEntry(e.id); await bumpUsage(-1); });
+      pushUndo((opts && opts.label) || 'Entry added', async () => { const x = entries.get(e.id); if (x) await putEntry(Object.assign(clone(x), { deleted: true, updatedAt: new Date().toISOString() })); await bumpUsage(-1); });
       changed('add'); return clone(e);
     },
 
@@ -303,18 +311,42 @@
     },
 
     // ---------- testing tools (local mode only) ----------
-    async _setUsage(n) { await putMeta('usage', { month: ym(new Date()), used: n }); changed('usage'); },
+    async _setUsage(n) { await rawMeta('usageTest', n === 0 ? null : { month: ym(new Date()), used: n }); changed('usage'); },
     async _loadSample(rows) {
       const t = new Date().toISOString();
       for (const r of rows) { const { e } = normalize(r); e.id = uid(); e.createdAt = t; e.updatedAt = t; e.deleted = false; e.counted = false; await putEntry(e); }
       changed('sample');
     },
     async _clearAll() {
-      for (const id of [...entries.keys()]) await dropEntry(id);
-      const keep = { createdAt: meta.createdAt, signinDays: meta.signinDays, plan: meta.plan };
+      // deleting (not just dropping) so the clear reaches your account and other devices too
+      const t = new Date().toISOString();
+      for (const e of [...entries.values()]) if (!e.deleted) await putEntry(Object.assign(clone(e), { deleted: true, updatedAt: t }));
+      const keep = { createdAt: meta.createdAt, signinDays: meta.signinDays, plan: meta.plan, _sync: meta._sync };
       if (db) await reqP(db.transaction('meta', 'readwrite').objectStore('meta').clear());
       meta = {}; for (const k in keep) if (keep[k] !== undefined) await putMeta(k, keep[k]);
       undoStack.length = 0; changed('clear');
+    },
+    // ---------- sync (used by sync.js) ----------
+    _sync: {
+      state() { return meta._sync || null; },
+      async setState(v) { await rawMeta('_sync', v); },
+      // the first sync on a device sends everything already here
+      async markAll() { for (const e of entries.values()) { e._d = 1; if (db) await reqP(db.transaction('entries', 'readwrite').objectStore('entries').put(e)); } const md = {}; SYNC_META.forEach(k => { if (meta[k] !== undefined) md[k] = 1; }); await rawMeta('_md', md); },
+      dirty() { const out = []; entries.forEach(e => { if (e._d) { const c = clone(e); delete c._d; out.push(c); } }); return out; },
+      dirtyMeta() { const md = meta._md || {}, mt = meta._mt || {}, o = {}; Object.keys(md).forEach(k => { o[k] = { v: meta[k] === undefined ? null : clone(meta[k]), t: mt[k] || new Date(0).toISOString() }; }); return o; },
+      // after a send: clear the mark only if nothing changed while it was on its way
+      async sent(list, metaKeys) {
+        for (const x of list) { const e = entries.get(x.id); if (e && e._d && e.updatedAt === x.updatedAt) { delete e._d; if (db) await reqP(db.transaction('entries', 'readwrite').objectStore('entries').put(e)); } }
+        if (metaKeys && metaKeys.length) { const md = Object.assign({}, meta._md); metaKeys.forEach(k => delete md[k]); await rawMeta('_md', md); }
+      },
+      // copies from the account: the newer edit wins; a newer edit still waiting to be sent from here is kept
+      async apply(list, metaMap) {
+        let n = 0;
+        for (const r of list || []) { if (!r || !r.id) continue; const cur = entries.get(r.id); if (cur && cur.updatedAt >= r.updatedAt) continue; await putEntry(clone(r), true); n++; }
+        for (const [k, m] of Object.entries(metaMap || {})) { if (!SYNC_META.includes(k)) continue; const t = (meta._mt || {})[k] || ''; if (t >= m.t) continue; await putMeta(k, m.v, true, m.t); n++; }
+        if (n) changed('sync');
+        return n;
+      }
     },
     async _setSigninDays(days) { await putMeta('signinDays', days); changed('meta'); }
   };

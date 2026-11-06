@@ -18,6 +18,7 @@
     av.textContent = (displayName(session)[0] || '?').toUpperCase();
     whoName = displayName(session); $('am-name').textContent = whoName; $('am-email').textContent = session.email.endsWith('.local') ? 'Signed in on this device' : session.email;
     applyServer(session);
+    if (window.CTSync && Sess.REAL) window.CTSync.start();
     Dash.mount();
     if (!S.persistent) Dash.toast('This browser isn’t letting Card Tab save on the device, so entries last until you close the tab.');
     else if (isNew && !S.all().length) Dash.toast('Welcome to Card Tab');
@@ -29,11 +30,31 @@
     if (Sess.REAL && session && session.plan && S.plan && S.plan() !== session.plan) S.setPlan(session.plan);
   }
   function showAuth() {
+    if (window.CTSync) window.CTSync.stop();
     S.close(); closeMenu();
     vApp.hidden = true; vAuth.hidden = false; document.title = 'Sign in · Card Tab';
     if (!auth) auth = window.CTAuth.mount(vAuth, (s, isNew) => showApp(s, isNew)); else auth.reset();
     setTimeout(() => $('auth-email').focus({ preventScroll: true }), 50);
   }
+
+  // ---------- sync status: a line in the profile menu; a small cloud on your picture only when offline or not saved yet ----------
+  (function () {
+    if (!window.CTSync) return;
+    const line = $('am-sync'), TXT = { syncing: 'Saving to your account…', synced: 'All changes saved to your account', pending: 'Saving to your account…', offline: 'Offline. Everything here is saved on this device.', 'offline-pending': 'Offline. Changes will save to your account when you’re back online.', error: 'Couldn’t reach your account. Changes are safe on this device and will save soon.' };
+    let errT = 0;
+    const paint = s => {
+      const show = Sess.REAL && TXT[s];
+      line.hidden = !show; if (!show) { av.classList.remove('sync-off'); return; }
+      line.dataset.s = s; line.querySelector('span').textContent = TXT[s];
+      clearTimeout(errT);
+      // the cloud only shows when something's actually waiting: offline with changes, or an error that lasts
+      if (s === 'offline-pending') av.classList.add('sync-off');
+      else if (s === 'error') errT = setTimeout(() => { if (window.CTSync.status() === 'error') av.classList.add('sync-off'); }, 20000);
+      else av.classList.remove('sync-off');
+    };
+    window.CTSync.onChange(paint);
+    window.CTSync.onSignedOut = () => { Sess.check().then(c => { if (!c) { Sess.signOut(); showAuth(); if (auth) auth.error('You were signed out. Sign in again to keep your changes in sync.'); } }); };
+  })();
 
   // ---------- Delete account (from Edit profile) ----------
   (function () {
