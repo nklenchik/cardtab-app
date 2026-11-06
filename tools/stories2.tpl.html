@@ -839,7 +839,7 @@ let SS=[];
 let hideAmt=false;try{hideAmt=localStorage.getItem('cs.hide')==='1'}catch(e){}
 const pctS=n=>(n>=0?'+':'−')+NFR.format(Math.abs(n))+'%';
 function buildStories(){const b=D,x=b.x,t=x.t,M=x.M,S=[];const H=hideAmt;
-  const per=x.one?mName(x.mo1):b.lab,perOf=x.one?'the month’s ':'';
+  const per=x.one?mName(x.mo1):String(b.lab).replace(/^Last /,''),perOf=x.one?'the month’s ':'';
   // 1 · the money: the line draws itself
   const cum=x.cum.length>1?x.cum:[0].concat(x.cum),mn=Math.min(0,...cum),mx=Math.max(1,...cum),pts=cum.map((v,i)=>[(i/Math.max(1,cum.length-1))*260,108-((v-mn)/(mx-mn||1))*96]);
   const line='M'+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L'),up=t.profit>=0,ratio=t.spent?t.kept/t.spent:0;
