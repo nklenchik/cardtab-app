@@ -175,3 +175,17 @@
 .bgnote{margin:8px 2px 0;font-size:12px;font-weight:650;color:var(--muted,#8a857e)}
 .pl .pshs .vlock{display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,.12)!important;color:#fff!important}
 .pl .pshs .vlock span{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:999px;background:#fff;color:#111}
+/* v39.4 theme tiles on phones: long names wrap to a second line instead of being cut off; tighter swatch dots */
+@media(max-width:600px){
+ .tgrid .topt{gap:9px;padding:12px 10px;white-space:normal;overflow:visible;font-size:13.5px;line-height:1.15;min-height:60px}
+ .tgrid .topt>span:last-child,.tgrid .topt .tn{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;min-width:0}
+ .tgrid .topt .tsw{flex:none}
+ .tgrid .topt .tsw span+span{margin-left:-9px}
+ .tgrid .topt.lockd,.tgrid .topt:has(.tm){padding-right:30px}
+ .tgrid .topt:has(.tm){padding-top:20px}
+}
+/* the free mark: "Made with" small, cardtab.app a touch bolder underneath */
+.st .brand mark{display:inline-grid;line-height:1.15;padding:3px 8px 4px}
+.st .brand mark i{font-style:normal;font-size:8px;font-weight:650;letter-spacing:.04em;opacity:.9}
+.st .brand mark b{font-size:10.5px;font-weight:800}
+@media(max-width:360px){.tgrid .topt{flex-direction:column;align-items:flex-start;justify-content:center;gap:7px;padding:12px 30px 12px 12px}.tgrid .topt:has(.tm){padding-top:22px}}

@@ -449,6 +449,20 @@ html.pg-moving *,html.pg-moving *::before{-webkit-backdrop-filter:none!important
 .bgnote{margin:8px 2px 0;font-size:12px;font-weight:650;color:var(--muted,#8a857e)}
 .pl .pshs .vlock{display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,.12)!important;color:#fff!important}
 .pl .pshs .vlock span{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:999px;background:#fff;color:#111}
+/* v39.4 theme tiles on phones: long names wrap to a second line instead of being cut off; tighter swatch dots */
+@media(max-width:600px){
+ .tgrid .topt{gap:9px;padding:12px 10px;white-space:normal;overflow:visible;font-size:13.5px;line-height:1.15;min-height:60px}
+ .tgrid .topt>span:last-child,.tgrid .topt .tn{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;min-width:0}
+ .tgrid .topt .tsw{flex:none}
+ .tgrid .topt .tsw span+span{margin-left:-9px}
+ .tgrid .topt.lockd,.tgrid .topt:has(.tm){padding-right:30px}
+ .tgrid .topt:has(.tm){padding-top:20px}
+}
+/* the free mark: "Made with" small, cardtab.app a touch bolder underneath */
+.st .brand mark{display:inline-grid;line-height:1.15;padding:3px 8px 4px}
+.st .brand mark i{font-style:normal;font-size:8px;font-weight:650;letter-spacing:.04em;opacity:.9}
+.st .brand mark b{font-size:10.5px;font-weight:800}
+@media(max-width:360px){.tgrid .topt{flex-direction:column;align-items:flex-start;justify-content:center;gap:7px;padding:12px 30px 12px 12px}.tgrid .topt:has(.tm){padding-top:22px}}
 </style>
 
 <div class="wrap">
@@ -809,7 +823,7 @@ function buildStories(){const b=D,x=b.x,t=x.t,M=x.M,S=[];const lab=b.lab;
   else S.push({k:'Your cards',cover:all?cnt(all,'card','cards'):'Your cards',h:all?'You collected '+cnt(all,'card','cards')+'.':'Your cards show up here.',line:all?'Across every game you play.':'Log a purchase to start your collection story.',vis:()=>arts.length?'<div class="sfan">'+arts.slice(0,3).map(cardEl).join('')+'</div>':''});
   return S}
 function stHTML(s,i,on){const p=palN(i);return '<div class="st'+(on?' on':'')+(p.scrim?' scrim':'')+'" style="color:'+p.ink+'">'+bgSvg(bgStyle,p,i+1)+'<div class="sin">'+
-  '<div class="brand"><mark style="--hl:'+p.acc+';color:'+p.on+'">cardtab.app</mark></div><small>'+s.k+'</small><h4 class="pop">'+s.h.replace('{acc}',p.acc)+'</h4>'+(s.big?'<div class="sbig pop" style="color:'+p.acc+'">'+s.big+'</div>':'')+(s.line?'<p class="line pop">'+s.line+'</p>':'')+
+  '<div class="brand"><mark style="--hl:'+p.acc+';color:'+p.on+'"><i>Made with</i><b>cardtab.app</b></mark></div><small>'+s.k+'</small><h4 class="pop">'+s.h.replace('{acc}',p.acc)+'</h4>'+(s.big?'<div class="sbig pop" style="color:'+p.acc+'">'+s.big+'</div>':'')+(s.line?'<p class="line pop">'+s.line+'</p>':'')+
   '<div class="svis rise">'+s.vis(p)+'</div></div></div>'}
 function cvHTML(s,i,cls){const p=palN(i),long=String(s.cover).length>9;return '<button type="button" class="scv '+(cls||'')+'" data-play="'+i+'" style="color:'+p.ink+'" aria-label="Play '+esc(s.k)+'">'+bgSvg(bgStyle,p,i+1,300,420)+'<span class="sin"><small>'+esc(s.k)+'</small><b style="'+(long?'font-size:clamp(11px,3.6cqw,14px);':'')+'color:'+(s.big||String(s.cover).startsWith('+')?p.acc:p.ink)+'">'+esc(s.cover)+'</b></span></button>'}
 // ---------- the shelf ----------
@@ -985,7 +999,7 @@ const _saveStories=saveStories;saveStories=async function(list,share){
 // the share sheet says what's left; the background picker says downloads use Clean
 pl.build=(b=>function(){b();if(!isFree())return;const n=plEl.querySelector('.pshs .shn');if(n){const v=fLeft('video'),i=fLeft('image');
   n.textContent=(v&&i?'1 free video and 1 free image this month':v?'1 free video left this month':i?'1 free image left this month':'Free video and image used this month')+' · saved on the Clean background'}})(pl.build.bind(pl));
-new MutationObserver(()=>{if(!isFree())return;const r=$('bgrow');if(r&&!r.parentElement.querySelector('.bgnote')){r.insertAdjacentHTML('afterend','<p class="bgnote">On Free, saved images and videos use Clean.</p>')}}).observe($('bgrow'),{childList:true});
+new MutationObserver(()=>{if(!isFree())return;const r=$('bgrow');if(r&&!r.parentElement.querySelector('.bgnote')){r.insertAdjacentHTML('afterend','<p class="bgnote">On Free, saved images use Clean. Video comes with Premium.</p>')}}).observe($('bgrow'),{childList:true});
 // ================= v39.3 Video saving is Premium =================
 // Free users watch their stories on Clean or Blobs and save one image a month on Clean; saving or sharing video is Premium.
 const openPrem=()=>{try{parent.CTPremiumOpen&&parent.CTPremiumOpen('stories')}catch(e){}};

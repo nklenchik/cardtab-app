@@ -78,7 +78,7 @@ function buildStories(){const b=D,x=b.x,t=x.t,M=x.M,S=[];const lab=b.lab;
   else S.push({k:'Your cards',cover:all?cnt(all,'card','cards'):'Your cards',h:all?'You collected '+cnt(all,'card','cards')+'.':'Your cards show up here.',line:all?'Across every game you play.':'Log a purchase to start your collection story.',vis:()=>arts.length?'<div class="sfan">'+arts.slice(0,3).map(cardEl).join('')+'</div>':''});
   return S}
 function stHTML(s,i,on){const p=palN(i);return '<div class="st'+(on?' on':'')+(p.scrim?' scrim':'')+'" style="color:'+p.ink+'">'+bgSvg(bgStyle,p,i+1)+'<div class="sin">'+
-  '<div class="brand"><mark style="--hl:'+p.acc+';color:'+p.on+'">cardtab.app</mark></div><small>'+s.k+'</small><h4 class="pop">'+s.h.replace('{acc}',p.acc)+'</h4>'+(s.big?'<div class="sbig pop" style="color:'+p.acc+'">'+s.big+'</div>':'')+(s.line?'<p class="line pop">'+s.line+'</p>':'')+
+  '<div class="brand"><mark style="--hl:'+p.acc+';color:'+p.on+'"><i>Made with</i><b>cardtab.app</b></mark></div><small>'+s.k+'</small><h4 class="pop">'+s.h.replace('{acc}',p.acc)+'</h4>'+(s.big?'<div class="sbig pop" style="color:'+p.acc+'">'+s.big+'</div>':'')+(s.line?'<p class="line pop">'+s.line+'</p>':'')+
   '<div class="svis rise">'+s.vis(p)+'</div></div></div>'}
 function cvHTML(s,i,cls){const p=palN(i),long=String(s.cover).length>9;return '<button type="button" class="scv '+(cls||'')+'" data-play="'+i+'" style="color:'+p.ink+'" aria-label="Play '+esc(s.k)+'">'+bgSvg(bgStyle,p,i+1,300,420)+'<span class="sin"><small>'+esc(s.k)+'</small><b style="'+(long?'font-size:clamp(11px,3.6cqw,14px);':'')+'color:'+(s.big||String(s.cover).startsWith('+')?p.acc:p.ink)+'">'+esc(s.cover)+'</b></span></button>'}
 // ---------- the shelf ----------
@@ -254,7 +254,7 @@ const _saveStories=saveStories;saveStories=async function(list,share){
 // the share sheet says what's left; the background picker says downloads use Clean
 pl.build=(b=>function(){b();if(!isFree())return;const n=plEl.querySelector('.pshs .shn');if(n){const v=fLeft('video'),i=fLeft('image');
   n.textContent=(v&&i?'1 free video and 1 free image this month':v?'1 free video left this month':i?'1 free image left this month':'Free video and image used this month')+' · saved on the Clean background'}})(pl.build.bind(pl));
-new MutationObserver(()=>{if(!isFree())return;const r=$('bgrow');if(r&&!r.parentElement.querySelector('.bgnote')){r.insertAdjacentHTML('afterend','<p class="bgnote">On Free, saved images and videos use Clean.</p>')}}).observe($('bgrow'),{childList:true});
+new MutationObserver(()=>{if(!isFree())return;const r=$('bgrow');if(r&&!r.parentElement.querySelector('.bgnote')){r.insertAdjacentHTML('afterend','<p class="bgnote">On Free, saved images use Clean. Video comes with Premium.</p>')}}).observe($('bgrow'),{childList:true});
 // ================= v39.3 Video saving is Premium =================
 // Free users watch their stories on Clean or Blobs and save one image a month on Clean; saving or sharing video is Premium.
 const openPrem=()=>{try{parent.CTPremiumOpen&&parent.CTPremiumOpen('stories')}catch(e){}};
