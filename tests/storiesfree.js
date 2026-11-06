@@ -37,8 +37,9 @@ const { chromium, devices } = require('playwright');
  await S.evaluate(() => { window.csPlay(1); }); await p.waitForTimeout(700);
  await S.evaluate(() => document.querySelector('.pl [data-share]').click()); await p.waitForTimeout(300);
  ok('Sheet still offers the free image', /1 free image/.test(await S.evaluate(() => document.querySelector('.pl .pshs .shn').textContent)));
- await S.evaluate(() => document.querySelector('.pl [data-shx="vsave"]').click()); await p.waitForTimeout(500);
- ok('Video is Premium for free users', /comes with Premium/.test(await S.evaluate(() => document.querySelector('.pl .ptoast').textContent)), await S.evaluate(() => document.querySelector('.pl .ptoast').textContent));
+ await S.evaluate(() => document.querySelector('.pl [data-vprem]').click()); await p.waitForTimeout(900);
+ ok('Video is Premium for free users', await p.evaluate(() => !!document.querySelector('dialog[open].pms, .pms[open]')));
+ await p.keyboard.press('Escape'); await p.waitForTimeout(500);
  await S.evaluate(() => document.querySelector('.pl [data-x]').click()); await p.waitForTimeout(400);
  // Premium: plain cardtab.app in the lower right, all themes
  await p.evaluate(async () => { await CTStore.setPlan('premium'); if (window.CTBoardLoader) window.CTBoardLoader.sync(); });
