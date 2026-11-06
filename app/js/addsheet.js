@@ -207,7 +207,8 @@
     diag.run(tOpen, performance.now());
     // phones: the sheet waits one painted frame off screen before it slides, so iPhone has it drawn before the slide's
     // first frame (otherwise the opening of the slide is skipped and it looks like a hang)
-    requestAnimationFrame(() => requestAnimationFrame(() => dlg.classList.add('go')));
+    const go = () => { if (dlg.open && !dlg.classList.contains('go')) { dlg.classList.add('go'); diag.go && diag.go(); } };
+    requestAnimationFrame(() => requestAnimationFrame(go)); setTimeout(go, 50);
     if (!touch || mode === 'together') inp.focus({ preventScroll: true });
     else { const sh = dlg.querySelector('.sheet'); sh.tabIndex = -1; sh.focus({ preventScroll: true }); } // no stray focus ring on the close button
     clearTimeout(settle); settle = setTimeout(() => { moving = false; dlg.classList.remove('moving'); fit(); kbSave(); }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 480);
@@ -227,7 +228,8 @@
     const ph = dlg.querySelector('.phone'), t0 = tTap && tOpen - tTap < 3000 ? tTap : tOpen, m = { tap: t0, open: tOpen, shown: tShown };
     requestAnimationFrame(() => { m.shown = performance.now(); }); // the first frame drawn with the window open
     let box = dlg.querySelector('.as-diag'); if (!box) { box = document.createElement('div'); box.className = 'as-diag'; dlg.appendChild(box); }
-    box.textContent = 'Timing…';
+    box.innerHTML = '<b>Add New timing</b><span>Waiting for the slide to start…</span>';
+    diag.go = () => { m.go = performance.now(); };
     let last = performance.now(), gap = 0, frames = 0, live = true;
     (function f() { const n = performance.now(); gap = Math.max(gap, n - last); last = n; frames++; if (live) requestAnimationFrame(f); })();
     const ms = v => Math.round(v) + ' ms';
@@ -237,6 +239,7 @@
         '<span>Tap → open: ' + ms(m.open - m.tap) + '</span>' +
         '<span>Open → first frame: ' + ms(m.shown - m.open) + '</span>' +
         '<span>First frame → slide starts: ' + ms((m.start || m.end) - m.shown) + '</span>' +
+        '<span>Slide asked to start: ' + (m.go ? ms(m.go - m.tap) + ' after tap' : 'never') + '</span>' +
         '<span>Slide: ' + ms(m.end - (m.start || m.end)) + ' · ' + frames + ' frames</span>' +
         '<span>Longest freeze: ' + ms(gap) + '</span>' +
         '<span><b>Total: ' + ms(m.end - m.tap) + '</b></span>';

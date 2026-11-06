@@ -22,6 +22,13 @@
 
   // any open window or sheet (dialog) marks the page, so phones can switch off the glass blur underneath while it's up
   (function () {
+    // while a window is open, a drag only scrolls what can scroll inside it (results, a long form, the date chips);
+    // anywhere else it does nothing, so the page behind never moves and the window stays put
+    const canScroll = (el, stop) => { for (; el && el !== stop.parentElement; el = el.parentElement) { const cs = getComputedStyle(el);
+      if (/(auto|scroll)/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 1) return true;
+      if (/(auto|scroll)/.test(cs.overflowX) && el.scrollWidth > el.clientWidth + 1) return true; } return false; };
+    document.addEventListener('touchmove', e => { const d = document.querySelector('dialog[open]'); if (!d || !e.cancelable) return;
+      if (!d.contains(e.target) || !canScroll(e.target, d)) e.preventDefault(); }, { passive: false });
     const sync = () => document.documentElement.classList.toggle('sheet-up', !!document.querySelector('dialog[open]'));
     new MutationObserver(sync).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['open'] });
   })();
