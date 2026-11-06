@@ -1532,3 +1532,22 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 /* v42.2 budget window: the blurred backdrop fades in at the same unhurried pace as the window */
 .bu-sheet::backdrop{animation-duration:.55s!important;animation-timing-function:cubic-bezier(.22,1,.36,1)!important}
 .bu-sheet.closing::backdrop{animation-duration:.3s!important}
+
+/* v42.4 entry actions: Edit, Change card, Duplicate, Delete (two by two on phones) */
+.ct-demo .ct-demo-actions.ct-acts4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:560px){.ct-demo .ct-demo-actions.ct-acts4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ct-demo .ct-demo-actions.ct-acts4 button{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#fix .fix-none{display:block;margin:14px auto 2px;border:0;background:none;padding:8px 10px;font:inherit;font-weight:700;font-size:13.5px;color:var(--muted);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+#fix .fix-none[hidden]{display:none}
+
+/* v42.4 desktop notifications panel: a slower, softer slide (like the budget window) over a veil that fades in.
+   Only transform and opacity move; the frosted blur is left off behind this panel so the slide stays smooth. */
+@keyframes ntfIn2{from{transform:translate3d(100%,0,0);opacity:.6}60%{opacity:1}to{transform:none;opacity:1}}
+@keyframes ntfOut2{from{transform:none;opacity:1}to{transform:translate3d(100%,0,0);opacity:.7}}
+@media(min-width:761px){
+ #ntf .ntf-form{animation:ntfIn2 .66s cubic-bezier(.22,1,.36,1) both!important;will-change:transform;contain:layout paint;backface-visibility:hidden}
+ #ntf.closing .ntf-form{animation:ntfOut2 .3s cubic-bezier(.4,0,.9,.4) both!important}
+ #ntf::backdrop{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;animation:ct-bdIn .5s ease-out both}
+ #ntf.closing::backdrop{animation:ct-bdOut .3s ease-in both}
+}
+@media(prefers-reduced-motion:reduce){#ntf .ntf-form,#ntf::backdrop{animation:none!important}}

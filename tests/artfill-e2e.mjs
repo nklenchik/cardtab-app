@@ -42,5 +42,14 @@ const m = rows.find(r => /Mystery/.test(r.n)); ok(m && !m.art && m.tried, 'no cl
 ok(jtCalls - before <= 4, 'one lookup per unique card (JustTCG requests: ' + (jtCalls - before) + ')');
 await p.evaluate(() => window.CTSync.now()); await p.waitForTimeout(1500);
 ok(await p.evaluate(() => window.CTSync.status()) === 'synced', 'art changes saved to the account');
+// Change card: pick a card for the mystery entry; a second entry with the same text follows the pick
+await p.evaluate(() => CTStore.importMany([{ type: 'purchase', name: 'Mystery Promo Thing', amount: '6.00', date: '2026-10-05' }]));
+await p.evaluate(() => { const e = CTStore.all().find(x => x.name === 'Mystery Promo Thing'); window.CTNotify.change(e); });
+await p.waitForTimeout(400); await p.fill('#fix-q', 'Raichu 014/102'); await p.waitForTimeout(2500);
+await p.click('#fix .ntf-li'); await p.waitForTimeout(2500);
+const ms = await p.evaluate(() => CTStore.all().filter(x => x.name === 'Mystery Promo Thing').map(x => ({ from: x.artFrom, art: x.art && x.art.list })));
+ok(ms.length === 2 && ms.every(x => x.from === 'pick' && /raichu/.test(x.art || '')), 'Change card: your pick is used for both entries with that text ' + JSON.stringify(ms));
+await p.evaluate(() => window.CTArtFill.now()); await p.waitForTimeout(1500);
+ok(await p.evaluate(() => CTStore.all().filter(x => x.name === 'Mystery Promo Thing').every(x => x.artFrom === 'pick')), 'the background job never overrides a pick');
 ok(!errs.length, 'no page errors ' + errs.slice(0, 2).join(' | '));
 console.log(out.join('\n')); await b.close();

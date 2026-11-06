@@ -29,7 +29,7 @@
       d.dispatchEvent(new Event('closing'));
       if (calm.matches) { realClose(v); return; }
       d.classList.add('closing');
-      d._ct = setTimeout(() => { d.classList.remove('closing'); if (d.open) realClose(v); }, phone.matches ? 270 : 250);
+      d._ct = setTimeout(() => { d.classList.remove('closing'); if (d.open) realClose(v); }, phone.matches ? 270 : id === 'ntf' ? 300 : 250);
     };
     d.addEventListener('cancel', e => { e.preventDefault(); d.close(); });
   });

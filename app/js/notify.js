@@ -138,14 +138,22 @@
   const fix = (function () {
     const d = document.createElement('dialog'); d.className = 'ed ntf'; d.id = 'fix'; d.setAttribute('aria-labelledby', 'fix-h');
     d.innerHTML = '<div class="ed-form ntf-form"><div class="ed-head"><h2 id="fix-h">Match your card</h2><button type="button" class="ed-x" data-fix-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
-      '<p class="ntf-lede" id="fix-lede"></p><label class="ntf-search">' + svg('search', 17) + '<input id="fix-q" type="search" autocomplete="off" enterkeyhint="search" aria-label="Search for the card"></label><div id="fix-res" class="ntf-res"></div></div>';
+      '<p class="ntf-lede" id="fix-lede"></p><label class="ntf-search">' + svg('search', 17) + '<input id="fix-q" type="search" autocomplete="off" enterkeyhint="search" aria-label="Search for the card"></label><div id="fix-res" class="ntf-res"></div><button type="button" class="fix-none" id="fix-none" hidden>No card art for this one</button></div>';
     document.body.appendChild(d);
-    let entry = null, list = [];
+    let entry = null, list = [], mode = 'fix', qt = 0, tok = 0;
     const listName = c => [c.n, c.num, c.s].filter(Boolean).join(' - ');
     const artBg = c => c.art && c.art.list ? 'center/cover no-repeat url("' + c.art.list + '")' : 'linear-gradient(150deg,hsl(' + (c.h || 210) + ',62%,62%),hsl(' + (((c.h || 210) + 40) % 360) + ',55%,38%))';
     function search() {
       const q = $('fix-q').value.trim(), p = window.CardParser ? window.CardParser.parse(q) : { name: q };
-      const r = window.CardLookup.search(p); list = r.list.length ? r.list : window.CardLookup.suggest(p);
+      // the real card search when it's switched on (app.cardtab.app), otherwise the built-in catalog
+      if (window.CARDTAB_API && q) {
+        const my = ++tok; clearTimeout(qt); $('fix-res').innerHTML = '<p class="ntf-fine">Looking it up…</p>';
+        qt = setTimeout(() => window.CardLookup.remote(p).then(r => { if (my !== tok) return; paint(q, r, p); }), 320); return;
+      }
+      paint(q, window.CardLookup.search(p), p);
+    }
+    function paint(q, r, p) {
+      list = r.list.length ? r.list : window.CardLookup.suggest(p);
       $('fix-res').innerHTML = !q ? '' : list.length ? (r.list.length ? '' : '<div class="ntf-gl">Did you mean</div>') + '<div class="ntf-lst">' + list.map((c, i) => '<button type="button" class="ntf-li" data-i="' + i + '"><span class="ntf-art" style="background:' + artBg(c) + '"></span><span><b>' + esc(c.n) + '</b><small>' + esc([c.num, c.s].filter(Boolean).join(' · ')) + '</small></span></button>').join('') + '</div>'
         : '<p class="ntf-fine">No match yet. Try the card number, or leave it as typed. We’ll keep looking once card search goes live.</p>';
     }
@@ -154,11 +162,20 @@
       if (e.target === d || e.target.closest('[data-fix-close]')) { d.close(); return; }
       const li = e.target.closest('.ntf-li'); if (!li || !entry) return;
       const c = list[+li.dataset.i], nm = listName(c);
-      await S.matchCard(entry.id, { name: nm, art: c.art || null });
+      if (mode === 'card') {   // keep the entry as typed; only the card (and its art) changes, and the pick is remembered
+        await S._artPatch(entry.id, { art: c.art ? { list: c.art.list, detail: c.art.detail } : null, artFrom: 'pick', cardId: c.id, cardName: nm, artV2: 1 });
+        if (window.CTArtFill) window.CTArtFill.learn(entry);
+        d.close(); toast('Card changed to ' + c.n + (c.num ? ' · ' + c.num : '') + '.', true); return;
+      }
+      await S.matchCard(entry.id, { name: nm, art: c.art || null, artFrom: 'pick', cardId: c.id, artV2: 1 });
       await save(s => { s.items = (s.items || []).concat([{ id: 'fx:' + entry.id + ':' + now(), kind: 'fixed', cat: 'cards', ts: now(), card: [c.n, c.num].filter(Boolean).join(' · ') }]).slice(-40); s.read = Object.assign({}, s.read); });
       d.close(); toast('Fixed: ' + c.n + '. The amount didn’t change.', true);
     });
-    return { open(e) { entry = e; $('fix-lede').innerHTML = 'You typed <b>“' + esc(e.name) + '”</b>. Pick the right card and we’ll add its name and art. Amounts stay the same.'; $('fix-q').value = e.name; search(); d.showModal(); } };
+    $('fix-none').addEventListener('click', async () => { if (!entry) return; await S._artPatch(entry.id, { art: null, artFrom: 'none', artV2: 1 }); if (window.CTArtFill) window.CTArtFill.learn(entry); d.close(); toast('No card art for this entry.', true); });
+    return {
+      open(e) { mode = 'fix'; entry = e; $('fix-h').textContent = 'Match your card'; $('fix-none').hidden = true; $('fix-lede').innerHTML = 'You typed <b>“' + esc(e.name) + '”</b>. Pick the right card and we’ll add its name and art. Amounts stay the same.'; $('fix-q').value = e.name; search(); d.showModal(); },
+      change(e) { mode = 'card'; entry = e; $('fix-h').textContent = 'Change card'; $('fix-none').hidden = false; $('fix-lede').innerHTML = 'Pick the printing that matches <b>“' + esc(e.name) + '”</b>. Your entry stays as you typed it; only the card and its art change. Entries with the same name will use your pick too.'; $('fix-q').value = (e.source || e.name); search(); d.showModal(); }
+    };
   })();
 
   // ---------- Free tips: patterns, capped ----------
@@ -197,5 +214,5 @@
 
   S.on(() => { paintDot(); if (dlg.open) paint(); checkTips(); });
   paintDot();
-  window.CTNotify = { open, close, unread, premiumTap, demo, clearDemo, paintDot, fix: e => fix.open(e) };
+  window.CTNotify = { open, close, unread, premiumTap, demo, clearDemo, paintDot, fix: e => fix.open(e), change: e => fix.change(e) };
 })();

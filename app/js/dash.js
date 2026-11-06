@@ -165,7 +165,7 @@
   function factsHtml(t) { return t.note ? '<div class="ct-row-note">' + esc(t.note) + '</div>' : ''; }
   const COND = { 'near mint': 'NM', 'mint': 'M', 'lightly played': 'LP', 'moderately played': 'MP', 'heavily played': 'HP', 'damaged': 'DMG' };
   const condShort = c => c ? (COND[String(c).toLowerCase()] || c) : '';
-  const ACTS = '<div class="ct-demo-actions"><button type="button" data-act="edit">Edit</button><button type="button" data-act="dup">Duplicate</button><button type="button" data-act="del">Delete</button></div>';
+  const ACTS = '<div class="ct-demo-actions ct-acts4"><button type="button" data-act="edit">Edit</button><button type="button" data-act="card">Change card</button><button type="button" data-act="dup">Duplicate</button><button type="button" data-act="del">Delete</button></div>';
   function detailsHtml(t) {
     return '<div class="ct-open-actions"><div class="ct-row-expanded-info"><div class="ct-dtot"><i class="ct-mdash"></i><div class="ct-dtrow">' + ACTS + keptRow(t) + '</div></div>' + factsHtml(t) + '<div class="ct-pacts">' + ACTS + '</div></div></div>';
   }
@@ -345,6 +345,7 @@
     const t = S.get(id); if (!t) return;
     if (a === 'edit') window.CTEditor.open(t, afterEditor);
     else if (a === 'del') removeAnimated(id);
+    else if (a === 'card') { if (window.CTNotify) window.CTNotify.change(t); }
     else if (a === 'dup') {
       if (S.usage().blocked) { limitToast(); return; }
       const c = await S.duplicate(id); justAdded = c.id; expanded = null; render(); usageToast('Entry duplicated');
