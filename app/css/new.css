@@ -1328,3 +1328,12 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 /* testing tool: Add New timing readout */
 .as-diag{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:5;display:grid;gap:2px;padding:10px 12px;border-radius:14px;background:#111;color:#f4f4f1;font:600 12.5px/1.4 ui-monospace,Menlo,monospace;box-shadow:0 8px 24px rgba(0,0,0,.35)}
 .as-diag b{font-weight:800}
+
+/* v37.26 phones: Add New starts its slide with its top edge just inside the bottom of the screen (like the profile sheet),
+   never fully below it. Safari pauses animations on things that are completely off screen until you scroll, which is
+   why the sheet only appeared after a drag. */
+@keyframes ct-shUpEdge{from{transform:translateY(calc(100% - 2px))}to{transform:none}}
+@media(max-width:760px){
+ #as .phone{transform:translateY(calc(100% - 2px))}
+ #as.go .phone{animation:ct-shUpEdge .42s cubic-bezier(.2,.8,.2,1) both}
+}
