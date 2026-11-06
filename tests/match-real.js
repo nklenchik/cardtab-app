@@ -70,6 +70,22 @@ const cases = [
  ['1998 Pokemon Japanese Starter Red Green Gift Holo Scyther #123', 'Placide - Voodoo Sentinel · 123 · Welcome to Night City - Retail · Rare', null],
  ['Raichu - 014/102 - Base Set', `Raichu · 014/102 · Base Set · Holo Rare
   Raichu · 014/102 · Base Set (Shadowless) · Holo Rare`, 0],
+ ["Son Goku, Nimbus Master, Collector's Selection Vol. 2, CGC 10 Pristine", `Son Goku, Nimbus Master · DB3-003 · Collector's Selection Vol. 2 · Promo
+  Son Goku, Nimbus Master · DB3-003 · Draft Box 06 - Giant Force · Super Rare
+  Son Goku, Nimbus Master · DB3-003 · Mythic Booster · Super Rare
+  Son Goku, Nimbus Master (Gold Stamped) · DB3-003 · Mythic Booster · Super Rare`, 0],
+ ["Gengar SWSH052 - Pokemon Champion's Path Pin Collection", "Gengar - SWSH052 · SWSH052 · SWSH: Sword & Shield Promo Cards · Promo", 0],
+ ['Umbreon - SV: Prismatic Evolutions', `Umbreon · 041/147 · Aquapolis · Rare
+  Umbreon · 22/95 · Call of Legends · Holo Rare
+  Umbreon ex · 060/131 · SV: Prismatic Evolutions · Double Rare
+  Umbreon ex - 161/131 · 161/131 · SV: Prismatic Evolutions · Special Illustration Rare`, null],
+ ['Umbreon ex - SV: Prismatic Evolutions', `Umbreon · 041/147 · Aquapolis · Rare
+  Umbreon ex · 060/131 · SV: Prismatic Evolutions · Double Rare
+  Umbreon ex - 161/131 · 161/131 · SV: Prismatic Evolutions · Special Illustration Rare`, null],
+ ['Charizard', `Charizard · 4/102 · Base Set · Holo Rare
+  Charizard · 006/165 · SV: 151 · Rare`, null],
+ ['SS Son Gohan Self Taught Truth (SPR)', `SS Son Gohan, Self-Taught Truth · BT23-011 · Perfect Combination · Super Rare
+  SS Son Gohan, Self-Taught Truth (SPR) · BT23-011 · Perfect Combination · Special Rare`, 1],
 ];
 let pass = 0;
 for (const [name, list, want] of cases) { const cards = L(list), e = { name }, p = W._parsed(e), got = W._clearMatch(cards, p, e);

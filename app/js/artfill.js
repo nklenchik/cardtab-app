@@ -26,6 +26,7 @@
     if (m) return { name: m[1].trim(), number: m[2], set: m[3].trim(), game: '' };
     let q = e.parsed && (e.parsed.name || e.parsed.number) ? Object.assign({}, e.parsed) : (() => { const p = P.parse(e.source || e.name || ''); return { name: p.name || e.name, number: p.number || '', set: p.set || '', game: p.game || '' }; })();
     // "Jolteon - 169 SV: Scarlet & Violet Promo Cards, Pokemon, 169": the number sits at the front of the set
+    if (!q.number) { const inName = /\b([A-Za-z]{2,6}\d{2,4}[A-Za-z]?|\d{1,3}\/\d{1,3})\b/.exec(q.name || ''); if (inName && !/^(ss\d|ssb|ssg|ex\d+|bt\d+|db\d+)$/i.test(inName[1]) && /\d{2,}/.test(inName[1])) { q.number = inName[1]; q.name = q.name.replace(inName[0], ' ').replace(/\s+/g, ' ').trim(); } }
     const lead = /^#?(\d{1,4})\s+(.+)$/.exec(q.set || ''); if (lead && !q.number) { q.number = lead[1]; q.set = lead[2].replace(/,\s*pokemon\b.*$/i, '').trim(); }
     return q;
   }
@@ -70,6 +71,7 @@
       return sides(c.n).some(v => {
         const cw = words(v); if (!cw.length) return false;
         if (numExact(c) && (cw.every(w => has(ew, w)) || (pw.length && pw.every(w => has(new Set(cw), w))))) return true;   // number matches exactly and one name holds the other                 // number matches exactly and the card's whole name is in the entry
+        if (cw.every(w => has(ew, w)) && (/,|\/\//.test(v) || cw.length >= 3)) return true;   // a distinctive name, whole, in the entry ("Son Goku, Nimbus Master, Collector's Selection Vol. 2")
         if (cw.filter(w => has(ew, w)).length / cw.length < 0.75) return false;      // the card's name is in the entry
         const cs = new Set(cw); return !pw.length || pw.filter(w => has(cs, w)).length / pw.length >= 0.75;   // and the entry's card name is the card's
       });
@@ -96,7 +98,8 @@
     if (ok.length > 1 && pw.length) ok = narrow(ok, c => sides(c.n).some(v => { const cs = new Set(words(v)); return pw.every(w => has(cs, w)); }));
     if (ok.length === 1) return ok[0];
     // versions of the very same card (reprints, alternate arts, pre-release stamps): the everyday printing
-    if (new Set(ok.map(c => baseName(c.n))).size === 1) return standard(ok);
+    // (only when they share a card number, or the name is distinctive: two Charizards from different sets are different cards)
+    if (new Set(ok.map(c => baseName(c.n))).size === 1 && (new Set(ok.map(c => numKey(c.num))).size === 1 || ok.every(c => /,|\/\//.test(c.n) || words(clean(c.n)).length >= 3))) return standard(ok);
     return null;                                                          // different cards with similar names: don't guess
   }
 
@@ -143,6 +146,7 @@
         }
         // nothing found for a long name with extra parts ("Son Goku, Nimbus Master, Collector's Selection Vol. 2"): try just the card's name
         if (cards && !cards.length && !held && (g.p.name.match(/,/g) || []).length >= 2) { const short = Object.assign({}, g.p, { name: g.p.name.split(',').slice(0, 2).join(',').trim() }); try { cards = await lookup(short); } catch (err) { if (err.later) held = true; } }
+        if (cards && cards.length && !held && g.p.set && !clearMatch(cards, g.p, g.e)) { const es = sigWords(g.p.set); if (es.length && !cards.some(c => sigWords(c.s).some(w => es.includes(w)))) { try { const more = await lookup(Object.assign({}, g.p, { name: g.p.name + ' ' + es.join(' '), set: '' })); if (more && more.length) cards = more.concat(cards); } catch (err) { if (err.later) held = true; } } }
         if (held) { heldUntil = Date.now() + LATER; if (force) report.push({ entry: '(stopped)', looked: '', n: 0, result: 'monthly limit reached', got: [] }); break; }   // today's share is used up: stop quietly and pick up where we left off in a few hours
         const card = cards ? clearMatch(cards, g.p, g.e) : null, now = new Date().toISOString();
         for (const id of g.ids) {
