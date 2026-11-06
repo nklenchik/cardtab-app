@@ -19,6 +19,7 @@
     whoName = displayName(session); $('am-name').textContent = whoName; $('am-email').textContent = session.email.endsWith('.local') ? 'Signed in on this device' : session.email;
     applyServer(session);
     if (window.CTSync && Sess.REAL) window.CTSync.start();
+    if (window.CTArtFill && Sess.REAL) window.CTArtFill.start();
     Dash.mount();
     if (!S.persistent) Dash.toast('This browser isn’t letting Card Tab save on the device, so entries last until you close the tab.');
     else if (isNew && !S.all().length) Dash.toast('Welcome to Card Tab');
@@ -31,6 +32,7 @@
   }
   function showAuth() {
     if (window.CTSync) window.CTSync.stop();
+    if (window.CTArtFill) window.CTArtFill.stop();
     S.close(); closeMenu();
     vApp.hidden = true; vAuth.hidden = false; document.title = 'Sign in · Card Tab';
     if (!auth) auth = window.CTAuth.mount(vAuth, (s, isNew) => showApp(s, isNew)); else auth.reset();
@@ -55,6 +57,13 @@
     window.CTSync.onChange(paint);
     window.CTSync.onSignedOut = () => { Sess.check().then(c => { if (!c) { Sess.signOut(); showAuth(); if (auth) auth.error('You were signed out. Sign in again to keep your changes in sync.'); } }); };
   })();
+
+  // card art progress, in the profile menu while it runs
+  if (window.CTArtFill) window.CTArtFill.onChange(pg => {
+    const el = $('am-art'); if (!el) return;
+    el.hidden = !(pg.running && pg.total > 0);
+    if (!el.hidden) el.querySelector('span').textContent = 'Adding card art: ' + pg.done + ' of ' + pg.total + ' cards checked, ' + pg.found + (pg.found === 1 ? ' entry' : ' entries') + ' filled in';
+  });
 
   // ---------- Delete account (from Edit profile) ----------
   (function () {

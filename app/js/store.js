@@ -326,6 +326,14 @@
       meta = {}; for (const k in keep) if (keep[k] !== undefined) await putMeta(k, keep[k]);
       undoStack.length = 0; changed('clear');
     },
+    // card art found in the background (artfill.js): saved like an edit so it syncs, but with no undo step.
+    // A typed card stays flagged as unmatched unless real art was found.
+    async _artPatch(id, patch) {
+      const cur = entries.get(id); if (!cur || cur.deleted) return null;
+      const e = Object.assign(clone(cur), patch, { updatedAt: new Date().toISOString() });
+      if (patch.art) delete e.unmatched;
+      await putEntry(e); changed('art'); return clone(e);
+    },
     // ---------- sync (used by sync.js) ----------
     _sync: {
       state() { return meta._sync || null; },
