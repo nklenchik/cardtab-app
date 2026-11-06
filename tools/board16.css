@@ -34,7 +34,7 @@ dialog.sheet.pms .awp.pmp{padding:0!important;border:0!important;gap:0;overflow:
 #aw .thumb.lockd .k-feat .wb{filter:none}
 #aw .thumb.lockd .k-feat .fwi,#aw .thumb.lockd .k-feat .fwt{filter:blur(1.6px)}
 #aw .thumb.lockd .badge{background:var(--card);color:var(--muted);border:1px solid var(--line)}
-html.cbfree #cb-stories>span::after,html.cbfree #cb-ask>span::after,html.cbfree #cb-share>span::after{content:"";display:inline-block;width:11px;height:11px;margin-left:6px;vertical-align:-1px;background:currentColor;opacity:.55;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.8' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2.5'/%3E%3Cpath d='M8 11V8a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.8' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2.5'/%3E%3Cpath d='M8 11V8a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") center/contain no-repeat}
+html.cbfree #cb-ask>span::after,html.cbfree #cb-share>span::after{content:"";display:inline-block;width:11px;height:11px;margin-left:6px;vertical-align:-1px;background:currentColor;opacity:.55;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.8' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2.5'/%3E%3Cpath d='M8 11V8a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.8' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2.5'/%3E%3Cpath d='M8 11V8a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") center/contain no-repeat}
 /* the quiet line */
 .cbquiet{display:flex;align-items:center;gap:10px;margin:0 0 14px;padding:10px 8px 10px 16px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:13px;color:var(--muted)}
 .cbquiet b{color:var(--text)}
@@ -75,8 +75,8 @@ html.cbfree #cr.pre .crcmp{display:none}
 @media (min-width:761px){.cbx #cb .topbar{margin-bottom:var(--topgap,60px)!important}.cbx #cb .cbquiet{margin-bottom:20px}}
 /* when Stories / Ask / Share show as icons only (desktop up to 1340px), the lock sits as a small badge on the corner */
 @media (min-width:761px) and (max-width:1340px){
-  html.cbfree #cb-stories,html.cbfree #cb-ask,html.cbfree #cb-share{position:relative}
-  html.cbfree #cb-stories::after,html.cbfree #cb-ask::after,html.cbfree #cb-share::after{content:"";position:absolute;right:-2px;top:-2px;width:16px;height:16px;border-radius:50%;background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='3' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2.5'/%3E%3Cpath d='M8 11V8a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") center/9px no-repeat;box-shadow:0 0 0 1px var(--line),0 1px 2px rgba(0,0,0,.15)}
+  html.cbfree #cb-ask,html.cbfree #cb-share{position:relative}
+  html.cbfree #cb-ask::after,html.cbfree #cb-share::after{content:"";position:absolute;right:-2px;top:-2px;width:16px;height:16px;border-radius:50%;background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='3' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2.5'/%3E%3Cpath d='M8 11V8a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") center/9px no-repeat;box-shadow:0 0 0 1px var(--line),0 1px 2px rgba(0,0,0,.15)}
 }
 
 /* desktop rows follow the window height (set in fitRows) so the first three rows fit on screen */

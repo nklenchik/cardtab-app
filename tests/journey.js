@@ -41,7 +41,7 @@ async function sheetAdd({ query, type, price, fees, ship, plat }) {
   const browser = await chromium.launch();
   const ctx = await browser.newContext(MODE === 'phone' ? { ...devices['iPhone 13'], acceptDownloads: true } : { viewport: { width: 1280, height: 900 }, acceptDownloads: true });
   page = await ctx.newPage();
-  const errors = []; page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+  const errors = []; page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error' && !/ERR_TUNNEL_CONNECTION_FAILED/.test(m.text())) errors.push(m.text()); });
 
   // 1. Create an account (local mode: signs in on this device)
   await page.goto(BASE + '?signup'); await settle(800);

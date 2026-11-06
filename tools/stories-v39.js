@@ -191,3 +191,47 @@ async function shareVideo(n,share){if(!VMIME){pl.toast('This browser can’t mak
     if((share||phoneUI())&&navigator.canShare&&navigator.canShare({files:[f]})){pl.toast('Your video is ready.');try{await navigator.share({files:[f]})}catch(e){}}
     else{download(b,name);pl.toast('Saved “'+SS[n].k+'” as a video.')}}catch(e){console.error(e);pl.toast('Couldn’t make the video. Try again.')}finally{$('xhost').innerHTML=''}}
 window.csVideo=storyVideo;
+// ================= v39.1 Free users: a taste of Stories =================
+// Free: Last month only (longer ranges show a Premium note), two themes (Jewel + a theme of the month matched to the color
+// of your profile picture, or random with the default color), Clean and Blobs backgrounds, one video a month (resets with
+// your 20 free entries), images any time, and the cardtab.app highlight up top. Premium: everything, with cardtab.app as
+// plain text in the lower right.
+const isFree=()=>{try{return !!(EMB&&parent.CTBoardPlan&&parent.CTBoardPlan()!=='premium')}catch(e){return false}};
+const ym=()=>TODAY.slice(0,7);
+function tomIdx(){let a={},em='';try{a=JSON.parse(localStorage.getItem('cb.avatar'))||{}}catch(e){}try{const s=parent.CTSession&&parent.CTSession.current();em=(s&&s.email)||''}catch(e){}
+  const mi=(+TODAY.slice(0,4))*12+(+TODAY.slice(5,7)),seed=[...em].reduce((x,c)=>(x*31+c.charCodeAt(0))>>>0,7)+mi;
+  const pool=TH.map((_,i)=>i).filter(i=>i!==0),col=!a.photo&&/^#[0-9a-f]{6}$/i.test(a.color||'')&&a.color.toLowerCase()!=='#a50e37'?a.color:null;
+  if(!col)return pool[seed%pool.length];
+  // the three themes whose main color is closest to your profile color, taking turns month by month
+  const near=pool.map(i=>({i,d:cdist(swCols(TH[i])[0],col)})).sort((x,y)=>x.d-y.d).slice(0,3);return near[mi%near.length].i}
+const freeThemes=()=>[0,tomIdx()];
+const themeOK=i=>!isFree()||freeThemes().includes(i),bgOK=b=>!isFree()||b!=='Stickers';
+// themes: free users see their two in the chips; the sheet shows the rest with a lock
+const _paintChips=paintChips;paintChips=function(){_paintChips();if(!isFree())return;const f=freeThemes(),el=$('thm');if(!themeOK(th))th=f[1];
+  el.innerHTML=f.map(i=>'<button class="tchip" aria-pressed="'+(i===th)+'" data-i="'+i+'"><span class="tsw">'+sw(TH[i])+'</span>'+TH[i][0]+'</button>').join('')+'<button class="tchip more" data-all><span class="rbw" aria-hidden="true"></span>All themes</button>'};
+const _pg2=paintGrid;paintGrid=function(){_pg2();if(!isFree())return;$('tgrid').querySelectorAll('[data-i]').forEach(b=>{if(!themeOK(+b.dataset.i)){b.classList.add('lockd');b.setAttribute('aria-disabled','true');b.insertAdjacentHTML('beforeend','<em class="lk" title="Premium"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg></em>')}else if(+b.dataset.i===freeThemes()[1])b.insertAdjacentHTML('beforeend','<em class="tm">This month</em>')})};
+$('tgrid').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(!b||themeOK(+b.dataset.i))return;e.stopImmediatePropagation();$('ths-s').textContent='All 24 themes come with Premium. Free includes Jewel and a theme of the month picked from your profile color.';$('ths-s').classList.add('msg')},true);
+const _setTheme2=setTheme;setTheme=function(i){if(!themeOK(i)){try{parent.CTPremiumOpen&&parent.CTPremiumOpen('stories')}catch(e){}return}_setTheme2(i)};
+const _list=window.csThemes.list;window.csThemes.list=()=>isFree()?freeThemes().map(i=>({i,name:TH[i][0],sw:swCols(TH[i])})):_list();
+// backgrounds: Stickers is Premium
+$('bgrow').addEventListener('click',e=>{const b=e.target.closest('[data-bg]');if(!b||bgOK(b.dataset.bg))return;e.stopImmediatePropagation();$('ths-s').textContent='Stickers comes with Premium. Clean and Blobs are free.';$('ths-s').classList.add('msg')},true);
+const bgPaintLock=()=>{if(!isFree())return;const s=$('bgrow').querySelector('[data-bg="Stickers"]');if(s&&!s.querySelector('.lk')){s.classList.add('lockd');s.insertAdjacentHTML('beforeend','<em class="lk" title="Premium"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg></em>')}};
+new MutationObserver(bgPaintLock).observe($('bgrow'),{childList:true});
+// ranges: free users start on Last month; anything longer shows a Premium note instead of the stories
+let freeStart=false;
+const _paintShelf=paintShelf;paintShelf=function(){if(isFree()){if(!freeStart){freeStart=true;if(per!=='lm'){setPer('lm');return}}if(!bgOK(bgStyle))bgStyle='Blobs';if(!themeOK(th))th=freeThemes()[1];
+    if(per!=='lm'){const p=palN(0);SS=[];shelf.innerHTML='<div class="plock" style="color:'+p.ink+'">'+bgSvg('Blobs',p,5,400,300)+'<div class="sin"><small>'+esc(D.lab)+'</small><span class="h4">Longer recaps come with Premium.</span><p>Free Stories cover last month. Premium adds your year, the last 12 months and any dates you pick.</p><div class="pla"><button type="button" class="b1" data-lm>Show last month</button><button type="button" class="b2" data-prem>See Premium</button></div></div></div>';return}}
+  else freeStart=false;_paintShelf()};
+shelf.addEventListener('click',e=>{if(e.target.closest('[data-lm]'))setPer('lm');else if(e.target.closest('[data-prem]')){try{parent.CTPremiumOpen&&parent.CTPremiumOpen('stories')}catch(er){}}});
+// videos: one a month for free users (counted in the account, reset with the 20 free entries)
+const vUsed=()=>{try{const m=parent.CTStore.meta('storiesVideo');return m&&m.month===ym()?m.n:0}catch(e){return 0}};
+const vLeft=()=>isFree()?Math.max(0,1-vUsed()):Infinity;
+const _shareVideo=shareVideo;shareVideo=async function(n,share){if(isFree()&&vLeft()<1){let on='next month';try{on=parent.CTStore.usage().resetsOn}catch(e){}pl.toast('Your free video for '+mName(ym())+' is used. More on '+on+', or go Premium.');return}
+  await _shareVideo(n,share);if(isFree()){try{await parent.CTStore.setMeta('storiesVideo',{month:ym(),n:vUsed()+1})}catch(e){}}};
+// the share sheet says how many free videos are left
+const _build=pl.build.bind(pl);pl.build=function(){_build();if(isFree()&&VMIME){const n=plEl.querySelector('.pshs .shn');if(n)n.textContent=vLeft()?'1 free video this month · images any time':'Free video used this month · images any time'}};
+// the cardtab.app mark: Premium gets plain text in the lower right; free keeps the highlight up top
+const _stHTML=stHTML;stHTML=function(s,i,on){let h=_stHTML(s,i,on);if(!isFree()){const p=palN(i);h=h.replace(/<div class="brand">[\s\S]*?<\/div>/,'').replace('<div class="sin">','<div class="sin"><span class="pmark" style="color:'+p.ink+'">cardtab.app</span>')}return h};
+// keep the plan in step when it changes (Premium turned on or off)
+const _cs2=window.csSync;window.csSync=function(){_cs2();paintChips();paintShelf();tellParent()};
+paintChips();paintShelf();

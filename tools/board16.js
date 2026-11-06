@@ -46,9 +46,10 @@ pms.addEventListener('click',e=>{if(e.target===pms||e.target.closest('[data-clos
     if(window.CTBoardUpgrade){pms.close();setTimeout(()=>window.CTBoardUpgrade(),calm.matches?0:260)}else toast('Upgrading opens at launch')}});
 // --- locks ---
 const lockAct=(el,ctx)=>el&&el.addEventListener('click',e=>{if(!cbFree())return;e.preventDefault();e.stopImmediatePropagation();openPm(ctx)},true);
-lockAct($('cb-stories'),'stories');lockAct($('cb-ask'),'ask');lockAct($('cb-share'),'share');
+// v39.1: free users get a taste of Stories (last month, two themes, one video a month), so its button isn't locked
+lockAct($('cb-ask'),'ask');lockAct($('cb-share'),'share');
 $('cb-amenu').addEventListener('click',e=>{if(!cbFree())return;const b=e.target.closest('[data-am]');if(!b)return;const a=b.dataset.am;
-  if(a==='import'||a==='export'||a==='plan'||(a==='go-stories'&&$('cb-amenu').dataset.ctx!=='stories')){e.preventDefault();e.stopImmediatePropagation();closeMenus();setTimeout(()=>openPm(a==='plan'?null:a==='go-stories'?'stories':a),calm.matches?0:120)}},true);
+  if(a==='import'||a==='export'||a==='plan'){e.preventDefault();e.stopImmediatePropagation();closeMenus();setTimeout(()=>openPm(a==='plan'?null:a),calm.matches?0:120)}},true);
 $('aw-list').addEventListener('click',e=>{const th=e.target.closest('.thumb.lockd');if(!th)return;e.preventDefault();e.stopImmediatePropagation();
   aw.close();setTimeout(()=>openPm(null),calm.matches?0:260)},true);
 // the time range menu: what Free covers first, then everything else under "With Premium", each with a lock
@@ -129,7 +130,7 @@ window.cbSyncPlan();
  new MutationObserver(()=>{if(tip.classList.contains('on'))show();else clear()}).observe(tip,{attributes:true,attributeFilter:['class']});
 })();
 // v34.1: warm Stories up in idle time (Premium), so the first slide into it never waits on loading
-;(()=>{const s=$('cb-stories');if(!s)return;const warm=()=>{if(!cbFree())s.dispatchEvent(new Event('focus'))};(window.requestIdleCallback||(f=>setTimeout(f,2500)))(warm,{timeout:5000})})();
+;(()=>{const s=$('cb-stories');if(!s)return;const warm=()=>{s.dispatchEvent(new Event('focus'))};(window.requestIdleCallback||(f=>setTimeout(f,2500)))(warm,{timeout:5000})})();
 // v34.2: the profile editor can open from the app's menu on any page (the board stays closed underneath if it was),
 // and every avatar in the app follows what you save here
 ;(()=>{const av=$('av');if(!av)return;
