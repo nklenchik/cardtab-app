@@ -61,7 +61,13 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && dd) { const b = dd.btn; closeDD(); b.focus(); } });
 
   // ---------- Board: same date as Entries, platform in the row ----------
-  function linkBoard() { if (!window.cbLinkRange) return; const [a, b] = CTMonth.bounds(); window.cbLinkRange(CTMonth.isAll() ? null : a, b, CTMonth.label()); }
+  function linkBoard() { if (!window.cbLinkRange) return; const [a, b] = CTMonth.bounds(); window.cbLinkRange(CTMonth.isAll() ? null : a, b, CTMonth.label()); setTimeout(boardLabel, 0); }   // after the switchers repaint
+  // Free: when the Board falls back to the last 3 months, its own copy of the date switcher says so too (not "All")
+  function boardLabel() {
+    const own = document.querySelector('#cb .ms-board'), l = $('cb-perl'); if (!own || !l) return;
+    const lab = own.querySelector('.ms-lab > span:last-child');
+    if (lab && /last 3 months/i.test(l.textContent) && !/last 3 months/i.test(CTMonth.label())) { lab.textContent = l.textContent; own.classList.remove('is-all'); }
+  }
   $('ct-period').addEventListener('change', linkBoard);
   // a plan change re-links too, so Free goes back to the last 3 months and Premium gets the full date back
   if (window.CTStore) CTStore.on(r => { if (CTMonth.isAll() || r === 'plan') linkBoard(); });
@@ -71,7 +77,7 @@
     linkBoard();
     // narrower screens: the board's own copy of the switcher, where its old date button was
     const tctl = document.querySelector('#cb .tctl'), own = CTMonth.make('ms-main ms-board');
-    if (tctl) tctl.insertBefore(own, $('cb-per').parentElement);
+    if (tctl) tctl.insertBefore(own, $('cb-per').parentElement); boardLabel();
     // wide screens: platform, in the header row
     const w = document.createElement('div'); w.className = 'sh-dd';
     w.innerHTML = '<button type="button" class="sh-ddb" aria-haspopup="menu" aria-expanded="false"><span></span>' + CHEV + '</button>';

@@ -15,6 +15,8 @@ const { chromium, devices } = require('playwright');
   const lab = () => p.evaluate(() => document.getElementById('cb-perl').textContent);
   await p.evaluate(() => CTMonth.set('all')); await p.waitForTimeout(700);
   ok(/last 3 months/i.test(await lab()), w + ' free + Entries "All" → Board shows ' + await lab());
+  const own = await p.evaluate(() => { const o = document.querySelector('#cb .ms-board'); return o && o.offsetParent ? o.querySelector('.ms-lab').textContent : null; });
+  if (own !== null) ok(/last 3 months/i.test(own), w + ' Board\'s own switcher says: ' + own);
   await p.evaluate(() => { const d = new Date(); d.setMonth(d.getMonth() - 8); CTMonth.set('m:' + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')); }); await p.waitForTimeout(700);
   ok(/last 3 months/i.test(await lab()), w + ' free + 8 months ago → Board shows ' + await lab());
   await p.evaluate(() => { const d = new Date(); d.setMonth(d.getMonth() - 1); CTMonth.set('m:' + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')); }); await p.waitForTimeout(700);
