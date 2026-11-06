@@ -36,6 +36,7 @@
   const sh = document.createElement('header'); sh.className = 'ct-shell'; sh.dataset.page = 'entries';
   sh.innerHTML = '<div class="sh-in"><div class="sh-brand"><img src="assets/logo-128.webp" alt="" width="30" height="30"><span class="sh-name"><span>Card Tab</span></span></div>' +
     '<div class="sh-tabs"></div><div class="sh-acts"><div class="sha on" data-p="entries"></div><div class="sha" data-p="board"></div><div class="sha" data-p="stories"></div></div>' +
+    '<button type="button" class="sh-bell sh-ic" aria-label="Notifications"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 1112 0c0 5 2 6.5 2 6.5H4S6 14 6 9z"/><path d="M10 19a2 2 0 004 0"/></svg></button>' +
     '<button type="button" class="sh-ask sh-ic" aria-label="Ask about your numbers">' + SPARK + '</button><div class="sh-me"></div></div>' +
     '<label class="sh-field">' + QI + '<input type="search" placeholder="Search all months" aria-label="Search cards, sets and platforms" autocomplete="off" enterkeyhint="search"><button type="button" class="sh-x">Cancel</button></label>';
   document.body.appendChild(sh);
@@ -74,6 +75,7 @@
     G('stories').append(saveAll, sShare);
     placeAll();
   }
+  sh.querySelector('.sh-bell').addEventListener('click', () => { if (window.CTNotify) window.CTNotify.open('list'); });
   sh.querySelector('.sh-ask').addEventListener('click', () => { if (window.CTAskOpen) window.CTAskOpen(); else if (window.CTBoardLoader) window.CTBoardLoader.load().then(() => window.CTAskOpen && window.CTAskOpen()).catch(() => {}); });
 
   // ---------- which page, and the header for it ----------

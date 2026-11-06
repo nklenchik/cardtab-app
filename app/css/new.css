@@ -1428,3 +1428,22 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 @keyframes zmTip{0%{opacity:0}12%,75%{opacity:1}100%{opacity:0}}
 @media(prefers-reduced-motion:reduce){.zm-bg,.zm-x,.zm-tip{animation:none}}
 .zm.zoomed .zm-tip,.zm.out .zm-tip{visibility:hidden}
+
+/* v38.3 the bell in the header, next to Ask: the same grey as the tabs you're not on, the red dot when something's new */
+.sh-bell{position:relative;color:var(--ct-muted)}
+.sh-bell.has-ntf::after{content:"";position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;background:var(--ntf-dot);box-shadow:0 0 0 2px var(--s-bg,#f8f7f4);animation:ntfPop .35s cubic-bezier(.2,.8,.2,1) both}
+.app-avatar.has-ntf::after{display:none}
+/* desktop: the notifications panel slides in from the right, like Ask */
+@keyframes ntfIn{from{transform:translateX(100%)}to{transform:none}}
+@keyframes ntfOut{to{transform:translateX(100%)}}
+@media(min-width:761px){
+ #ntf[open]{display:flex!important;justify-content:flex-end;align-items:stretch;padding:0!important}
+ #ntf .ntf-form{width:min(420px,100vw)!important;max-width:none!important;height:100%!important;max-height:none!important;margin:0!important;border-radius:24px 0 0 24px!important;overflow:auto;animation:ntfIn .38s cubic-bezier(.2,.8,.2,1) both!important}
+ #ntf.closing .ntf-form{animation:ntfOut .22s cubic-bezier(.4,0,1,1) both!important}
+}
+@media(min-width:761px){.sh-in{grid-template-columns:148px auto minmax(0,1fr) auto auto auto}}
+/* v38.3 Your platforms */
+.ntf-addp{display:flex;gap:8px;margin:0 0 12px}
+.ntf-addp input{flex:1;min-width:0;height:44px;border-radius:14px;border:1.5px solid var(--s-hair);background:var(--s-card);padding:0 14px;font:600 16px Manrope,system-ui,sans-serif;color:var(--text);outline:none}
+.ntf-addp input:focus{border-color:var(--brand,#b0123d)}
+.ntf-addp .ntf-btn{height:44px;padding:0 18px}

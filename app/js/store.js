@@ -181,6 +181,8 @@
       const hit = all.find(p => p.toLowerCase() === n.toLowerCase()); if (hit) return hit;
       await putMeta('customPlatforms', (meta.customPlatforms || []).concat([n])); changed('platforms'); return n;
     },
+    // Removing your own platform only takes it off the pickers; entries that already use it keep it
+    async removePlatform(name) { await putMeta('customPlatforms', (meta.customPlatforms || []).filter(p => p !== name)); changed('platforms'); },
     // Everything to offer when picking a platform: ones you use most, then your own, then the standard list
     // the pickers end with their own "Other…" (type a platform), so a plain "Other" isn't listed separately
     pickerPlatforms() { return [...new Set(this.platforms().concat(meta.customPlatforms || [], DEFAULT_PLATFORMS))].filter(p => p.toLowerCase() !== 'other'); },

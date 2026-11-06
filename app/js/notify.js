@@ -45,8 +45,9 @@
 
   // ---------- the dot and the menu count ----------
   function paintDot() {
-    const n = unread(), av = $('app-avatar');
-    if (av) { av.classList.toggle('has-ntf', n > 0); av.setAttribute('aria-label', n ? 'Account, ' + n + (n === 1 ? ' new notification' : ' new notifications') : 'Account'); }
+    // the dot sits on the bell in the header (next to Ask); the menu row keeps its count
+    const n = unread();
+    document.querySelectorAll('.sh-bell').forEach(bl => { bl.classList.toggle('has-ntf', n > 0); bl.setAttribute('aria-label', n ? 'Notifications, ' + n + ' new' : 'Notifications'); });
     const b = $('am-ntf-n'); if (b) { b.textContent = n; b.hidden = !n; }
   }
 
@@ -90,13 +91,22 @@
       '<div class="ntf-gl">Email</div><div class="ntf-set">' + sw('emailOff', p.emailOff, 'Unsubscribe from all emails', 'No tips, news or reminders by email') + '</div>' +
       '<p class="ntf-fine">You’ll still get an email if a payment fails, plus one reminder. Emails start once accounts go live.</p>';
   }
+  // Your platforms (opened from the profile menu): the ones you added yourself, to add more or remove a typo
+  function renderPlats() {
+    const mine = S.customPlatforms(), used = new Set(S.platforms());
+    return '<p class="ntf-lede">Platforms you add show up in Add New and the full form, after the standard ones like eBay and TCGplayer.</p>' +
+      '<form class="ntf-addp" id="ntf-addp"><input id="ntf-pin" maxlength="40" autocomplete="off" placeholder="Add a platform, like a local shop" aria-label="New platform name" enterkeyhint="done"><button type="submit" class="ntf-btn p">Add</button></form>' +
+      (mine.length ? '<div class="ntf-set">' + mine.map(p => '<div class="ntf-sr"><div><b>' + esc(p) + '</b><span>' + (used.has(p) ? 'Used in your entries' : 'Not used yet') + '</span></div><button type="button" class="ntf-btn" data-rmp="' + esc(p) + '">Remove</button></div>').join('') + '</div>'
+        : '<p class="ntf-fine">No platforms of your own yet.</p>') +
+      '<p class="ntf-fine">Removing one takes it off the list. Entries that already use it keep it.</p>';
+  }
   function paint() {
-    dlg.querySelector('#ntf-h').textContent = view === 'settings' ? 'Notification settings' : 'Notifications';
-    dlg.querySelector('.ntf-back').hidden = view !== 'settings'; dlg.querySelector('.ntf-gear').hidden = view === 'settings';
-    $('ntf-body').innerHTML = view === 'settings' ? renderSettings() : renderList();
+    dlg.querySelector('#ntf-h').textContent = view === 'settings' ? 'Notification settings' : view === 'plats' ? 'Your platforms' : 'Notifications';
+    dlg.querySelector('.ntf-back').hidden = view !== 'settings'; dlg.querySelector('.ntf-gear').hidden = view !== 'list';
+    $('ntf-body').innerHTML = view === 'settings' ? renderSettings() : view === 'plats' ? renderPlats() : renderList();
   }
   async function open(v) {
-    view = v === 'settings' ? 'settings' : 'list'; paint(); dlg.showModal();
+    view = v === 'settings' || v === 'plats' ? v : 'list'; paint(); dlg.showModal();
     // opening the list counts as seeing what's there: the dot clears, the "new" marks stay until next time
     if (view === 'list') { const ids = all().map(it => it.id); await save(s => { s.read = s.read || {}; ids.forEach(id => { s.read[id] = 1; }); }); }
   }
@@ -105,6 +115,7 @@
     if (e.target === dlg || e.target.closest('[data-ntf-close]')) { close(); return; }
     if (e.target.closest('.ntf-gear')) { view = 'settings'; paint(); return; }
     if (e.target.closest('.ntf-back')) { view = 'list'; paint(); return; }
+    const rmp = e.target.closest('[data-rmp]'); if (rmp) { await S.removePlatform(rmp.dataset.rmp); paint(); return; }
     const t = e.target.closest('[data-pref]');
     if (t && !t.disabled) { const k = t.dataset.pref, v = t.getAttribute('aria-checked') !== 'true'; window.ctBuzz && window.ctBuzz(); await save(s => { s.prefs = Object.assign({}, DEF, s.prefs, { [k]: v }); }); paint(); return; }
     const b = e.target.closest('[data-act]'); if (!b) return;
@@ -117,6 +128,8 @@
     if (act === 'premium') { close(); window.CTDash && window.CTDash.upgradeNote(); return; }
     if (act === 'billing') { close(); window.CTDash && window.CTDash.toast('Plan and billing arrives with payments.'); return; }
   });
+  dlg.addEventListener('submit', async e => { if (e.target.id !== 'ntf-addp') return; e.preventDefault(); const v = $('ntf-pin').value.trim(); if (!v) return;
+    const n = await S.addPlatform(v); paint(); const i = $('ntf-pin'); if (i) i.focus(); if (n && n !== v && window.CTDash) window.CTDash.toast(n + ' is already in the list'); });
   const toast = (t, undo) => window.CTDash && window.CTDash.toast(t, undo ? { undo: true } : undefined);
 
   // ---------- fixing an unmatched card: pick the right printing; only the name and art change ----------
