@@ -117,17 +117,44 @@
   function openCal() {
     const cur = parse(sel.value);
     cal = { view: (cur.from || today()).slice(0, 7), a: cur.kind === 'custom' ? cur.from : null, b: cur.kind === 'custom' ? cur.to : null };
-    openPop('cal', '<div class="mc-h"><button type="button" class="mc-prev" aria-label="Previous month">' + ARROW(-1) + '</button><b class="mc-t"></b><button type="button" class="mc-next" aria-label="Next month">' + ARROW(1) + '</button></div>' +
+    openPop('cal', '<div class="mc-in"><label><small>From</small><input type="text" class="mc-a" placeholder="mm/dd/yyyy" autocomplete="off" enterkeyhint="next" aria-label="From date"></label><label><small>To</small><input type="text" class="mc-b" placeholder="mm/dd/yyyy" autocomplete="off" enterkeyhint="done" aria-label="To date"></label></div>' +
+      '<div class="mc-h"><button type="button" class="mc-prev" aria-label="Previous month">' + ARROW(-1) + '</button><b class="mc-t"></b><button type="button" class="mc-next" aria-label="Next month">' + ARROW(1) + '</button></div>' +
       '<div class="mc-wk"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div><div class="mc-g"></div>' +
       '<div class="mc-f"><span class="mc-s"></span><button type="button" class="mc-go">Show these days</button></div>');
-    paintCal();
+    paintCal(); syncIn();
+    // type the dates instead: 11/5/2026, 11/5/26, 2026-11-05, Nov 5 or Nov 5 2026 all work; the calendar follows as you type
+    const ia = pop.querySelector('.mc-a'), ib = pop.querySelector('.mc-b');
+    const onType = (el, which) => { const d = typedDay(el.value); el.classList.toggle('bad', !!el.value.trim() && !d); if (!d) return;
+      if (which === 'a') { cal.a = d; if (cal.b && cal.b < d) cal.b = null; } else { if (!cal.a) cal.a = d; else if (d < cal.a) { cal.b = cal.a; cal.a = d; } else cal.b = d; }
+      cal.view = d.slice(0, 7); paintCal(); };
+    ia.addEventListener('input', () => onType(ia, 'a')); ib.addEventListener('input', () => onType(ib, 'b'));
+    ia.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ib.focus(); } });
+    ib.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const g = pop.querySelector('.mc-go'); if (g && !g.disabled) g.click(); } });
+    [ia, ib].forEach(el => el.addEventListener('blur', () => { if (typedDay(el.value)) syncIn(); }));
+    if (!PH()) ia.focus({ preventScroll: true });
     pop.addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b) return;
       if (b.classList.contains('mc-prev') || b.classList.contains('mc-next')) { const n = shift(cal.view, b.classList.contains('mc-prev') ? -1 : 1); if (n <= curKey()) { cal.view = n; paintCal(); } return; }
-      if (b.dataset.d) { const d = b.dataset.d; if (!cal.a || cal.b) { cal.a = d; cal.b = null; } else if (d < cal.a) { cal.b = cal.a; cal.a = d; } else cal.b = d; paintCal(); return; }
+      if (b.dataset.d) { const d = b.dataset.d; if (!cal.a || cal.b) { cal.a = d; cal.b = null; } else if (d < cal.a) { cal.b = cal.a; cal.a = d; } else cal.b = d; paintCal(); syncIn(); return; }
       if (b.classList.contains('mc-go') && cal.a) { const a = cal.a, z = cal.b || cal.a; closePop(); set('rc:' + a + ':' + z); }
     });
   }
+  const MON = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+  function typedDay(v) {
+    v = String(v || '').trim().toLowerCase().replace(/,/g, ' ').replace(/\s+/g, ' '); if (!v) return null;
+    let y, m, d, r;
+    if ((r = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(v))) { y = +r[1]; m = +r[2]; d = +r[3]; }
+    else if ((r = /^(\d{1,2})[\/.-](\d{1,2})(?:[\/.-](\d{2}|\d{4}))?$/.exec(v))) { m = +r[1]; d = +r[2]; y = r[3] ? +r[3] : +today().slice(0, 4); }
+    else if ((r = /^([a-z]{3})[a-z]*\.? (\d{1,2})(?: (\d{4}))?$/.exec(v)) && MON.indexOf(r[1]) > -1) { m = MON.indexOf(r[1]) + 1; d = +r[2]; y = r[3] ? +r[3] : +today().slice(0, 4); }
+    else return null;
+    if (y < 100) y += 2000;
+    const dt = new Date(y, m - 1, d); if (dt.getMonth() !== m - 1 || dt.getDate() !== d) return null;
+    const s = ymd(dt); return s > today() ? null : s;
+  }
+  const typedText = s => s ? s.slice(5, 7) + '/' + s.slice(8, 10) + '/' + s.slice(0, 4) : '';
+  function syncIn() { if (!pop) return; const ia = pop.querySelector('.mc-a'), ib = pop.querySelector('.mc-b'); if (!ia) return;
+    if (document.activeElement !== ia) { ia.value = typedText(cal.a); ia.classList.remove('bad'); }
+    if (document.activeElement !== ib) { ib.value = typedText(cal.b); ib.classList.remove('bad'); } }
   function paintCal() {
     const [y, m] = cal.view.split('-').map(Number), first = new Date(y, m - 1, 1), n = new Date(y, m, 0).getDate(), t = today();
     pop.querySelector('.mc-t').textContent = label(cal.view);

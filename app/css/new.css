@@ -1229,3 +1229,11 @@ html:has(dialog[open]),html:has(dialog[open]) body{overflow:hidden!important;ove
 @media(prefers-reduced-motion:reduce){.ct-tbar{transition:none}}
 /* v37.11: the row shows one number (after fees by default); the full breakdown is in the open row */
 .ct-demo .ct-row .ct-row-amt small{display:none!important}
+/* v37.12: type your dates at the top of the custom calendar */
+.mc-in{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.mc-in label{display:grid;gap:4px;min-width:0}
+.mc-in small{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ct-muted)}
+.mc-in input{width:100%;min-width:0;height:38px;border-radius:10px;border:1px solid var(--s-hair);background:var(--s-track);color:var(--ct-text);font:inherit;font-size:14px;font-weight:650;padding:0 10px;font-variant-numeric:tabular-nums;outline:none;margin:0}
+.mc-in input:focus{border-color:#5b9fe3}
+.mc-in input.bad{border-color:var(--tab-on,#b0123d)}
+@media(max-width:760px){.mc-in input{font-size:16px;height:42px}}
