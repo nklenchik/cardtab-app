@@ -92,7 +92,8 @@ async function search(env, q, ctl) {
 }
 
 async function art(env, ctx, id, size) {
-  const sz = SIZES[size]; if (!sz || !/^[\w-]{3,80}$/.test(id)) return new Response('not found', { status: 404 });
+  const sz = SIZES[size]; // card ids can be long (Dragon Ball ids run past 100 characters), so allow up to 240
+  if (!sz || !/^[\w-]{3,240}$/.test(id)) return new Response('not found', { status: 404, headers: { 'x-art-why': 'bad card id', ...cors(env) } });
   const k = `art/v2/${id}/${size}.webp`;   // v2: copies made before resizing was switched on are ignored
   let obj = await env.ART.get(k);
   if (!obj) {
@@ -144,7 +145,7 @@ export default {
       }
       const m = u.pathname.match(/^\/art\/([^/]+)\/(list|detail)$/);
       if (m) return art(env, ctx, decodeURIComponent(m[1]), m[2]);
-      return new Response('not found', { status: 404 });
+      return new Response('not found', { status: 404, headers: cors(env) });
     } catch (e) {
       return json(env, { error: e.status === 429 ? 'busy, try again in a moment' : 'lookup failed', upstream: e.upstream || null, detail: e.why || String(e.message || '') }, e.status || 500, e.status === 429 ? { 'retry-after': '20' } : {});
     }

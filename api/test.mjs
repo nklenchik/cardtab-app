@@ -25,3 +25,7 @@ assert.equal((await get('/art/bad id/list')).status, 404);
 assert.equal(norm('Raichu #014/102'), 'raichu 014 102');
 assert.deepEqual(pickByNumber([{ number: '014/102' }, { number: '14/64' }], '14/102').length, 1);
 console.log('api tests ok; JustTCG requests for 2 identical lookups:', calls.filter(c => /api.justtcg/.test(c)).length);
+// long ids (Dragon Ball) are allowed
+const longId = 'dragon-ball-super-masters-collector-s-selection-vol-3-supreme-kai-of-time-time-labyrinth-unleashed-super-rare';
+const lr = await get('/art/' + longId + '/list'); assert.notEqual(lr.headers.get('x-art-why'), 'bad card id'); assert.ok(lr.headers.get('access-control-allow-origin'), 'CORS on every art reply');
+console.log('long ids ok:', longId.length, 'chars');
