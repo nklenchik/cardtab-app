@@ -1506,3 +1506,8 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 /* v41.2 sign-in: the buttons' group keeps the card's spacing and full width */
 .auth-form{display:flex;flex-direction:column;gap:14px;min-width:0}
 .auth-form .auth-g,.auth-form .auth-go{width:100%}
+/* v41.3 "Check your inbox": the code box fits the card on every phone, and long emails wrap at sensible places */
+.auth-card.sent .auth-sent{grid-template-columns:minmax(0,1fr)}
+.auth-sent>*{min-width:0}
+.auth-sent .auth-f input{width:100%;min-width:0;box-sizing:border-box}
+.auth-sent-p strong{word-break:normal;overflow-wrap:anywhere}
