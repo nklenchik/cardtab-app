@@ -3,6 +3,7 @@
 (function () {
   'use strict';
   const S = window.CTStore, Sess = window.CTSession, Dash = window.CTDash;
+  const PUBLIC_HOST = /(^|\.)cardtab\.app$|\.pages\.dev$/i.test(location.hostname);   // the real app, as people will see it
   const $ = id => document.getElementById(id);
   const vAuth = $('view-auth'), vApp = $('view-app'), menu = $('app-menu'), av = $('app-avatar');
   let auth = null, whoName = '';
@@ -17,7 +18,8 @@
     av.textContent = (displayName(session)[0] || '?').toUpperCase();
     whoName = displayName(session); $('am-name').textContent = whoName; $('am-email').textContent = session.email.endsWith('.local') ? 'Signed in on this device' : session.email;
     // Admin tools: you (and local testing) only
-    $('am-dev').hidden = !(Sess.LOCAL_MODE || /^(nklenchik@gmail\.com)$/i.test((session && session.email) || ''));
+    // testing tools: always for Nick; for anyone else only on test copies (never on app.cardtab.app or the pages.dev address)
+    $('am-dev').hidden = !(/^(nklenchik@gmail\.com)$/i.test((session && session.email) || '') || (Sess.LOCAL_MODE && !PUBLIC_HOST));
     Dash.mount();
     if (!S.persistent) Dash.toast('This browser isn’t letting Card Tab save on the device, so entries last until you close the tab.');
     else if (isNew && !S.all().length) Dash.toast('Welcome to Card Tab');
@@ -139,7 +141,7 @@
 
   // Sample entries for testing, dated around today so every view has something to show (art from the site demo)
   // Preview helper (local mode + ?preview only): one tap loads the sample entries as Premium
-  if (Sess.LOCAL_MODE && /[?&]preview\b/.test(location.search)) {
+  if (Sess.LOCAL_MODE && !PUBLIC_HOST && /[?&]preview\b/.test(location.search)) {
     const pv = document.createElement('button'); pv.type = 'button'; pv.className = 'pv-chip'; pv.textContent = 'Load sample entries';
     pv.addEventListener('click', async () => { if (S.setPlan) await S.setPlan('premium'); await S._loadSample(sampleEntries()); clearInterval(pvT); pv.remove(); Dash.toast(S.plan() === 'premium' ? 'Sample entries loaded. Tap Board for Card Board.' : 'Sample entries loaded. You’re on Free: tap ⤢ on Insights for the free Card Board.'); });
     const show = () => { if (!document.querySelector('.pv-chip') && !$('view-app').hidden) document.body.appendChild(pv); };
