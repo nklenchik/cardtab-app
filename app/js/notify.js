@@ -108,7 +108,7 @@
     $('ntf-body').innerHTML = view === 'settings' ? renderSettings() : view === 'plats' ? renderPlats() : renderList();
   }
   async function open(v) {
-    view = v === 'settings' || v === 'plats' ? v : 'list'; paint(); dlg.showModal();
+    view = v === 'settings' || v === 'plats' ? v : 'list'; paint(); dlg.showModal(); { const f = dlg.querySelector('.ntf-form'); if (f) { f.tabIndex = -1; f.focus({ preventScroll: true }); } }
     // opening the list counts as seeing what's there: the dot clears, the "new" marks stay until next time
     if (view === 'list') { const ids = all().map(it => it.id); await save(s => { s.read = s.read || {}; ids.forEach(id => { s.read[id] = 1; }); }); }
   }

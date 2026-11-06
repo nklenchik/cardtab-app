@@ -33,7 +33,7 @@
     sel.style.width = Math.ceil(m.getBoundingClientRect().width + 16) + 'px'; m.remove();
   }
   function show(n) {
-    step = n; [1, 2, 3, 4].forEach(i => { $('imp-s' + i).hidden = i !== n; });
+    step = n; [1, 2, 3, 4].forEach(i => { $('imp-s' + i).hidden = i !== n; }); form.classList.toggle('s1', n === 1);
     $('imp-back').hidden = n === 1 || n === 4;
   }
 
@@ -133,7 +133,7 @@
   function open(cb) {
     onDone = cb || null; book = null; res = null; sum = null;
     $('imp-file').value = ''; $('imp-err').hidden = true; $('imp-go').disabled = false; $('imp-choose').textContent = 'Choose file';
-    show(1); dlg.showModal();
+    show(1); dlg.showModal(); form.tabIndex = -1; form.style.outline = "none"; form.focus({ preventScroll: true });
   }
   function close() { if (dlg.open) dlg.close(); }
   window.CTImportUI = { open, close, get isOpen() { return dlg.open; } };

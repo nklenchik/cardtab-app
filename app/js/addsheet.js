@@ -96,11 +96,20 @@
   let moving = false, settle = 0;
   function fit() { if (!dlg.open || !vv || moving) return;
     // phones search full screen: the keyboard just covers the bottom, nothing resizes. Only the price step follows the keyboard, so Save stays in reach.
-    if (dlg.classList.contains('nm') && !dlg.classList.contains('st2')) { dlg.style.height = ''; dlg.style.top = ''; return; }
+    if (dlg.classList.contains('nm') && !dlg.classList.contains('st2')) { dlg.style.height = ''; dlg.style.top = ''; dlg.classList.remove('kb'); return; }
     // only follow the visible area while the keyboard is up; otherwise sit at the top of the screen. (Inside some app
     // viewers the visible area reports an offset even with no keyboard, which pushed the sheet down.)
     const kb = vv.height < innerHeight * .85;
-    dlg.style.height = kb ? vv.height + 'px' : ''; dlg.style.top = kb ? Math.max(0, vv.offsetTop) + 'px' : ''; }
+    dlg.style.height = kb ? vv.height + 'px' : ''; dlg.style.top = kb ? Math.max(0, vv.offsetTop) + 'px' : '';
+    // v42.5 phones: with the keyboard up the price step goes compact (smaller card row and price, condition waits until the
+    // keyboard drops), so the field you're typing in, the "You keep" line and Save all stay in view
+    const was = dlg.classList.contains('kb'); dlg.classList.toggle('kb', kb && dlg.classList.contains('nm'));
+    if (kb) reveal(); else if (was) dlg.querySelector('#as-s2 .body').scrollTop = 0; }
+  // the field you're typing in stays in the middle of what you can see
+  function reveal() { const a = document.activeElement, body = dlg.querySelector('#as-s2 .body'); if (!a || !body || !body.contains(a)) return;
+    requestAnimationFrame(() => { const box = a.closest('.mini, .pr, .field') || a, br = body.getBoundingClientRect(), r = box.getBoundingClientRect();
+      if (r.top < br.top + 8 || r.bottom > br.bottom - 8) body.scrollBy({ top: r.top - br.top - Math.max(8, (br.height - r.height) / 2), behavior: 'smooth' }); }); }
+  dlg.addEventListener('focusin', () => setTimeout(() => { if (dlg.classList.contains('kb')) reveal(); }, 60));
   const bd = document.createElement('div'); bd.className = 'as-bd'; bd.setAttribute('aria-hidden', 'true'); document.body.appendChild(bd);
   dlg.addEventListener('closing', () => { moving = true; clearTimeout(settle); bd.classList.remove('on'); });
   dlg.addEventListener('close', () => bd.classList.remove('on'));

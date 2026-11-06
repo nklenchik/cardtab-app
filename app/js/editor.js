@@ -133,5 +133,26 @@
   // Tidy money as you leave the field: "12.5" becomes "12.50"
   ['amount', 'fees', 'ship'].forEach(n => f(n).addEventListener('blur', () => { const c = S.toCents(f(n).value); if (c != null && c >= 0) f(n).value = S.fromCents(c); }));
 
+  // v42.5 phones: the sheet sits on top of the keyboard instead of behind it, and the field you're typing in scrolls to the
+  // middle of what you can see, so you always see what you type
+  const vv = window.visualViewport, PH = matchMedia('(max-width:760px)');
+  function kfit() {
+    if (!vv || !dlg.open || !PH.matches || dlg.classList.contains('closing')) return;
+    const kb = vv.height < innerHeight * .85;
+    if (!kb) { form.style.removeProperty('bottom'); form.style.removeProperty('max-height'); return; }
+    form.style.setProperty('bottom', Math.max(0, innerHeight - (vv.offsetTop + vv.height)) + 'px', 'important');
+    form.style.setProperty('max-height', Math.max(200, vv.height - 10) + 'px', 'important');
+    reveal();
+  }
+  function reveal() { const a = document.activeElement; if (!a || !form.contains(a) || !a.matches('input,textarea,select')) return;
+    requestAnimationFrame(() => { const box = a.closest('label') || a, f0 = form.getBoundingClientRect(), r = box.getBoundingClientRect();
+      // the sticky Save bar and header cover part of the sheet; aim for the middle of what's left
+      const foot = document.getElementById('ed-save').parentElement, head = form.querySelector('.ed-head');
+      const top = f0.top + (head && getComputedStyle(head).position === 'sticky' ? head.offsetHeight : 0) + 12;
+      const bot = (foot && /sticky|fixed/.test(getComputedStyle(foot).position) ? foot.getBoundingClientRect().top : f0.bottom) - 12;
+      if (r.top < top || r.bottom > bot) form.scrollBy({ top: r.top - top - Math.max(0, (bot - top - r.height) / 2), behavior: 'smooth' }); }); }
+  if (vv) { vv.addEventListener('resize', kfit); vv.addEventListener('scroll', kfit); }
+  form.addEventListener('focusin', () => setTimeout(() => { kfit(); reveal(); }, 60));
+  dlg.addEventListener('close', () => { form.style.removeProperty('bottom'); form.style.removeProperty('max-height'); });
   window.CTEditor = { open, close, get isOpen() { return dlg.open; } };
 })();
