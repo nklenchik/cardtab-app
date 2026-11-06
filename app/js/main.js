@@ -80,6 +80,10 @@
   let hapOn = true; try { hapOn = localStorage.getItem('cb.haptics') !== '0'; } catch (e) {}
   window.ctBuzz = () => { if (hapOn && touchDev && navigator.vibrate) try { navigator.vibrate(8); } catch (e) {} };
   const paintHap = () => $('am-hap').setAttribute('aria-checked', hapOn); paintHap(); if (!touchDev) $('am-hapr').hidden = true;
+  // Sales show: what you kept after fees (the default) or the full sale price, in the list and the gallery
+  const paintAmt = () => { let v = 'kept'; try { v = localStorage.getItem('ct.amt') || 'kept'; } catch (e) {} $('am-amt').querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.amt === v))); };
+  paintAmt();
+  $('am-amt').addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('button'); if (!b) return; try { localStorage.setItem('ct.amt', b.dataset.amt); } catch (er) {} paintAmt(); window.ctBuzz(); dispatchEvent(new Event('ct-amt')); });
   $('am-theme').addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('button'); if (b) { applyTheme(b.dataset.th, true); window.ctBuzz(); } });
   $('am-hap').addEventListener('click', e => { e.stopPropagation(); hapOn = !hapOn; try { localStorage.setItem('cb.haptics', hapOn ? '1' : '0'); } catch (e) {} paintHap(); window.ctBuzz(); });
   document.addEventListener('keydown', e => {

@@ -1227,3 +1227,5 @@ html:has(dialog[open]),html:has(dialog[open]) body{overflow:hidden!important;ove
  html.tb-away .ct-tbar{transform:translate3d(0,calc(100% + 24px + env(safe-area-inset-bottom,0px)),0)}
 }
 @media(prefers-reduced-motion:reduce){.ct-tbar{transition:none}}
+/* v37.11: the row shows one number (after fees by default); the full breakdown is in the open row */
+.ct-demo .ct-row .ct-row-amt small{display:none!important}

@@ -168,7 +168,10 @@
     return '<div class="ct-open-actions"><div class="ct-row-expanded-info"><div class="ct-dtot"><i class="ct-mdash"></i><div class="ct-dtrow">' + ACTS + keptRow(t) + '</div></div>' + factsHtml(t) + '<div class="ct-pacts">' + ACTS + '</div></div></div>';
   }
   const badgeOf = t => t.type === 'sale' ? 'Sale' : t.type === 'refund' ? 'Refund' : 'Purchase';
-  const amtText = t => (t.type === 'sale' ? '+' : '−') + money(t.amount);
+  // a sale's big number: what you kept after fees (default), or the full sale price if you picked that in your profile
+  const soldPref = () => { try { return localStorage.getItem('ct.amt') === 'sold'; } catch (e) { return false; } };
+  const amtText = t => t.type === 'sale' ? '+' + money(soldPref() ? t.amount : t.net) : '−' + money(t.amount);
+  addEventListener('ct-amt', () => render());
   const subText = t => t.type === 'sale' ? money(t.net) + ' after fees' : t.type === 'refund' ? 'Refunded' : 'Paid';
   const fullArt = img => { if (!img || img.tagName !== 'IMG' || img.dataset.loaded) return; img.dataset.loaded = 1; const u = img.dataset.full, pre = new Image(), t0 = performance.now(); pre.src = u; (pre.decode ? pre.decode() : new Promise((r, j) => { pre.onload = r; pre.onerror = j; })).then(() => setTimeout(() => { if (img.isConnected) img.src = u; }, Math.max(0, 380 - (performance.now() - t0)))).catch(() => { delete img.dataset.loaded; }); };
   function setBtn(btn, open) { const t = S.get(btn.dataset.tx); if (!t) return; btn.setAttribute('aria-expanded', open); btn.setAttribute('aria-label', (open ? 'Collapse ' : 'Expand ') + t.name); btn.querySelector('.ct-row-chevron').textContent = open ? '−' : '+'; }
@@ -322,7 +325,7 @@
       chunks.push('<div class="ct-row ' + (open ? 'expanded' : '') + (t.id === justAdded ? ' ct-new' : '') + '"><button type="button" class="ct-row-toggle" data-tx="' + t.id + '" aria-expanded="' + open + '" aria-label="' + (open ? 'Collapse' : 'Expand') + ' ' + esc(t.name) + '">' + artHtml(t, open) + '<div class="ct-expanded-right"><div class="ct-row-meta">' + shortDate(t.date) + (t.platform ? ' · ' + esc(t.platform) : '') + '</div><div class="ct-row-name">' + esc(t.name) + (t.qty > 1 ? ' ×' + t.qty : '') + '</div><div class="ct-row-bottom">' + verb + ' <strong>' + money(t.amount) + '</strong>' + after + '</div>' +
         // desktop: one quiet line under the name (type, platform, date) and the money on the right edge
         '<div class="ct-row-line"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span>' + badge + ' · ' + (t.condition ? '<span class="ct-cond" title="' + esc(t.condition) + '">' + esc(condShort(t.condition)) + ' · </span>' : '') + (t.platform ? esc(t.platform) + ' · ' : '') + niceDate(t.date) + '</div>' + (open ? moneyHtml(t) : '') + '</div>' +
-        '<span class="ct-row-amt ' + t.type + '"><strong>' + (t.type === 'sale' ? '+' : '−') + money(t.amount) + '</strong><small>' + (t.type === 'sale' ? money(t.net) + ' after fees' : t.type === 'refund' ? 'Refunded' : 'Paid') + '</small></span><span class="ct-tag ' + t.type + '">' + badge + '</span><span class="ct-row-chevron" aria-hidden="true">' + (open ? '−' : '+') + '</span></button>' + (open ? detailsHtml(t) : '') + '</div>');
+        '<span class="ct-row-amt ' + t.type + '"><strong>' + amtText(t) + '</strong><small>' + (t.type === 'sale' ? money(t.net) + ' after fees' : t.type === 'refund' ? 'Refunded' : 'Paid') + '</small></span><span class="ct-tag ' + t.type + '">' + badge + '</span><span class="ct-row-chevron" aria-hidden="true">' + (open ? '−' : '+') + '</span></button>' + (open ? detailsHtml(t) : '') + '</div>');
       lastRow = chunks.length - 1;
     });
     endGroup();
