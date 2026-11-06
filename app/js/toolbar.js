@@ -111,6 +111,8 @@
       '<button type="button" class="sh-chip" data-all><span class="rbw" aria-hidden="true"></span>All themes</button>';
   }
   window.csChanged = () => paintStories();
+  // a sheet or enlarged story open inside Stories covers the header too, like every other window in the app
+  window.csModal = on => document.documentElement.classList.toggle('cs-modal', !!on);
 
   // the board and Stories arrive after the app; hook them up when they do
   const wait = setInterval(() => { wireBoard(); wireStories(); if (boardDone && sDone) clearInterval(wait); }, 400);

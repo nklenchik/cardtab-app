@@ -151,18 +151,21 @@
   // v37.1: the open row, like the website's card: the money as a short receipt beside the art (Sold, Fees and
   // shipping, then what you kept), and only condition and any note under it. The right-hand amount steps aside so the
   // card's name gets the full width.
+  const keptRow = t => t.type === 'sale' ? '<div class="ct-mr kept"><span>You kept</span><b>' + money(t.net) + '</b></div>' : '<div class="ct-mr paid"><span>' + (t.type === 'refund' ? 'Refunded to buyer' : 'Paid') + '</span><b>−' + money(t.amount) + '</b></div>';
+  // the receipt beside the art. Phones (and the gallery panel) end it with the total; on desktop the total sits on the
+  // last line instead, across from Edit, Duplicate and Delete, so the open row is no taller than the card
   function moneyHtml(t) {
     const r = (l, v, cls) => '<div class="ct-mr' + (cls ? ' ' + cls : '') + '"><span>' + l + '</span><b>' + v + '</b></div>';
-    if (t.type === 'sale') { const fee = t.amount - t.net; return '<div class="ct-money">' + r('Sold', money(t.amount)) + r('Fees and shipping', (fee ? '−' : '') + money(fee), fee ? 'neg' : '') + '<i class="ct-mdash"></i>' + r('You kept', money(t.net), 'kept') + '</div>'; }
-    return '<div class="ct-money">' + r(t.type === 'refund' ? 'Refunded to buyer' : 'Paid', '−' + money(t.amount), 'paid' + (t.qty > 1 ? '' : ' solo')) + (t.qty > 1 ? r('Each', money(Math.round(t.amount / t.qty))) : '') + '</div>';
+    const fee = t.amount - t.net, each = t.qty > 1 ? r('Each', money(Math.round(t.amount / t.qty))) : '';
+    const top = t.type === 'sale' ? r('Sold', money(t.amount)) + r('Fees and shipping', (fee ? '−' : '') + money(fee), fee ? 'neg' : '') : each;
+    return '<div class="ct-money' + (top ? '' : ' ct-money-solo') + '">' + top + '<div class="ct-mtot"><i class="ct-mdash"></i>' + keptRow(t) + '</div></div>';
   }
-  function factsHtml(t) {
-    const f = [t.condition && esc(t.condition), t.qty > 1 && 'Qty ' + t.qty].filter(Boolean);
-    return (f.length ? '<div class="ct-facts">' + f.map(x => '<span>' + x + '</span>').join('') + '</div>' : '') + (t.note ? '<div class="ct-row-note">' + esc(t.note) + '</div>' : '');
-  }
+  function factsHtml(t) { return t.note ? '<div class="ct-row-note">' + esc(t.note) + '</div>' : ''; }
+  const COND = { 'near mint': 'NM', 'mint': 'M', 'lightly played': 'LP', 'moderately played': 'MP', 'heavily played': 'HP', 'damaged': 'DMG' };
+  const condShort = c => c ? (COND[String(c).toLowerCase()] || c) : '';
   const ACTS = '<div class="ct-demo-actions"><button type="button" data-act="edit">Edit</button><button type="button" data-act="dup">Duplicate</button><button type="button" data-act="del">Delete</button></div>';
   function detailsHtml(t) {
-    return '<div class="ct-open-actions"><div class="ct-row-expanded-info">' + factsHtml(t) + ACTS + '</div></div>';
+    return '<div class="ct-open-actions"><div class="ct-row-expanded-info"><div class="ct-dtot"><i class="ct-mdash"></i><div class="ct-dtrow">' + ACTS + keptRow(t) + '</div></div>' + factsHtml(t) + '<div class="ct-pacts">' + ACTS + '</div></div></div>';
   }
   const badgeOf = t => t.type === 'sale' ? 'Sale' : t.type === 'refund' ? 'Refund' : 'Purchase';
   const amtText = t => (t.type === 'sale' ? '+' : '−') + money(t.amount);
@@ -249,7 +252,7 @@
     const A = d => '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + (d < 0 ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6') + '"/></svg>';
     gp.innerHTML = '<div class="gp-in"><i class="gp-grab" aria-hidden="true"></i><button type="button" class="gp-x" data-gx aria-label="Close">' + X + '</button>' +
       '<div class="gp-art">' + (src ? '<img src="' + esc(src) + '" alt="">' : '<i>' + esc(t.name) + '</i>') + '</div>' +
-      '<div class="gp-body"><small class="gp-line"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span>' + badgeOf(t) + ' · ' + (t.platform ? esc(t.platform) + ' · ' : '') + niceDate(t.date) + '</small>' +
+      '<div class="gp-body"><small class="gp-line"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span>' + badgeOf(t) + ' · ' + (t.condition ? esc(condShort(t.condition)) + ' · ' : '') + (t.platform ? esc(t.platform) + ' · ' : '') + niceDate(t.date) + '</small>' +
       '<h2 class="gp-nm">' + esc(t.name) + (t.qty > 1 ? ' ×' + t.qty : '') + '</h2>' +
       moneyHtml(t) + '<div class="ct-row-expanded-info">' + factsHtml(t) + ACTS.replace(/data-act=/g, 'data-gact=') + '</div></div>' +
       (ids.length > 1 ? '<button type="button" class="gp-nav gp-prev" data-gstep="-1" aria-label="Previous card"' + (i <= 0 ? ' disabled' : '') + '>' + A(-1) + '</button><button type="button" class="gp-nav gp-next" data-gstep="1" aria-label="Next card"' + (i >= ids.length - 1 ? ' disabled' : '') + '>' + A(1) + '</button>' : '') + '</div>';
@@ -318,7 +321,7 @@
       const verb = t.type === 'sale' ? 'Sold' : t.type === 'refund' ? 'Refunded to buyer' : 'Paid';
       chunks.push('<div class="ct-row ' + (open ? 'expanded' : '') + (t.id === justAdded ? ' ct-new' : '') + '"><button type="button" class="ct-row-toggle" data-tx="' + t.id + '" aria-expanded="' + open + '" aria-label="' + (open ? 'Collapse' : 'Expand') + ' ' + esc(t.name) + '">' + artHtml(t, open) + '<div class="ct-expanded-right"><div class="ct-row-meta">' + shortDate(t.date) + (t.platform ? ' · ' + esc(t.platform) : '') + '</div><div class="ct-row-name">' + esc(t.name) + (t.qty > 1 ? ' ×' + t.qty : '') + '</div><div class="ct-row-bottom">' + verb + ' <strong>' + money(t.amount) + '</strong>' + after + '</div>' +
         // desktop: one quiet line under the name (type, platform, date) and the money on the right edge
-        '<div class="ct-row-line"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span>' + badge + ' · ' + (t.platform ? esc(t.platform) + ' · ' : '') + niceDate(t.date) + '</div>' + (open ? moneyHtml(t) : '') + '</div>' +
+        '<div class="ct-row-line"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span>' + badge + ' · ' + (t.condition ? '<span class="ct-cond" title="' + esc(t.condition) + '">' + esc(condShort(t.condition)) + ' · </span>' : '') + (t.platform ? esc(t.platform) + ' · ' : '') + niceDate(t.date) + '</div>' + (open ? moneyHtml(t) : '') + '</div>' +
         '<span class="ct-row-amt ' + t.type + '"><strong>' + (t.type === 'sale' ? '+' : '−') + money(t.amount) + '</strong><small>' + (t.type === 'sale' ? money(t.net) + ' after fees' : t.type === 'refund' ? 'Refunded' : 'Paid') + '</small></span><span class="ct-tag ' + t.type + '">' + badge + '</span><span class="ct-row-chevron" aria-hidden="true">' + (open ? '−' : '+') + '</span></button>' + (open ? detailsHtml(t) : '') + '</div>');
       lastRow = chunks.length - 1;
     });

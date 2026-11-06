@@ -1095,3 +1095,28 @@ html.pg-moving .ct-shell::before{-webkit-backdrop-filter:none;backdrop-filter:no
 .sh-acts{position:relative}
 .sha:not(.on){position:absolute;right:0;top:50%;margin-top:-20px;width:auto}
 @media(max-width:760px){.sha:not(.on){margin-top:-18px}}
+html.cs-modal .csx{z-index:120!important}
+
+/* ===== v37.2: open row — condition in the date line; desktop puts the total across from the buttons ===== */
+.ct-demo .ct-row:not(.expanded) .ct-cond{display:none}
+.ct-money{max-width:none}
+.ct-mtot{display:grid;gap:8px}
+.ct-dtot,.ct-pacts{display:none}
+@media(min-width:761px){
+ .ct-demo .ct-row .ct-mtot{display:none}
+ .ct-demo .ct-row .ct-money-solo{display:none}
+ .ct-demo .ct-row .ct-dtot{display:block}
+ .ct-demo .ct-row .ct-dtot .ct-mdash{margin:4px 0 10px}
+ .ct-dtrow{display:flex;align-items:center;gap:16px}
+ .ct-demo .ct-row .ct-dtrow .ct-demo-actions{margin:0!important;flex:none}
+ .ct-demo .ct-row .ct-dtrow .ct-demo-actions button[data-act="del"]{margin-left:0!important}
+ .ct-dtrow .ct-mr{margin-left:auto;gap:18px}
+ .ct-demo .ct-row.expanded .ct-open-actions{margin-top:10px!important;margin-bottom:16px!important}
+ .ct-demo .ct-row .ct-open-actions .ct-row-note{margin-top:12px}
+}
+@media(max-width:760px){
+ .ct-demo .ct-row .ct-pacts{display:block}
+ .ct-demo .ct-row .ct-pacts .ct-demo-actions{margin-top:12px}
+}
+.ct-gp .ct-pacts,.ct-gp .ct-dtot{display:none}
+@media(min-width:761px){.ct-demo .ct-row .ct-row-line{display:block!important;overflow:hidden;text-overflow:ellipsis}.ct-demo .ct-row .ct-row-line .ct-dot{vertical-align:1px;margin-right:7px}}
