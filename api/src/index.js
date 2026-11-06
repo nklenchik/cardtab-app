@@ -3,7 +3,7 @@
    GET /art/:id/:size                          -> our own copy of the card art as WebP (size: list | detail)
    /auth/*                                     -> sign-in (see auth.js)
    Nothing here is exposed to the app except our own ids and our own image URLs. */
-import { handleAuth, currentUser } from './auth.js';
+import { handleAuth, currentUser, isAdmin } from './auth.js';
 import { gate, count } from './budget.js';
 const JT = 'https://api.justtcg.com';
 const CDN = 'https://tcgplayer-cdn.tcgplayer.com/product/';
@@ -121,7 +121,7 @@ export default {
         if (!q.name && !q.number) return json(env, { error: 'name or number required' }, 400);
         if (!q.number && norm(q.name).replace(/ /g, '').length < 3) return json(env, { cards: [] });   // too short to be worth a lookup
         const me = await currentUser(env, req).catch(() => null);
-        const who = { src: u.searchParams.get('src') === 'fill' ? 'fill' : 'type', plan: me && me.plan === 'premium' ? 'premium' : 'free', user: me ? me.id : '' };
+        const who = { src: u.searchParams.get('src') === 'fill' ? 'fill' : 'type', plan: me && me.plan === 'premium' ? 'premium' : 'free', user: me ? me.id : '', admin: !!(me && isAdmin(env, me.email) && u.searchParams.get('force')) };
         let why = '';
         const ctl = { calls: 0, async ok() { why = await gate(env, who); if (why) throw Object.assign(new Error(why), { held: why }); } };
         let cards;

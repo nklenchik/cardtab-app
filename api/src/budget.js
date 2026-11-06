@@ -36,7 +36,7 @@ export async function totals(env, t = Date.now()) {
 export async function gate(env, who, t = Date.now()) {
   const L = limits(env), T = await totals(env, t);
   if (T.month >= L.month - 20 || T.day >= L.day - 10) return 'limit';            // nothing left: everyone uses what we've already saved
-  if (who.src !== 'fill') return '';
+  if (who.src !== 'fill' || who.admin) return '';                 // admins can fill their own art now, past the daily share
   // the day's fair share of what's left this month, decided at the start of the day so it doesn't shrink as the day goes on
   const share = Math.min(L.day, Math.floor((L.month - T.before) / T.cycle.daysLeft));
   if (T.fill >= share * L.fillShare) return 'later';

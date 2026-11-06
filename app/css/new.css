@@ -1617,3 +1617,4 @@ html.cs-modal,html.cs-modal body{overflow:hidden!important;overscroll-behavior:n
 
 /* v42.12 a profile photo never shows the letter on top of it */
 #app-avatar.has-photo,#am-av.has-photo{color:transparent!important;font-size:0!important}
+.am-cd #am-art-r{margin:6px 0;font-size:12px;line-height:1.4;opacity:.8}

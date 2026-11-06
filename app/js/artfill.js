@@ -11,7 +11,7 @@
   const S = window.CTStore, Sess = window.CTSession, L = window.CardLookup, P = window.CardParser;
   if (!S || !Sess || !L || !P) return;
   const GAP = 3500, RETRY_DAYS = 4, BUSY_WAIT = 60000, LATER = 3 * 3600e3;
-  let heldUntil = 0;
+  let heldUntil = 0, force = false, report = [];
   let on = false, running = false, timer = 0, prog = { done: 0, total: 0, found: 0 }, listeners = new Set();
   const norm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
   const words = s => norm(s).split(' ').filter(w => w.length > 2 && !/^(the|and|for|holo|rare|card|pokemon|japanese|japan|promo|ex|gx|v)$/.test(w));
@@ -33,7 +33,7 @@
     if (e.artFrom === 'lookup' && !e.artV2) return true;                 // filled in by the old rules: re-check once
     if (!e.art && e.artV2 && !e.artV3) return true;                      // v42.12: emptied by the stricter rules: try again now with the printing rule
     if (e.art && (e.art.list || e.art.detail)) return false;
-    if (e.artTry && Date.now() - Date.parse(e.artTry) < RETRY_DAYS * 864e5) return false;
+    if (!force && e.artTry && Date.now() - Date.parse(e.artTry) < RETRY_DAYS * 864e5) return false;
     return true;
   }
   // your own picks, by entry text (from every entry you've changed)
@@ -72,7 +72,7 @@
   async function lookup(p) {
     const base = window.CARDTAB_API;
     const q = '?name=' + encodeURIComponent(p.name || '') + '&number=' + encodeURIComponent(p.number || '') + '&set=' + encodeURIComponent(p.set || '') + '&game=' + encodeURIComponent(p.game || '');
-    const r = await fetch(base + '/api/lookup' + q + '&src=fill', { credentials: 'include' });
+    const r = await fetch(base + '/api/lookup' + q + '&src=fill' + (force ? '&force=1' : ''), { credentials: 'include' });
     if (r.status === 429) { let j = {}; try { j = await r.json(); } catch (e) {} const err = new Error('busy'); if (j.later) err.later = true; else err.busy = true; throw err; }
     if (!r.ok) throw new Error('lookup ' + r.status);
     const j = await r.json();
@@ -88,7 +88,7 @@
   async function run() {
     if (running) { again = true; return; }
     if (!on || !window.CARDTAB_API) return;
-    if (heldUntil > Date.now()) { await applyPicks(); return; }
+    if (heldUntil > Date.now() && !force) { await applyPicks(); return; }
     running = true;
     try {
       // 1) your picks first: every entry with the same text as one you changed gets the same card, no lookup needed
@@ -98,7 +98,7 @@
       // 2) one lookup per unique card
       const groups = new Map();
       left.forEach(e => { const p = parsedOf(e), k = [norm(p.name), numKey(p.number), norm(p.set), /japan/i.test(e.source || e.name) ? 'jp' : ''].join('|'); if (!groups.has(k)) groups.set(k, { p, ids: [], e }); groups.get(k).ids.push(e.id); });
-      prog = { done: 0, total: groups.size, found: 0 }; emit();
+      prog = { done: 0, total: groups.size, found: 0 }; emit(); if (force) report = [];
       let held = false;
       for (const g of groups.values()) {
         if (!on) break;
@@ -107,18 +107,20 @@
           try { cards = await lookup(g.p); break; }
           catch (err) { if (err.later) { held = true; break; } if (err.busy) { await sleep(BUSY_WAIT); continue; } cards = null; break; }
         }
-        if (held) { heldUntil = Date.now() + LATER; break; }   // today's share is used up: stop quietly and pick up where we left off in a few hours
+        if (held) { heldUntil = Date.now() + LATER; if (force) report.push({ entry: '(stopped)', looked: '', n: 0, result: 'monthly limit reached', got: [] }); break; }   // today's share is used up: stop quietly and pick up where we left off in a few hours
         const card = cards ? clearMatch(cards, g.p, g.e) : null, now = new Date().toISOString();
         for (const id of g.ids) {
           const cur = S.get(id); if (!cur || !needs(cur) || picks().has(textKey(cur))) continue;
           if (card) await S._artPatch(id, { art: { list: card.art.list, detail: card.art.detail }, artFrom: 'lookup', cardId: card.id, cardName: [card.n, card.num, card.s].filter(Boolean).join(' - '), artV2: 1, artV3: 1 });
           else if (cards) await S._artPatch(id, { art: null, artFrom: null, cardId: null, artTry: now, artV2: 1, artV3: 1 });   // unclear: placeholder, try again in a few days
         }
+        if (force) report.push({ entry: g.e.name, looked: [g.p.name, g.p.number, g.p.set].filter(Boolean).join(' | '), n: g.ids.length, result: card ? 'filled' : cards ? (cards.length ? 'unclear' : 'not found') : 'lookup failed',
+          got: card ? [card.n, card.num, card.s, card.r].filter(Boolean).join(' · ') : (cards || []).slice(0, 4).map(c => [c.n, c.num, c.s, c.r].filter(Boolean).join(' · ')) });
         if (card) prog.found += g.ids.length;
         prog.done++; emit();
-        await sleep(GAP);
+        await sleep(force ? 1300 : GAP);
       }
-    } finally { running = false; emit(); if (heldUntil > Date.now() && on) { clearTimeout(timer); timer = setTimeout(run, heldUntil - Date.now()); } else if (again && on) { again = false; clearTimeout(timer); timer = setTimeout(run, 600); } }
+    } finally { running = false; force = false; emit(); if (heldUntil > Date.now() && on) { clearTimeout(timer); timer = setTimeout(run, heldUntil - Date.now()); } else if (again && on) { again = false; clearTimeout(timer); timer = setTimeout(run, 600); } }
   }
 
   window.CTArtFill = {
@@ -126,6 +128,9 @@
     stop() { on = false; clearTimeout(timer); },
     now: run,
     // after "Change card": entries with the same text pick it up right away
+    // admins: try every entry that has no art right now, past the daily share, and keep a report of what came back
+    async force() { if (!window.CARDTAB_API) return null; while (running) await sleep(300); on = true; force = true; heldUntil = 0; report = []; await run(); return report.slice(); },
+    report: () => report.slice(),
     learn() { applyPicks().catch(() => {}); if (on) { clearTimeout(timer); timer = setTimeout(run, 600); } },
     progress: () => Object.assign({ running }, prog),
     onChange(f) { listeners.add(f); return () => listeners.delete(f); },

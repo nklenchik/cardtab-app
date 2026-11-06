@@ -77,6 +77,23 @@
     } catch (e) { $('am-cd-v').textContent = 'Couldn’t load'; $('am-cd-s').textContent = ''; }
   });
 
+  // ---------- Admin: fill missing card art now (past the daily share), with a report of what the card database returned ----------
+  let artRep = [];
+  $('am-artnow').addEventListener('click', async () => {
+    const b = $('am-artnow'), r = $('am-art-r'); if (!window.CTArtFill || b.disabled) return;
+    b.disabled = true; b.textContent = 'Filling in card art…'; r.hidden = false; r.textContent = 'Checking every entry without art. This can take a few minutes; you can keep using the app.';
+    const off = window.CTArtFill.onChange(pg => { if (pg.running && pg.total) r.textContent = pg.done + ' of ' + pg.total + ' cards checked, ' + pg.found + ' entries filled in'; });
+    try { artRep = (await window.CTArtFill.force()) || []; } finally { off(); b.disabled = false; b.textContent = 'Fill missing card art now'; }
+    const c = k => artRep.filter(x => x.result === k).length;
+    r.textContent = artRep.length ? 'Done: ' + c('filled') + ' filled, ' + c('unclear') + ' with several possible cards, ' + c('not found') + ' not found' + (c('lookup failed') ? ', ' + c('lookup failed') + ' lookups failed' : '') + (c('monthly limit reached') ? '. Stopped: this month’s card lookups are used up' : '') + '.' : 'Every entry already has art (or a card you picked).';
+    $('am-art-copy').hidden = !artRep.length;
+  });
+  $('am-art-copy').addEventListener('click', async () => {
+    const t = artRep.map(x => x.result.toUpperCase() + ' (' + x.n + ')  ' + x.entry + '\n   looked up: ' + x.looked + '\n   ' + (Array.isArray(x.got) ? (x.got.length ? 'card database returned:\n     - ' + x.got.join('\n     - ') : 'card database returned nothing') : 'used: ' + x.got)).join('\n');
+    try { await navigator.clipboard.writeText(t); $('am-art-copy').textContent = 'Copied'; } catch (e) { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (er) {} ta.remove(); $('am-art-copy').textContent = 'Copied'; }
+    setTimeout(() => { $('am-art-copy').textContent = 'Copy art report'; }, 1600);
+  });
+
   // ---------- Delete account (from Edit profile) ----------
   (function () {
     const d = $('dela'); if (!d) return; const ok = $('dela-ok'), go = $('dela-go');

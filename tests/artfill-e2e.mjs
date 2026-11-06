@@ -11,7 +11,7 @@ const mails = [];
 const realFetch = globalThis.fetch;
 let jtCalls = 0;
 globalThis.fetch = async (url, opt) => { const u = String(url); if (u.includes('api.justtcg.com')) { jtCalls++; if (/q=Raichu/.test(u)) return new Response(JSON.stringify({ data: [{ id: 'pokemon-base-set-raichu-holo-rare', game: 'Pokemon', name: 'Raichu', set_name: 'Base Set', number: '014/102', rarity: 'Holo Rare', tcgplayerId: 42354 }, { id: 'pokemon-jungle-raichu', game: 'Pokemon', name: 'Raichu', set_name: 'Jungle', number: '14/64', rarity: 'Rare', tcgplayerId: 1 }] })); return new Response(JSON.stringify({ data: [] })); } if (u.includes('tcgplayer-cdn')) return new Response('no', { status: 404 }); return realFetch(url, opt); };
-const env = { DB: { prepare: stmt, async batch(l) { for (const s of l) await s.run(); } }, ALLOWED_ORIGIN: 'https://app.cardtab.app', ADMIN_EMAILS: 'nklenchik@gmail.com', EMAIL: { async send(m) { mails.push(m); } }, ART: { async get() { return null; } } };
+const env = { DB: { prepare: stmt, async batch(l) { for (const s of l) await s.run(); } }, ALLOWED_ORIGIN: 'https://app.cardtab.app', ADMIN_EMAILS: 'nklenchik@gmail.com, importer@x.com', EMAIL: { async send(m) { mails.push(m); } }, ART: { async get() { return null; } } };
 const out = []; const ok = (c, m) => out.push((c ? 'PASS ' : 'FAIL ') + m);
 const b = await chromium.launch();
 async function ctxFor(w) {
@@ -19,7 +19,7 @@ async function ctxFor(w) {
   await ctx.route('https://app.cardtab.app/**', async r => { let p = new URL(r.request().url()).pathname; if (p === '/') p = '/index.html'; const f = path.join(APP, decodeURIComponent(p));
     if (!existsSync(f)) return r.fulfill({ status: 404, body: 'nf' }); const ext = path.extname(f).slice(1); const types = { html: 'text/html', js: 'text/javascript', css: 'text/css', svg: 'image/svg+xml', webp: 'image/webp', png: 'image/png', json: 'application/json', woff2: 'font/woff2', webmanifest: 'application/manifest+json' };
     r.fulfill({ status: 200, body: readFileSync(f), headers: { 'content-type': types[ext] || 'application/octet-stream' } }); });
-  await ctx.route('https://api.cardtab.app/**', async r => { const q = r.request(); const res = await worker.fetch(new Request(q.url(), { method: q.method(), headers: q.headers(), body: q.method() === 'POST' ? q.postData() : undefined, redirect: 'manual' }), env, {});
+  await ctx.route('https://api.cardtab.app/**', async r => { const q = r.request(); const res = await worker.fetch(new Request(q.url(), { method: q.method(), headers: await q.allHeaders(), body: q.method() === 'POST' ? q.postData() : undefined, redirect: 'manual' }), env, {});
     const h = {}; res.headers.forEach((v, k) => { h[k] = v; }); r.fulfill({ status: res.status, headers: h, body: Buffer.from(await res.arrayBuffer()) }); });
   return ctx;
 }
@@ -52,7 +52,7 @@ ok(ms.length === 2 && ms.every(x => x.from === 'pick' && /raichu/.test(x.art || 
 await p.evaluate(() => window.CTArtFill.now()); await p.waitForTimeout(1500);
 ok(await p.evaluate(() => CTStore.all().filter(x => x.name === 'Mystery Promo Thing').every(x => x.artFrom === 'pick')), 'the background job never overrides a pick');
 // today's art share used up: the app makes no lookups, shows nothing, and leaves the entry to try later
-sq.prepare("INSERT INTO usage (day,src,plan,calls,reqs) VALUES (?, 'fill', 'free', 100000, 1) ON CONFLICT(day,src,plan) DO UPDATE SET calls=calls+100000").run(new Date().toISOString().slice(0, 10));
+sq.prepare("INSERT INTO usage (day,src,plan,calls,reqs) VALUES (?, 'fill', 'free', 300, 1) ON CONFLICT(day,src,plan) DO UPDATE SET calls=calls+300").run(new Date().toISOString().slice(0, 10));
 sq.prepare("INSERT INTO usage (day,src,plan,calls,reqs) VALUES ('2026-01-01', 'type', 'none', 0, 1)").run();
 const jb = jtCalls;
 await p.evaluate(() => CTStore.importMany([{ type: 'purchase', name: 'Blastoise - 2/102 - Base Set', amount: '9.00', date: '2026-10-06' }]));
@@ -60,5 +60,9 @@ await p.evaluate(() => window.CTArtFill.now()); await p.waitForTimeout(3000);
 const bl = await p.evaluate(() => { const e = CTStore.all().find(x => /Blastoise/.test(x.name)); return { art: !!e.art, tried: !!e.artTry }; });
 const line = await p.evaluate(() => { const el = document.getElementById('am-art'); return el ? el.hidden : true; });
 ok(jtCalls === jb && !bl.art && !bl.tried && line, 'when today’s art share is used up: no lookups, nothing shown, tried again later ' + JSON.stringify(bl));
+// admin: fill missing art now, past the day's share, with a report
+
+const jf = jtCalls; const rep = await p.evaluate(() => window.CTArtFill.force());
+ok(Array.isArray(rep) && rep.some(x => /Blastoise/.test(x.entry)) && jtCalls > jf, 'admin "Fill missing art now" runs past the daily share and reports ' + JSON.stringify(rep.map(x => x.entry + ':' + x.result)));
 ok(!errs.length, 'no page errors ' + errs.slice(0, 2).join(' | '));
 console.log(out.join('\n')); await b.close();
