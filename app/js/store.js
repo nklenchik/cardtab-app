@@ -181,7 +181,8 @@
       await putMeta('customPlatforms', (meta.customPlatforms || []).concat([n])); changed('platforms'); return n;
     },
     // Everything to offer when picking a platform: ones you use most, then your own, then the standard list
-    pickerPlatforms() { return [...new Set(this.platforms().concat(meta.customPlatforms || [], DEFAULT_PLATFORMS))]; },
+    // the pickers end with their own "Other…" (type a platform), so a plain "Other" isn't listed separately
+    pickerPlatforms() { return [...new Set(this.platforms().concat(meta.customPlatforms || [], DEFAULT_PLATFORMS))].filter(p => p.toLowerCase() !== 'other'); },
     DEFAULT_PLATFORMS,
 
     // ---------- import ----------

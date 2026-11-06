@@ -17,11 +17,11 @@
 <meta name="apple-mobile-web-app-title" content="Card Tab">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preload" href="fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/demo.css?v=37.12.1">
-<link rel="stylesheet" href="css/app.css?v=37.12.1">
-<link rel="stylesheet" href="css/addsheet.css?v=37.12.1">
-<link rel="stylesheet" href="css/soft.css?v=37.12.1">
-<link rel="stylesheet" href="css/new.css?v=37.12.1">
+<link rel="stylesheet" href="css/demo.css?v=37.13.1">
+<link rel="stylesheet" href="css/app.css?v=37.13.1">
+<link rel="stylesheet" href="css/addsheet.css?v=37.13.1">
+<link rel="stylesheet" href="css/soft.css?v=37.13.1">
+<link rel="stylesheet" href="css/new.css?v=37.13.1">
 </head>
 <body class="ct-demo">
 
@@ -142,7 +142,7 @@
     </div>
     <div class="ed-row">
       <label class="ed-f"><span>Date</span><input name="date" type="date"></label>
-      <label class="ed-f"><span>Platform</span><input name="platform" list="ed-platforms" autocomplete="off" placeholder="eBay"><datalist id="ed-platforms"></datalist></label>
+      <label class="ed-f"><span>Platform</span><select id="ed-plat-sel" aria-label="Platform"></select><input name="platform" autocomplete="off" placeholder="Type the platform" hidden><datalist id="ed-platforms"></datalist></label>
     </div>
     <label class="ed-f"><span>Condition</span><select name="condition"><option value="">Not set</option><option>Near Mint</option><option>Lightly Played</option><option>Moderately Played</option><option>Heavily Played</option><option>Damaged</option><option>Graded</option><option>Sealed</option></select></label>
     <label class="ed-f"><span>Note</span><textarea name="note" rows="2" placeholder="Optional"></textarea></label>
@@ -157,7 +157,7 @@
 <div class="hd"><h2 id="as-h">Add a card</h2><button class="x" type="button" data-as-close aria-label="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l10 10M13 3L3 13"/></svg></button></div>
 <div class="ctx"><div class="seg n2" id="as-type" data-i="0"><span class="th"></span><button type="button" data-v="purchase" aria-pressed="true">Purchase</button><button type="button" data-v="sale" aria-pressed="false">Sale</button></div>
 <div class="sel"><select id="as-plat" aria-label="Platform"></select></div></div>
-<div class="addplat" id="as-addplat" hidden><input id="as-newplat" type="text" maxlength="40" autocomplete="off" placeholder="Your platform, like a local shop" aria-label="New platform name" enterkeyhint="done"><button type="button" id="as-saveplat">Add</button><button type="button" class="ghost" id="as-cancelplat">Cancel</button></div>
+<div class="addplat" id="as-addplat" hidden><input id="as-newplat" type="text" maxlength="40" autocomplete="off" placeholder="Type the platform, like a local shop" aria-label="New platform name" enterkeyhint="done"><button type="button" id="as-saveplat">Add</button><button type="button" class="ghost" id="as-cancelplat">Cancel</button></div>
 <div id="as-s1" style="display:flex;flex-direction:column;flex:1;min-height:0">
 <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
 <input id="as-in" type="text" enterkeyhint="next" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Card name, number, set, grade&hellip;" aria-label="Card"></label>
@@ -211,26 +211,26 @@
 
 <div class="app-toasts" id="app-toasts" aria-live="polite"></div>
 
-<script src="js/store.js?v=37.12.1"></script>
-<script src="js/auth.js?v=37.12.1"></script>
+<script src="js/store.js?v=37.13.1"></script>
+<script src="js/auth.js?v=37.13.1"></script>
 <script>/* Set to the deployed Worker URL for live lookups and real art. Empty = built-in sample catalog. */window.CARDTAB_API="";</script>
-<script src="js/parser.js?v=37.12.1"></script>
-<script src="js/lookup.js?v=37.12.1"></script>
-<script src="js/editor.js?v=37.12.1"></script>
-<script src="js/addsheet.js?v=37.12.1"></script>
-<script src="js/xlsx-lite.js?v=37.12.1"></script>
-<script src="js/importer.js?v=37.12.1"></script>
-<script src="js/import-ui.js?v=37.12.1"></script>
-<script src="js/motion.js?v=37.12.1"></script>
-<script src="js/dash.js?v=37.12.1"></script>
-<script src="js/budget.js?v=37.12.1"></script>
-<script src="js/home.js?v=37.12.1"></script>
-<script src="js/month.js?v=37.12.1"></script>
-  <script src="js/metrics.js?v=37.12.1"></script>
-<script src="js/shell.js?v=37.12.1"></script>
-<script src="js/toolbar.js?v=37.12.1"></script>
-<script src="js/board-loader.js?v=37.12.1"></script>
-<script src="js/install.js?v=37.12.1"></script>
-<script src="js/main.js?v=37.12.1"></script>
+<script src="js/parser.js?v=37.13.1"></script>
+<script src="js/lookup.js?v=37.13.1"></script>
+<script src="js/editor.js?v=37.13.1"></script>
+<script src="js/addsheet.js?v=37.13.1"></script>
+<script src="js/xlsx-lite.js?v=37.13.1"></script>
+<script src="js/importer.js?v=37.13.1"></script>
+<script src="js/import-ui.js?v=37.13.1"></script>
+<script src="js/motion.js?v=37.13.1"></script>
+<script src="js/dash.js?v=37.13.1"></script>
+<script src="js/budget.js?v=37.13.1"></script>
+<script src="js/home.js?v=37.13.1"></script>
+<script src="js/month.js?v=37.13.1"></script>
+  <script src="js/metrics.js?v=37.13.1"></script>
+<script src="js/shell.js?v=37.13.1"></script>
+<script src="js/toolbar.js?v=37.13.1"></script>
+<script src="js/board-loader.js?v=37.13.1"></script>
+<script src="js/install.js?v=37.13.1"></script>
+<script src="js/main.js?v=37.13.1"></script>
 </body>
 </html>

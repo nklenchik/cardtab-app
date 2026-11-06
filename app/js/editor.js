@@ -72,7 +72,7 @@
     else { f('fees').value = ''; f('ship').value = last.ship != null ? S.fromCents(last.ship) : ''; }
     f('qty').value = e.qty || 1; f('date').value = e.date || S.today(); f('platform').value = e.platform || '';
     f('condition').value = e.condition || ''; f('note').value = e.note || ''; keep();
-    document.getElementById('ed-platforms').innerHTML = S.pickerPlatforms().map(p => '<option value="' + p.replace(/"/g, '&quot;') + '">').join('');
+    fillPlat(f('platform').value);
     const u = S.usage(), left = document.getElementById('ed-left');
     left.hidden = !!editing || !(u.warn);
     left.textContent = u.left === 1 ? '1 free entry left this month.' : u.left + ' free entries left this month.';
@@ -82,6 +82,20 @@
     else { form.scrollTop = 0; if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); requestAnimationFrame(() => { form.scrollTop = 0; }); }
   }
   function close() { if (dlg.open) dlg.close(); editing = null; }
+  // Platform: your platforms in a list, with "Other…" at the end to type a new one (it's saved, so it's in the list next time)
+  const psel = document.getElementById('ed-plat-sel');
+  function fillPlat(cur) {
+    const ps = S.pickerPlatforms(), esc2 = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    psel.innerHTML = '<option value="">Pick one</option>' + ps.map(p => '<option>' + esc2(p) + '</option>').join('') + '<option value="__other">Other…</option>';
+    const hit = cur && ps.find(p => p.toLowerCase() === cur.toLowerCase());
+    if (hit) { psel.value = hit; f('platform').value = hit; f('platform').hidden = true; }
+    else if (cur) { psel.value = '__other'; f('platform').hidden = false; }
+    else { psel.value = ''; f('platform').hidden = true; }
+  }
+  psel.addEventListener('change', () => {
+    if (psel.value === '__other') { f('platform').value = ''; f('platform').hidden = false; f('platform').focus(); }
+    else { f('platform').value = psel.value; f('platform').hidden = true; }
+  });
 
   form.addEventListener('submit', async ev => {
     ev.preventDefault();

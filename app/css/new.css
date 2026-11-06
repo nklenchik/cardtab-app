@@ -1237,3 +1237,28 @@ html:has(dialog[open]),html:has(dialog[open]) body{overflow:hidden!important;ove
 .mc-in input:focus{border-color:#5b9fe3}
 .mc-in input.bad{border-color:var(--tab-on,#b0123d)}
 @media(max-width:760px){.mc-in input{font-size:16px;height:42px}}
+
+/* ===== v37.13 ===== */
+/* Add a card: the full-form link sits up off the bottom edge (clear of the home bar) */
+@media(max-width:760px){#as .other{margin:4px auto calc(14px + env(safe-area-inset-bottom,0px))!important;padding:8px 6px}}
+/* the entry form's lists (condition, platform): our own arrow, inside the field on every screen */
+.ed .ed-f select{-webkit-appearance:none;appearance:none;padding-right:38px!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 14px center!important;background-size:14px!important}
+.ed .ed-f select+input{margin-top:8px}
+/* profile: "Sales show" uses the exact same switch as Appearance */
+.app-menu.am #am-amt{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #am-amt{background:var(--s-ctl)!important}:root:not([data-theme="light"]) #am-amt [aria-checked=true]{background:var(--s-raise)!important}}
+:root[data-theme="dark"] #am-amt{background:var(--s-ctl)!important}:root[data-theme="dark"] #am-amt [aria-checked=true]{background:var(--s-raise)!important}
+.app-menu.am .amr.amth .seg button{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;padding:0 6px}
+@media(max-width:760px){.app-menu.am .amr.amth .seg button{height:36px;font-size:13.5px}}
+/* header buttons are always true circles (no squeezing on narrow phones) */
+.sh-ic,.app-avatar{aspect-ratio:1;flex:none}
+@media(max-width:350px){.sh-pillbtn{width:38px!important;height:38px!important;flex:none}}
+/* phones: the tab bar and the header slide away while you scroll down and glide back on scroll up — the same motion as the website's header */
+@media(max-width:760px){
+ .ct-tbar{will-change:transform;transition:transform .8s cubic-bezier(.22,.61,.36,1)!important}
+ html.tb-away .ct-tbar{transition:transform .6s cubic-bezier(.4,0,.2,1)!important}
+ .ct-shell{will-change:transform;transition:transform .8s cubic-bezier(.22,.61,.36,1)}
+ html.tb-away .ct-shell:not(.q-on){transform:translate3d(0,-100%,0);transition:transform .6s cubic-bezier(.4,0,.2,1)}
+}
+@media(prefers-reduced-motion:reduce){.ct-tbar,.ct-shell{transition-duration:.01s!important}}
+#ed .ed-f select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 14px center!important;background-size:14px!important;padding-right:38px!important}

@@ -165,10 +165,10 @@
   dlg.addEventListener('click', e => { if (e.target === dlg) close(); });
   dlg.addEventListener('close', () => { const n = st.rows.length, done = st.onDone; st.onDone = null; if (done && n) done('session', n); });
 
-  // Platform picker, with "Add your own" at the end. Your own platforms are saved in your account only.
+  // Platform picker, with "Other…" at the end to type your own. Your own platforms are saved in your account only.
   function fillPlatforms(pick) {
     const plats = S.pickerPlatforms(), sel = $('as-plat');
-    sel.innerHTML = plats.map(p => '<option>' + esc(p) + '</option>').join('') + '<option value="__add">+ Add your own…</option>';
+    sel.innerHTML = plats.map(p => '<option>' + esc(p) + '</option>').join('') + '<option value="__add">Other…</option>';
     sel.value = pick && plats.includes(pick) ? pick : plats[0];
     sel.dataset.prev = sel.value; $('as-addplat').hidden = true;
   }
