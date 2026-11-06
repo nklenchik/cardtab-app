@@ -1467,3 +1467,25 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 .del-sheet .del-cancel{display:block}
 /* v40: from 1200px the Stories style panel (inside the Stories page) replaces the theme chips in the header row */
 @media (min-width:1200px){.sh-chips{display:none!important}}
+
+/* ===== v41 phones: Add New is a full screen with search on top =====
+   The keyboard only covers the bottom, so the matches and their art stay in view while typing, and nothing has to
+   resize when the keyboard comes up (that resize was the stutter). It opens with a quick fade and rise. The
+   Purchase/Sale switch and platform step aside while searching (a Bought/Sold chip flips the type) and come back on the price step. */
+@keyframes ct-fsIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes ct-fsOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(14px)}}
+@media(max-width:760px){
+ #as.nm[open]{align-items:stretch}
+ #as.nm .phone{margin:0!important;height:100%!important;max-height:none!important;border-radius:0!important;border:0!important;box-shadow:none!important;transform:none;opacity:0;padding-top:env(safe-area-inset-top,0px)}
+ #as.nm.go .phone{animation:ct-fsIn .24s cubic-bezier(.2,.8,.2,1) both}
+ #as.nm.go.closing .phone,#as.nm.closing .phone{animation:ct-fsOut .18s ease-in both}
+ #as.nm .grab{display:none}
+ #as.nm .hd{padding-top:10px}
+ #as.nm.st1 .ctx,#as.nm.st1 #as-addplat{display:none!important}
+ #as.nm.st1 .search{margin-top:2px}
+ #as.nm .chips{display:flex;flex-wrap:wrap;gap:6px}
+ #as .tchip{font:inherit;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;-webkit-tap-highlight-color:transparent}
+ #as .tchip i{color:var(--brand);font-weight:800}
+ #as.nm .other{margin-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+}
+@media(max-width:760px) and (prefers-reduced-motion:reduce){#as.nm .phone{opacity:1;animation:none!important}}

@@ -512,6 +512,10 @@ html.pg-moving *,html.pg-moving *::before{-webkit-backdrop-filter:none!important
 .hidew{margin-top:16px}
 @media(min-width:1280px){.shelfrow>.shelf{flex-basis:calc(400px + 28px + 3 * 170px + 24px)}}
 @media(min-width:1200px) and (max-width:1279px){.shelfrow .covers{grid-template-columns:repeat(3,minmax(0,150px))}.shelfrow .hero{height:calc(150px * 4.2 / 3 * 2 + 12px + 30px)}}
+/* v40.3 theme sheet: the whole sheet scrolls (themes, background, Hide amounts) with Done pinned at the bottom, so nothing gets squeezed when a phone browser's bars take up room */
+#ths .tgrid{overflow:visible;flex:none;max-height:none}
+#ths .bgw,#ths .hidew,#ths .shh{flex:none}
+#ths .go{position:sticky;bottom:0;z-index:2;box-shadow:0 -14px 18px var(--bg)}
 </style>
 
 <div class="wrap">

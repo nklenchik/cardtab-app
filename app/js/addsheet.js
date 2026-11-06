@@ -18,6 +18,7 @@
   const CK = '<span class="tick"><svg viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg></span>';
   const mem = { get() { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } }, set(extra) { try { localStorage.setItem(KEY, JSON.stringify(Object.assign(mem.get(), { type: st.type, plat: $('as-plat').value }, extra || {}))); } catch (e) {} } };
 
+  const PHN = matchMedia('(max-width:760px)');
   function chipsFor(p) {
     const c = [];
     if (p.name) c.push(['Card', p.name]); if (p.number) c.push(['No.', p.number]); if (p.set) c.push(['Set', p.set]);
@@ -51,7 +52,9 @@
   function setGo(enabled, label) { go.disabled = !enabled; go.textContent = label; }
   function render() {
     const t = inp.value.trim(), p = window.CardParser.parse(t);
-    chips.innerHTML = t ? chipsFor(p).map((c, i) => '<span class="chip" style="animation-delay:' + i * 45 + 'ms"><i>' + c[0] + '</i>' + esc(c[1]) + '</span>').join('') : '';
+    // phones: the first chip says Bought or Sold and flips it (the Purchase/Sale switch is hidden while searching, to keep the matches above the keyboard)
+    const tchip = PHN.matches ? '<button type="button" class="chip tchip" data-tchip aria-label="' + (st.type === 'sale' ? 'Sale' : 'Purchase') + ', tap to switch"><i>' + (st.type === 'sale' ? 'Sold' : 'Bought') + '</i>tap to switch</button>' : '';
+    chips.innerHTML = tchip + (t ? chipsFor(p).map((c, i) => '<span class="chip" style="animation-delay:' + i * 45 + 'ms"><i>' + c[0] + '</i>' + esc(c[1]) + '</span>').join('') : '');
     const sig = [p.name, p.number, p.set, p.rarity].join('|');
     if (sig !== st.sig) {
       st.sig = sig;
@@ -92,18 +95,19 @@
   // sheet settles above the keyboard once, after the slide. Resizing on every keyboard step is what made it stutter.
   let moving = false, settle = 0;
   function fit() { if (!dlg.open || !vv || moving) return;
+    // phones search full screen: the keyboard just covers the bottom, nothing resizes. Only the price step follows the keyboard, so Save stays in reach.
+    if (dlg.classList.contains('nm') && !dlg.classList.contains('st2')) { dlg.style.height = ''; dlg.style.top = ''; return; }
     // only follow the visible area while the keyboard is up; otherwise sit at the top of the screen. (Inside some app
     // viewers the visible area reports an offset even with no keyboard, which pushed the sheet down.)
     const kb = vv.height < innerHeight * .85;
     dlg.style.height = kb ? vv.height + 'px' : ''; dlg.style.top = kb ? Math.max(0, vv.offsetTop) + 'px' : ''; }
-  const PHN = matchMedia('(max-width:760px)');
   const bd = document.createElement('div'); bd.className = 'as-bd'; bd.setAttribute('aria-hidden', 'true'); document.body.appendChild(bd);
   dlg.addEventListener('closing', () => { moving = true; clearTimeout(settle); bd.classList.remove('on'); });
   dlg.addEventListener('close', () => bd.classList.remove('on'));
   dlg.addEventListener('close', () => { dlg.classList.remove('go'); moving = false; clearTimeout(settle); dlg.style.height = ''; dlg.style.top = ''; dlg.classList.remove('moving'); });
   if (vv) { vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
 
-  function show(step) { $('as-s1').style.display = step === 1 ? 'flex' : 'none'; $('as-s2').style.display = step === 2 ? 'flex' : 'none'; }
+  function show(step) { $('as-s1').style.display = step === 1 ? 'flex' : 'none'; $('as-s2').style.display = step === 2 ? 'flex' : 'none'; dlg.classList.toggle('st1', step === 1); dlg.classList.toggle('st2', step === 2); if (step === 1) { dlg.style.height = ''; dlg.style.top = ''; } else fit(); }
   function setSeg(id, i) { const el = $(id); el.setAttribute('data-i', i); el.querySelectorAll('button').forEach((b, k) => b.setAttribute('aria-pressed', k === i)); }
   function seg(id, fn) { $(id).querySelectorAll('button').forEach((b, i) => b.addEventListener('click', () => { setSeg(id, i); fn(b, i); })); }
 
@@ -156,6 +160,9 @@
   function flash(t) { const el = $('as-toast'); el.textContent = t; el.classList.add('on'); clearTimeout(flash.t); flash.t = setTimeout(() => el.classList.remove('on'), 1900); }
 
   seg('as-type', b => { st.type = b.dataset.v; upd(); mem.set(); });
+  // phones: the Bought/Sold chip flips the type without dropping the keyboard
+  chips.addEventListener('pointerdown', e => { if (e.target.closest('[data-tchip]')) e.preventDefault(); });
+  chips.addEventListener('click', e => { if (!e.target.closest('[data-tchip]')) return; const b = $('as-type').querySelectorAll('button')[st.type === 'sale' ? 0 : 1]; if (b) b.click(); render(); if (window.CTHaptic) try { CTHaptic('tap'); } catch (er) {} });
   seg('as-cond', (b, i) => { st.cond = i; });
   $('as-plat').addEventListener('change', e => { if (e.target.value !== '__add') mem.set(); });
   $('as-qm').addEventListener('click', () => { st.qty = Math.max(1, st.qty - 1); $('as-q').textContent = st.qty; });
@@ -210,7 +217,8 @@
     const touch = matchMedia('(hover:none)').matches;
     let mode = 'after'; try { mode = localStorage.getItem('ct.kbmode') || 'after'; } catch (e) {}
     dlg.style.top = ''; dlg.style.height = '';
-    if (touch && mode === 'together') { const k = kbMem(); if (k) dlg.style.height = k + 'px'; }
+    const phone = PHN.matches; if (phone) mode = 'together';   // v41: full-screen search on phones, so the keyboard can rise with it
+    if (touch && mode === 'together' && !phone) { const k = kbMem(); if (k) dlg.style.height = k + 'px'; }
     moving = true; dlg.classList.remove('go'); dlg.classList.add('moving');
     const tOpen = performance.now();
     // phones: opens as a normal layer over the page with its own blurred backdrop, like the profile menu (the browser's
