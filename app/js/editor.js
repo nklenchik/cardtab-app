@@ -79,7 +79,7 @@
     dlg.showModal();
     // phones: no keyboard jumping up while the sheet slides in; tap a field when you're ready
     if (!PHONE.matches) requestAnimationFrame(() => { (editing ? f('amount') : f('name')).focus({ preventScroll: true }); });
-    else { form.scrollTop = 0; requestAnimationFrame(() => { const x = form.querySelector('.ed-x'); if (x) x.focus({ preventScroll: true }); }); }
+    else { form.scrollTop = 0; if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); requestAnimationFrame(() => { form.scrollTop = 0; }); }
   }
   function close() { if (dlg.open) dlg.close(); editing = null; }
 
