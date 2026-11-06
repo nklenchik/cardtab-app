@@ -1,0 +1,10 @@
+const { chromium, devices } = require('playwright');
+(async () => { const b = await chromium.launch(); const p = await (await b.newContext({ ...devices['iPhone 13'] })).newPage();
+ await p.goto('http://localhost:8765/index.html'); await p.evaluate(() => localStorage.setItem('ct.session', JSON.stringify({ email: 'b@x.test', via: 'email', at: Date.now(), exp: Date.now() + 864e5 })));
+ await p.reload(); await p.waitForTimeout(1200); await p.click('[data-dev=sample]').catch(() => {}); await p.evaluate(() => document.querySelector('[data-dev=sample]') && document.querySelector('[data-dev=sample]').click()); await p.waitForTimeout(1200);
+ const bd = id => p.evaluate(id => { const d = document.getElementById(id); return d && d.open ? getComputedStyle(d, '::backdrop').backdropFilter : 'closed'; }, id);
+ await p.locator('.ct-budtile').scrollIntoViewIfNeeded(); await p.locator('.ct-budtile').click(); await p.waitForTimeout(900);
+ console.log('budget', await bd('bu-sheet')); await p.screenshot({ path: 'out-phone/budget-blur.png' });
+ await p.keyboard.press('Escape'); await p.waitForTimeout(700);
+ await p.locator('#ct-fab').click(); await p.waitForTimeout(900); console.log('add new', await bd('as'));
+ await b.close(); })();

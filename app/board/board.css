@@ -1969,7 +1969,7 @@ html.pg-moving .cbx #cb .wq.k-feat .ttl,html.pg-moving .cbx #cb .fpc,html.pg-mov
  dialog.drawer.closing .askp{animation:ctAskDown .24s cubic-bezier(.4,0,1,1) both!important}
  dialog.drawer .askp{height:min(90dvh,calc(100dvh - 40px - env(safe-area-inset-top,0px)))!important;border-radius:26px 26px 0 0!important;background:var(--sheet-bg,var(--card))!important;border:0!important;border-top:1px solid var(--win-edge,rgba(255,255,255,.1))!important;padding-top:24px!important;position:relative}
  dialog.drawer .askp::before{content:"";position:absolute;top:8px;left:50%;width:38px;height:5px;margin-left:-19px;border-radius:999px;background:color-mix(in srgb,currentColor 22%,transparent)}
- dialog.drawer::backdrop{background:rgba(10,8,6,.45)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;animation:ctAskFade .3s ease both}
+ dialog.drawer::backdrop{background:var(--win-veil)!important;-webkit-backdrop-filter:var(--win-blur)!important;backdrop-filter:var(--win-blur)!important;animation:ctAskFade .3s ease both}
 }
 @keyframes ctAskUp{from{transform:translate3d(0,100%,0)}to{transform:none}}
 @keyframes ctAskDown{to{transform:translate3d(0,100%,0)}}

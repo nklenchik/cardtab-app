@@ -1296,10 +1296,9 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
  .app-menu.am>.amg>button,.app-menu.am>.amg>.amr{border-radius:0!important;margin:0!important;width:100%}
  .app-menu.am>.amg>button:active{background:var(--am-hl)}
 }
-/* phones: while a sheet or window is open, the blurred glass behind it (header, tab bar, the dimmed backdrop) switches to
-   a plain tint — blurring the whole page under a sliding sheet is what made Add New stall before appearing on iPhone */
+/* phones: while a window is open, the header and tab bar glass under it stops blurring (the window's own frosted veil covers
+   them, so it looks the same). v37.22: every window keeps the same frosted veil on phones as on desktop. */
 @media(max-width:760px){
- dialog::backdrop{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgba(10,8,6,.45)!important}
  html.sheet-up .ct-tbar,html.sheet-up .ct-shell::before,html.sheet-up .ct-shell{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 }
 
