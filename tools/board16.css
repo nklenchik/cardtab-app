@@ -270,3 +270,11 @@ html.pg-moving .cbx #cb .wq.k-feat .ttl,html.pg-moving .cbx #cb .fpc,html.pg-mov
 #cb .gl{container-type:inline-size}
 #cb .gltx small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @container (max-width:250px){#cb .glic{display:none}#cb .glv span{display:none}#cb .glr{gap:8px;padding:8px 4px}#cb .gltx em{font-size:13px}#cb .glv b{font-size:14px}}
+/* v37.5: the board only scrolls up and down — nothing can push it sideways, and it never drifts on a swipe */
+.cbx{overflow-x:hidden!important;overscroll-behavior-x:none}
+#cb{max-width:100%;overflow-x:clip}
+@media(max-width:760px){
+ #cb .tctl{flex-wrap:wrap!important;overflow-x:visible!important;row-gap:8px}
+ #cb .ms-board{flex:1 1 100%;min-width:0;margin-right:0!important}
+ #cb .ms-board .ms-lab{min-width:0;overflow:hidden;text-overflow:ellipsis}
+}

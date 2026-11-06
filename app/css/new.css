@@ -1134,3 +1134,11 @@ body:has(#view-app[hidden]) .ct-shell,body:has(#view-app[hidden]) .ct-tbar,body:
  .ct-demo .ct-row:not(.expanded) .ct-row-amt small{display:none}
  .ct-demo .ct-row:not(.expanded) .ct-row-amt strong{font-size:15.5px}
 }
+/* v37.5: narrow phones (big text sizes): the date label steps down a size and header pills become icons, so nothing is cut off */
+@media(max-width:350px){
+ .ct-mstep.ms-main .ms-lab{font-size:16.5px!important}
+ .ct-mstep.ms-main>button{width:32px!important;height:32px!important}
+ .ct-mstep .ms-rng{padding:0 9px 0 11px!important}
+ .sh-pillbtn span{display:none}
+ .sh-pillbtn{width:36px;padding:0!important;justify-content:center}
+}

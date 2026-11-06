@@ -145,9 +145,11 @@
   document.addEventListener('pointerdown', e => { if (pop && !e.target.closest('.ms-rw')) closePop(); }, true);
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && pop) { const r = rngOf(popEl); closePop(); if (r) r.focus(); } });
 
+  const NARROW = matchMedia('(max-width:350px)');
+  NARROW.addEventListener('change', () => inst.forEach(el => { el.querySelector('.ms-lab').innerHTML = ''; paintStep(el, 0); }));
   function paintStep(el, dir) {
     const p = parse(sel.value), lab = el.querySelector('.ms-lab');
-    const text = textOf(p, el.classList.contains('ms-mini'));
+    const text = textOf(p, el.classList.contains('ms-mini') || NARROW.matches);   // narrow phones say "Nov 2026"
     el.classList.toggle('is-all', p.kind === 'all');
     el.querySelector('.ms-prev').disabled = !stepped(p, -1);
     el.querySelector('.ms-next').disabled = !stepped(p, 1);
