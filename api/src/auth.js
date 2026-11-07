@@ -1,3 +1,4 @@
+import { handleEvents, handleStats } from './analytics.js';
 import { handleAsk } from './ask.js';
 /* Card Tab sign-in: Google, or an emailed link + 6-digit code. No passwords.
    A session is a random token in an HttpOnly cookie on .cardtab.app (good for 30 days); only its SHA-256 is stored.
@@ -152,11 +153,17 @@ export async function handleAuth(env, req, path) {
   }
   if (!me) return out(env, req, { error: 'Sign in first.' }, 401);
   if (path === '/auth/delete' && req.method === 'POST') {
-    await env.DB.batch([...(await deleteSynced(env, me.id)), env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(me.id), env.DB.prepare('DELETE FROM login_tokens WHERE email=?').bind(me.email), env.DB.prepare('DELETE FROM users WHERE id=?').bind(me.id)]);
+    await env.DB.batch([...(await deleteSynced(env, me.id)), env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(me.id), env.DB.prepare('DELETE FROM an_active WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM login_tokens WHERE email=?').bind(me.email), env.DB.prepare('DELETE FROM users WHERE id=?').bind(me.id)]);
     return out(env, req, { ok: true }, 200, { 'set-cookie': setCookie(env, 'ct_s', '', 0) });
   }
   if (path === '/auth/sync' && req.method === 'POST') return handleSync(env, req, me, (body, status = 200) => out(env, req, body, status));
   if (path === '/auth/ask' && req.method === 'POST') return handleAsk(env, req, Object.assign({}, me, { role: isAdmin(env, me.email) ? 'admin' : 'user' }), (body, status = 200) => out(env, req, body, status));
+  // v50 analytics: the app's counts, and the admin dashboard's numbers
+  if (path === '/auth/ev' && req.method === 'POST') return handleEvents(env, req, me, (body, status = 200) => out(env, req, body, status));
+  if (path === '/auth/admin/stats') {
+    if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);
+    return handleStats(env, req, (body, status = 200) => out(env, req, body, status));
+  }
   if (path === '/auth/usage') {   // card data use this billing month (admins)
     if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);
     return out(env, req, await report(env));

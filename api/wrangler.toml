@@ -27,3 +27,7 @@ GOOGLE_CLIENT_ID = "402189262163-0kb6qq7l9igfmvgiqp81plvjk5572to8.apps.googleuse
 # Email: either Cloudflare Email Service (add a [[send_email]] binding named EMAIL) or  wrangler secret put RESEND_API_KEY
 
 # Secret (never put it in this file):  wrangler secret put JUSTTCG_API_KEY
+
+# v50: nightly analytics tidy-up (keeps two years of daily rows). Times are UTC.
+[triggers]
+crons = ["17 8 * * *"]

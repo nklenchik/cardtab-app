@@ -89,6 +89,7 @@
     }
     if (id === 'sharing') { const sh = S.meta('sharing') || {}; $('am-shamt').setAttribute('aria-checked', String(!!sh.amt)); $('am-shnames').setAttribute('aria-checked', String(!!sh.names)); }
     if (id === 'data') {
+      $('am-usage').setAttribute('aria-checked', String(S.meta('shareUsage') !== false));
       const ys = [...new Set(S.all().map(e => e.date.slice(0, 4)))].sort().reverse(), now = String(new Date().getFullYear());
       if (!ys.includes(now)) ys.unshift(now);
       const pick = ys.includes(String(+now - 1)) && new Date().getMonth() < 4 ? String(+now - 1) : ys[0];
@@ -105,6 +106,7 @@
     if (t.closest('.amp-back')) { e.stopPropagation(); closePage(); return; }
     const c = t.closest('#am-dcond button'); if (c) { $('am-dcond').querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(b === c))); await saveMeta('addDefaults', { cond: c.dataset.c }); return; }
     const g = t.closest('.am-chip'); if (g) { const on = g.getAttribute('aria-pressed') !== 'true'; g.setAttribute('aria-pressed', String(on)); const list = myGames().filter(x => x !== g.dataset.g); if (on) list.push(g.dataset.g); await S.setMeta('games', list); return; }
+    const us = t.closest('#am-usage'); if (us) { const on = us.getAttribute('aria-checked') !== 'true'; us.setAttribute('aria-checked', String(on)); await S.setMeta('shareUsage', on); return; }
     const sw = t.closest('#am-shamt, #am-shnames'); if (sw) { const on = sw.getAttribute('aria-checked') !== 'true'; sw.setAttribute('aria-checked', String(on)); await saveMeta('sharing', sw.id === 'am-shamt' ? { amt: on } : { names: on }); applySharing(); return; }
     if (t.closest('#am-prof')) { e.stopPropagation(); if (window.CTMenu) window.CTMenu.close(); if (window.CTBoardLoader) window.CTBoardLoader.load().then(() => setTimeout(() => window.CTProfileOpen && window.CTProfileOpen(), 180)).catch(() => {}); return; }
     if (t.closest('#am-del')) { e.stopPropagation(); if (window.CTMenu) window.CTMenu.close(); setTimeout(() => window.CTDeleteAccount && window.CTDeleteAccount(), matchMedia('(max-width:760px)').matches ? 280 : 60); return; }

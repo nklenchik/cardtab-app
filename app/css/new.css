@@ -1823,3 +1823,6 @@ body:has(#view-app[hidden]) .ct-dock{display:none!important}
 
 /* v49.2 behind every window: back to the plain darker dim chosen earlier (no grain) */
 dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backdrop,.am-bd,.as-bd,.mbd,.zm-bg{background:var(--win-veil)!important}
+
+/* v50 admin menu: link to the analytics dashboard */
+.am-cd .am-adm{display:flex;justify-content:space-between;align-items:center;font-weight:750;font-size:13px;color:var(--brand,#a50e37);text-decoration:none;padding:4px 0 10px}

@@ -43,3 +43,9 @@ CREATE INDEX IF NOT EXISTS cards_name ON cards(name);
 -- Ask (v45): questions asked per account per month, and the month's tokens (for the spending cap)
 CREATE TABLE IF NOT EXISTS ask_usage ( user_id TEXT NOT NULL, month TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (user_id, month) );
 CREATE TABLE IF NOT EXISTS ask_spend ( month TEXT PRIMARY KEY, tin INTEGER NOT NULL DEFAULT 0, tout INTEGER NOT NULL DEFAULT 0, n INTEGER NOT NULL DEFAULT 0 );
+
+-- v50 analytics: one row per day per count (totals only), and who was active each day (for active people, time in the app
+-- and coming-back numbers). Rows older than two years are removed nightly.
+CREATE TABLE IF NOT EXISTS an_day ( day TEXT NOT NULL, ev TEXT NOT NULL, dim TEXT NOT NULL DEFAULT '', plan TEXT NOT NULL, dev TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, v REAL NOT NULL DEFAULT 0, PRIMARY KEY (day, ev, dim, plan, dev) );
+CREATE TABLE IF NOT EXISTS an_active ( day TEXT NOT NULL, uid TEXT NOT NULL, plan TEXT NOT NULL, dev TEXT NOT NULL, secs INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day, uid) );
+CREATE INDEX IF NOT EXISTS an_active_uid ON an_active (uid);

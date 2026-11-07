@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow">
+<title>Card Tab Admin</title>
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap">
+<style>
+:root{--page:#f7f5f1;--card:#fff;--card2:#f1eee8;--text:#1a1918;--muted:#77736d;--hair:rgba(0,0,0,.08);--brand:#a50e37;--good:#2e8b4f;--bad:#c0392b;--s1:#a50e37;--s2:#3b6fd8;--s3:#e0a100;--s4:#2e8b7a;--s5:#8a5cd6;--grid:rgba(0,0,0,.06)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--page:#121110;--card:#1d1c1a;--card2:#272523;--text:#f2efe9;--muted:#a19c94;--hair:rgba(255,255,255,.09);--brand:#ff6b8b;--good:#5fd38a;--bad:#ff7a6b;--s1:#ff6b8b;--s2:#6f9bff;--s3:#ffc53d;--s4:#4fd1b8;--s5:#b48cff;--grid:rgba(255,255,255,.07);color-scheme:dark}}
+:root[data-theme=dark]{--page:#121110;--card:#1d1c1a;--card2:#272523;--text:#f2efe9;--muted:#a19c94;--hair:rgba(255,255,255,.09);--brand:#ff6b8b;--good:#5fd38a;--bad:#ff7a6b;--s1:#ff6b8b;--s2:#6f9bff;--s3:#ffc53d;--s4:#4fd1b8;--s5:#b48cff;--grid:rgba(255,255,255,.07);color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--text);font:500 14px/1.45 Manrope,system-ui,sans-serif}
+button{font:inherit;color:inherit}
+.wrap{max-width:1360px;margin:0 auto;padding-block:20px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hd{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--brand);display:grid;place-items:center;color:#fff;font-weight:800}
+.hd h1{margin:0;font-size:20px;letter-spacing:-.02em}
+.hd .tag{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--hair);padding:3px 8px;border-radius:99px}
+.hd .sp{flex:1}
+.note{font-size:12px;color:var(--muted);font-weight:600}
+.bar{position:sticky;top:0;z-index:5;background:var(--page);padding:10px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--hair);margin-bottom:16px}
+.seg{display:inline-flex;background:var(--card);border:1px solid var(--hair);border-radius:999px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;border-radius:999px;padding:7px 12px;font-weight:700;font-size:13px;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed=true]{background:var(--text);color:var(--page)}
+.chip{border:1px solid var(--hair);background:var(--card);border-radius:999px;padding:8px 13px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.chip[aria-pressed=true]{border-color:var(--text)}
+.sw{width:30px;height:18px;border-radius:99px;background:var(--card2);position:relative;transition:background .2s}.sw::after{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .2s}
+.chip[aria-pressed=true] .sw{background:var(--brand)}.chip[aria-pressed=true] .sw::after{transform:translateX(12px)}
+.range{font-weight:800;font-size:13px;margin-left:auto;color:var(--muted)}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin-bottom:16px}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{border:0;background:transparent;padding:9px 14px;border-radius:12px;font-weight:800;cursor:pointer;color:var(--muted);white-space:nowrap}
+.tabs button[aria-selected=true]{background:var(--card);color:var(--text);box-shadow:inset 0 0 0 1px var(--hair)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:12px}
+.kpi{background:var(--card);border:1px solid var(--hair);border-radius:18px;padding:15px 16px;display:grid;gap:4px}
+.kpi small{color:var(--muted);font-weight:700;font-size:12px}
+.kpi b{font-size:28px;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi em{font-style:normal;font-size:12px;font-weight:800}
+.up{color:var(--good)}.dn{color:var(--bad)}.fl{color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--hair);border-radius:18px;padding:16px;min-width:0}
+.c8{grid-column:span 8}.c4{grid-column:span 4}.c6{grid-column:span 6}.c12{grid-column:span 12}
+.card h3{margin:0 0 2px;font-size:15px}
+.card .sub{color:var(--muted);font-size:12px;font-weight:600;margin-bottom:10px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--muted) 0 4px,transparent 4px 7px)!important}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:220px;overflow:visible}
+.tip{position:absolute;pointer-events:none;background:var(--text);color:var(--page);font-size:12px;font-weight:700;padding:7px 9px;border-radius:9px;white-space:nowrap;transform:translate(-50%,-110%);opacity:0;transition:opacity .12s}
+.tip.on{opacity:1}
+.list{display:grid;gap:9px}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center}
+.row span{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row b{font-size:13px;font-variant-numeric:tabular-nums}
+.row .tr{grid-column:1/-1;height:6px;border-radius:99px;background:var(--card2);overflow:hidden}
+.row .tr i{display:block;height:100%;border-radius:99px;background:var(--s1);transform-origin:left;animation:grow .6s cubic-bezier(.2,.8,.2,1) both}
+@keyframes grow{from{transform:scaleX(0)}}
+.row small{font-weight:800;font-size:11px;margin-left:6px}
+.stack{display:flex;height:14px;border-radius:99px;overflow:hidden;gap:2px;margin:6px 0 10px}
+.stack i{display:block;height:100%}
+.funnel{display:grid;gap:8px}
+.funnel div{display:grid;grid-template-columns:150px 1fr 70px;gap:10px;align-items:center;font-size:13px;font-weight:700}
+.funnel .bx{height:26px;border-radius:8px;background:var(--s2);opacity:.85;transform-origin:left;animation:grow .6s cubic-bezier(.2,.8,.2,1) both}
+.funnel em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--muted);font-weight:700;font-size:11.5px;padding:6px 8px;border-bottom:1px solid var(--hair)}
+td{padding:8px;border-bottom:1px solid var(--hair);font-variant-numeric:tabular-nums}
+td.n,th.n{text-align:right}
+.heat{display:grid;grid-template-columns:70px repeat(8,1fr);gap:3px;font-size:11px;font-weight:700}
+.heat span{padding:7px 4px;text-align:center;border-radius:6px}
+.heat .h{color:var(--muted);background:none;text-align:left}
+.priv{font-size:12px;color:var(--muted);font-weight:600;margin-top:16px;display:flex;gap:8px;align-items:center}
+@media(max-width:900px){.c8,.c4,.c6{grid-column:span 12}.range{width:100%;margin-left:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body><div class="wrap">
+</head><body>
+<style>
+/* phones: the date range and filters become dropdowns, like the app's period picker */
+.dd{position:relative;display:none}
+.dd>button{border:0;border-radius:999px;padding:9px 14px;font-weight:800;font-size:13px;cursor:pointer;background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--brand);display:inline-flex;gap:6px;align-items:center}
+.dd>button.n{background:var(--card);color:var(--text);border:1px solid var(--hair)}
+.dd .mn{position:absolute;top:calc(100% + 6px);left:0;z-index:20;min-width:200px;background:var(--card);border:1px solid var(--hair);border-radius:16px;padding:6px;box-shadow:0 18px 40px rgba(0,0,0,.28);display:grid;gap:2px;transform-origin:top left;animation:mnIn .18s cubic-bezier(.2,.8,.2,1)}
+.dd .mn[hidden]{display:none}
+@keyframes mnIn{from{opacity:0;transform:scale(.96) translateY(-4px)}}
+.dd .mn button{border:0;background:transparent;text-align:left;padding:10px 12px;border-radius:10px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between}
+.dd .mn button[aria-checked=true]{background:var(--card2)}
+.dd .mn button[aria-checked=true]::after{content:"✓";font-weight:800}
+.dd .mn hr{border:0;border-top:1px solid var(--hair);margin:4px 6px}
+.cust{display:none;gap:8px;align-items:center;flex-wrap:wrap}
+.cust.on{display:flex}
+.cust input{font:700 13px Manrope,sans-serif;border:1px solid var(--hair);background:var(--card);color:var(--text);border-radius:10px;padding:7px 9px}
+.gate{min-height:60vh;display:grid;place-content:center;text-align:center;gap:10px}
+.gate h2{margin:0;font-size:22px}.gate p{margin:0;color:var(--muted)}
+.gate a{color:var(--brand);font-weight:800}
+.empty{color:var(--muted);font-size:13px;font-weight:600;padding:18px 0;text-align:center}
+.load{opacity:.55;transition:opacity .2s}
+@media(max-width:760px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.kpi b{font-size:22px}.kpi{padding:13px}.seg.wide,#cmp.wide{display:none}.dd{display:inline-block}.bar{gap:6px}.range{order:9}}
+</style>
+<div class="wrap" id="app">
+<div class="hd"><span class="logo">C</span><h1>Card Tab Admin</h1><span class="tag" id="mode">Live</span><span class="sp"></span><span class="note">Your own devices are left out of every number</span></div>
+<div class="bar">
+ <div class="seg wide" id="rng"></div>
+ <div class="dd" id="rngdd"><button type="button" aria-haspopup="true" aria-expanded="false"><span></span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="mn" hidden role="menu"></div></div>
+ <div class="cust" id="cust"><input type="date" id="cf" aria-label="From"><span>–</span><input type="date" id="ct" aria-label="To"></div>
+ <button class="chip wide" id="cmp" aria-pressed="true"><span class="sw"></span>Compare to previous</button>
+ <div class="seg wide" id="plan"></div>
+ <div class="seg wide" id="dev"></div>
+ <div class="dd" id="fdd"><button type="button" class="n" aria-haspopup="true" aria-expanded="false"><span>Filters</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="mn" hidden role="menu"></div></div>
+ <span class="range" id="rlab"></span>
+</div>
+<div class="tabs" id="tabs" role="tablist"></div>
+<div id="view"></div>
+<div class="priv"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Counts only: no card names, prices, emails or typed text. People who switch off "Share anonymous usage" aren't counted. Daily counts are kept for two years.</div>
+</div>
+<script>
+const REAL=/(^|\.)cardtab\.app$/i.test(location.hostname),API='https://api.cardtab.app';
+const R=[['1','Today'],['7','7 days'],['30','30 days'],['90','90 days'],['ytd','This year'],['c','Custom']];
+const PLANS=[['all','Everyone'],['free','Free'],['premium','Premium']],DEVS=[['all','All devices'],['phone','Phone'],['desk','Desktop']];
+const TABS=['Overview','Time & pages','Board','Stories','Premium','Ask','Collection','Health'];
+let st={r:'30',cmp:true,plan:'all',dev:'all',tab:0,cf:'',ct:''},D=null,busy=0;
+try{Object.assign(st,JSON.parse(localStorage.getItem('ct.admin')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('ct.admin',JSON.stringify(st))}catch(e){}};
+const iso=t=>new Date(t.getTime()-t.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+function range(){const t=new Date();let a=new Date(t),b=new Date(t);if(st.r==='c'&&st.cf&&st.ct)return [st.cf,st.ct];if(st.r==='ytd')a=new Date(t.getFullYear(),0,1);else if(st.r!=='c')a.setDate(t.getDate()-(+st.r-1));else a.setDate(t.getDate()-29);return [iso(a),iso(b)]}
+const fmt=n=>{n=+n||0;return Math.abs(n)>=1e4?(n/1e3).toFixed(Math.abs(n)>=1e5?0:1)+'k':Math.round(n).toLocaleString()};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const cap=s=>{s=String(s||'—');return s.charAt(0).toUpperCase()+s.slice(1)};
+const LOWER=new Set(['Cancelled','App errors','Failed syncs','Load time (avg)','Widgets removed','Ask cost this month']);
+function delta(a,b,lab){if(!st.cmp||b==null)return '';if(!b&&!a)return '<em class="fl">no change</em>';if(!b)return '<em class="up">new</em>';const d=Math.round((a-b)/b*100),good=LOWER.has(lab)?d<0:d>0;return '<em class="'+(d===0?'fl':good?'up':'dn')+'">'+(d>0?'▲ ':d<0?'▼ ':'')+Math.abs(d)+'% vs previous</em>'}
+const kpi=(lab,v,prev,f)=>'<div class="kpi"><small>'+lab+'</small><b>'+(f?f(v):fmt(v))+'</b>'+delta(v,prev,lab)+'</div>';
+const card=(cls,h,sub,body)=>'<div class="card '+cls+'"><h3>'+h+'</h3><div class="sub">'+sub+'</div>'+body+'</div>';
+// counts helpers over the server's rows
+const evs=(rows,e)=>rows.filter(r=>r.ev===e);
+const tot=(rows,e)=>evs(rows,e).reduce((t,r)=>t+r.n,0);
+const totV=(rows,e)=>evs(rows,e).reduce((t,r)=>t+r.v,0);
+const byDim=(rows,e,useV)=>{const m={};evs(rows,e).forEach(r=>{m[r.dim||'—']=(m[r.dim||'—']||0)+(useV?r.v:r.n)});return m};
+function list(cur,prev,color,unit,limit){const ks=Object.keys(cur).sort((a,b)=>cur[b]-cur[a]).slice(0,limit||10);if(!ks.length)return '<div class="empty">Nothing yet for these dates</div>';const mx=Math.max(...ks.map(k=>cur[k]));
+ return '<div class="list">'+ks.map(k=>{const p=prev&&prev[k],d=p?Math.round((cur[k]-p)/p*100):null;return '<div class="row"><span>'+esc(cap(k))+(st.cmp&&d!=null?'<small class="'+(d>0?'up':d<0?'dn':'fl')+'">'+(d>0?'▲':d<0?'▼':'')+Math.abs(d)+'%</small>':'')+'</span><b>'+fmt(cur[k])+(unit||'')+'</b><span class="tr"><i style="width:'+(cur[k]/mx*100).toFixed(1)+'%;background:'+(color||'var(--s1)')+'"></i></span></div>'}).join('')+'</div>'}
+let cid=0;
+function line(sets,labels,label){const id='c'+(cid++),W=800,H=220,P=34,n=labels.length,mx=Math.max(1,...sets.flatMap(s=>s.v)),x=i=>P+(W-P*2)*(n<2?.5:i/(n-1)),y=v=>H-24-(H-44)*v/mx;
+ let g='';for(let k=0;k<=3;k++){const yy=H-24-(H-44)*k/3;g+='<line x1="'+P+'" x2="'+(W-P)+'" y1="'+yy+'" y2="'+yy+'" stroke="var(--grid)"/><text x="'+(P-6)+'" y="'+(yy+4)+'" text-anchor="end" font-size="10" fill="var(--muted)">'+fmt(mx*k/3)+'</text>'}
+ const step=Math.max(1,Math.ceil(n/7));labels.forEach((l,i)=>{if(i%step===0||i===n-1)g+='<text x="'+x(i)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" fill="var(--muted)">'+l+'</text>'});
+ const paths=sets.map(s=>n<2?'<circle cx="'+x(0)+'" cy="'+y(s.v[0]||0)+'" r="5" fill="'+s.c+'"/>':'<path d="'+s.v.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join('')+'" fill="none" stroke="'+s.c+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"'+(s.dash?' stroke-dasharray="4 4" opacity=".6"':'')+'/>').join('');
+ const leg=sets.length>1?'<div class="legend">'+sets.map(s=>'<span><i class="'+(s.dash?'dash':'')+'" style="background:'+s.c+'"></i>'+s.n+'</span>').join('')+'</div>':'';
+ setTimeout(()=>{const el=document.getElementById(id);if(!el)return;const svg=el.querySelector('svg'),tip=el.querySelector('.tip'),cx=el.querySelector('.cx');
+  svg.addEventListener('pointermove',e=>{const r=svg.getBoundingClientRect(),px=(e.clientX-r.left)/r.width*W,i=Math.max(0,Math.min(n-1,Math.round((px-P)/((W-P*2)/(n-1||1)))));cx.setAttribute('x1',x(i));cx.setAttribute('x2',x(i));cx.style.opacity=1;
+   tip.innerHTML=labels[i]+'<br>'+sets.map(s=>s.n+': '+fmt(s.v[i]||0)).join('<br>');tip.style.left=Math.min(88,Math.max(12,x(i)/W*100))+'%';tip.style.top=(y(Math.max(...sets.map(s=>s.v[i]||0)))/H*220)+'px';tip.classList.add('on')});
+  svg.addEventListener('pointerleave',()=>{tip.classList.remove('on');cx.style.opacity=0})},0);
+ return leg+'<div class="chart" id="'+id+'"><svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="'+label+'">'+g+'<line class="cx" y1="12" y2="'+(H-24)+'" stroke="var(--muted)" stroke-dasharray="3 3" style="opacity:0"/>'+paths+'</svg><span class="tip"></span></div>'}
+function dayLabels(){const out=[],a=new Date(D.from+'T12:00:00');for(let i=0;i<D.days;i++){const t=new Date(a);t.setDate(a.getDate()+i);out.push(t.toLocaleDateString('en-US',{month:'short',day:'numeric'}))}return out}
+function dailyOf(e){const m={};D.eventsByDay.filter(r=>r.ev===e).forEach(r=>m[r.day]=r.n);const a=new Date(D.from+'T12:00:00'),out=[];for(let i=0;i<D.days;i++){const t=new Date(a);t.setDate(a.getDate()+i);out.push(m[t.toISOString().slice(0,10)]||0)}return out}
+const avg=a=>a.length?a.reduce((t,x)=>t+x,0)/a.length:0;
+const med=a=>{a=a.filter(x=>x>0).sort((x,y)=>x-y);if(!a.length)return 0;const m=a.length>>1;return a.length%2?a[m]:(a[m-1]+a[m])/2};
+const mins=s=>(s/60).toFixed(1)+' min';
+function views(){const E=D.events,P=st.cmp?D.eventsPrev:null,PP=D.eventsPrev,L=dayLabels(),cmpSet=(v,c,nm)=>st.cmp?[{n:'Previous',v,c:'var(--muted)',dash:1}]:[];
+ const S=[];
+ S[0]=()=>{const sign=D.signups.reduce((t,r)=>t+r.n,0),m=D.members||{},coh=D.cohorts||[],pc=(a,b)=>b?Math.round(a/b*100)+'%':'—';
+  return '<div class="kpis">'+kpi('Active people a day (avg)',avg(D.active),avg(D.activePrev))+kpi('People active in this period',D.people,D.peoplePrev)+kpi('New sign-ups',sign,D.signupsPrev)+kpi('Premium members',m.premium||0)+kpi('Free members',m.free||0)+kpi('Free → Premium',tot(E,'upgrade'),tot(PP,'upgrade'))+kpi('Time in app a day (median)',med(D.secs),med(D.secsPrev),mins)+'</div>'+
+  '<div class="grid">'+card('c8','Active people','Each day'+(st.cmp?', with the same days of the previous period':''),line([{n:'This period',v:D.active,c:'var(--s1)'}].concat(cmpSet(D.activePrev)),L,'Active people'))+
+  card('c4','Members','Everyone with an account (not you)',(()=>{const f=m.free||0,p=m.premium||0,t=f+p||1;return '<div class="stack"><i style="width:'+(f/t*100)+'%;background:var(--s2)"></i><i style="width:'+(p/t*100)+'%;background:var(--s1)"></i></div>'+list({Free:f,Premium:p},null,'var(--s2)')})()+
+   '<div class="sub" style="margin-top:14px">Coming back (active again after joining)</div>'+(coh.length?'<table><tr><th>Joined</th><th class="n">People</th><th class="n">Week 1</th><th class="n">Week 4</th><th class="n">Week 8</th></tr>'+coh.map(c=>'<tr><td>'+new Date(c.m+'-15').toLocaleDateString('en-US',{month:'short'})+'</td><td class="n">'+c.n+'</td><td class="n">'+pc(c.w1,c.n)+'</td><td class="n">'+pc(c.w4,c.n)+'</td><td class="n">'+pc(c.w8,c.n)+'</td></tr>').join('')+'</table>':'<div class="empty">No sign-ups in the last three months yet</div>'))+'</div>'};
+ S[1]=()=>{const pv=byDim(E,'page_view'),pt=byDim(E,'page_time',1),per={};Object.keys(pt).forEach(k=>per[k]=+(pt[k]/60/Math.max(1,pv[k]||1)).toFixed(1));const ptp=byDim(PP,'page_time',1),pvp=byDim(PP,'page_view'),perp={};Object.keys(ptp).forEach(k=>perp[k]=ptp[k]/60/Math.max(1,pvp[k]||1));const tm={};Object.keys(pt).forEach(k=>tm[k]=Math.round(pt[k]/60));
+  return '<div class="kpis">'+kpi('Page visits',tot(E,'page_view'),tot(PP,'page_view'))+kpi('Time in app a day (median)',med(D.secs),med(D.secsPrev),mins)+kpi('Total time in app',totV(E,'page_time')/3600,totV(PP,'page_time')/3600,v=>v.toFixed(1)+' h')+'</div><div class="grid">'+
+  card('c6','Time on each page','Average minutes a visit, counted only while the page is on screen',list(per,st.cmp?perp:null,'var(--s2)',' min'))+card('c6','Page visits','How often each page is opened',list(pv,P&&byDim(P,'page_view'),'var(--s4)'))+
+  card('c12','Total minutes on each page','Where time goes overall',list(tm,null,'var(--s5)',' min'))+'</div>'};
+ S[2]=()=>'<div class="kpis">'+kpi('Widgets added',tot(E,'widget_add'),tot(PP,'widget_add'))+kpi('Widgets removed',tot(E,'widget_remove'),tot(PP,'widget_remove'))+kpi('Resized',tot(E,'widget_size'),tot(PP,'widget_size'))+kpi('Layouts saved',tot(E,'layout_save'),tot(PP,'layout_save'))+kpi('Layouts updated',tot(E,'layout_update'),tot(PP,'layout_update'))+'</div><div class="grid">'+
+  card('c6','Most-added widgets','With the change from the previous period',list(byDim(E,'widget_add'),P&&byDim(P,'widget_add'),'var(--s1)'))+card('c6','Most-removed widgets','Candidates to rethink',list(byDim(E,'widget_remove'),P&&byDim(P,'widget_remove'),'var(--s3)'))+
+  card('c6','Sizes chosen','When people resize a widget (S small, M wide, L large, B banner, X extra large)',list(byDim(E,'widget_size'),P&&byDim(P,'widget_size'),'var(--s5)'))+card('c6','Saved layouts','How many layouts people had after saving a new one',list(byDim(E,'layout_save'),null,'var(--s4)'))+'</div>';
+ S[3]=()=>{const plays=tot(E,'story_play'),ends=tot(E,'story_end'),dep=byDim(E,'story_depth'),dk=Object.keys(dep).map(Number).sort((a,b)=>a-b),d1=dep['1']||1;
+  return '<div class="kpis">'+kpi('Stories played',plays,tot(PP,'story_play'))+kpi('Watched to the end',plays?Math.round(ends/plays*100):0,tot(PP,'story_play')?Math.round(tot(PP,'story_end')/tot(PP,'story_play')*100):null,v=>v+'%')+kpi('Saved',tot(E,'story_save'),tot(PP,'story_save'))+kpi('Shared',tot(E,'story_share'),tot(PP,'story_share'))+'</div><div class="grid">'+
+  card('c8','Plays','Each day',line([{n:'Plays',v:dailyOf('story_play'),c:'var(--s5)'}],L,'Story plays'))+
+  card('c4','How far people get','Share of runs that reach each story',dk.length?'<div class="funnel">'+dk.slice(0,12).map(k=>'<div><span>Story '+k+'</span><i class="bx" style="width:'+Math.round(dep[k]/d1*100)+'%"></i><em>'+Math.round(dep[k]/d1*100)+'%</em></div>').join('')+'</div>':'<div class="empty">No plays yet</div>')+
+  card('c6','Most-watched stories','Times each story was seen',list(byDim(E,'story_view'),P&&byDim(P,'story_view'),'var(--s5)',null,12))+card('c6','Saves','Photo or video, one or all',list(byDim(E,'story_save'),P&&byDim(P,'story_save'),'var(--s4)'))+
+  card('c6','Themes picked','',list(byDim(E,'theme'),P&&byDim(P,'theme'),'var(--s1)',null,10))+card('c6','Backgrounds picked','',list(byDim(E,'background'),P&&byDim(P,'background'),'var(--s2)'))+'</div>'};
+ S[4]=()=>{const o=byDim(E,'prem_open'),t=byDim(E,'prem_tap'),u=byDim(E,'upgrade'),ks=Object.keys(o).sort((a,b)=>o[b]-o[a]),O=tot(E,'prem_open'),U=tot(E,'upgrade'),OP=tot(PP,'prem_open'),UP=tot(PP,'upgrade');
+  return '<div class="kpis">'+kpi('Premium sheet opened',O,OP)+kpi('Tapped Upgrade',tot(E,'prem_tap'),tot(PP,'prem_tap'))+kpi('Upgraded',U,UP)+kpi('Sheet → upgrade',O?U/O*100:0,OP?UP/OP*100:null,v=>v.toFixed(1)+'%')+'</div><div class="grid">'+
+  card('c12','What opened the Premium sheet','And how often each one led to an upgrade',ks.length?'<div style="overflow-x:auto"><table><tr><th>Where</th><th class="n">Opened</th><th class="n">Tapped Upgrade</th><th class="n">Upgraded</th><th class="n">Rate</th></tr>'+ks.map(k=>'<tr><td>'+esc(cap(k))+'</td><td class="n">'+fmt(o[k])+'</td><td class="n">'+fmt(t[k]||0)+'</td><td class="n">'+fmt(u[k]||0)+'</td><td class="n">'+((u[k]||0)/o[k]*100).toFixed(1)+'%</td></tr>').join('')+'</table></div>':'<div class="empty">The Premium sheet hasn’t opened in these dates</div>')+
+  card('c6','Headlines','Upgrade taps by the headline that was showing',list(byDim(E,'prem_head_tap'),P&&byDim(P,'prem_head_tap'),'var(--s3)'))+card('c6','Upgrades by where they started','',list(u,P&&byDim(P,'upgrade'),'var(--s4)'))+'</div>'};
+ S[5]=()=>{const sp=D.askSpend,cost=sp?(sp.tin*0.10+sp.tout*0.50)/1e6:0;return '<div class="kpis">'+kpi('Questions asked',tot(E,'ask'),tot(PP,'ask'))+kpi('Follow-up questions',byDim(E,'ask')['follow-up']||0,byDim(PP,'ask')['follow-up']||0)+kpi('Ask cost this month',cost,null,v=>'$'+v.toFixed(2))+kpi('Monthly cap used',D.askCap?cost/D.askCap*100:0,null,v=>v.toFixed(0)+'% of $'+D.askCap)+'</div><div class="grid">'+
+  card('c12','Questions','Each day',line([{n:'Questions',v:dailyOf('ask'),c:'var(--s4)'}],L,'Questions'))+'</div>'};
+ S[6]=()=>'<div class="kpis">'+kpi('Entries added',tot(E,'entry_add'),tot(PP,'entry_add'))+kpi('Purchases',byDim(E,'entry_add').purchase||0,byDim(PP,'entry_add').purchase||0)+kpi('Sales',byDim(E,'entry_add').sale||0,byDim(PP,'entry_add').sale||0)+'</div><div class="grid">'+
+  card('c6','Games collected','Entries by game',list(byDim(E,'entry_game'),P&&byDim(P,'entry_game'),'var(--s1)'))+card('c6','Where entries come from','Platforms on entries (others grouped)',list(byDim(E,'entry_platform'),P&&byDim(P,'entry_platform'),'var(--s2)'))+'</div>';
+ S[7]=()=>{const l=byDim(E,'load_ms',1),ln=byDim(E,'load_ms'),lt={};Object.keys(l).forEach(k=>lt[k]=+(l[k]/Math.max(1,ln[k])/1000).toFixed(2));const all=Object.keys(l).reduce((t,k)=>t+l[k],0)/Math.max(1,tot(E,'load_ms'))/1000,allp=totV(PP,'load_ms')/Math.max(1,tot(PP,'load_ms'))/1000;
+  return '<div class="kpis">'+kpi('App errors',tot(E,'error'),tot(PP,'error'))+kpi('Load time (avg)',all,allp||null,v=>v.toFixed(2)+' s')+kpi('Counts recorded today',D.eventsToday)+'</div><div class="grid">'+
+  card('c6','Most common errors','By kind and file (never the message)',list(byDim(E,'error'),P&&byDim(P,'error'),'var(--s3)'))+card('c6','Load time by device','Seconds until the app is ready',list(lt,null,'var(--s4)',' s'))+
+  card('c12','Errors','Each day',line([{n:'Errors',v:dailyOf('error'),c:'var(--s3)'}],L,'Errors'))+'</div>'};
+ return S}
+function seg(id,items,key){const el=document.getElementById(id);el.innerHTML=items.map(([v,l])=>'<button aria-pressed="'+(st[key]===v)+'" data-v="'+v+'">'+l+'</button>').join('');el.onclick=e=>{const b=e.target.closest('button');if(!b)return;st[key]=b.dataset.v;changed()}}
+function dd(id,label,groups){const w=document.getElementById(id),b=w.querySelector('button'),m=w.querySelector('.mn');b.querySelector('span').textContent=label;
+ m.innerHTML=groups.map(([key,items])=>items.map(([v,l])=>'<button role="menuitemradio" aria-checked="'+(st[key]===v)+'" data-k="'+key+'" data-v="'+v+'">'+l+'</button>').join('')).join('<hr>')+(id==='fdd'?'<hr><button role="menuitemcheckbox" aria-checked="'+st.cmp+'" data-k="cmp">Compare to previous</button>':'');
+ b.onclick=e=>{e.stopPropagation();const o=m.hidden;closeDd();m.hidden=!o;b.setAttribute('aria-expanded',o)};
+ m.onclick=e=>{const x=e.target.closest('[data-k]');if(!x)return;if(x.dataset.k==='cmp')st.cmp=!st.cmp;else st[x.dataset.k]=x.dataset.v;closeDd();changed()}}
+const closeDd=()=>document.querySelectorAll('.dd .mn').forEach(m=>{m.hidden=true;m.previousElementSibling.setAttribute('aria-expanded','false')});
+document.addEventListener('click',closeDd);document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDd()});
+function chrome(){seg('rng',R,'r');seg('plan',PLANS,'plan');seg('dev',DEVS,'dev');
+ dd('rngdd',(R.find(x=>x[0]===st.r)||R[2])[1],[['r',R]]);const fl=[st.plan!=='all'?PLANS.find(x=>x[0]===st.plan)[1]:'',st.dev!=='all'?DEVS.find(x=>x[0]===st.dev)[1]:''].filter(Boolean).join(' · ');dd('fdd',fl||'Filters',[['plan',PLANS],['dev',DEVS]]);
+ const [a,b]=range();document.getElementById('cust').classList.toggle('on',st.r==='c');document.getElementById('cf').value=a;document.getElementById('ct').value=b;
+ const f=s=>new Date(s+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:a.slice(0,4)!==b.slice(0,4)?'numeric':undefined});document.getElementById('rlab').textContent=a===b?f(a):f(a)+' – '+f(b);
+ document.getElementById('cmp').setAttribute('aria-pressed',st.cmp);
+ document.getElementById('tabs').innerHTML=TABS.map((t,i)=>'<button role="tab" aria-selected="'+(i===st.tab)+'" data-t="'+i+'">'+t+'</button>').join('')}
+function paint(){cid=0;const v=document.getElementById('view');if(!D){v.innerHTML='<div class="empty">Loading…</div>';return}v.innerHTML=views()[st.tab]();v.classList.remove('load')}
+async function load(){const [a,b]=range(),tk=++busy;document.getElementById('view').classList.add('load');
+ const qs='?from='+a+'&to='+b+(st.plan!=='all'?'&plan='+st.plan:'')+(st.dev!=='all'?'&dev='+st.dev:'');
+ try{let j;if(REAL){const r=await fetch(API+'/auth/admin/stats'+qs,{credentials:'include'});if(r.status===401)return gate('Sign in to Card Tab first','Then come back to this page.','<a href="/">Open Card Tab</a>');if(r.status===403)return gate('Admins only','This page is for the Card Tab team.','');j=await r.json()}else{j=sample(a,b);document.getElementById('mode').textContent='Preview · sample numbers'}
+  if(tk!==busy)return;D=j;paint()}catch(e){document.getElementById('view').innerHTML='<div class="empty">Couldn’t load the numbers. Check the connection and try again.</div>'}}
+function gate(h,p,a){document.getElementById('app').innerHTML='<div class="gate"><h2>'+h+'</h2><p>'+p+'</p>'+a+'</div>'}
+function changed(){save();chrome();load()}
+document.getElementById('tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){st.tab=+b.dataset.t;save();chrome();paint()}};
+document.getElementById('cmp').onclick=()=>{st.cmp=!st.cmp;changed()};
+['cf','ct'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{st.cf=document.getElementById('cf').value;st.ct=document.getElementById('ct').value;if(st.cf&&st.ct)changed()}));
+// preview copies (not on cardtab.app) show sample numbers so the layout can be checked
+function sample(a,b){const n=Math.round((new Date(b)-new Date(a))/864e5)+1,r=i=>{const x=Math.sin(i*99.7)*1e4;return x-Math.floor(x)},k={all:1,free:.8,premium:.2}[st.plan]*{all:1,phone:.68,desk:.32}[st.dev],m=Math.max(1,n/30)*k;
+ const ser=(base,s)=>Array.from({length:n},(_,i)=>Math.round(base*k*(.85+r(s+i)*.3)*(1+.3*i/n)));const E=[],add=(e,d,v,mult,vv)=>E.push({ev:e,dim:d,n:Math.round(v*m*(mult||1)),v:vv?Math.round(vv*m):0});
+ [['Featured card',310],['Profit',280],['Best sellers',240],['Profit by day',190],['Where you buy',170],['Budget',150]].forEach(([d,v])=>add('widget_add',d,v));[['Fees',120],['After fees',96],['Spent',64]].forEach(([d,v])=>add('widget_remove',d,v));[['S',300],['M',260],['L',170],['X',70]].forEach(([d,v])=>add('widget_size',d,v));
+ [['entries',9100,0,4.8],['board',4300,0,3.6],['stories',2100,0,2.9],['add a card',6400,0,1.4],['settings data',300,0,.9]].forEach(([d,v,_,mn])=>{add('page_view',d,v);add('page_time',d,0,0,v*mn*60)});
+ add('story_play','from the start',620);add('story_end','full screen',360);[1,2,3,4,5,6,7,8].forEach(i=>add('story_depth',String(i),620*Math.pow(.9,i-1)));[['in cards',600],['top win',560],['the splurge',380],['the fees',300]].forEach(([d,v])=>add('story_view',d,v));add('story_save','one',220);add('story_save','video',120);add('story_share','one',190);
+ [['Voltage',220],['Jewel',180],['Dusk',160],['Neon',120]].forEach(([d,v])=>add('theme',d,v));[['Blobs',260],['Clean',210],['Grain',150],['Sunrise',90]].forEach(([d,v])=>add('background',d,v));
+ [['locked story',310,64,14],['entry limit',240,71,16],['locked theme',220,38,6],['range',160,30,5],['layouts',130,22,3],['ask',110,19,2]].forEach(([d,o,t,u])=>{add('prem_open',d,o);add('prem_tap',d,t);add('upgrade',d,u)});[['h1',41],['h2',33],['h3',26]].forEach(([d,v])=>add('prem_head_tap',d,v));
+ add('ask','first',600);add('ask','follow-up',220);add('entry_add','purchase',8600);add('entry_add','sale',5300);[['pokemon',6400],['dragon ball super',2700],['magic',2200],['one piece',1800]].forEach(([d,v])=>add('entry_game',d,v));[['ebay',6200],['tcgplayer',4100],['local shop',1600],['other',900]].forEach(([d,v])=>add('entry_platform',d,v));
+ add('error','TypeError board.js',14);add('error','Promise rejection',8);add('load_ms','phone',800,1,520000);add('load_ms','desk',400,1,240000);
+ const prev=E.map(x=>Object.assign({},x,{n:Math.round(x.n*.85),v:x.v*.85})),day0=new Date(a+'T12:00:00'),byDay=[];['story_play','ask','error'].forEach((e,j)=>{for(let i=0;i<n;i++){const t=new Date(day0);t.setDate(day0.getDate()+i);byDay.push({day:t.toISOString().slice(0,10),ev:e,n:Math.round([20,27,1][j]*k*(.7+r(i+j*50)*.6))})}});
+ return {from:a,to:b,days:n,active:ser(140,1),activePrev:ser(120,9),secs:ser(680,3),secsPrev:ser(620,4),people:Math.round(900*m),peoplePrev:Math.round(780*m),events:E,eventsPrev:prev,eventsByDay:byDay,members:{free:Math.round(1480*k),premium:Math.round(212*k)},signups:[{day:a,n:Math.round(340*m)}],signupsPrev:Math.round(290*m),cohorts:[{m:'2026-09',n:120,w1:85,w4:58,w8:47},{m:'2026-10',n:160,w1:118,w4:83,w8:0},{m:'2026-11',n:40,w1:28,w4:0,w8:0}],askSpend:{tin:9e6,tout:9e5},askCap:25,eventsToday:23140}}
+chrome();paint();load();
+</script>
+</body></html>
