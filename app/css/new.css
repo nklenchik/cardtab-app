@@ -1282,8 +1282,8 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
  .ct-fab{right:max(14px,env(safe-area-inset-right,0px))!important;bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;width:62px!important;height:62px!important;border-radius:50%!important;z-index:56!important;
   will-change:transform;transition:transform .8s cubic-bezier(.22,.61,.36,1),opacity .2s!important}
  .ct-fab:active{transform:scale(.92)}
- /* v47.2: the round button stays exactly where it is while you scroll (only the tab bar beside it slides away) */
- html.tb-away .ct-fab{transform:none!important}
+ /* v48.1: the round button slides down out of the way with the tab bar while scrolling down, and comes back with it */
+ html.tb-away .ct-fab{transform:translate3d(0,calc(100% + 24px + env(safe-area-inset-bottom,0px)),0)!important;transition:transform .6s cubic-bezier(.4,0,.2,1),opacity .2s!important}
 }
 @media(prefers-reduced-motion:reduce){.ct-fab{transition-duration:.01s!important}}
 /* v37.17: the tab bar and Add New sit above Board and Stories too (Stories' layer is z 90), under the header (95);
