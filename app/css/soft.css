@@ -129,8 +129,8 @@ html,body,.ct-demo{background:var(--s-bg)}
 :root[data-theme="dark"] .ct-demo select{background-color:var(--s-ctl)!important;border-color:var(--s-ctl-line)!important}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ct-demo .ct-demo-actions button{background:var(--s-ctl)!important;border-color:var(--s-ctl-line)!important}}
 :root[data-theme="dark"] .ct-demo .ct-demo-actions button{background:var(--s-ctl)!important;border-color:var(--s-ctl-line)!important}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ct-demo .ct-demo-actions button:hover{background:#3a3633!important}}
-:root[data-theme="dark"] .ct-demo .ct-demo-actions button:hover{background:#3a3633!important}
+@media (prefers-color-scheme:dark){@media(hover:hover){:root:not([data-theme="light"]) .ct-demo .ct-demo-actions button:hover{background:#3a3633!important}}}
+@media(hover:hover){:root[data-theme="dark"] .ct-demo .ct-demo-actions button:hover{background:#3a3633!important}}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ct-demo .ct-insight-tabs{background:var(--s-ctl)!important}}
 :root[data-theme="dark"] .ct-demo .ct-insight-tabs{background:var(--s-ctl)!important}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ct-demo .ct-insight-tabs button.ct-selected{background:var(--s-raise)!important;box-shadow:var(--s-thumb-sh)!important}}

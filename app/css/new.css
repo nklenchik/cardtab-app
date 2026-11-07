@@ -34,8 +34,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #as .none{margin-top:18px}
 
 /* ===== Open entry: stays white, details as small labeled stats, quiet pill buttons ===== */
-.ct-demo .ct-row.expanded,.ct-demo .ct-row:hover{background:var(--s-card)}
-.ct-demo .ct-row.expanded .ct-art-ph,.ct-demo .ct-row:hover .ct-art-ph{background:var(--s-track)}
+.ct-demo .ct-row.expanded{background:var(--s-card)}@media(hover:hover){.ct-demo .ct-row:hover{background:var(--s-card)}}
+.ct-demo .ct-row.expanded .ct-art-ph{background:var(--s-track)}@media(hover:hover){.ct-demo .ct-row:hover .ct-art-ph{background:var(--s-track)}}
 .ct-demo .ct-stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:8px 12px;border-top:1px dotted var(--s-dot);padding-top:10px;margin-top:2px}
 .ct-demo .ct-stats-row>div{min-width:0}
 .ct-demo .ct-stats-row small{display:block;font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ct-muted);white-space:nowrap}
@@ -67,18 +67,18 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .app-menu.am .amg button{display:flex;align-items:center;justify-content:flex-start;gap:12px;width:100%;border:0;background:none;text-align:left;font:inherit;font-weight:650;font-size:14px;padding:9px 10px;border-radius:10px;color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent}
 .app-menu.am .amg button[hidden]{display:none}
 .app-menu.am .amg button>span{flex:1;min-width:0}
-.app-menu.am .amg button:hover,.app-menu.am .amg button:focus-visible{background:var(--am-hl);outline:0}
+.app-menu.am .amg button:focus-visible{background:var(--am-hl);outline:0}@media(hover:hover){.app-menu.am .amg button:hover{background:var(--am-hl);outline:0}}
 .app-menu.am .mi{flex:none;color:var(--muted)}
-.app-menu.am .amg button:hover .mi{color:var(--text)}
+@media(hover:hover){.app-menu.am .amg button:hover .mi{color:var(--text)}}
 .app-menu.am .amgo button.here{color:var(--muted);cursor:default}
 .app-menu.am .amgo button.here::after{content:"You're here";margin-left:auto;font-size:11.5px;font-weight:750;color:var(--s-brand)}
-.app-menu.am .amgo button.here:hover{background:none}
+@media(hover:hover){.app-menu.am .amgo button.here:hover{background:none}}
 .app-menu.am .amr{display:flex;align-items:center;gap:12px;padding:7px 10px;font-weight:650;font-size:14px}
 .app-menu.am .amr[hidden]{display:none}
 .app-menu.am .amr>span{flex:1}
 .app-menu.am .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;padding:3px;flex:none;min-width:186px;background:var(--s-track);border-radius:999px}
 .app-menu.am .amr .seg button{width:auto;display:block;text-align:center;padding:5px 9px;font-size:12px;font-weight:750;border-radius:999px;color:var(--muted);justify-content:center}
-.app-menu.am .amr .seg button:hover{background:none;color:var(--text)}
+@media(hover:hover){.app-menu.am .amr .seg button:hover{background:none;color:var(--text)}}
 .app-menu.am .amr .seg button[aria-checked="true"]{background:var(--s-card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .app-menu.am .swt{width:42px;height:26px;padding:2px;border-radius:999px;background:var(--s-dot);flex:none;transition:background .2s;display:block;border:0}
 .app-menu.am .swt i{display:block;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s cubic-bezier(.2,.7,.2,1)}
@@ -94,7 +94,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 }
 @media(prefers-reduced-motion:reduce){.app-menu.am,.app-menu.am>*,.am-bd{animation:none!important}}
 .app-menu.am .amr button.swt{width:42px;height:26px;padding:2px;display:block;border-radius:999px;flex:none}
-.app-menu.am .amr button.swt:hover{background:var(--s-dot)}.app-menu.am .amr button.swt[aria-checked="true"]:hover{background:var(--green)}
+@media(hover:hover){.app-menu.am .amr button.swt:hover{background:var(--s-dot)}}@media(hover:hover){.app-menu.am .amr button.swt[aria-checked="true"]:hover{background:var(--green)}}
 .app-menu.am .amgo button.here:focus-visible{background:none}
 
 /* ===== Sheets move exactly like the board's: up from the bottom on phones, a soft rise on desktop, and they slide away on close ===== */
@@ -380,7 +380,7 @@ dialog::backdrop,.bu-sheet::backdrop{background:var(--win-veil)!important;-webki
  .ct-brand{display:flex!important;align-items:center}
  .ct-tabs{display:flex;gap:4px;padding:4px;margin-left:18px;border-radius:999px;background:var(--s-track)}
  .ct-tabs button{display:flex;align-items:center;gap:7px;height:34px;padding:0 14px;border:0;border-radius:999px;background:none;color:var(--ct-muted);font:inherit;font-size:13.5px;font-weight:750;white-space:nowrap;cursor:pointer;transition:background-color .2s,color .2s}
- .ct-tabs button:hover{color:var(--ct-text)}
+ @media(hover:hover){.ct-tabs button:hover{color:var(--ct-text)}}
  .ct-tabs button[aria-current]{background:var(--s-card);color:var(--ct-text);box-shadow:0 1px 2px rgba(0,0,0,.12)}
  .ct-tabs button[aria-current] svg{color:var(--s-brand,#b0123d)}
 }
@@ -510,7 +510,7 @@ dialog::backdrop,.bu-sheet::backdrop{background:var(--win-veil)!important;-webki
  .ct-tabs,.cb-tabs{gap:4px;padding:5px!important;border-radius:16px!important;background:var(--s-track)!important}
  .ct-tabs button,.cb-tabs button{height:40px!important;padding:0 18px!important;border-radius:12px!important;gap:9px!important;font-size:14px!important;font-weight:800!important;color:var(--ct-muted,var(--muted))!important;background:none!important;box-shadow:none!important}
  .ct-tabs button svg,.cb-tabs button svg{width:17px;height:17px}
- .ct-tabs button:hover,.cb-tabs button:hover{color:var(--ct-text,var(--text))!important}
+ @media(hover:hover){.ct-tabs button:hover,.cb-tabs button:hover{color:var(--ct-text,var(--text))!important}}
  .ct-tabs button[aria-current],.cb-tabs button[aria-current]{background:var(--s-card)!important;color:var(--ct-text,var(--text))!important;box-shadow:0 1px 2px rgba(0,0,0,.08),0 6px 16px -8px rgba(0,0,0,.28)!important}
  .ct-tabs button[aria-current] svg,.cb-tabs button[aria-current] svg{color:var(--tab-on)}
  .ct-demo-top .ct-top-actions{min-width:0}
@@ -670,7 +670,7 @@ dialog::backdrop,.bu-sheet::backdrop{background:var(--win-veil)!important;-webki
 @keyframes msPop{from{opacity:0;transform:translateY(-4px) scale(.97)}}@keyframes msPopOut{to{opacity:0;transform:translateY(-4px) scale(.98)}}
 .ms-menu{width:212px;padding:6px;display:flex;flex-direction:column}
 .ms-menu button{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;width:100%;height:38px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:650;color:var(--ct-text);cursor:pointer}
-.ms-menu button:hover,.ms-menu button:focus-visible{background:var(--s-track)}
+.ms-menu button:focus-visible{background:var(--s-track)}@media(hover:hover){.ms-menu button:hover{background:var(--s-track)}}
 .ms-menu button.on{font-weight:800}.ms-menu button.on svg{color:var(--tab-on)}
 .ms-menu hr{border:0;border-top:1px solid var(--s-hair);margin:5px 6px}
 .ms-cal{width:min(304px,calc(100vw - 32px));padding:14px}
@@ -682,7 +682,7 @@ dialog::backdrop,.bu-sheet::backdrop{background:var(--win-veil)!important;-webki
 .mc-g{row-gap:2px}
 .mc-g button{all:unset;box-sizing:border-box;height:36px;display:grid;place-items:center;font-size:13.5px;font-weight:650;color:var(--ct-text);cursor:pointer;position:relative;z-index:0;font-variant-numeric:tabular-nums}
 .mc-g button::before{content:"";position:absolute;inset:2px;border-radius:50%;z-index:-1}
-.mc-g button:hover::before{background:var(--s-track)}
+@media(hover:hover){.mc-g button:hover::before{background:var(--s-track)}}
 .mc-g button.today{color:var(--tab-on)}
 .mc-g button.in{background:var(--tab-onbg)}
 .mc-g button.first{background:linear-gradient(90deg,transparent 50%,var(--tab-onbg) 50%)}.mc-g button.last{background:linear-gradient(90deg,var(--tab-onbg) 50%,transparent 50%)}
@@ -818,7 +818,7 @@ html.pg-moving .ct-shell::before{-webkit-backdrop-filter:none;backdrop-filter:no
 .qm-pop{position:absolute;right:10px;top:40px;z-index:30;width:220px;background:var(--s-card);border:1px solid var(--s-hair);border-radius:16px;box-shadow:0 18px 44px -18px rgba(0,0,0,.4);padding:6px;animation:msPop .18s cubic-bezier(.2,.8,.2,1) both}
 .qm-pop p{margin:4px 10px 6px;font-size:11.5px;font-weight:750;color:var(--ct-muted)}
 .qm-pop button{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;width:100%;height:36px;padding:0 10px;border-radius:10px;font-size:13.5px;font-weight:650;color:var(--ct-text);cursor:pointer}
-.qm-pop button:hover{background:var(--s-track)}
+@media(hover:hover){.qm-pop button:hover{background:var(--s-track)}}
 .qm-pop button i{width:18px;height:18px;border-radius:6px;border:1.5px solid var(--s-hair)}
 .qm-pop button[aria-checked="true"] i{background:var(--s-brand,#b0123d) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/12px no-repeat;border-color:transparent}
 /* the filter row */
@@ -833,7 +833,7 @@ html.pg-moving .ct-shell::before{-webkit-backdrop-filter:none;backdrop-filter:no
 .fb-dds select{-webkit-appearance:none;appearance:none;height:34px!important;width:auto!important;max-width:none!important;min-width:0!important;margin:0!important;padding:0 24px 0 10px!important;border:0!important;border-radius:10px!important;box-shadow:none!important;
  background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2377736d' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") right 6px center/12px no-repeat!important;
  font:inherit!important;font-size:13px!important;font-weight:750!important;color:var(--ct-text)!important;cursor:pointer}
-.fb-dds select:hover{background-color:var(--s-track)!important}
+@media(hover:hover){.fb-dds select:hover{background-color:var(--s-track)!important}}
 @media(min-width:1100px){
  .ct-shell{--sh-w:1360px}
  .ct-app #app-grid.ct-demo-grid{flex:none!important;height:auto!important;max-height:none!important;grid-template-rows:auto!important;width:min(1360px,calc(100% - 64px))!important;display:grid!important;grid-template-columns:372px minmax(0,1fr)!important;column-gap:40px!important;align-items:start}
@@ -855,7 +855,7 @@ html.pg-moving .ct-shell::before{-webkit-backdrop-filter:none;backdrop-filter:no
 }
 @media(min-width:1100px){.ct-demo .ct-app{max-width:none!important;padding-left:0!important;padding-right:0!important}}
 .ct-demo .ct-fbar .fb-dds select,:root .ct-demo .ct-fbar .fb-dds select{background-color:transparent!important;border:0!important;box-shadow:none!important}
-.ct-demo .ct-fbar .fb-dds select:hover{background-color:var(--s-track)!important}
+@media(hover:hover){.ct-demo .ct-fbar .fb-dds select:hover{background-color:var(--s-track)!important}}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ct-demo .ct-fbar .fb-dds select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a4a4a0' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")!important}}
 .ct-demo .ct-fbar .fb-dds select{field-sizing:content}
 @media(max-width:760px){.ct-demo .ct-fbar .fb-dds select{max-width:46vw!important;font-size:13.5px!important}}
@@ -893,7 +893,7 @@ html.pg-moving .ct-shell::before{-webkit-backdrop-filter:none;backdrop-filter:no
 .qm-it{display:flex;align-items:center;gap:2px;border-radius:10px;background:var(--s-card);transition:transform .2s cubic-bezier(.2,.8,.2,1)}
 .qm-it button{flex:1;min-width:0}
 .qm-grip{flex:none;width:26px;height:36px;display:grid;place-items:center;color:var(--ct-muted);cursor:grab;touch-action:none;border-radius:8px;opacity:.75}
-.qm-grip:hover{opacity:1}.qm-grip:focus-visible{outline:2px solid var(--s-brand,#b0123d);outline-offset:-2px}
+@media(hover:hover){.qm-grip:hover{opacity:1}}.qm-grip:focus-visible{outline:2px solid var(--s-brand,#b0123d);outline-offset:-2px}
 .qm-nogrip{cursor:default}
 .qm-held{position:relative;z-index:2;transition:none;box-shadow:0 10px 24px -10px rgba(0,0,0,.45);cursor:grabbing}
 .qm-held .qm-grip{cursor:grabbing;opacity:1}
@@ -911,7 +911,7 @@ html.pg-moving .ct-shell::before{-webkit-backdrop-filter:none;backdrop-filter:no
  .shd .ct-mstep .ms-lab{font-size:20px!important}
  .sht .ct-fbar{flex:1;margin:0!important;min-height:0;flex-wrap:nowrap}
  .sh-row2 .ct-fbar .fb-dds select{background-color:transparent!important;border:0!important;box-shadow:none!important;field-sizing:content}
- .sh-row2 .ct-fbar .fb-dds select:hover{background-color:var(--s-track)!important}
+ @media(hover:hover){.sh-row2 .ct-fbar .fb-dds select:hover{background-color:var(--s-track)!important}}
  /* the page content starts under both rows */
  html.has-row2 .ct-demo .ct-app{padding-top:160px!important}
  html.has-row2 .ct-app #app-grid.ct-demo-grid>.ct-demo-left{top:160px!important}
@@ -920,7 +920,7 @@ html.pg-moving .ct-shell::before{-webkit-backdrop-filter:none;backdrop-filter:no
 /* the small menus in the row (board platform, Stories range) */
 .sh-dd{position:relative}
 .sh-ddb{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:999px;border:0;background:transparent;color:var(--ct-text);font:inherit;font-size:13.5px;font-weight:750;cursor:pointer}
-.sh-ddb:hover,.sh-ddb.open{background:var(--s-track)}
+.sh-ddb.open{background:var(--s-track)}@media(hover:hover){.sh-ddb:hover{background:var(--s-track)}}
 .sh-ddb svg{color:var(--ct-muted);transition:transform .2s ease}.sh-ddb.open svg{transform:rotate(180deg)}
 .sh-dd .sh-ddm{right:0;left:auto;min-width:200px}
 .sht .sh-dd .sh-ddm{top:42px}
@@ -968,7 +968,7 @@ html.pg-moving .ct-shell::before{-webkit-backdrop-filter:none;backdrop-filter:no
 @media(min-width:1100px){.ct-demo #ct-rows.ct-gal{grid-template-columns:repeat(5,minmax(0,1fr))}}
 .ct-demo #ct-rows.ct-gal>.ct-month,.ct-demo #ct-rows.ct-gal>.ct-empty{grid-column:1/-1}
 .ct-tile{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:6px;min-width:0;background:var(--s-card);border:1px solid var(--s-hair);border-radius:16px;padding:11px;cursor:pointer;box-shadow:var(--s-whisper,0 1px 2px rgba(0,0,0,.05));transition:transform .2s cubic-bezier(.2,.8,.2,1)}
-.ct-tile:hover{transform:translateY(-2px)}
+@media(hover:hover){.ct-tile:hover{transform:translateY(-2px)}}
 .ct-tile:active{transform:scale(.98)}
 .ct-tile:focus-visible{outline:2px solid var(--tab-on,#b0123d);outline-offset:2px}
 .ct-tile-art{display:grid;place-items:center;aspect-ratio:63/88;border-radius:8px;overflow:hidden;background:var(--s-track)}
@@ -985,7 +985,7 @@ html.pg-moving .ct-shell::before{-webkit-backdrop-filter:none;backdrop-filter:no
 @media(max-width:760px){
  .ct-demo #ct-rows.ct-gal{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px;padding:4px 0 24px}
  .ct-tile{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"art art" "nm nm" "ln amt";gap:0;background:none;border:0;padding:0;box-shadow:none;border-radius:10px}
- .ct-tile:hover{transform:none}
+ @media(hover:hover){.ct-tile:hover{transform:none}}
  .ct-tile-art{grid-area:art;border-radius:9px;box-shadow:0 1px 2px rgba(0,0,0,.08),0 8px 18px -12px rgba(0,0,0,.4)}
  .ct-tile-nm{grid-area:nm;margin-top:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
  .ct-tile-full{display:none}.ct-tile-short{display:inline}
@@ -1023,7 +1023,7 @@ html.pg-moving .ct-shell::before{-webkit-backdrop-filter:none;backdrop-filter:no
 .ct-gp .ct-row-note{margin-top:14px;padding:10px 14px;border-radius:12px;background:var(--s-bg);font-size:13.5px}
 .ct-gp .ct-demo-actions{display:flex;gap:8px;margin-top:20px}
 .ct-gp .ct-demo-actions button{all:unset;box-sizing:border-box;height:38px;padding:0 18px;border-radius:999px;border:1px solid var(--s-hair);background:var(--s-card);font-size:14px;font-weight:700;cursor:pointer;color:var(--ct-text)}
-.ct-gp .ct-demo-actions button:hover{background:var(--s-track)}
+@media(hover:hover){.ct-gp .ct-demo-actions button:hover{background:var(--s-track)}}
 .ct-gp .ct-demo-actions [data-gact="del"]{margin-left:auto;border-color:transparent!important;background:transparent!important;box-shadow:none!important;color:var(--tab-on,#b0123d)}
 .ct-gp .ct-demo-actions button:focus-visible,.gp-x:focus-visible,.gp-nav:focus-visible{outline:2px solid var(--tab-on,#b0123d);outline-offset:2px}
 .gp-nav{position:absolute;top:50%;width:42px;height:42px;margin-top:-21px;padding:0;border-radius:50%;border:0;background:var(--s-card);color:var(--ct-text);display:grid;place-items:center;cursor:pointer;box-shadow:0 8px 24px -10px rgba(0,0,0,.5)}
@@ -1305,7 +1305,7 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 /* v37.21 Profit: tap for what it means */
 .ct-stats small .ct-why{all:unset;display:inline-flex;align-items:center;gap:4px;cursor:pointer;color:inherit;font:inherit;border-radius:6px;-webkit-tap-highlight-color:transparent}
 .ct-stats small .ct-why svg{opacity:.7;transition:opacity .15s}
-.ct-stats small .ct-why:hover svg,.ct-stats small .ct-why[aria-expanded="true"] svg{opacity:1}
+.ct-stats small .ct-why[aria-expanded="true"] svg{opacity:1}@media(hover:hover){.ct-stats small .ct-why:hover svg{opacity:1}}
 .ct-stats small .ct-why:focus-visible{outline:2px solid currentColor;outline-offset:2px}
 .ct-whypop{position:fixed;z-index:96;padding:12px 14px;border-radius:14px;background:var(--ct-surface,#fff);color:var(--ct-text,#1a1918);border:1px solid color-mix(in srgb,var(--ct-text,#1a1918) 12%,transparent);box-shadow:0 10px 30px rgba(0,0,0,.18);font-size:13px;line-height:1.45;opacity:0;transform:translateY(-4px);transition:opacity .18s ease,transform .18s cubic-bezier(.2,.8,.2,1);pointer-events:none}
 .ct-whypop.in{opacity:1;transform:none;pointer-events:auto}
@@ -1633,3 +1633,15 @@ html.cs-modal,html.cs-modal body{overflow:hidden!important;overscroll-behavior:n
  #ntf.closing .ntf-form{animation:ntfOut3 .26s cubic-bezier(.4,0,1,1) both!important}
 }
 @media(prefers-reduced-motion:reduce){#ntf .ntf-form{animation:none!important}}
+
+/* v42.24 long lists: rows far off screen skip layout and painting until they come near (big collections scroll and
+   switch pages more smoothly). Each row remembers its real height once seen. */
+.ct-demo .ct-row:not(.expanded){content-visibility:auto;contain-intrinsic-size:auto 74px}
+@media(min-width:761px){.ct-demo .ct-row:not(.expanded){contain-intrinsic-size:auto 70px}}
+
+/* v42.24 touch screens: every small control gets a finger-sized tap area (at least 40px), without changing how it looks */
+@media (hover:none){
+ .fb-view button,.ct-hint .ch-x,.cbx #cb .wmore,.sh-pillbtn{position:relative}
+ .fb-view button::after,.ct-hint .ch-x::after,.cbx #cb .wmore::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,40px);height:max(100%,40px);transform:translate(-50%,-50%)}
+ .sh-pillbtn::after{content:"";position:absolute;inset:-6px -2px}
+}

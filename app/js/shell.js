@@ -98,23 +98,27 @@
   // phones: one highlight behind the whole tab (icon and label) that slides to the page you pick
   const tbar = $('ct-tbar'); let tbPill = null;
   if (tbar) { tbPill = document.createElement('i'); tbPill.className = 'tb-pill'; tbar.prepend(tbPill); }
+  // where each tab sits, measured once (and again after a resize), so switching pages never waits on a layout pass
+  const geo = new Map(); const at = b => { let g = geo.get(b); if (!g || !g[1]) { g = [b.offsetLeft, b.offsetWidth]; if (g[1]) geo.set(b, g); } return g; };
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => geo.clear());
   function syncTb(animate) {
-    if (!tbPill) return; const b = tbar.querySelector('[data-tab="' + cur + '"]'); if (!b || !b.offsetWidth) return;
+    if (!tbPill) return; const b = tbar.querySelector('[data-tab="' + cur + '"]'); if (!b) return; const g = at(b); if (!g[1]) return;
     tbPill.style.transition = animate && !calm() ? '' : 'none';
-    tbPill.style.width = b.offsetWidth + 'px'; tbPill.style.transform = 'translateX(' + b.offsetLeft + 'px)';
+    tbPill.style.width = g[1] + 'px'; tbPill.style.transform = 'translateX(' + g[0] + 'px)';
     if (!animate) requestAnimationFrame(() => { tbPill.style.transition = ''; });
   }
   function syncPill(animate) {
     syncTb(animate);
     if (!tabs) return; const pill = tabs.querySelector('.sh-pill'), b = tabs.querySelector('[data-tab="' + cur + '"]'); if (!pill || !b) return;
     pill.style.transition = animate && !calm() ? '' : 'none';
-    pill.style.width = b.offsetWidth + 'px'; pill.style.transform = 'translateX(' + b.offsetLeft + 'px)';
+    const g = at(b); pill.style.width = g[1] + 'px'; pill.style.transform = 'translateX(' + g[0] + 'px)';
     if (!animate) requestAnimationFrame(() => { pill.style.transition = ''; });
   }
 
   // ---------- the pages, side by side ----------
   const layerOf = p => p === 'entries' ? [document.querySelector('#view-app .ct-app')].filter(Boolean) : p === 'board' ? [document.querySelector('.cbx')].filter(Boolean) : [$('csx')].filter(Boolean);
-  const W = () => document.documentElement.clientWidth || innerWidth;
+  // the screen width is read once and kept (reading it mid-switch forced the whole page to be measured again)
+  let vw = 0; const W = () => vw || (vw = document.documentElement.clientWidth || innerWidth);
   const restX = (p, c) => (ORDER[p] - ORDER[c]) * W();
   const tx = x => x ? 'translate3d(' + x + 'px,0,0)' : 'none';
   function placeAll() {
@@ -139,7 +143,7 @@
     if (ms) setTimeout(end, ms); else end();
   }
   window.CTPage = { move, place: placeAll, get cur() { return cur; } };
-  addEventListener('resize', () => { if (!moving) placeAll(); syncPill(false); });
+  addEventListener('resize', () => { vw = 0; geo.clear(); if (!moving) placeAll(); syncPill(false); });
 
   // ---------- the frosted background, from the page you're on ----------
   const scrollOf = p => { if (p === 'entries') return window.scrollY; if (p === 'board') { const c = document.querySelector('.cbx'); return c ? c.scrollTop : 0; } const d = frameDoc(); return d && d.defaultView ? d.defaultView.scrollY : 0; };

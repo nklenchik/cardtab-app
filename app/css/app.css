@@ -22,7 +22,7 @@ button{font:inherit;color:inherit}
 
 /* ---------- avatar ---------- */
 .app-avatar{position:relative;width:36px;height:36px;border-radius:50%;border:1px solid var(--ct-line);background:var(--ct-surface);color:var(--ct-text);font-weight:750;font-size:14px;padding:0;flex:none;display:grid;place-items:center;transition:border-color .2s}
-.app-avatar:hover{border-color:var(--ct-muted)}
+@media(hover:hover){.app-avatar:hover{border-color:var(--ct-muted)}}
 .app-avatar.dot::after{content:"";position:absolute;top:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:#e4852a;border:2px solid var(--ct-bg)}
 @media(max-width:760px){.app-avatar{width:34px;height:34px}}
 
@@ -31,7 +31,7 @@ button{font:inherit;color:inherit}
 @keyframes am-in{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.app-menu{animation:none}}
 .app-menu>button,.am-dev>button{display:block;width:100%;text-align:left;padding:9px 10px;border-radius:8px;border:0;background:none;color:var(--text);font-size:13px;cursor:pointer}
-.app-menu>button:hover,.am-dev>button:hover,.app-menu>button:focus-visible{background:var(--surface);outline:0}
+.app-menu>button:focus-visible{background:var(--surface);outline:0}@media(hover:hover){.app-menu>button:hover,.am-dev>button:hover{background:var(--surface);outline:0}}
 .am-who{display:flex;flex-direction:column;padding:8px 10px 10px;border-bottom:1px solid var(--line);margin-bottom:6px;min-width:0}
 .am-who b{font-weight:700}.am-who span{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .am-plan{padding:8px 10px 10px;display:grid;gap:6px;border-bottom:1px solid var(--line);margin-bottom:6px}
@@ -83,7 +83,7 @@ button{font:inherit;color:inherit}
 .ct-demo .ct-art-ph{display:grid;place-items:center;aspect-ratio:44/61;background:var(--ct-surface);border:0;border-radius:5px;color:var(--ct-muted);overflow:hidden;container-type:inline-size}
 .ct-demo .ct-art-ph i{font-style:normal;font-weight:800;font-size:30cqi;line-height:1}
 .ct-demo .ct-row.expanded .ct-art-ph{height:auto}
-.ct-demo .ct-row:hover .ct-art-ph,.ct-demo .ct-row.expanded .ct-art-ph{background:var(--ct-bg)}
+.ct-demo .ct-row.expanded .ct-art-ph{background:var(--ct-bg)}@media(hover:hover){.ct-demo .ct-row:hover .ct-art-ph{background:var(--ct-bg)}}
 .ct-demo .ct-tag.refund{background:#e7e8f9;color:#5753a4}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .ct-demo .ct-tag.refund{background:#24233f;color:#a9a6f0}}
 :root[data-theme="dark"] .ct-demo .ct-tag.refund{background:#24233f;color:#a9a6f0}
@@ -95,7 +95,7 @@ button{font:inherit;color:inherit}
 .app-toast{pointer-events:auto;display:flex;align-items:center;gap:14px;background:#1f2223;color:#fff;border-radius:11px;padding:10px 12px 10px 15px;font-size:13px;box-shadow:0 10px 28px rgba(0,0,0,.25);animation:t-in .22s var(--ease)}
 .app-toast.out{opacity:0;transform:translateY(6px);transition:opacity .2s,transform .2s}
 .app-toast button{background:none;border:0;color:#9dccff;font-weight:750;padding:4px 6px;border-radius:6px;white-space:nowrap}
-.app-toast button:hover{background:rgba(255,255,255,.08)}
+@media(hover:hover){.app-toast button:hover{background:rgba(255,255,255,.08)}}
 @keyframes t-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .app-toast{background:#f1efe8;color:#1d1d1b}:root:not([data-theme="light"]) .app-toast button{color:#1765a5}}
 :root[data-theme="dark"] .app-toast{background:#f1efe8;color:#1d1d1b}:root[data-theme="dark"] .app-toast button{color:#1765a5}
@@ -111,7 +111,7 @@ button{font:inherit;color:inherit}
 .auth h1{margin:6px 0 0;font-size:24px;letter-spacing:-.02em;line-height:1.2}
 .auth-sub{margin:-6px 0 0;color:var(--muted)}
 .auth-g{display:flex;gap:10px;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:10px;padding:11px;font-weight:650;transition:border-color .2s}
-.auth-g:hover{border-color:var(--muted)}
+@media(hover:hover){.auth-g:hover{border-color:var(--muted)}}
 .auth-or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px}.auth-or::before,.auth-or::after{content:"";flex:1;height:1px;background:var(--line)}
 .auth-f{display:grid;gap:6px;font-size:12px;color:var(--muted)}
 .auth-f input{border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:10px;padding:11px 12px;font:inherit;font-size:16px;outline:0;transition:border-color .2s}
@@ -140,7 +140,7 @@ button{font:inherit;color:inherit}
 .ed-head{display:flex;justify-content:space-between;align-items:center}
 .ed-head h2{margin:0;font-size:19px;letter-spacing:-.02em}
 .ed-x{border:0;background:none;color:var(--ct-muted);width:34px;height:34px;border-radius:50%;display:grid;place-items:center;margin-right:-6px}
-.ed-x:hover{background:var(--ct-surface)}
+@media(hover:hover){.ed-x:hover{background:var(--ct-surface)}}
 .ed-seg{position:relative;display:flex;background:var(--ct-surface);border-radius:10px;padding:3px}
 .ed-seg button{position:relative;z-index:1;flex:1;border:0;background:none;color:var(--ct-muted);padding:8px 4px;border-radius:8px;font-weight:650;white-space:nowrap;font-size:14px}
 .ed-seg button[aria-checked="true"]{color:var(--ct-text)}
@@ -163,8 +163,8 @@ button{font:inherit;color:inherit}
 .ed-foot{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:2px}
 .ed-cancel,.ed-del{border:1px solid var(--ct-line);background:none;color:var(--ct-text);border-radius:9px;padding:9px 14px}
 .ed-del{margin-right:auto;color:var(--err);border-color:transparent;padding-left:4px}
-.ed-del:hover{text-decoration:underline}
-.ed-cancel:hover{background:var(--ct-surface)}
+@media(hover:hover){.ed-del:hover{text-decoration:underline}}
+@media(hover:hover){.ed-cancel:hover{background:var(--ct-surface)}}
 .ed-save{min-width:96px;font-weight:700}
 /* Phones: on an empty account the "Add your first card" card comes first, above the empty totals */
 @media(max-width:760px){.ct-demo .ct-demo-grid.is-empty .app-first-wrap{order:-1}}
@@ -201,7 +201,7 @@ a,button,select,summary,label,[role="button"]{touch-action:manipulation}
 .imp-form{width:min(460px,calc(100vw - 32px));padding:14px 18px 26px;gap:0}
 .imp-top{display:flex;justify-content:space-between;align-items:center;height:34px}
 .imp-back{border:0;background:none;color:var(--ct-muted);width:34px;height:34px;border-radius:50%;font-size:26px;line-height:1;display:grid;place-items:center;margin-left:-6px;padding-bottom:3px}
-.imp-back:hover{background:var(--ct-surface)}
+@media(hover:hover){.imp-back:hover{background:var(--ct-surface)}}
 .imp-top .ed-x{margin-left:auto}
 .imp-step{display:flex;flex-direction:column;align-items:center;text-align:center;padding:4px 8px 0;animation:imp-in .28s var(--ease)}
 @keyframes imp-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -227,10 +227,10 @@ a,button,select,summary,label,[role="button"]{touch-action:manipulation}
 .imp-more{width:100%;text-align:left;font-size:12px;color:var(--ct-muted);padding:8px 2px 0}
 .imp-profit{margin-top:20px!important;font-size:14px!important}.imp-profit b{color:var(--ct-text);font-size:17px;margin-left:6px;font-variant-numeric:tabular-nums}.imp-profit b.pos{color:var(--ct-green)}.imp-profit b.neg{color:#e45256}
 .imp-link{background:none;border:0;padding:6px;margin-top:12px;color:var(--ct-muted);font-size:13px;cursor:pointer}
-.imp-link:hover{color:var(--ct-text);text-decoration:underline;text-underline-offset:3px}
+@media(hover:hover){.imp-link:hover{color:var(--ct-text);text-decoration:underline;text-underline-offset:3px}}
 .imp-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:22px}
 .imp-pills button{border:1px solid var(--ct-line);background:var(--card);color:var(--ct-text);border-radius:999px;padding:9px 16px;font-size:14px;font-weight:600;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;transition:border-color .15s,background .15s}
-.imp-pills button:hover{border-color:var(--ct-muted)}
+@media(hover:hover){.imp-pills button:hover{border-color:var(--ct-muted)}}
 .imp-pills button.on{border-color:#1765a5;background:#e1efff;color:#1765a5}
 .imp-pills button.none{color:var(--ct-muted);font-weight:500}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .imp-pills button.on{background:#10324f;color:#9dccff;border-color:#2f6fa8}}

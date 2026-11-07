@@ -245,6 +245,8 @@
     clearTimeout(settle); settle = setTimeout(() => { moving = false; dlg.classList.remove('moving'); fit(); kbSave(); }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 480);
   }
   function close() { if (dlg.open) dlg.close(); }
+  // phones open it as a plain layer (not a pop-up), so Escape on a hardware keyboard closes it here
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && dlg.open && dlg.classList.contains('nm')) { e.preventDefault(); close(); } });
 
   // ---------- testing tool: a timing readout for opening Add New (Profile › testing tools). Shows where the wait goes on a real phone. ----------
   const diagOn = () => { try { return localStorage.getItem('ct.diag') === '1'; } catch (e) { return false; } };
