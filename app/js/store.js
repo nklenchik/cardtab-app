@@ -73,7 +73,7 @@
   // _d = changed here and not yet sent to the account (sync); copies that came from another device are saved without it
   async function putEntry(e, fromSync) { if (fromSync) delete e._d; else e._d = 1; entries.set(e.id, e); if (db) await reqP(db.transaction('entries', 'readwrite').objectStore('entries').put(e)); }
   async function dropEntry(id) { entries.delete(id); if (db) await reqP(db.transaction('entries', 'readwrite').objectStore('entries').delete(id)); }
-  const SYNC_META = ['budget', 'budgetFlags', 'customPlatforms', 'notif', 'storiesFree', 'startOn', 'addDefaults', 'games', 'sharing', 'boardSavesDesk', 'boardSavesPhone'];   // settings that follow you to other devices
+  const SYNC_META = ['budget', 'budgetFlags', 'customPlatforms', 'notif', 'storiesFree', 'startOn', 'addDefaults', 'games', 'sharing', 'boardSavesDesk', 'boardSavesPhone', 'storyFav'];   // settings that follow you to other devices
   async function rawMeta(k, v) { meta[k] = v; if (db) await reqP(db.transaction('meta', 'readwrite').objectStore('meta').put({ k, v })); }
   async function putMeta(k, v, fromSync, t) {
     await rawMeta(k, v);

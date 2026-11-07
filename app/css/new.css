@@ -1778,7 +1778,26 @@ html[data-fab="widget"] .ct-fab .fi-add{opacity:1;transform:rotate(180deg)}
  html[data-fab="edit"] .ct-fab,html[data-fab="theme"] .ct-fab{background:var(--ct-text,#22221f)!important;color:var(--s-card,#fff)!important;box-shadow:0 10px 24px -8px rgba(0,0,0,.45)!important}
  .ct-fab{transition:transform .18s cubic-bezier(.2,.8,.2,1),opacity .2s,background-color .3s ease!important}
  /* Board's Edit lives in the round button on phones; the header shows Done only while editing */
- .ct-shell .sh-edit:not(.on){display:none!important}
  html.cs-modal .ct-fab{opacity:0;pointer-events:none}
 }
 @media(prefers-reduced-motion:reduce){.ct-fab .fi{transition:opacity .01s}}
+
+/* ===== v47.3 Board header: Edit becomes + Add widget while editing (white in dark mode, dark in light), Done beside it ===== */
+.ct-shell .sh-edit .ebic{display:grid;width:16px;height:16px}
+.ct-shell .sh-edit .ebi{grid-area:1/1;transition:opacity .2s ease,transform .3s cubic-bezier(.2,.8,.2,1)}
+.ct-shell .sh-edit .ebi-a{opacity:0;transform:rotate(-90deg) scale(.6)}
+.ct-shell .sh-edit.on .ebi-e{opacity:0;transform:rotate(90deg) scale(.6)}
+.ct-shell .sh-edit.on .ebi-a{opacity:1;transform:none}
+.ct-shell .sh-edit .ebt{display:grid}
+.ct-shell .sh-edit .ebt>span{grid-area:1/1;transition:opacity .2s ease,transform .3s cubic-bezier(.2,.8,.2,1)}
+.ct-shell .sh-edit .ebt-a{opacity:0;transform:translateY(6px)}
+.ct-shell .sh-edit.on .ebt-e{opacity:0;transform:translateY(-6px)}
+.ct-shell .sh-edit.on .ebt-a{opacity:1;transform:none}
+.ct-shell .sh-edit .ebt-e{justify-self:start}
+.ct-shell .sh-edit{transition:background-color .25s ease,color .25s ease,border-color .25s ease}
+.ct-shell .sh-edit.on{background:var(--ct-text,#22221f);color:var(--s-card,#fff);border-color:transparent}
+.ct-shell .sh-done{display:none}
+.ct-shell .sh-done.on{display:flex;animation:shDone .28s cubic-bezier(.2,.8,.2,1) both;background:var(--s-card,#fff);color:var(--ct-text,#22221f);border-color:var(--s-hair)}
+@keyframes shDone{from{opacity:0;transform:translateX(8px) scale(.96)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.ct-shell .sh-edit .ebi,.ct-shell .sh-edit .ebt>span{transition:opacity .01s}.ct-shell .sh-done.on{animation:none}}
+@media(max-width:760px){.ct-shell .sh-edit{display:none!important}.ct-shell .sh-done.on{background:var(--ct-text,#22221f);color:var(--s-card,#fff);border-color:transparent}}

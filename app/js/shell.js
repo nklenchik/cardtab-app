@@ -64,9 +64,16 @@
     if (wired || !$('cb-edit')) return; wired = true;
     const edit = $('cb-edit'), share = $('cb-share');
     const eb = document.createElement('button'); eb.type = 'button'; eb.className = 'sh-pillbtn sh-edit';
-    const paintEdit = () => { const on = edit.classList.contains('on'); eb.classList.toggle('on', on); eb.innerHTML = (edit.querySelector('svg') ? edit.querySelector('svg').outerHTML : '') + '<span>' + (on ? 'Done' : 'Edit') + '</span>'; };
-    paintEdit(); new MutationObserver(paintEdit).observe(edit, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
-    eb.addEventListener('click', () => edit.click());
+    // v47.3: desktop: Edit turns into + Add widget while editing (with Done beside it); phones keep Edit in the round button
+    // and show only Done here. The pencil and the + cross-fade in place.
+    const PEN = '<svg class="ebi ebi-e" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-4-4L4 16z"/></svg>';
+    const PLUS = '<svg class="ebi ebi-a" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+    eb.innerHTML = '<span class="ebic">' + PEN + PLUS + '</span><span class="ebt"><span class="ebt-e">Edit</span><span class="ebt-a">Add widget</span></span>';
+    const db = document.createElement('button'); db.type = 'button'; db.className = 'sh-pillbtn sh-done'; db.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Done</span>';
+    const paintEdit = () => { const on = edit.classList.contains('on'); eb.classList.toggle('on', on); db.classList.toggle('on', on); eb.setAttribute('aria-label', on ? 'Add widget' : 'Edit board'); };
+    paintEdit(); new MutationObserver(paintEdit).observe(edit, { attributes: true, attributeFilter: ['class'] });
+    eb.addEventListener('click', () => { if (edit.classList.contains('on')) { const a = $('addw'); if (a) a.click(); } else edit.click(); });
+    db.addEventListener('click', () => { if (edit.classList.contains('on')) edit.click(); });
     // v46: Layouts (saved boards), beside Edit. Free sees a Premium tag; it opens the Premium sheet.
     const lb = document.createElement('button'); lb.type = 'button'; lb.className = 'sh-pillbtn sh-lay'; lb.setAttribute('aria-haspopup', 'dialog');
     lb.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="4.5" rx="1.4"/><rect x="13" y="11" width="7" height="9" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/></svg><span>Layouts</span><em class="sh-pm" hidden>Premium</em>';
@@ -74,7 +81,7 @@
     const paintLay = () => { const free = window.CTBoardPlan && window.CTBoardPlan() === 'free'; lb.querySelector('.sh-pm').hidden = !free; lb.classList.toggle('lockd', !!free); };
     paintLay(); if (window.CTStore) CTStore.on(r => { if (r === 'plan') paintLay(); });
     lb.addEventListener('click', () => { if (window.cbLayoutsOpen) window.cbLayoutsOpen(lb); });
-    G('board').append(eb, lb, proxy('Share your board', share.querySelector('svg').outerHTML, () => share.click()));
+    G('board').append(db, eb, lb, proxy('Share your board', share.querySelector('svg').outerHTML, () => share.click()));
     const saveAll = document.createElement('button'); saveAll.type = 'button'; saveAll.className = 'sh-pillbtn sh-save';
     saveAll.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14"/></svg><span>Save all</span>';
     // v42.27: Save all asks how: photos (free and Premium) or videos (Premium), for all of your stories
