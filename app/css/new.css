@@ -1659,3 +1659,12 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 /* v42.26 Stories' toolbar row on 1100–1299px screens: fewer theme chips, so they never slide over the period button
    (the theme you're using and "All themes" always stay) */
 @media(min-width:1100px) and (max-width:1299px){.sh-chips .sh-chip[data-i]:nth-child(n+4):not([aria-pressed="true"]){display:none}}
+
+/* v42.27 Save all menu (Stories): Photos or Videos */
+.sh-savew{position:relative;display:inline-flex}
+.sh-savem{width:250px;top:calc(100% + 8px)}
+.sh-savem button{height:auto!important;padding:9px 12px!important;flex-direction:column;align-items:flex-start!important;gap:2px}
+.sh-savem b{font-size:14px;font-weight:750;display:flex;align-items:center;gap:8px}
+.sh-savem small{font-size:12px;font-weight:600;color:var(--ct-muted)}
+.sh-savem .pm{font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.03em;padding:2px 7px;border-radius:999px;background:color-mix(in srgb,var(--brand,#a50e37) 12%,transparent);color:var(--brand,#a50e37)}
+@media(max-width:760px){.sh-savem{right:-46px}}

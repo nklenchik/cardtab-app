@@ -67,7 +67,7 @@ async function sheetAdd({ query, type, price, fees, ship, plat }) {
   ok('Three entries in the list', (await page.evaluate(() => CTStore.all().length)) === 3);
   // Sales 89.99 · after fees 73.32 − 10.00 refund = 63.32 · spent 120.00 · profit 63.32 − 120.00 = −56.68
   await expectTiles('Tiles after adding', { sales: '$89.99', after: '$63.32', spent: '$120.00', profit: '-$56.68' });
-  ok('Fees line counts fees and shipping only', /\$16\.67 in fees\s*\$10\.00 refunded/.test(await txt('#ct-after ~ .ct-line')), await txt('#ct-after ~ .ct-line'));
+  ok('Fees line counts fees and shipping only', /^\s*\$16\.67 in fees\s*$/.test(await txt('#ct-after ~ .ct-line')), await txt('#ct-after ~ .ct-line'));
   ok('Profit tile turns red below zero', await page.locator('#ct-profit').evaluate(el => el.parentElement.classList.contains('ct-negative')));
   ok('Free entries used went up by 3', (await page.evaluate(() => CTStore.usage().used)) - u0 === 3);
 

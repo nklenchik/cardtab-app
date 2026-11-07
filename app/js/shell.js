@@ -70,10 +70,27 @@
     G('board').append(eb, proxy('Share your board', share.querySelector('svg').outerHTML, () => share.click()));
     const saveAll = document.createElement('button'); saveAll.type = 'button'; saveAll.className = 'sh-pillbtn sh-save';
     saveAll.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14"/></svg><span>Save all</span>';
-    saveAll.addEventListener('click', () => { const d = frameDoc(); const b = d && d.getElementById('svall'); if (b) b.click(); }); // all six stories, on every screen
+    // v42.27: Save all asks how: photos (free and Premium) or videos (Premium), for all of your stories
+    saveAll.setAttribute('aria-haspopup', 'menu'); saveAll.setAttribute('aria-expanded', 'false');
+    const saveWrap = document.createElement('span'); saveWrap.className = 'sh-dd sh-savew';
+    let saveMenu = null;
+    const closeSave = () => { if (!saveMenu) return; const m = saveMenu; saveMenu = null; saveAll.setAttribute('aria-expanded', 'false'); saveAll.classList.remove('open'); m.classList.add('out'); setTimeout(() => m.remove(), 160); };
+    saveAll.addEventListener('click', () => {
+      if (saveMenu) { closeSave(); return; }
+      const fw = (() => { try { return document.querySelector('#csx iframe').contentWindow; } catch (e) { return null; } })();
+      const prem = window.CTBoardPlan ? window.CTBoardPlan() === 'premium' : true, canV = !fw || !fw.csCanVideo || fw.csCanVideo();
+      const m = document.createElement('div'); m.className = 'ms-pop ms-menu sh-ddm sh-savem'; m.setAttribute('role', 'menu');
+      m.innerHTML = '<button type="button" role="menuitem" data-k="photos"><b>Photos</b><small>One image per story' + (matchMedia('(max-width:760px)').matches ? '' : ', in a .zip') + '</small></button>' +
+        (canV ? '<button type="button" role="menuitem" data-k="videos"><b>Videos' + (prem ? '' : ' <i class="pm">Premium</i>') + '</b><small>One vertical clip per story' + (matchMedia('(max-width:760px)').matches ? '' : ', in a .zip') + '</small></button>' : '');
+      saveWrap.appendChild(m); saveAll.setAttribute('aria-expanded', 'true'); saveAll.classList.add('open'); saveMenu = m;
+      m.addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (!b) return; closeSave(); try { const w = document.querySelector('#csx iframe').contentWindow; if (w.csSaveAll) w.csSaveAll(b.dataset.k); else { const x = frameDoc().getElementById('svall'); if (x) x.click(); } } catch (er) {} });
+    });
+    document.addEventListener('pointerdown', e => { if (saveMenu && !e.target.closest('.sh-savew')) closeSave(); }, true);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && saveMenu) { closeSave(); saveAll.focus(); } });
     // v39.6: the stories play from here; each one has its own Share inside the player
     const sShare = proxy('Play stories', '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>', () => { try { const f = document.querySelector('#csx iframe'); f && f.contentWindow.csPlay && f.contentWindow.csPlay(0); } catch (e) {} });
-    G('stories').append(saveAll, sShare);
+    saveWrap.appendChild(saveAll);
+    G('stories').append(saveWrap, sShare);
     placeAll();
   }
   sh.querySelector('.sh-bell').addEventListener('click', () => { if (window.CTNotify) window.CTNotify.open('list'); });

@@ -47,8 +47,8 @@
     const n = list.filter(e => e.type === 'sale').length;
     line(sales, n ? n + (n === 1 ? ' sale' : ' sales') : 'No sales yet');
     // fees and shipping only; a refund you gave is named on its own, not counted as a fee
-    if (t.refunds) line(after, (t.sales ? money(t.fees) + ' in fees\n' : '') + money(t.refunds) + ' refunded', 'two');
-    else line(after, t.sales ? money(t.fees) + ' in fees' : '');
+    // v42.27: one line under every tile, so they stay the same size (refunds are already counted in Profit)
+    line(after, t.sales ? money(t.fees) + ' in fees' : t.refunds ? money(t.refunds) + ' refunded' : '');
 
     // --- budget, inside the Spent tile ---
     const b = S.budget();
