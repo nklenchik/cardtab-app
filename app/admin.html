@@ -72,6 +72,24 @@ td.n,th.n{text-align:right}
 .priv{font-size:12px;color:var(--muted);font-weight:600;margin-top:16px;display:flex;gap:8px;align-items:center}
 @media(max-width:900px){.c8,.c4,.c6{grid-column:span 12}.range{width:100%;margin-left:0}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* v50.8 phones: a tidy header (title and close, then App | Website across, then the sample switch), tabs that keep the
+   chosen one in view, tables that fit, a stacked funnel and charts drawn for the narrow screen */
+@media(max-width:760px){
+ .hd{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;padding-right:0!important}
+ .hd .logo{grid-row:1;grid-column:1}.hd h1{grid-row:1;grid-column:2;min-width:0}.hd .xclose{position:static;grid-row:1;grid-column:3}
+ .hd #srcsw{grid-row:2;grid-column:1/-1;display:flex;width:100%;margin:2px 0 0}.hd #srcsw button{flex:1}
+ .hd #smp{grid-row:3;grid-column:1/-1;justify-self:start}.hd #mode{grid-row:3;grid-column:1/-1;justify-self:end;align-self:center}
+ .hd .note{grid-row:4;grid-column:1/-1;width:auto;font-size:12px}.hd .sp{display:none}
+ .tabs{-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent);scroll-padding:0 40px}
+ .tabs.end{-webkit-mask-image:none;mask-image:none}
+ table{font-size:12px}th{padding:6px 5px;font-size:10.5px;line-height:1.25;vertical-align:bottom}td{padding:7px 5px}
+ th:first-child,td:first-child{padding-left:0}th:last-child,td:last-child{padding-right:0}
+ .funnel{gap:12px}.funnel div{grid-template-columns:minmax(0,1fr) auto;gap:4px 10px}.funnel .bx{grid-column:1/-1;grid-row:2;height:12px;border-radius:6px}
+ .priv{align-items:flex-start;line-height:1.45}.priv svg{flex:none;margin-top:2px}
+ .kpi b{overflow-wrap:anywhere}
+ .list .row>span:first-child{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.3}
+}
 </style></head><body><div class="wrap">
 </head><body>
 <style>
@@ -147,9 +165,9 @@ const byDim=(rows,e,useV)=>{const m={};evs(rows,e).forEach(r=>{m[r.dim||'—']=(
 function list(cur,prev,color,unit,limit){const ks=Object.keys(cur).sort((a,b)=>cur[b]-cur[a]).slice(0,limit||10);if(!ks.length)return '<div class="empty">Nothing yet for these dates</div>';const mx=Math.max(...ks.map(k=>cur[k]));
  return '<div class="list">'+ks.map(k=>{const p=prev&&prev[k],d=p?Math.round((cur[k]-p)/p*100):null;return '<div class="row"><span>'+esc(cap(k))+(st.cmp&&d!=null?'<small class="'+(d>0?'up':d<0?'dn':'fl')+'">'+(d>0?'▲':d<0?'▼':'')+Math.abs(d)+'%</small>':'')+'</span><b>'+fmt(cur[k])+(unit||'')+'</b><span class="tr"><i style="width:'+(cur[k]/mx*100).toFixed(1)+'%;background:'+(color||'var(--s1)')+'"></i></span></div>'}).join('')+'</div>'}
 let cid=0;
-function line(sets,labels,label){const id='c'+(cid++),W=800,H=220,P=34,n=labels.length,mx=Math.max(1,...sets.flatMap(s=>s.v)),x=i=>P+(W-P*2)*(n<2?.5:i/(n-1)),y=v=>H-24-(H-44)*v/mx;
+function line(sets,labels,label){const ph=innerWidth<760,id='c'+(cid++),W=ph?380:800,H=ph?200:220,P=34,n=labels.length,mx=Math.max(1,...sets.flatMap(s=>s.v)),x=i=>P+(W-P*2)*(n<2?.5:i/(n-1)),y=v=>H-24-(H-44)*v/mx;
  let g='';for(let k=0;k<=3;k++){const yy=H-24-(H-44)*k/3;g+='<line x1="'+P+'" x2="'+(W-P)+'" y1="'+yy+'" y2="'+yy+'" stroke="var(--grid)"/><text x="'+(P-6)+'" y="'+(yy+4)+'" text-anchor="end" font-size="10" fill="var(--muted)">'+fmt(mx*k/3)+'</text>'}
- const step=Math.max(1,Math.ceil(n/7));labels.forEach((l,i)=>{if(i%step===0||i===n-1)g+='<text x="'+x(i)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" fill="var(--muted)">'+l+'</text>'});
+ const step=Math.max(1,Math.ceil(n/(ph?4:7)));labels.forEach((l,i)=>{if(i%step===0||i===n-1)g+='<text x="'+x(i)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" fill="var(--muted)">'+l+'</text>'});
  const paths=sets.map(s=>n<2?'<circle cx="'+x(0)+'" cy="'+y(s.v[0]||0)+'" r="5" fill="'+s.c+'"/>':'<path d="'+s.v.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join('')+'" fill="none" stroke="'+s.c+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"'+(s.dash?' stroke-dasharray="4 4" opacity=".6"':'')+'/>').join('');
  const leg=sets.length>1?'<div class="legend">'+sets.map(s=>'<span><i class="'+(s.dash?'dash':'')+'" style="background:'+s.c+'"></i>'+s.n+'</span>').join('')+'</div>':'';
  setTimeout(()=>{const el=document.getElementById(id);if(!el)return;const svg=el.querySelector('svg'),tip=el.querySelector('.tip'),cx=el.querySelector('.cx');
@@ -282,6 +300,10 @@ function sample(a,b){const n=Math.round((new Date(b)-new Date(a))/864e5)+1,r=i=>
  return {from:a,to:b,days:n,active:ser(140,1),activePrev:ser(120,9),secs:ser(680,3),secsPrev:ser(620,4),people:Math.round(900*m),peoplePrev:Math.round(780*m),events:E,eventsPrev:prev,eventsByDay:byDay,members:{free:Math.round(1480*k),premium:Math.round(212*k)},signups:[{day:a,n:Math.round(340*m)}],signupsPrev:Math.round(290*m),cohorts:[{m:'2026-09',n:120,w1:85,w4:58,w8:47},{m:'2026-10',n:160,w1:118,w4:83,w8:0},{m:'2026-11',n:40,w1:28,w4:0,w8:0}],askSpend:{tin:9e6,tout:9e5},askCap:25,eventsToday:23140,reach:[['add',820],['board',610],['board_edit',260],['layouts',48],['stories',430],['stories_watch',400],['stories_style',150],['stories_save',120],['ask',170],['import',40],['long_range',210],['export',22],['settings',310],['entry_limit',95]].map(([f,v])=>({feat:f,n:Math.round(v*m)})),reachPrev:[['add',700],['board',480],['board_edit',230],['layouts',30],['stories',300],['stories_watch',280],['stories_style',120],['stories_save',90],['ask',120],['import',38],['long_range',160],['export',20],['settings',300],['entry_limit',70]].map(([f,v])=>({feat:f,n:Math.round(v*m*.87)})),upgraders:Math.round(46*m),upDays:11.4,upFeat:[['add',46],['board',41],['board_edit',30],['stories',38],['stories_watch',36],['stories_style',28],['stories_save',22],['ask',24],['long_range',19],['entry_limit',27],['settings',20]].map(([f,v])=>({feat:f,n:Math.round(v*m)})),freeBase:Math.round(700*m),freeFeat:[['add',640],['board',420],['board_edit',150],['stories',260],['stories_watch',240],['stories_style',60],['stories_save',40],['ask',110],['long_range',90],['entry_limit',60],['settings',230],['import',30],['export',10]].map(([f,v])=>({feat:f,n:Math.round(v*m)})),upCtx:[['locked theme',12],['entry limit',11],['locked story',9],['layouts',6],['range',5],['ask',3]].map(([d,v])=>({dim:d,n:Math.round(v*m)})),signupSrc:[['instagram',120,108,12,9],['google',90,84,6,5],['direct',60,55,5,3],['reddit',40,38,2,2],['not known',30,28,2,1]].map(([d,n,f,p,u])=>({dim:d,n:Math.round(n*m),free:Math.round(f*m),premium:Math.round(p*m),upgraded:Math.round(u*m)})),signupSec:[['compare',280],['how',250],['demo',240],['story',200],['pricing',190],['faq',80]].map(([d,v])=>({dim:d,n:Math.round(v*m)})),signupDemo:[['demo',170],['story',120],['understand',40]].map(([d,v])=>({dim:d,n:Math.round(v*m)})),signupKnown:Math.round(310*m),signupAll:Math.round(340*m)}}
 // close: shuts this tab when the app opened it; otherwise goes back to the app
 document.getElementById('xclose').onclick=()=>{try{window.close()}catch(e){}setTimeout(()=>{if(!window.closed)location.href='/'},150)};
+// phones: keep the chosen tab in view, and fade the right edge only while more tabs sit off to the side
+{const c0=chrome;chrome=function(){c0.apply(this,arguments);const t=document.getElementById('tabs'),on=t&&t.querySelector('[aria-selected=true]');if(!t)return;
+  if(on){const l=on.offsetLeft-t.offsetLeft,r=l+on.offsetWidth;if(l<t.scrollLeft+8||r>t.scrollLeft+t.clientWidth-40)t.scrollTo({left:Math.max(0,l-24),behavior:'smooth'})}
+  const end=()=>t.classList.toggle('end',t.scrollLeft+t.clientWidth>=t.scrollWidth-4);end();if(!t._e){t._e=1;t.addEventListener('scroll',end,{passive:true})}}}
 chrome();paint();load();
 </script>
 </body></html>

@@ -1826,3 +1826,13 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 
 /* v50 admin menu: link to the analytics dashboard */
 .am-cd .am-adm{display:flex;justify-content:space-between;align-items:center;font-weight:750;font-size:13px;color:var(--brand,#a50e37);text-decoration:none;padding:4px 0 10px}
+
+/* v50.8: the Admin section never makes the account menu wider: it takes the width the menu already has, and its long
+   lines wrap */
+.am #am-dev{width:0;min-width:100%;box-sizing:border-box}
+.am #am-dev p,.am #am-dev b,.am #am-dev button,.am #am-dev .am-adm{white-space:normal;overflow-wrap:anywhere}
+.am #am-dev .am-dev-row{gap:10px}.am #am-dev .am-dev-row>span{flex:none}
+.am #am-cd .am-adm{padding:9px 10px}
+.am #am-cd>button{display:block;width:100%;text-align:left;padding:9px 10px;border:0;border-radius:8px;background:none;color:var(--text);font:inherit;font-size:13px;cursor:pointer}
+@media(hover:hover){.am #am-cd>button:hover{background:var(--am-hl)}}
+.am #am-cd>p{margin:0;padding:0 10px 6px;font-size:11.5px;line-height:1.4;color:var(--muted)}
