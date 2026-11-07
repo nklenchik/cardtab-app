@@ -2006,6 +2006,14 @@ html.pg-moving .cbx #cb .wq.k-feat .ttl,html.pg-moving .cbx #cb .fpc,html.pg-mov
 .avp .avdel{display:block;margin:14px auto 2px;min-height:44px;padding:0 14px;border:0;background:none;color:#c62828;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
 :root[data-theme=dark] .avp .avdel{color:#ff6b6b}@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .avp .avdel{color:#ff6b6b}}
 .avp .avdel[hidden]{display:none}
+/* v43 Card Board grid: six columns on desktop, four on mid-size screens, two on phones. Shorter rows, so a row of
+   single-number tiles reads at a glance and the bigger widgets stand out. */
+@media(min-width:601px){.cbx #cb .simple{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:var(--rowh,150px)}}
+@media(min-width:1100px){.cbx #cb .simple{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.cbx #cb .simple>.szB{grid-column:1/-1;grid-row:span 1}
+.cbx #cb .simple>.szX{grid-column:1/-1;grid-row:span 2}
+/* phones, Fit more: short number tiles show the number only (a 2px squashed sparkline reads as a stray rule) */
+@media(max-width:600px){html.cb-fit .cbx #cb:not(.editing) .simple>.fs .kspk,html.cb-fit .cbx #cb:not(.editing) .simple>.fs.k-budget .cv{display:none}}
 .tip{position:fixed;z-index:60;pointer-events:none;background:var(--text);color:var(--bg);border-radius:10px;padding:8px 11px;font-size:12.5px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;text-align:left}
 .tip.on{opacity:1}
 .note{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--text);color:var(--bg);border-radius:999px;padding:8px 14px;font-size:12px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}

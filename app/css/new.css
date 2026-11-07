@@ -1668,3 +1668,13 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 .sh-savem small{font-size:12px;font-weight:600;color:var(--ct-muted)}
 .sh-savem .pm{font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.03em;padding:2px 7px;border-radius:999px;background:color-mix(in srgb,var(--brand,#a50e37) 12%,transparent);color:var(--brand,#a50e37)}
 @media(max-width:760px){.sh-savem{right:-46px}}
+
+/* v42.28 focus, on brand: no browser-blue rings anywhere. Text fields never get their own ring (the field around them
+   already turns cranberry); buttons and links show a cranberry ring only when you move around with the keyboard. */
+:root{--focus-ring:color-mix(in srgb,var(--s-brand,#a50e37) 60%,transparent)}
+input:focus,textarea:focus,select:focus,input:focus-visible,textarea:focus-visible,select:focus-visible,[contenteditable]:focus{outline:none!important}
+:focus:not(:focus-visible){outline:none!important}
+a:focus-visible,button:focus-visible,summary:focus-visible,[role="button"]:focus-visible,[role="menuitem"]:focus-visible,[role="radio"]:focus-visible,[role="switch"]:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--focus-ring)!important;outline-offset:2px}
+dialog:focus-visible,dialog [tabindex="-1"]:focus-visible,.ed-form:focus-visible,.ntf-form:focus-visible,.imp-form:focus-visible{outline:none!important}
+/* a text field with no styled frame around it gets a soft cranberry edge instead */
+.ed .ed-f input:focus,.ed .ed-f textarea:focus,.ed .ed-f select:focus{border-color:var(--s-brand,#a50e37)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--s-brand,#a50e37) 14%,transparent)!important}
