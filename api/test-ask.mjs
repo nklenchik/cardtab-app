@@ -36,7 +36,7 @@ assert.equal(runTool(E, 'entries', { type: 'sale', sort: 'biggest', limit: 1 }).
 // the stand-in for Anthropic: the first reply asks for totals, the second answers with what the tool said
 const sent = []; let mode = 'ok';
 globalThis.fetch = async (url, init) => {
-  assert.equal(url, 'https://api.anthropic.com/v1/messages'); assert.equal(init.headers['x-api-key'], 'test-key');
+  assert.equal(url, 'https://api.anthropic.com/v1/messages'); assert.equal(init.headers.authorization, 'Bearer test-key');
   const body = JSON.parse(init.body); sent.push(body);
   if (mode === 'down') return new Response('{}', { status: 529 });
   assert.equal(body.model, 'claude-haiku-5-5'); assert.ok(body.tools.some(x => x.name === 'totals'));

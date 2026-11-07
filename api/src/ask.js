@@ -83,7 +83,7 @@ const RULES = (view, today) => 'You are Ask, inside Card Tab, an app where a tra
   'Today is ' + today + '.' + (view && view.label ? ' They are looking at: ' + String(view.label).slice(0, 80) + (view.from ? ' (' + view.from + ' to ' + (view.to || today) + ')' : '') + (view.platform && view.platform !== 'all' ? ', platform ' + String(view.platform).slice(0, 40) : '') + '. Use that range when the question doesn\'t name one.' : '');
 
 async function claude(env, body) {
-  const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': String(env.ANTHROPIC_API_KEY || '').trim(), 'anthropic-version': '2023-06-01' }, body: JSON.stringify(body) });
+  const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + String(env.ANTHROPIC_API_KEY || '').trim(), ...(env.ANTHROPIC_WORKSPACE_ID ? { 'anthropic-workspace-id': String(env.ANTHROPIC_WORKSPACE_ID).trim() } : {}), 'anthropic-version': '2023-06-01' }, body: JSON.stringify(body) });
   if (!r.ok) { let m = ''; try { const j = await r.json(); m = (j.error && j.error.message) || ''; } catch (er) {} const e = new Error('ai ' + r.status); e.status = r.status; e.detail = String(m).slice(0, 240); throw e; }
   return r.json();
 }

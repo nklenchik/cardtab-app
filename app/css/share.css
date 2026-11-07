@@ -1,5 +1,5 @@
 /* Shared Card Board viewer (v50.5) */
-.shv .shcbx{position:static;overflow:visible;min-height:100vh}
+.shv .shcbx{position:static!important;overflow:visible!important;overscroll-behavior:auto!important;min-height:100vh;clip-path:none!important;will-change:auto!important}
 .shv #cb .frame{max-width:1400px;margin:0 auto}
 .shv .shtop{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 22px}
 .shv .shbrand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:16px;color:var(--text);text-decoration:none}
