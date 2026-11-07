@@ -183,7 +183,7 @@ const byId=id=>layout.find(w=>w.id===id);
 // a double pulse when you remove one. Nothing while scrolling or between snaps. Android vibrates; iPhone Safari has no
 // vibration for web pages, so it uses the system switch's own light tick (iOS 18+). The native app will get full haptics.
 const HAP={tick:[6],tap:[12],firm:[20],warn:[14,70,14]};
-let hapOn=(()=>{try{return localStorage.getItem('cb.haptics')!=='0'}catch(e){return true}})(),hapLast=0,iosSw=null;
+let hapOn=false,/* v43.3: haptics removed (they didn't reach most phones); buzz() stays as a no-op */hapLast=0,iosSw=null;
 const canVibrate=typeof navigator.vibrate==='function',touchDev=matchMedia('(pointer:coarse)').matches;
 function iosTick(){if(!iosSw){iosSw=document.createElement('label');iosSw.className='hapsw';iosSw.setAttribute('aria-hidden','true');iosSw.innerHTML='<input type="checkbox" switch tabindex="-1">';iosSw.addEventListener('click',e=>e.stopPropagation());document.body.appendChild(iosSw)}iosSw.click()}
 function buzz(kind){if(!hapOn||!touchDev)return;const now=performance.now();if(kind==='tick'&&now-hapLast<45)return;hapLast=now;
@@ -824,9 +824,7 @@ function applyTheme(th){if($('cb-amenu').parentNode===mhost)setTimeout(mhVars,30
 applyTheme((()=>{try{return localStorage.getItem('cb.theme')||'auto'}catch(e){return 'auto'}})());
 $('cb-am-theme').addEventListener('click',e=>{const b=e.target.closest('button');if(b){applyTheme(b.dataset.th);buzz('tick');setTimeout(()=>render(false),30)}});
 // haptics switch; hidden on computers, where there is nothing to feel
-function paintHap(){$('cb-am-hap').setAttribute('aria-checked',hapOn)}paintHap();
-if(!touchDev)$('cb-am-hapr').hidden=true;
-$('cb-am-hap').addEventListener('click',()=>{hapOn=!hapOn;try{localStorage.setItem('cb.haptics',hapOn?'1':'0')}catch(e){}paintHap();buzz('tap')});
+if($('cb-am-hapr'))$('cb-am-hapr').remove();
 $('cb-amenu').addEventListener('click',e=>{const b=e.target.closest('[data-am]');if(!b)return;closeMenus();const a=b.dataset.am;
   const inSt=()=>{try{return $('csx').querySelector('iframe').contentWindow}catch(e){return null}};
   if(a==='go-board'){if($('cb-amenu').dataset.ctx==='stories')window.cbStoriesBack();return}

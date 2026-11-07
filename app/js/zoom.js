@@ -10,9 +10,11 @@
   let el = null, img = null, from = null, base = { w: 0, h: 0 }, s = 1, tx = 0, ty = 0, maxS = 3, open = false;
 
   function build() {
-    el = document.createElement('div'); el.className = 'zm'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Card art');
+    // a real <dialog> (v43.3), so it opens above an entry that's already open in its own window instead of behind it
+    el = document.createElement('dialog'); el.className = 'zm'; el.setAttribute('aria-label', 'Card art');
     el.innerHTML = '<div class="zm-bg"></div><img class="zm-img" alt="" draggable="false"><button type="button" class="zm-x" aria-label="Close">' + X + '</button><p class="zm-tip"></p>';
     document.body.appendChild(el); img = el.querySelector('.zm-img');
+    el.addEventListener('cancel', e => { e.preventDefault(); close(); });
     el.querySelector('.zm-x').addEventListener('click', e => { e.stopPropagation(); close(); });
     wire();
   }
@@ -36,7 +38,7 @@
     from = thumb || null; s = 1; tx = 0; ty = 0; open = true;
     el.querySelector('.zm-tip').textContent = innerWidth < 761 ? 'Pinch to zoom · swipe down to close' : 'Click to zoom · Esc to close';
     const show = () => {
-      size(); apply(0); el.classList.add('on'); document.documentElement.classList.add('zm-open');
+      if (!el.open) { try { el.showModal(); } catch (er) { el.setAttribute('open', ''); } } size(); apply(0); el.classList.add('on'); document.documentElement.classList.add('zm-open');
       // grow out of the thumbnail
       if (from && !calm.matches) { const r = from.getBoundingClientRect(); if (r.width) {
         const k = r.width / base.w, dx = r.left + r.width / 2 - innerWidth / 2, dy = r.top + r.height / 2 - innerHeight / 2;
@@ -53,7 +55,7 @@
   }
   function close(fromPop) {
     if (!open) return; open = false; if (!fromPop && window.CTNav) window.CTNav.done('zoom');
-    const done = () => { el.classList.remove('on', 'zoomed', 'drag'); document.documentElement.classList.remove('zm-open'); if (from) from.style.opacity = ''; el.style.removeProperty('--bg'); };
+    const done = () => { el.classList.remove('on', 'zoomed', 'drag'); if (el.open) el.close(); document.documentElement.classList.remove('zm-open'); if (from) from.style.opacity = ''; el.style.removeProperty('--bg'); };
     const r = from && from.getBoundingClientRect(), vis = r && r.width && r.bottom > 0 && r.top < innerHeight;
     el.classList.add('out');
     if (vis && !calm.matches) {

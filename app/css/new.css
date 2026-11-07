@@ -1691,3 +1691,11 @@ dialog:focus-visible,dialog [tabindex="-1"]:focus-visible,.ed-form:focus-visible
 @media(hover:hover){.ntf-x{opacity:0}.ntf-it:hover .ntf-x,.ntf-x:focus-visible{opacity:1}.ntf-x:hover{background:color-mix(in srgb,var(--text,#22221f) 8%,transparent);color:var(--text,#22221f)}}
 .ntf-clear{display:block;margin:14px auto 4px;min-height:40px;padding:0 16px;border:0;border-radius:999px;background:none;color:var(--muted,#77736d);font:inherit;font-size:13.5px;font-weight:750;cursor:pointer}
 @media(hover:hover){.ntf-clear:hover{color:var(--text,#22221f);background:color-mix(in srgb,var(--text,#22221f) 6%,transparent)}}
+/* v43.3 the card art viewer is a <dialog> now: no browser box around it, and no second dim behind its own */
+dialog.zm{max-width:none;max-height:none;width:100%;height:100%;margin:0;padding:0;border:0;background:transparent;color:inherit;overflow:hidden}
+dialog.zm:not(.on){display:none}
+dialog.zm::backdrop{background:transparent}
+/* v43.3 the "saved to your account" line sits under Edit profile, part of the profile card (no row of its own) */
+.app-menu.am .amh .am-sync{display:flex;align-self:flex-start;justify-content:flex-start;width:auto;margin:5px 0 0;padding:0;background:none;border-radius:0;font-size:12px;line-height:1.3;text-align:left}
+.app-menu.am .amh .am-sync[hidden]{display:none}
+.app-menu.am .amh .am-sync i{width:7px;height:7px}

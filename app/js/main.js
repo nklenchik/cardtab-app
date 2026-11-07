@@ -178,9 +178,9 @@
   const touchDev = matchMedia('(hover:none)').matches;
   function applyTheme(th, save) { if (th === 'auto') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = th; if (save) { try { localStorage.setItem('cb.theme', th); } catch (e) {} } $('am-theme').querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', b.dataset.th === th)); }
   let th0 = 'auto'; try { th0 = localStorage.getItem('cb.theme') || 'auto'; } catch (e) {} applyTheme(th0, false);
-  let hapOn = true; try { hapOn = localStorage.getItem('cb.haptics') !== '0'; } catch (e) {}
-  window.ctBuzz = () => { if (hapOn && touchDev && navigator.vibrate) try { navigator.vibrate(8); } catch (e) {} };
-  const paintHap = () => $('am-hap').setAttribute('aria-checked', hapOn); paintHap(); if (!touchDev) $('am-hapr').hidden = true;
+  // v43.3: no haptics (iPhones don't allow web pages to vibrate, so the setting did nothing for most people). Kept as a no-op
+  // so the places that call it don't need to change.
+  window.ctBuzz = () => {}; try { localStorage.removeItem('cb.haptics'); } catch (e) {}
   // Sales show: what you kept after fees (the default) or the full sale price, in the list and the gallery
   const paintAmt = () => { let v = 'kept'; try { v = localStorage.getItem('ct.amt') || 'kept'; } catch (e) {} $('am-amt').querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.amt === v))); };
   paintAmt();
@@ -195,7 +195,6 @@
     window.ctBuzz(); b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-checked', String(x === b)));
     if (window.CTStore) await CTStore.setMeta('startOn', b.dataset.so); });
   $('am-theme').addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('button'); if (b) { applyTheme(b.dataset.th, true); window.ctBuzz(); } });
-  $('am-hap').addEventListener('click', e => { e.stopPropagation(); hapOn = !hapOn; try { localStorage.setItem('cb.haptics', hapOn ? '1' : '0'); } catch (e) {} paintHap(); window.ctBuzz(); });
   document.addEventListener('keydown', e => {
     if (menu.hidden) return;
     if (e.key === 'Escape') { closeMenu(true); return; }
