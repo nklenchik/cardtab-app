@@ -3,7 +3,7 @@
    GET /art/:id/:size                          -> our own copy of the card art as WebP (size: list | detail)
    /auth/*                                     -> sign-in (see auth.js)
    Nothing here is exposed to the app except our own ids and our own image URLs. */
-import { handlePublicShare } from './share.js';
+import { handlePublicShare, cleanupShares } from './share.js';
 import { cleanupAnalytics, handleSiteEvent } from './analytics.js';
 import { handleAuth, currentUser, isAdmin } from './auth.js';
 import { gate, count } from './budget.js';
@@ -128,7 +128,7 @@ async function art(env, ctx, id, size) {
 }
 
 export default {
-  async scheduled(evt, env, ctx) { ctx.waitUntil(cleanupAnalytics(env)); },
+  async scheduled(evt, env, ctx) { ctx.waitUntil(cleanupAnalytics(env)); ctx.waitUntil(cleanupShares(env)); },
   async fetch(req, env, ctx) {
     const u = new URL(req.url);
     { const m = u.pathname.match(/^\/s\/b\/([a-z0-9]{1,32})$/); if (m && req.method === 'GET') { try { return await handlePublicShare(env, req, m[1]); } catch (e) { return new Response(JSON.stringify({ error: 'gone' }), { status: 404, headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' } }); } } }

@@ -5,7 +5,7 @@
 import { sendMail } from './email.js';
 
 const ID_OK = /^[a-z0-9]{8,16}$/;
-const MAX = 400000;
+const MAX = 400000, UNUSED = 90 * 86400;
 const now = () => Math.floor(Date.now() / 1000);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const shareUrl = (env, id) => (env.APP_URL || 'https://app.cardtab.app') + '/b/' + id;
@@ -49,6 +49,8 @@ export async function handleShare(env, req, me, path, out) {
       ON CONFLICT(id) DO UPDATE SET html=excluded.html, meta=excluded.meta, live=excluded.live, exp_opt=excluded.exp_opt, exp=excluded.exp, created=excluded.created, updated=excluded.updated`)
       .bind(id, me.id, html, JSON.stringify(cleanMeta(b.meta)), b.live ? 1 : 0, opt, exp, created, now()));
     await env.DB.batch(st);
+    // the 90-day "not opened" clock starts when a link is made; while the owner keeps it, opening it resets the clock
+    if (!mine || mine.id !== id) await env.DB.prepare('INSERT INTO share_open (id, last) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET last=excluded.last').bind(id, now()).run().catch(() => {});
     return out({ ok: true, url: shareUrl(env, id), exp });
   }
   if (path === '/auth/share/invite') {
@@ -83,7 +85,20 @@ export async function handlePublicShare(env, req, id) {
   const r = await env.DB.prepare('SELECT html, meta, live, exp, updated FROM shares WHERE id=?').bind(id).first();
   if (!r) return new Response(JSON.stringify({ error: 'gone' }), { status: 404, headers: { ...h, 'cache-control': 'no-store' } });
   if (r.exp && r.exp < now()) return new Response(JSON.stringify({ error: 'expired' }), { status: 410, headers: { ...h, 'cache-control': 'no-store' } });
-  env.DB.prepare('UPDATE shares SET views=views+1 WHERE id=?').bind(id).run().catch(() => {});
+  // a link nobody has opened for 90 days stops working (the owner can make a new one any time)
+  const seen = await env.DB.prepare('SELECT last FROM share_open WHERE id=?').bind(id).first().catch(() => null);
+  if (seen && seen.last < now() - UNUSED) return new Response(JSON.stringify({ error: 'unused' }), { status: 410, headers: { ...h, 'cache-control': 'no-store' } });
+  await env.DB.batch([env.DB.prepare('UPDATE shares SET views=views+1 WHERE id=?').bind(id), env.DB.prepare('INSERT INTO share_open (id, last) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET last=excluded.last').bind(id, now())]).catch(() => {});
   let meta = {}; try { meta = JSON.parse(r.meta || '{}'); } catch (e) {}
   return new Response(JSON.stringify({ html: r.html, meta, live: !!r.live, updated: r.updated }), { headers: { ...h, 'cache-control': 'public, max-age=30' } });
+}
+
+// nightly: links that ended, or that nobody opened for 90 days, are removed
+export async function cleanupShares(env) {
+  const t = now();
+  await env.DB.batch([
+    env.DB.prepare('DELETE FROM shares WHERE exp IS NOT NULL AND exp < ?').bind(t),
+    env.DB.prepare('DELETE FROM shares WHERE id IN (SELECT id FROM share_open WHERE last < ?)').bind(t - UNUSED),
+    env.DB.prepare('DELETE FROM share_open WHERE id NOT IN (SELECT id FROM shares)')
+  ]).catch(() => {});
 }

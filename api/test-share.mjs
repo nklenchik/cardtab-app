@@ -30,6 +30,12 @@ assert.equal((await pub('abcdefgh1')).status, 404); g = await (await pub('zzzzzz
 // expired links say so
 sq.prepare("UPDATE shares SET exp=1 WHERE id='zzzzzzzz2'").run(); assert.equal((await pub('zzzzzzzz2')).status, 410);
 await call('/auth/share', { method: 'POST', cookie: a, body: { id: 'zzzzzzzz2', html: '<b>v3</b>', exp: 'never' } }); assert.equal((await pub('zzzzzzzz2')).status, 200);
+// unused for 90 days: stops working, then the nightly tidy-up removes it
+sq.prepare("UPDATE share_open SET last=? WHERE id='zzzzzzzz2'").run(Math.floor(Date.now()/1000) - 91*86400);
+let u = await pub('zzzzzzzz2'); assert.equal(u.status, 410); assert.equal((await u.json()).error, 'unused');
+await worker.scheduled({}, env, { waitUntil: p => p }); await new Promise(r => setTimeout(r, 20));
+assert.equal(sq.prepare("SELECT COUNT(*) n FROM shares").get().n, 0);
+await call('/auth/share', { method: 'POST', cookie: a, body: { id: 'zzzzzzzz2', html: '<b>v4</b>', exp: 'never' } }); assert.equal((await pub('zzzzzzzz2')).status, 200, 'made again');
 // invites by email
 mails.length = 0; r = await (await call('/auth/share/invite', { method: 'POST', cookie: a, body: { emails: ['one@x.com', 'bad', 'two@x.com'] } })).json();
 assert.equal(r.sent, 2); assert.ok(/Nick shared their Card Board/.test(mails[0].subject)); assert.ok(mails[0].text.includes('https://app.cardtab.app/b/zzzzzzzz2'));

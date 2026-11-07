@@ -83,13 +83,15 @@ const RULES = (view, today) => 'You are Ask, inside Card Tab, an app where a tra
   'Today is ' + today + '.' + (view && view.label ? ' They are looking at: ' + String(view.label).slice(0, 80) + (view.from ? ' (' + view.from + ' to ' + (view.to || today) + ')' : '') + (view.platform && view.platform !== 'all' ? ', platform ' + String(view.platform).slice(0, 40) : '') + '. Use that range when the question doesn\'t name one.' : '');
 
 async function claude(env, body) {
-  const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, body: JSON.stringify(body) });
+  const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': String(env.ANTHROPIC_API_KEY || '').trim(), 'anthropic-version': '2023-06-01' }, body: JSON.stringify(body) });
   if (!r.ok) { let m = ''; try { const j = await r.json(); m = (j.error && j.error.message) || ''; } catch (er) {} const e = new Error('ai ' + r.status); e.status = r.status; e.detail = String(m).slice(0, 240); throw e; }
   return r.json();
 }
 
 export async function handleAsk(env, req, me, out) {
-  if (!env.ANTHROPIC_API_KEY) return out({ error: 'setup' }, 503);
+  const key = String(env.ANTHROPIC_API_KEY || '').trim();
+  // admins are told what's wrong with the key (never the key itself)
+  if (!key) return out({ error: 'setup', detail: me.role === 'admin' ? (env.ANTHROPIC_API_KEY == null ? 'The server has no ANTHROPIC_API_KEY secret.' : 'The ANTHROPIC_API_KEY secret is there but empty. Set it again and paste the key at the prompt.') : undefined }, 503);
   const L = askLimits(env), m = month(), plan = me.plan === 'premium' ? 'premium' : 'free', limit = L[plan], admin = me.role === 'admin';
   const used = (await env.DB.prepare('SELECT n FROM ask_usage WHERE user_id=? AND month=?').bind(me.id, m).first() || {}).n || 0;
   const info = { limit, left: Math.max(0, limit - used), resets: resets(), plan };

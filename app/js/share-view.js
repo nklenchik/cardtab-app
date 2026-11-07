@@ -7,6 +7,7 @@
   const say = (h, p) => { $('simple').innerHTML = '<div class="shgone"><h2>' + h + '</h2><p>' + p + '</p><a class="shcta big" href="https://cardtab.app/?utm_source=shared-board">See what Card Tab is</a></div>'; };
   if (!/^[a-z0-9]{8,16}$/.test(id)) { say('This link isn’t right', 'Check that the whole link was copied.'); return; }
   fetch('https://api.cardtab.app/s/b/' + id).then(r => r.json().then(j => ({ r, j }))).then(({ r, j }) => {
+    if (r.status === 410 && j.error === 'unused') return say('This link has gone quiet', 'No one opened it for 90 days, so it stopped working. Ask the person who shared it for a new link.');
     if (r.status === 410) return say('This link has ended', 'The person who shared it set it to stop working after a while.');
     if (!r.ok || !j.html) return say('This board isn’t shared anymore', 'The link was turned off or replaced with a new one.');
     const m = j.meta || {};
@@ -17,7 +18,7 @@
     $('shv-t').textContent = m.title || 'Card Board'; document.title = (m.title || 'Card Board') + ' · Card Tab';
     $('shv-s').textContent = [m.label, m.plat].filter(Boolean).join(' · ');
     const sim = $('simple'); sim.innerHTML = j.html; if (m.simStyle && innerWidth >= 761) sim.setAttribute('style', m.simStyle);
-    sim.querySelectorAll('a').forEach(a => { a.removeAttribute('href'); });
+    sim.querySelectorAll('a').forEach(a => { a.removeAttribute('href'); }); sim.querySelectorAll('.fw').forEach(f => f.classList.add('in'));
     const d = j.updated ? new Date(j.updated * 1000) : null;
     if (d) $('shv-u').textContent = (j.live ? 'Kept up to date · last updated ' : 'A snapshot from ') + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric' }) + '.';
   }).catch(() => say('Couldn’t load this board', 'Check your connection and try again.'));
