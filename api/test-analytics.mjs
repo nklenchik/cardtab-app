@@ -44,4 +44,18 @@ await worker.scheduled({}, env, { waitUntil: p => p }); await new Promise(r => s
 assert.equal(sq.prepare("SELECT COUNT(*) n FROM an_day WHERE day='2020-01-01'").get().n, 0);
 await call('/auth/delete', { method: 'POST', cookie: b });
 assert.equal(sq.prepare("SELECT COUNT(*) n FROM an_active").get().n, 1);
+// ---- the website ----
+const site = (body, { origin = 'https://cardtab.app', ip = '9.9.9.9', ua = 'Mozilla/5.0 (iPhone) Mobile' } = {}) => worker.fetch(new Request('https://api.cardtab.app/s/ev', { method: 'POST', headers: { origin, 'content-type': 'text/plain', 'cf-connecting-ip': ip, 'cf-ipcountry': 'US', 'user-agent': ua }, body: JSON.stringify(body) }), env, {});
+assert.equal((await site({ ref: 'https://www.google.com/', ev: [{ e: 'pv', d: '/' }, { e: 'sec', d: 'pricing' }, { e: 'nope', d: 'x' }] })).status, 204);
+await site({ ref: 'https://www.google.com/', ev: [{ e: 'pv', d: '/' }, { e: 'cta', d: 'join focus' }, { e: 'join', d: 'hero' }] });   // same visitor, same day
+await site({ ref: 'https://reddit.com/r/pkmntcg', ev: [{ e: 'pv', d: '/' }] }, { ip: '8.8.8.8', ua: 'Mozilla/5.0 (Macintosh)' });
+await site({ ev: [{ e: 'pv', d: '/' }] }, { origin: 'https://evil.example' });   // not our site: ignored
+await site({ ev: [{ e: 'pv', d: '/' }] }, { ua: 'Googlebot/2.1' });              // robots: ignored
+assert.equal(sq.prepare('SELECT COUNT(*) n FROM an_site_vis').get().n, 2, 'two visitors');
+assert.deepEqual(sq.prepare('SELECT src FROM an_site_vis ORDER BY src').all().map(r => r.src), ['google', 'reddit']);
+assert.equal(sq.prepare("SELECT SUM(n) n FROM an_site WHERE ev='pv'").get().n, 3);
+let w = await (await call('/auth/admin/site', { cookie: boss })).json();
+assert.equal(w.visitors.at(-1), 2); assert.equal(w.events.find(x => x.ev === 'join').n, 1); assert.equal(w.countries[0].dim, 'US');
+w = await (await call('/auth/admin/site?dev=desk', { cookie: boss })).json(); assert.equal(w.visitors.at(-1), 1);
+assert.equal((await call('/auth/admin/site', { cookie: a })).status, 403);
 console.log('analytics tests ok');

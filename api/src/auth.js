@@ -1,4 +1,4 @@
-import { handleEvents, handleStats } from './analytics.js';
+import { handleEvents, handleStats, handleSiteStats } from './analytics.js';
 import { handleAsk } from './ask.js';
 /* Card Tab sign-in: Google, or an emailed link + 6-digit code. No passwords.
    A session is a random token in an HttpOnly cookie on .cardtab.app (good for 30 days); only its SHA-256 is stored.
@@ -163,6 +163,10 @@ export async function handleAuth(env, req, path) {
   if (path === '/auth/admin/stats') {
     if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);
     return handleStats(env, req, (body, status = 200) => out(env, req, body, status));
+  }
+  if (path === '/auth/admin/site') {
+    if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);
+    return handleSiteStats(env, req, (body, status = 200) => out(env, req, body, status));
   }
   if (path === '/auth/usage') {   // card data use this billing month (admins)
     if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);

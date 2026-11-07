@@ -80,5 +80,73 @@ export async function handleStats(env, req, out) {
 // nightly: keep two years of daily rows
 export async function cleanupAnalytics(env) {
   const cut = addDays(day(), -731);
-  await env.DB.batch([env.DB.prepare('DELETE FROM an_day WHERE day < ?').bind(cut), env.DB.prepare('DELETE FROM an_active WHERE day < ?').bind(cut)]);
+  // the website's daily visitor codes can never be remade once yesterday's random value is gone
+  await env.DB.batch([env.DB.prepare('DELETE FROM an_day WHERE day < ?').bind(cut), env.DB.prepare('DELETE FROM an_active WHERE day < ?').bind(cut), env.DB.prepare('DELETE FROM an_site WHERE day < ?').bind(cut), env.DB.prepare('DELETE FROM an_site_vis WHERE day < ?').bind(cut), env.DB.prepare('DELETE FROM an_salt WHERE day < ?').bind(day())]);
+}
+
+// ================= website (cardtab.app) visits — v50.1 =================
+// No cookies and nothing stored in the browser: a visitor is counted once a day with a code made from a random value that
+// changes every day (and is thrown away), plus their network address and browser. It can't be turned back into anyone, and
+// tomorrow the same person gets a different code. Country comes from Cloudflare; the page sends only what it is
+// (path, which sections came into view, demo taps, button taps, how far down it was scrolled).
+const SITE_ORIGINS = /^https:\/\/(www\.)?cardtab\.app$|^https:\/\/[a-z0-9-]+\.cardtab-site\.pages\.dev$/;
+const SITE_EV = new Set(['pv', 'sec', 'demo', 'cta', 'scroll', 'join', 'out']);
+const hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+function srcOf(ref, utm) {
+  if (utm) return clean(utm).toLowerCase();
+  let h = ''; try { h = new URL(ref).hostname.replace(/^www\./, ''); } catch (e) { return 'direct'; }
+  if (!h || /(^|\.)cardtab\.app$/.test(h)) return 'direct';
+  if (/google\./.test(h)) return 'google'; if (/bing\.com$/.test(h)) return 'bing'; if (/duckduckgo/.test(h)) return 'duckduckgo';
+  if (/(^|\.)(facebook|fb)\.com$|^l\.facebook/.test(h)) return 'facebook'; if (/instagram\.com$/.test(h)) return 'instagram';
+  if (/reddit\.com$/.test(h)) return 'reddit'; if (/(^|\.)(t\.co|twitter\.com|x\.com)$/.test(h)) return 'x'; if (/tiktok\.com$/.test(h)) return 'tiktok';
+  if (/youtube\.com$|youtu\.be$/.test(h)) return 'youtube'; if (/discord/.test(h)) return 'discord'; if (/chatgpt|openai|claude\.ai|perplexity/.test(h)) return 'ai assistants';
+  return clean(h).toLowerCase();
+}
+export async function handleSiteEvent(env, req) {
+  const origin = req.headers.get('origin') || '';
+  const hdr = { 'access-control-allow-origin': SITE_ORIGINS.test(origin) ? origin : 'https://cardtab.app', vary: 'origin' };
+  if (req.method === 'OPTIONS') return new Response(null, { headers: { ...hdr, 'access-control-allow-methods': 'POST', 'access-control-allow-headers': 'content-type' } });
+  if (!SITE_ORIGINS.test(origin)) return new Response(null, { status: 204, headers: hdr });
+  let b = {}; try { b = JSON.parse(await req.text()); } catch (e) {}
+  const ua = req.headers.get('user-agent') || '';
+  if (/bot|crawl|spider|slurp|headless|lighthouse|preview|facebookexternalhit/i.test(ua)) return new Response(null, { status: 204, headers: hdr });
+  const d = day(), dev = /Mobi|Android|iPhone|iPad/i.test(ua) ? 'phone' : 'desk';
+  let salt = await env.DB.prepare('SELECT salt FROM an_salt WHERE day=?').bind(d).first();
+  if (!salt) { const s = hex(crypto.getRandomValues(new Uint8Array(16))); await env.DB.prepare('INSERT OR IGNORE INTO an_salt (day, salt) VALUES (?,?)').bind(d, s).run(); salt = await env.DB.prepare('SELECT salt FROM an_salt WHERE day=?').bind(d).first(); }
+  const ip = req.headers.get('cf-connecting-ip') || '';
+  const vh = hex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(salt.salt + '|' + ip + '|' + ua))).slice(0, 24);
+  const src = srcOf(b.ref || '', b.utm || ''), cc = clean((req.cf && req.cf.country) || req.headers.get('cf-ipcountry') || '').slice(0, 2) || '—';
+  const sum = new Map();
+  for (const x of (Array.isArray(b.ev) ? b.ev.slice(0, 60) : [])) { if (!x || !SITE_EV.has(x.e)) continue; const k = x.e + '\u0001' + clean(x.d); const c = sum.get(k) || { e: x.e, d: clean(x.d), n: 0 }; c.n += 1; sum.set(k, c); }
+  const st = [...sum.values()].map(r => env.DB.prepare('INSERT INTO an_site (day,ev,dim,dev,n) VALUES (?,?,?,?,?) ON CONFLICT(day,ev,dim,dev) DO UPDATE SET n=n+excluded.n').bind(d, r.e, r.d, dev, r.n));
+  st.push(env.DB.prepare('INSERT INTO an_site_vis (day,vh,dev,src,cc) VALUES (?,?,?,?,?) ON CONFLICT(day,vh) DO NOTHING').bind(d, vh, dev, src, cc));
+  await env.DB.batch(st);
+  return new Response(null, { status: 204, headers: hdr });
+}
+
+export async function handleSiteStats(env, req, out) {
+  const u = new URL(req.url), today = day();
+  let to = /^\d{4}-\d\d-\d\d$/.test(u.searchParams.get('to') || '') ? u.searchParams.get('to') : today;
+  let from = /^\d{4}-\d\d-\d\d$/.test(u.searchParams.get('from') || '') ? u.searchParams.get('from') : addDays(to, -29);
+  if (from > to) [from, to] = [to, from];
+  const n = Math.min(800, span(from, to)), pTo = addDays(from, -1), pFrom = addDays(pTo, -(n - 1));
+  const dev = ['phone', 'desk'].includes(u.searchParams.get('dev')) ? u.searchParams.get('dev') : '';
+  const w = (a, b) => [' WHERE day BETWEEN ? AND ?' + (dev ? ' AND dev=?' : ''), dev ? [a, b, dev] : [a, b]];
+  const q = async (sql, p) => (await env.DB.prepare(sql).bind(...p).all()).results || [];
+  const [w1, p1] = w(from, to), [w0, p0] = w(pFrom, pTo), adm = admins(env), notAdmin = adm.length ? ' AND lower(email) NOT IN (' + adm.map(() => '?').join(',') + ')' : '';
+  const [vis, visPrev, src, srcPrev, cc, ev, evPrev, evDay, signups, signPrev] = await Promise.all([
+    q('SELECT day, COUNT(*) n FROM an_site_vis' + w1 + ' GROUP BY day', p1),
+    q('SELECT day, COUNT(*) n FROM an_site_vis' + w0 + ' GROUP BY day', p0),
+    q('SELECT src dim, COUNT(*) n FROM an_site_vis' + w1 + ' GROUP BY src', p1),
+    q('SELECT src dim, COUNT(*) n FROM an_site_vis' + w0 + ' GROUP BY src', p0),
+    q('SELECT cc dim, COUNT(*) n FROM an_site_vis' + w1 + ' GROUP BY cc', p1),
+    q('SELECT ev, dim, SUM(n) n FROM an_site' + w1 + ' GROUP BY ev, dim', p1),
+    q('SELECT ev, dim, SUM(n) n FROM an_site' + w0 + ' GROUP BY ev, dim', p0),
+    q("SELECT day, ev, SUM(n) n FROM an_site" + w1 + " AND ev IN ('pv','join') GROUP BY day, ev", p1),
+    q("SELECT COUNT(*) n FROM users WHERE date(created_at,'unixepoch') BETWEEN ? AND ?" + notAdmin, [from, to, ...adm]),
+    q("SELECT COUNT(*) n FROM users WHERE date(created_at,'unixepoch') BETWEEN ? AND ?" + notAdmin, [pFrom, pTo, ...adm])
+  ]);
+  const fill = (rows, a) => { const m = Object.fromEntries(rows.map(r => [r.day, r.n])); return Array.from({ length: n }, (_, i) => m[addDays(a, i)] || 0); };
+  return out({ from, to, pFrom, pTo, days: n, dev: dev || 'all', visitors: fill(vis, from), visitorsPrev: fill(visPrev, pFrom), sources: src, sourcesPrev: srcPrev, countries: cc,
+    events: ev, eventsPrev: evPrev, eventsByDay: evDay, appSignups: (signups[0] || {}).n || 0, appSignupsPrev: (signPrev[0] || {}).n || 0 });
 }
