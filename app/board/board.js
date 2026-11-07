@@ -620,14 +620,10 @@ function moveDrag(cx,cy){if(!drag)return;drag.cx=cx;drag.cy=cy;const dy=cy-drag.
   drag.fl.style.transform='translate('+(drag.ox+cx-drag.x)+'px,'+(drag.oy+dy)+'px) scale(1.03)';
   if(drag.desk){deskDrag(drag.ox+cx-drag.x,drag.oy+dy);return}
   const inside=el=>{const r=el.getBoundingClientRect();return cx>r.left&&cx<r.right&&cy>r.top&&cy<r.bottom};
-  // after a swap, wait until you've left that widget before it can swap back, so nothing flickers
-  if(drag.skip){const se=$('simple').querySelector('.w[data-id="'+drag.skip+'"]');if(se&&inside(se))return;drag.skip=null}
-  const over=[...$('simple').querySelectorAll('.w[data-id]')].find(el=>el!==drag.el&&inside(el));if(!over)return;
-  const from=layout.findIndex(w=>w.id===drag.id),to=layout.findIndex(w=>w.id===over.dataset.id);if(from<0||to<0||from===to)return;
-  // phones (v43.2): the widget you hold trades places with the one under your finger; nothing else moves
-  const before=rects();const t=layout[from];layout[from]=layout[to];layout[to]=t;
-  const mk=document.createComment('');drag.el.replaceWith(mk);over.replaceWith(drag.el);mk.replaceWith(over);
-  drag.moved=true;drag.skip=over.dataset.id;buzz('tick');flip(before)}
+  // phones (v49.1): the widget under your finger is marked; the two trade places when you let go. Nothing moves while
+  // you're still dragging, so passing over other widgets on the way doesn't shuffle them.
+  const over=[...$('simple').querySelectorAll('.w[data-id]')].find(el=>el!==drag.el&&inside(el)),id=over?over.dataset.id:null;
+  if(id!==drag.tgt){if(drag.tgtEl)drag.tgtEl.classList.remove('swapto');drag.tgt=id;drag.tgtEl=over||null;if(over){over.classList.add('swapto');buzz('tick')}}}
 // stop the page from scrolling under a finger once a widget is lifted
 document.addEventListener('touchmove',e=>{if(drag||rz)e.preventDefault()},{passive:false});
 $('simple').addEventListener('pointermove',e=>{
@@ -639,6 +635,8 @@ function endPointer(){
   if(pending){clearTimeout(pending.t);pending=null}
   if(rz){const r=rz;rz=null;if(r.raf)cancelAnimationFrame(r.raf);cancelAnimationFrame(r.loop);placeRzFinal(r);return}
   if(!drag)return;const d=drag;drag=null;cancelAnimationFrame(d.loop);justDragged=true;setTimeout(()=>{justDragged=false},0);
+  if(!d.desk&&d.tgtEl){d.tgtEl.classList.remove('swapto');const from=layout.findIndex(w=>w.id===d.id),to=layout.findIndex(w=>w.id===d.tgt);
+    if(from>=0&&to>=0&&from!==to){const before=rects(),t=layout[from];layout[from]=layout[to];layout[to]=t;const over=d.tgtEl,mk=document.createComment('');d.el.replaceWith(mk);over.replaceWith(d.el);mk.replaceWith(over);d.moved=true;flip(before)}}
   $('cb').classList.remove('dragging');if(d.moved){save();buzz('firm')}
   // the floating copy glides into the slot, then the real widget takes its place
   const g=$('simple').getBoundingClientRect(),t=d.el.getBoundingClientRect(),tx=t.left-g.left,ty=t.top-g.top;
