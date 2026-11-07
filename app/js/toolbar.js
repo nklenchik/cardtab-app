@@ -85,22 +85,8 @@
     lab(); new MutationObserver(lab).observe($('cb-platl'), { childList: true, characterData: true, subtree: true });
     b.addEventListener('click', () => openDD(b, cbPlat.list(), cbPlat.get(), (k, l) => cbPlat.set(k, l)));
     T('board').appendChild(w);
-    // phones: "Fit more" — the number widgets (Profit, Sales, Spent, Fees) go half height and the big card a bit shorter,
-    // so more fits on one screen. Charts and lists keep their size. Remembered on this device.
-    // v43: on by default (the compact view is the one that tells the story fastest); you can still turn it off
-    const fitOn = () => { try { return localStorage.getItem('ct.cbfit') !== '0'; } catch (e) { return true; } };
-    const fit = document.createElement('button'); fit.type = 'button'; fit.className = 'cb-fitsw'; fit.setAttribute('role', 'switch');
-    fit.innerHTML = '<span>Fit more</span><i aria-hidden="true"></i>';
-    const paintFit = () => { const on = fitOn(); fit.setAttribute('aria-checked', String(on)); document.documentElement.classList.toggle('cb-fit', on); };
-    fit.addEventListener('click', () => { try { localStorage.setItem('ct.cbfit', fitOn() ? '0' : '1'); } catch (e) {} paintFit(); window.ctBuzz && window.ctBuzz(); });
-    const pw = $('cb-plat') && $('cb-plat').parentElement; if (pw && pw.parentElement) pw.parentElement.insertBefore(fit, pw.nextSibling);
-    paintFit();
-    // a number widget only goes short when the widget beside it does too, so no gap opens under it
-    const KPI = /\bk-(profit|sales|after|spent|fees|budget)\b/;
-    const pair = () => { const g = document.querySelector('#cb .simple'); if (!g) return; let row = [];
-      const settle = () => { const short = row.length === 2 ? row.every(w => KPI.test(w.className)) : row.length === 1 && KPI.test(row[0].className); row.forEach(w => w.classList.toggle('fs', short)); row = []; };
-      [...g.children].forEach(w => { if (!w.classList.contains('szS')) { settle(); return; } row.push(w); if (row.length === 2) settle(); }); settle(); };
-    const grid = document.querySelector('#cb .simple'); if (grid) { new MutationObserver(pair).observe(grid, { childList: true }); pair(); }
+    // v43.1: phones always use the compact grid (it's built into the board's layout now), so the old "Fit more" switch is gone
+    document.documentElement.classList.remove('cb-fit'); try { localStorage.removeItem('ct.cbfit'); } catch (e) {}
   }
 
   // ---------- Stories: its own range and the themes, from inside its frame ----------
@@ -121,6 +107,9 @@
     sChips = document.createElement('div'); sChips.className = 'sh-chips'; sChips.setAttribute('role', 'group'); sChips.setAttribute('aria-label', 'Story theme');
     sChips.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const Th = frameWin().csThemes; if (b.dataset.all != null) Th.all(); else Th.set(+b.dataset.i); });
     T('stories').appendChild(sChips);
+    // Settings → Start on (Premium): Stories opens on This year or All time too. Month keeps Stories' usual opening range.
+    try { const so = window.CTStore && CTStore.plan() === 'premium' && CTStore.meta('startOn'), R = fw.csRange, k = so === 'year' ? 'ytd' : so === 'all' ? 'all' : '';
+      if (k && R.per() !== k && R.list().some(([x]) => x === k)) R.set(k); } catch (e) {}
     paintStories();
   }
   function paintStories() {

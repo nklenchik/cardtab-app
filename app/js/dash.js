@@ -546,8 +546,10 @@
   let off = null;
   function mount() {
     dates();
-    // always opens on the month you're in
-    if (window.CTMonth) window.CTMonth.set('m:' + D.monthPrefix, true); else $('ct-period').value = 'all';
+    // opens on the range picked in Settings → Start on (Premium: This year or All time); otherwise the month you're in
+    const so = premium() ? (S.meta('startOn') || 'month') : 'month';
+    const first = so === 'year' ? 'y:' + D.monthPrefix.slice(0, 4) : so === 'all' ? 'all' : 'm:' + D.monthPrefix;
+    if (window.CTMonth) window.CTMonth.set(first, true); else $('ct-period').value = 'all';
     $('ct-sort').value = pref.get('ct-sort', 'new');
     if (off) off();
     off = S.on(reason => {

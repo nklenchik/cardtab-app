@@ -2012,8 +2012,23 @@ html.pg-moving .cbx #cb .wq.k-feat .ttl,html.pg-moving .cbx #cb .fpc,html.pg-mov
 @media(min-width:1100px){.cbx #cb .simple{grid-template-columns:repeat(6,minmax(0,1fr))}}
 .cbx #cb .simple>.szB{grid-column:1/-1;grid-row:span 1}
 .cbx #cb .simple>.szX{grid-column:1/-1;grid-row:span 2}
-/* phones, Fit more: short number tiles show the number only (a 2px squashed sparkline reads as a stray rule) */
-@media(max-width:600px){html.cb-fit .cbx #cb:not(.editing) .simple>.fs .kspk,html.cb-fit .cbx #cb:not(.editing) .simple>.fs.k-budget .cv{display:none}}
+/* v43.1 phones: the compact size is the grid. One row = one short number tile (114px), so Small is 1 row and Large is 2.
+   Same in edit mode, so what you resize is what you get. Replaces the old "Fit more" switch. */
+@media(max-width:600px){
+ .cbx #cb .simple{grid-auto-rows:114px;gap:10px}
+ .cbx #cb .simple>.szS,.cbx #cb .simple>.szM,.cbx #cb .simple>.szB,.cbx #cb .simple>.mkw{grid-row:span 1}
+ .cbx #cb .simple>.szL,.cbx #cb .simple>.szX{grid-row:span 2}
+ .cbx #cb .simple>.szS .kspk,.cbx #cb .simple>.szS.k-budget .cv{display:none}
+ .cb-fitsw{display:none!important}
+}
+#aw .aws input{background:transparent!important}
+/* v43.1 Add widgets: the search box and the five kinds always fit the sheet (they were pushing past its right edge on phones) */
+#aw .awtop{grid-template-columns:minmax(0,1fr)}
+#aw .awtop>*{min-width:0}
+#aw .awseg{display:flex;min-width:0}
+#aw .awseg button{flex:1 1 auto;min-width:0;padding-left:6px;padding-right:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:600px){#aw .awseg button{font-size:13.5px}}
+@media(max-width:380px){#aw .awseg{padding:3px}#aw .awseg button{font-size:12.5px;padding-left:4px;padding-right:4px}}
 .tip{position:fixed;z-index:60;pointer-events:none;background:var(--text);color:var(--bg);border-radius:10px;padding:8px 11px;font-size:12.5px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;text-align:left}
 .tip.on{opacity:1}
 .note{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--text);color:var(--bg);border-radius:999px;padding:8px 14px;font-size:12px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}

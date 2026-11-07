@@ -144,7 +144,11 @@ let FREEMODE=cbFree();const defL=()=>FREEMODE?DEFAULT_FREE:DEFAULT;
 // v43: widget families, and the two sizes each can use (like single-number widgets on marketing dashboards)
 const FAMILY={profit:'num',sales:'num',spent:'num',fees:'num',after:'num',budget:'num',win:'card',feat:'card',pricey:'card',glance:'list',where:'list',kept:'list',best:'list',sell:'list',month:'chart'};
 const FAM_SIZES={num:['S','M'],card:['S','L'],list:['M','L'],chart:['B','X']};
-const sizesFor=k=>{const s=FAM_SIZES[FAMILY[k]]||['S','M','L'];return phone.matches?[...new Set(s.map(x=>x==='X'?'L':x==='B'?'M':x))]:s};
+// phones (v43.1): one grid row is one short number tile, so lists and charts need two rows (Large) to be readable
+const PH_SIZES={num:['S','M'],card:['S','L'],list:['L'],chart:['L']};
+const sizesFor=k=>phone.matches?(PH_SIZES[FAMILY[k]]||['S','L']):(FAM_SIZES[FAMILY[k]]||['S','M','L']);
+const phFit=(k,s)=>{const ok=PH_SIZES[FAMILY[k]]||['S','L'];if(ok.includes(s))return s;const near={S:['S','M','L'],M:['M','L','S'],L:['L','M','S'],B:['M','L','S'],X:['L','M','S']}[s]||[];return near.find(x=>ok.includes(x))||ok[0]};
+const phoneL=l=>l&&l.map(w=>Object.assign({},w,{size:phFit(w.k,w.size)}));
 // the nearest size a widget is allowed (for boards arranged before families)
 const fitSize=(k,s)=>{const ok=FAM_SIZES[FAMILY[k]];if(!ok||ok.includes(s))return s;const near={S:['S','M','L','B','X'],M:['M','S','L','B','X'],L:['L','X','M','S','B'],B:['B','X','M','L','S'],X:['X','B','L','M','S']}[s]||[];return near.find(x=>ok.includes(x))||ok[0]};
 // phone and desktop each keep their own arrangement (order and sizes). The phone starts as a copy of desktop.
@@ -152,16 +156,16 @@ const fitSize=(k,s)=>{const ok=FAM_SIZES[FAMILY[k]];if(!ok||ok.includes(s))retur
 const LKEY0='cb.layout.v4',LKEYP0='cb.layout.phone.v2',clone=x=>JSON.parse(JSON.stringify(x));let LKEY=LKEY0+(FREEMODE?'.free':''),LKEYP=LKEYP0+(FREEMODE?'.free':'');
 const loadL=k=>{try{let raw=localStorage.getItem(k);if(raw==null){const old=k.replace('cb.layout.v4','cb.layout.v3').replace('cb.layout.phone.v2','cb.layout.phone.v1');raw=localStorage.getItem(old);if(raw){const o=JSON.parse(raw);if(Array.isArray(o)){o.forEach(w=>{if(w&&w.k)w.size=fitSize(w.k,w.size)});raw=JSON.stringify(o)}}}const s=JSON.parse(raw);if(Array.isArray(s)&&s.every(w=>w.id&&CATALOG[w.k]&&DIM[w.size]&&(!FREEMODE||FREE_K.includes(w.k))))return s}catch(e){}return null};
 const phoneQ=matchMedia('(max-width:600px)');let onPhone=phoneQ.matches,layoutD=loadL(LKEY)||clone(defL()),layoutP=loadL(LKEYP);
-let layout=onPhone?(layoutP||(layoutP=clone(layoutD))):layoutD;
+let layout=onPhone?(layoutP=phoneL(layoutP||clone(layoutD))):layoutD;
 const save=()=>{try{if(onPhone)layoutP=layout;else layoutD=layout;localStorage.setItem(onPhone?LKEYP:LKEY,JSON.stringify(layout));localStorage.setItem('cb.custom','1')}catch(e){}};
 const otherLayout=()=>onPhone?layoutD:layoutP;
 const saveOther=()=>{try{const o=otherLayout();if(o)localStorage.setItem(onPhone?LKEY:LKEYP,JSON.stringify(o))}catch(e){}};
-function swapLayout(){const p=phoneQ.matches;if(p===onPhone)return;if(onPhone)layoutP=layout;else layoutD=layout;onPhone=p;layout=p?(layoutP||(layoutP=clone(layoutD))):layoutD}
+function swapLayout(){const p=phoneQ.matches;if(p===onPhone)return;if(onPhone)layoutP=layout;else layoutD=layout;onPhone=p;layout=p?(layoutP=phoneL(layoutP||clone(layoutD))):layoutD}
 const customized=()=>{try{return localStorage.getItem('cb.custom')==='1'}catch(e){return true}};
 const newId=()=>'w'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 let period='l12',plat='all',editing=false;
 function applyPlan(){const f=cbFree();if(f===FREEMODE)return false;FREEMODE=f;LKEY=LKEY0+(f?'.free':'');LKEYP=LKEYP0+(f?'.free':'');
-  layoutD=loadL(LKEY)||clone(defL());layoutP=loadL(LKEYP);layout=onPhone?(layoutP||(layoutP=clone(layoutD))):layoutD;if(editing)setEditing(false);fitFreePeriod();return true}
+  layoutD=loadL(LKEY)||clone(defL());layoutP=loadL(LKEYP);layout=onPhone?(layoutP=phoneL(layoutP||clone(layoutD))):layoutD;if(editing)setEditing(false);fitFreePeriod();return true}
 function fitFreePeriod(){if(window.cbLinked)return;if(cbFree()&&!FREE_P.includes(period)){period='l3';const l=$('cb-perl');if(l)l.textContent='Last 3 months'}}
 const VKEY='cb.view',saveView=()=>{try{localStorage.setItem(VKEY,JSON.stringify({period,plat,custom}))}catch(e){}};
 let BUDGET=15000; // your monthly budget in cents; inside the app it comes from the budget setting (see fitBudget)

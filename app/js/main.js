@@ -185,6 +185,15 @@
   const paintAmt = () => { let v = 'kept'; try { v = localStorage.getItem('ct.amt') || 'kept'; } catch (e) {} $('am-amt').querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.amt === v))); };
   paintAmt();
   $('am-amt').addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('button'); if (!b) return; try { localStorage.setItem('ct.amt', b.dataset.amt); } catch (er) {} paintAmt(); window.ctBuzz(); dispatchEvent(new Event('ct-amt')); });
+  // Start on: which range Entries, Board and Stories open on. Follows the account to every device. Year and All time are Premium.
+  const soPrem = () => window.CTStore && CTStore.plan() === 'premium';
+  const paintStart = () => { const v = soPrem() ? ((window.CTStore && CTStore.meta('startOn')) || 'month') : 'month';
+    $('am-start').querySelectorAll('button').forEach(b => { b.setAttribute('aria-checked', String(b.dataset.so === v)); b.classList.toggle('solk', !soPrem() && b.dataset.so !== 'month'); }); };
+  paintStart(); if (window.CTStore) CTStore.on(r => { if (r === 'plan' || r === 'meta' || r === 'remote') paintStart(); });
+  $('am-start').addEventListener('click', async e => { e.stopPropagation(); const b = e.target.closest('button'); if (!b) return;
+    if (!soPrem() && b.dataset.so !== 'month') { if (window.CTPremiumOpen) window.CTPremiumOpen('range'); return; }
+    window.ctBuzz(); b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-checked', String(x === b)));
+    if (window.CTStore) await CTStore.setMeta('startOn', b.dataset.so); });
   $('am-theme').addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('button'); if (b) { applyTheme(b.dataset.th, true); window.ctBuzz(); } });
   $('am-hap').addEventListener('click', e => { e.stopPropagation(); hapOn = !hapOn; try { localStorage.setItem('cb.haptics', hapOn ? '1' : '0'); } catch (e) {} paintHap(); window.ctBuzz(); });
   document.addEventListener('keydown', e => {

@@ -1678,3 +1678,8 @@ a:focus-visible,button:focus-visible,summary:focus-visible,[role="button"]:focus
 dialog:focus-visible,dialog [tabindex="-1"]:focus-visible,.ed-form:focus-visible,.ntf-form:focus-visible,.imp-form:focus-visible{outline:none!important}
 /* a text field with no styled frame around it gets a soft cranberry edge instead */
 .ed .ed-f input:focus,.ed .ed-f textarea:focus,.ed .ed-f select:focus{border-color:var(--s-brand,#a50e37)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--s-brand,#a50e37) 14%,transparent)!important}
+
+/* v43.1 Start on: Year and All time wear a quiet lock look on Free (tapping opens Premium) */
+.app-menu.am #am-start button.solk{opacity:.5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #am-start{background:var(--s-ctl)!important}:root:not([data-theme="light"]) #am-start [aria-checked=true]{background:var(--s-raise)!important}}
+:root[data-theme="dark"] #am-start{background:var(--s-ctl)!important}:root[data-theme="dark"] #am-start [aria-checked=true]{background:var(--s-raise)!important}
