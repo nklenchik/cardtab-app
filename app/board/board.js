@@ -294,7 +294,9 @@ const segCol=p=>CHIP[p]?'var('+CHIP[p][1]+')':'var(--cb-gry)';
 function shareBar(rows,total){if(!rows.length||!total)return '';const top=rows.slice(0,2),rest=total-top.reduce((a,x)=>a+x.v,0),segs=top.map(x=>({k:x.k,v:x.v}));if(rest>0)segs.push({k:'Other',v:rest});
   return '<div class="shb" role="img" aria-label="'+esc(segs.map(x=>x.k+' '+Math.round(x.v/total*100)+'%').join(', '))+'">'+segs.map(x=>'<i style="flex:'+x.v+';background:'+segCol(x.k)+'" title="'+esc(x.k)+'"></i>').join('')+'</div>'}
 // list rows: big sizes open in place like the site's FAQs; small sizes show the same detail in a tooltip
-const row=(inner,detail,open,drill)=>'<div class="r" '+(open?'data-row':'data-tipd="'+esc(detail)+'"'+(drill?dd(drill):''))+'>'+inner+'<div class="d">'+esc(detail)+(open&&drill?' <button type="button" class="seeent"'+dd(drill)+'>See entries ›</button>':'')+'</div></div>';
+/* v50.14: rows never open inside the widget any more (that changed the widget's height and pushed other rows out); the
+   detail shows in a hover card on computers, and a tap opens the entries behind the row */
+const row=(inner,detail,_open,drill,open=false)=>'<div class="r" '+(open?'data-row':'data-tipd="'+esc(detail)+'"'+(drill?dd(drill):''))+'>'+inner+'<div class="d">'+esc(detail)+(open&&drill?' <button type="button" class="seeent"'+dd(drill)+'>See entries ›</button>':'')+'</div></div>';
 
 // v37: At a glance, the same quick numbers as Entries (and the same picks), for the board's period and platform
 NEWW.glance=function(ctx,s){const rows=window.CTMetrics&&CTMetrics.rows?CTMetrics.rows(ctx.inP):[];if(!rows.length)return '<p class="eg">Nothing in this period yet.</p>';
@@ -322,9 +324,13 @@ function body(k,ctx,s,w){
     const TY={Bought:'purchase',Sold:'sale',Refunded:'refund'};const prs=open=>rows.map(([l,n,wd,c,d])=>'<div class="pr" '+(open?'data-row':'data-tipd="'+esc(d)+'"'+dd({t:l,a:'0000-01-01',b:ctx.b,types:[TY[l]]}))+'><div class="t"><span>'+l+'</span><span>'+cnt(n,'card','cards')+'</span></div><div class="bar"><i style="width:'+wd.toFixed(1)+'%;background:'+c+'"></i></div><div class="d">'+esc(d)+(open?' <button type="button" class="seeent"'+dd({t:l,sub:'Up to '+dLong(ctx.b),a:'0000-01-01',b:ctx.b,types:[TY[l]]})+'>See entries ›</button>':'')+'</div></div>').join('');
     const hero='<div class="cq">'+bn(pct+'%','g',s==='S'?44:64)+'</div><small class="cap">of the cards you’ve bought have sold</small>';
     if(s==='S')return '<div class="sS"><div class="cq">'+bn(pct+'%','g',44)+'</div><small class="cap">of cards sold</small><div class="prog"><div class="bar"><i style="width:'+pct+'%"></i></div><small>'+sd+' of '+b+'</small></div></div>';
-    if(s==='M'||s==='B')return '<div class="split'+(s==='B'?' wide':'')+'"><div class="hz">'+hero+'</div><div class="st tight">'+prs(false)+'</div></div>';
-    if(s==='L')return '<div class="col"><div class="hz">'+hero+'</div><div class="st">'+prs(true)+'</div></div>';
-    return '<div class="split wide"><div class="hz">'+hero+'<div class="facts"><span><small>Spent</small><b class="num">'+money(spent)+'</b></span><span><small>Made back</small><b class="num">'+money(made)+'</b></span></div></div><div class="st">'+prs(true)+'</div></div>'}
+    /* v50.14: wide-short sizes show one bar split into sold, refunded and not sold yet, with the three counts under it (each
+       with its detail on hover and its entries on tap), so nothing has to be hidden to fit */
+    if(s==='M'||s==='B'){const un=Math.max(0,b-sd-r),seg=(n,c)=>n?'<i style="width:'+(n/b*100).toFixed(2)+'%;background:'+c+'"></i>':'';
+      const key=rows.map(([l,n,wd,c,d])=>'<span class="sk" data-tipd="'+esc(d)+'"'+dd({t:l,a:'0000-01-01',b:ctx.b,types:[TY[l]]})+'><i style="background:'+c+'"></i>'+n+' '+l.toLowerCase()+'</span>').join('');
+      return '<div class="split'+(s==='B'?' wide':'')+'"><div class="hz">'+hero+'</div><div class="sstack"><div class="sbar">'+seg(sd,'var(--cb-pos)')+seg(r,'var(--cb-neg)')+seg(un,'var(--cb-gry)')+'</div><div class="skey">'+key+'</div></div></div>'}
+    if(s==='L')return '<div class="col"><div class="hz">'+hero+'</div><div class="st">'+prs(false)+'</div></div>';
+    return '<div class="split wide"><div class="hz">'+hero+'<div class="facts"><span><small>Spent</small><b class="num">'+money(spent)+'</b></span><span><small>Made back</small><b class="num">'+money(made)+'</b></span></div></div><div class="st">'+prs(false)+'</div></div>'}
   if(k==='where'){const sp={},n={};inP.filter(e=>e.type==='purchase').forEach(e=>{sp[e.platform]=(sp[e.platform]||0)+e.amount;n[e.platform]=(n[e.platform]||0)+e.qty});const rows=Object.keys(sp).map(x=>({k:x,v:sp[x],n:n[x]})).sort((a,b)=>b.v-a.v);
     if(!rows.length)return '<p class="eg">No purchases in this period.</p>';
     const pc=x=>Math.round(x.v/Math.max(1,t.spent)*100)+'% of spend',det=x=>cnt(x.n,'card','cards')+' · about '+kshort(x.v/x.n)+' each';
