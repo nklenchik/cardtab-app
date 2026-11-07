@@ -757,7 +757,9 @@ function pageGo(from,to,dir,done){
 function fromEl(){const o=(window.CTBoardFrom&&window.CTBoardFrom())||ins;const r=o&&o.getBoundingClientRect();return r&&r.width?r:{left:innerWidth/2-60,top:innerHeight/2-60,width:120,height:120}}
 function open(){
   if(busy||shown)return;navPush('board',()=>close());busy=true;xb.classList.remove('hint');($('note')||{}).hidden=true;
-  if(!ready){render(false);ready=true}
+  // v42.25: when the board hasn't been drawn yet, draw it first and start the slide two frames later, so the drawing
+  // never lands in the middle of the motion (it's usually drawn ahead of time, while you're on Entries)
+  const cold=!ready;if(cold){render(false);ready=true}
   const r=fromEl();shown=true;cbx.scrollTop=0;document.documentElement.style.overflow='hidden';document.documentElement.classList.add('cbopen');xb.setAttribute('aria-expanded','true');
   cbx.inert=false;cbx.removeAttribute('aria-hidden');
   if(calm.matches&&!window.CTPage){cbx.classList.remove('off','enter');busy=false;$('close').focus({preventScroll:true});return}
@@ -765,7 +767,7 @@ function open(){
   // from the right while the one you're leaving moves out to the left, in step, like turning a page.
   {const inst=window.cbInstant;window.cbInstant=false;cbx.classList.remove('off','enter');
     if(inst){busy=false;return}
-    pageGo('entries','board',1,()=>{busy=false;$('close').focus({preventScroll:true})});return}
+    const go=()=>pageGo('entries','board',1,()=>{busy=false;$('close').focus({preventScroll:true})});if(cold)requestAnimationFrame(()=>requestAnimationFrame(go));else go();return}
   cbx.classList.add('anim','enter');cbx.classList.remove('off');bgl.classList.add('on');
   bgl.animate([{transform:fromRect(r)},{transform:'none'}],{duration:460,easing:EASE});
   $('cb').animate([{opacity:0},{opacity:1}],{duration:240,delay:170,easing:'ease-out',fill:'backwards'});
@@ -1101,12 +1103,13 @@ addEventListener('resize',()=>document.querySelectorAll('dialog.sheet[open]').fo
 // The page loads quietly in the background once the board is open, so the first slide-in already has the stories on it.
 ;(()=>{const csx=$('csx');let csf=null,open=false;
 function load(){if(csf)return;csf=document.createElement('iframe');csf.title='Card Stories';csf.srcdoc=STORIES_HTML;csx.appendChild(csf)}
-function openStories(){if(open)return;open=true;navPush('stories',()=>window.cbStoriesBack());load();
+function openStories(){if(open)return;open=true;navPush('stories',()=>window.cbStoriesBack());const fresh=!csf;load();let heavy=fresh;
   // only redraw Stories when the entries changed since it last drew (refresh() already keeps it current), so switching never repaints it
-  try{if(csf.__ver!==window.cbDataVer){csf.contentWindow.csSync();csf.__ver=window.cbDataVer}}catch(e){}
+  try{if(csf.__ver!==window.cbDataVer){csf.contentWindow.csSync();csf.__ver=window.cbDataVer;heavy=true}}catch(e){}
   const fromE=window.cbFromEntries;window.cbFromEntries=false;csx.classList.remove('out');csx.classList.add('in');csx.removeAttribute('aria-hidden');csx.inert=false;
   // straight from Entries: Entries is the page you leave (the board opened underneath, out of sight until Stories covers it)
-  if(window.CTPage)pageGo(fromE?'entries':'board','stories',1,null);
+  // v42.25: after a redraw, start the slide two frames later so the drawing never lands mid-motion
+  if(window.CTPage){const go=()=>pageGo(fromE?'entries':'board','stories',1,null);if(heavy)requestAnimationFrame(()=>requestAnimationFrame(go));else go()}
   else if(!calm.matches){if(fromE)cbx.style.visibility='hidden';pageGo(fromE?'entries':'board','stories',1,()=>{cbx.style.visibility=''})}
   setTimeout(()=>{try{csf.contentWindow.focus()}catch(e){}},calm.matches?0:420)}
 window.cbStoriesBack=function(toEntries){if(!open)return;open=false;navDone('stories');csx.setAttribute('aria-hidden','true');csx.inert=true;
@@ -1369,8 +1372,11 @@ if(window.CTNav){navPush=(k,fn)=>window.CTNav.push('cb:'+k,fn);navDone=k=>{if(!n
 window.cbEntries=()=>E;
 window.cbDataVer=window.cbDataVer||1;  // the board starts with current entries; refresh() bumps this whenever they change
 const syncStories=()=>{try{const f=document.querySelector('#csx iframe');if(f&&f.contentWindow&&f.contentWindow.csSync)f.contentWindow.csSync()}catch(e){}};
-window.CTBoard={open(){window.cbSyncPlan();open()},close(){close()},get shown(){return shown},
-  refresh(rows){window.cbDataVer=(window.cbDataVer||0)+1;E=rows||(window.CTBoardData?window.CTBoardData():E);window.cbSyncPlan();const t=new Date();TODAY=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');if(shown)render(false);else ready=false;syncStories()},
+// v42.25: draw the board ahead of time, quietly, while you're on Entries (it's hidden and off to the side), so the first
+// visit slides in without a hitch. Redrawn the same way after your entries change.
+let warmT=0;function warm(){clearTimeout(warmT);warmT=setTimeout(()=>{(window.requestIdleCallback||(f=>f()))(()=>{if(!shown&&!ready&&document.visibilityState==='visible'&&(!window.CTPage||CTPage.cur==='entries')){render(false);ready=true}},{timeout:3000})},1200)}
+window.CTBoard={open(){window.cbSyncPlan();open()},close(){close()},get shown(){return shown},prewarm:warm,
+  refresh(rows){window.cbDataVer=(window.cbDataVer||0)+1;E=rows||(window.CTBoardData?window.CTBoardData():E);window.cbSyncPlan();const t=new Date();TODAY=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');if(shown)render(false);else{ready=false;warm()}syncStories()},
   user(u){if(!u)return;const n=document.getElementById('cb-cb-am-name');if(n&&u.name)n.textContent=u.name;const em=document.querySelector('#cb-amenu .amh small');if(em&&u.email)em.textContent=u.email;const pr=document.querySelector('#cb-amenu .prem2');if(pr)pr.hidden=!u.premium;window.cbSyncPlan()}};
 
 })();
