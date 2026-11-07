@@ -44,6 +44,7 @@ await worker.scheduled({}, env, { waitUntil: p => p }); await new Promise(r => s
 assert.equal(sq.prepare("SELECT COUNT(*) n FROM an_day WHERE day='2020-01-01'").get().n, 0);
 await call('/auth/delete', { method: 'POST', cookie: b });
 assert.equal(sq.prepare("SELECT COUNT(*) n FROM an_active").get().n, 1);
+assert.equal(sq.prepare("SELECT COUNT(DISTINCT uid) n FROM an_feat").get().n, 1, 'their feature days go too'); assert.equal(sq.prepare("SELECT COUNT(*) n FROM an_user").get().n, 1);
 // ---- the website ----
 const site = (body, { origin = 'https://cardtab.app', ip = '9.9.9.9', ua = 'Mozilla/5.0 (iPhone) Mobile' } = {}) => worker.fetch(new Request('https://api.cardtab.app/s/ev', { method: 'POST', headers: { origin, 'content-type': 'text/plain', 'cf-connecting-ip': ip, 'cf-ipcountry': 'US', 'user-agent': ua }, body: JSON.stringify(body) }), env, {});
 assert.equal((await site({ ref: 'https://www.google.com/', ev: [{ e: 'pv', d: '/' }, { e: 'sec', d: 'pricing' }, { e: 'nope', d: 'x' }] })).status, 204);
@@ -58,4 +59,25 @@ let w = await (await call('/auth/admin/site', { cookie: boss })).json();
 assert.equal(w.visitors.at(-1), 2); assert.equal(w.events.find(x => x.ev === 'join').n, 1); assert.equal(w.countries[0].dim, 'US');
 w = await (await call('/auth/admin/site?dev=desk', { cookie: boss })).json(); assert.equal(w.visitors.at(-1), 1);
 assert.equal((await call('/auth/admin/site', { cookie: a })).status, 403);
+// ---- v50.4: features, upgrades, where people came from ----
+await call('/auth/ev', { method: 'POST', cookie: a, body: { dev: 'phone', secs: 10, ev: [{ e: 'journey', d: 'google~hero.pricing.stories~stories' }, { e: 'page_view', d: 'board' }, { e: 'theme', d: 'Neon' }, { e: 'limit', d: 'entries' }, { e: 'prem_open', d: 'layouts' }] } });
+assert.ok(!sq.prepare("SELECT 1 FROM an_day WHERE ev='journey'").get(), 'the journey itself is not a count');
+let U = sq.prepare('SELECT * FROM an_user u JOIN users x ON x.id=u.uid WHERE x.email=?').get('fan@x.com');
+assert.equal(U.src, 'google'); assert.equal(U.sec, 'hero.pricing.stories'); assert.equal(U.last_prem, 'layouts'); assert.equal(U.up_day, null);
+sq.prepare("UPDATE users SET plan='premium' WHERE email='fan@x.com'").run();
+await call('/auth/ev', { method: 'POST', cookie: a, body: { dev: 'phone', secs: 10, ev: [{ e: 'layout_save', d: '1' }] } });
+U = sq.prepare('SELECT * FROM an_user u JOIN users x ON x.id=u.uid WHERE x.email=?').get('fan@x.com');
+assert.equal(U.up_day, t); assert.equal(U.up_ctx, 'layouts'); assert.equal(U.plan, 'premium');
+await call('/auth/ev', { method: 'POST', cookie: a, body: { ev: [{ e: 'journey', d: 'reddit~faq~' }] } });
+assert.equal(sq.prepare('SELECT src FROM an_user u JOIN users x ON x.id=u.uid WHERE x.email=?').get('fan@x.com').src, 'google', 'first journey sticks');
+s = await (await call('/auth/admin/stats', { cookie: boss })).json();
+const R = Object.fromEntries(s.reach.map(r => [r.feat, r.n]));
+assert.equal(R.board, 1); assert.equal(R.stories_style, 1); assert.equal(R.entry_limit, 1); assert.equal(R.layouts, 1);
+assert.equal(s.upgraders, 1); assert.deepEqual(s.upCtx, [{ dim: 'layouts', n: 1 }]);
+const UF = Object.fromEntries(s.upFeat.map(r => [r.feat, r.n])); assert.equal(UF.entry_limit, 1); assert.ok(!UF.layouts, 'saving layouts came after the upgrade');
+assert.equal(s.freeBase, 0, 'no one left on Free'); assert.equal(s.signupSrc.find(x => x.dim === 'google').upgraded, 1);
+assert.equal(s.signupSec.find(x => x.dim === 'pricing').n, 1);
+await site({ ref: 'https://www.instagram.com/', ev: [{ e: 'join', d: 'waitlist' }, { e: 'join_src', d: '' }, { e: 'join_sec', d: 'pricing' }, { e: 'join_demo', d: 'stories' }, { e: 'join_scroll', d: '75' }] }, { ip: '7.7.7.7' });
+s = await (await call('/auth/admin/stats', { cookie: boss })).json();
+assert.deepEqual(s.join.find(x => x.ev === 'join_src'), { ev: 'join_src', dim: 'instagram', n: 1 });
 console.log('analytics tests ok');

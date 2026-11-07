@@ -40,6 +40,7 @@
   function hook() {
     wrap(window, 'CTBoardUpgrade', () => ev('upgrade', lastPrem || 'other'));
     if (window.CTAddSheet) wrap(window.CTAddSheet, 'open', () => ev('page_view', 'add a card'));
+    if (window.CTDash) wrap(window.CTDash, 'exportCSV', () => ev('export', 'csv'));
     if (window.CTImportUI) wrap(window.CTImportUI, 'open', () => ev('page_view', 'import'));
     if (S()) wrap(S(), 'add', input => { const list = Array.isArray(input) ? input : [input]; list.slice(0, 200).forEach(x => { if (!x) return; ev('entry_add', word(x.type) || 'entry'); const p = word(x.platform); if (p) ev('entry_platform', PLAT.includes(p) ? p : 'other'); if (x.game) ev('entry_game', word(x.game)); }); });
   }
@@ -47,6 +48,20 @@
   // which page is on screen: Stories over Board over Entries (read from the page itself, however it was opened)
   const pageNow = () => { const x = document.getElementById('csx'); if (x && x.classList.contains('in')) return 'stories'; const c = document.querySelector('.cbx'); if (c && !c.classList.contains('off')) return 'board'; const m = document.querySelector('.amp:not([hidden])'); if (m && m.dataset.p) return 'settings ' + m.dataset.p; return 'entries'; };
   setInterval(() => { if (visible) setPage(pageNow()); }, 1000);
+
+  // v50.4 ---------------------------------------------------------------------------------------------------------------
+  // What the website showed someone before they opened the app (cardtab.app adds ?ctj=source~sections~demos to its links to
+  // the app). Kept on this device until they're signed in, sent once, then forgotten. Used only as counts on our dashboard.
+  try { const u = new URL(location.href), j = u.searchParams.get('ctj'); if (j) { localStorage.setItem('ct.j', JSON.stringify({ j: j.slice(0, 300), t: Date.now() })); u.searchParams.delete('ctj'); history.replaceState(history.state, '', u.pathname + (u.search || '') + u.hash); } } catch (e) {}
+  function sendJourney() { try { const o = JSON.parse(localStorage.getItem('ct.j') || 'null'); if (!o) return; if (Date.now() - o.t > 30 * 864e5) { localStorage.removeItem('ct.j'); return; } const s = Sess() && Sess().get(); if (!s) return; if (on()) ev('journey', o.j); localStorage.removeItem('ct.j'); } catch (e) {} }
+  // the moments that can lead to Premium: running out of free entries, and every Upgrade button (named by where it sits)
+  let limitSent = false;
+  setInterval(() => { sendJourney(); try { const u = S() && S().usage && S().usage(); if (u && u.blocked && !limitSent) { limitSent = true; ev('limit', 'entries'); } } catch (e) {} }, 5000);
+  document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-upgrade],[data-act=premium]'); if (!b) return;
+    let ctx = 'upgrade button'; try { const u = S() && S().usage && S().usage(); if (/all time/i.test(b.textContent)) ctx = 'all time'; else if (b.closest('[data-act]') || b.dataset.act) ctx = 'tip'; else if (u && u.blocked) ctx = 'entries used up'; else if (u && u.left != null && u.left <= 5) ctx = 'entries nearly used'; } catch (er) {}
+    CTTrack.prem(ctx); }, true);
+  // longer ranges (All time and This year are Premium) and exports
+  document.addEventListener('change', e => { const t = e.target; if (!t || !window.CTMonth) return; try { const v = String(t.value || ''); if (v === 'all') ev('range', 'all time'); else if (/^year/.test(v)) ev('range', 'year'); } catch (er) {} }, true);
 
   window.CTTrack = { ev, page: setPage, flush, prem(ctx) { lastPrem = word(ctx) || 'other'; ev('prem_open', lastPrem); }, tap(head) { ev('prem_tap', lastPrem || 'other'); if (head) ev('prem_head_tap', head); }, get premCtx() { return lastPrem; } };
 })();

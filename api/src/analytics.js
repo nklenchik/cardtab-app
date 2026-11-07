@@ -15,15 +15,58 @@ export async function handleEvents(env, req, me, out) {
   const dev = b.dev === 'desk' ? 'desk' : 'phone', plan = me.plan === 'premium' ? 'premium' : 'free', d = day();
   const sum = new Map();
   for (const x of evs) {
-    if (!x || !EV_OK.test(x.e)) continue;
+    if (!x || !EV_OK.test(x.e) || x.e === 'journey') continue;
     const k = x.e + '\u0001' + clean(x.d), cur = sum.get(k) || { e: x.e, d: clean(x.d), n: 0, v: 0 };
     cur.n += Math.max(0, Math.min(500, +x.n || 1)); cur.v += Math.max(0, Math.min(86400, +x.v || 0)); sum.set(k, cur);
   }
   const st = [...sum.values()].map(r => env.DB.prepare('INSERT INTO an_day (day,ev,dim,plan,dev,n,v) VALUES (?,?,?,?,?,?,?) ON CONFLICT(day,ev,dim,plan,dev) DO UPDATE SET n=n+excluded.n, v=v+excluded.v').bind(d, r.e, r.d, plan, dev, r.n, r.v));
+  // v50.4: which features this person touched today (one row per feature per day), and their own small record: the day they
+  // first showed up, their plan, the last Premium screen they saw, the day they went Premium, and what the website showed them
+  const ex = [];
+  const feats = new Set(); let lastPrem = '', journey = '';
+  for (const x of evs) { if (!x || !EV_OK.test(x.e)) continue; const f = featOf(x.e, clean(x.d)); if (f) feats.add(f); if (x.e === 'prem_open') lastPrem = clean(x.d); if (x.e === 'journey') journey = String(x.d || '').slice(0, 300); }
+  feats.forEach(f => ex.push(env.DB.prepare('INSERT OR IGNORE INTO an_feat (day,uid,feat,plan,dev) VALUES (?,?,?,?,?)').bind(d, me.id, f, plan, dev)));
+  try {
+    const u = await env.DB.prepare('SELECT plan, up_day, src FROM an_user WHERE uid=?').bind(me.id).first();
+    const J = parseJourney(journey);
+    if (!u) ex.push(env.DB.prepare('INSERT OR IGNORE INTO an_user (uid,first_day,plan0,plan,last_prem,src,sec,demo) VALUES (?,?,?,?,?,?,?,?)').bind(me.id, d, plan, plan, lastPrem || null, J ? J.src : null, J ? J.sec : null, J ? J.demo : null));
+    else {
+      if (u.plan !== 'premium' && plan === 'premium' && !u.up_day) ex.push(env.DB.prepare('UPDATE an_user SET up_day=?, up_ctx=COALESCE(?, last_prem, ?) WHERE uid=?').bind(d, lastPrem || null, 'not seen', me.id));
+      if (lastPrem) ex.push(env.DB.prepare('UPDATE an_user SET last_prem=? WHERE uid=?').bind(lastPrem, me.id));
+      if (u.plan !== plan) ex.push(env.DB.prepare('UPDATE an_user SET plan=? WHERE uid=?').bind(plan, me.id));
+      if (J && !u.src) ex.push(env.DB.prepare('UPDATE an_user SET src=?, sec=?, demo=? WHERE uid=?').bind(J.src, J.sec, J.demo, me.id));
+    }
+    if (J && (!u || !u.src)) { ex.push(env.DB.prepare('INSERT INTO an_day (day,ev,dim,plan,dev,n,v) VALUES (?,?,?,?,?,1,0) ON CONFLICT(day,ev,dim,plan,dev) DO UPDATE SET n=n+1').bind(d, 'signup_src', J.src, plan, dev)); }
+  } catch (e) { /* the new tables aren't there until schema.sql is run again: counting carries on without them */ }
   const secs = Math.max(0, Math.min(3600, Math.round(+b.secs || 0)));
   st.push(env.DB.prepare('INSERT INTO an_active (day,uid,plan,dev,secs) VALUES (?,?,?,?,?) ON CONFLICT(day,uid) DO UPDATE SET secs=secs+excluded.secs, plan=excluded.plan, dev=excluded.dev').bind(d, me.id, plan, dev, secs));
-  await env.DB.batch(st);
+  try { await env.DB.batch(st.concat(ex)); } catch (e) { if (!ex.length) throw e; await env.DB.batch(st); }
   return out({ ok: true });
+}
+
+// v50.4 features: what each count says someone used (the admin page's Features and Upgrades tabs)
+function featOf(e, d) {
+  switch (e) {
+    case 'page_view': return d === 'board' ? 'board' : d === 'stories' ? 'stories' : d === 'add a card' ? 'add' : d === 'import' ? 'import' : /^settings/.test(d) ? 'settings' : null;
+    case 'entry_add': return 'add';
+    case 'widget_add': case 'widget_remove': case 'widget_size': return 'board_edit';
+    case 'layout_save': case 'layout_update': return 'layouts';
+    case 'ask': return 'ask';
+    case 'story_play': case 'story_view': return 'stories_watch';
+    case 'story_save': case 'story_share': return 'stories_save';
+    case 'theme': case 'background': return 'stories_style';
+    case 'limit': return 'entry_limit';
+    case 'range': return d === 'all time' || d === 'year' ? 'long_range' : null;
+    case 'export': return 'export';
+    default: return null;
+  }
+}
+// what the website showed someone before they opened the app: "source~section.section~demo.demo"
+function parseJourney(j) {
+  if (!j) return null; const [src, sec, demo] = String(j).split('~');
+  const list = s => (s || '').split('.').map(x => x.replace(/[^a-z0-9-]/gi, '').slice(0, 24).toLowerCase()).filter(Boolean).slice(0, 16).join('.');
+  const S = String(src || 'direct').replace(/[^a-z0-9 .-]/gi, '').slice(0, 32).toLowerCase() || 'direct';
+  return { src: S, sec: list(sec) || null, demo: list(demo) || null };
 }
 
 // ---------- the admin dashboard's numbers ----------
@@ -66,6 +109,24 @@ export async function handleStats(env, req, out) {
     FROM users u LEFT JOIN an_active a ON a.uid = u.id
     WHERE u.created_at >= strftime('%s', date('now','start of month','-2 months'))` + notAdmin.replace(/lower\(email\)/, 'lower(u.email)') + ' GROUP BY m ORDER BY m', adm);
   const evToday = await q('SELECT SUM(n) n FROM an_day WHERE day=?', [today]);
+  // v50.4: feature reach (who used what, of everyone active), what upgraders had used before going Premium, and where people came from
+  const pf = (plan ? ' AND f.plan=?' : '') + (dev ? ' AND f.dev=?' : ''), pp = [...(plan ? [plan] : []), ...(dev ? [dev] : [])];
+  const safe = p => p.catch(() => []);
+  const [reach, reachPrev, upg, upgFeat, baseN, baseFeat, upCtx, srcRows, joinSec] = await Promise.all([
+    safe(q('SELECT feat, COUNT(DISTINCT uid) n FROM an_feat f WHERE day BETWEEN ? AND ?' + pf + ' GROUP BY feat', [from, to, ...pp])),
+    safe(q('SELECT feat, COUNT(DISTINCT uid) n FROM an_feat f WHERE day BETWEEN ? AND ?' + pf + ' GROUP BY feat', [pFrom, pTo, ...pp])),
+    safe(q('SELECT COUNT(*) n, AVG(julianday(up_day) - julianday(first_day)) days FROM an_user WHERE up_day BETWEEN ? AND ?', [from, to])),
+    safe(q('SELECT f.feat, COUNT(DISTINCT f.uid) n FROM an_feat f JOIN an_user u ON u.uid = f.uid WHERE u.up_day BETWEEN ? AND ? AND f.day <= u.up_day AND f.plan = \'free\' GROUP BY f.feat', [from, to])),
+    safe(q('SELECT COUNT(DISTINCT a.uid) n FROM an_active a LEFT JOIN an_user u ON u.uid = a.uid WHERE a.day BETWEEN ? AND ? AND a.plan = \'free\' AND (u.up_day IS NULL OR u.up_day > ?)', [from, to, to])),
+    safe(q('SELECT f.feat, COUNT(DISTINCT f.uid) n FROM an_feat f LEFT JOIN an_user u ON u.uid = f.uid WHERE f.day BETWEEN ? AND ? AND f.plan = \'free\' AND (u.up_day IS NULL OR u.up_day > ?) GROUP BY f.feat', [from, to, to])),
+    safe(q('SELECT up_ctx dim, COUNT(*) n FROM an_user WHERE up_day BETWEEN ? AND ? GROUP BY up_ctx', [from, to])),
+    safe(q('SELECT COALESCE(src, \'not known\') src, plan0, plan, sec, demo, up_day FROM an_user WHERE first_day BETWEEN ? AND ?', [from, to])),
+    safe(q("SELECT ev, dim, SUM(n) n FROM an_site WHERE day BETWEEN ? AND ? AND ev IN ('join_src','join_sec','join_demo','join_scroll') GROUP BY ev, dim", [from, to]))
+  ]);
+  const tally = (rows, key) => { const m = {}; rows.forEach(r => String(r[key] || '').split('.').filter(Boolean).forEach(k => { m[k] = (m[k] || 0) + 1; })); return Object.entries(m).map(([dim, n]) => ({ dim, n })).sort((a, b) => b.n - a.n); };
+  const bySrc = {}; srcRows.forEach(r => { const o = bySrc[r.src] = bySrc[r.src] || { dim: r.src, n: 0, free: 0, premium: 0, upgraded: 0 }; o.n++; o[r.plan0 === 'premium' ? 'premium' : 'free']++; if (r.up_day) o.upgraded++; });
+  const v504 = { reach, reachPrev, upgraders: (upg[0] || {}).n || 0, upDays: (upg[0] || {}).days || 0, upFeat: upgFeat, freeBase: (baseN[0] || {}).n || 0, freeFeat: baseFeat, upCtx,
+    signupSrc: Object.values(bySrc).sort((a, b) => b.n - a.n), signupSec: tally(srcRows, 'sec'), signupDemo: tally(srcRows, 'demo'), signupKnown: srcRows.filter(r => r.src !== 'not known').length, signupAll: srcRows.length, join: joinSec };
   return out({
     from, to, pFrom, pTo, days: n, plan: plan || 'all', dev: dev || 'all',
     active: cur.active, activePrev: prev.active, secs: cur.secs, secsPrev: prev.secs, people, peoplePrev,
@@ -73,7 +134,7 @@ export async function handleStats(env, req, out) {
     members: Object.fromEntries(members.map(r => [r.plan || 'free', r.n])),
     signups: signups, signupsPrev: (signPrev[0] || {}).n || 0,
     cohorts, askSpend: spend[0] || null, eventsToday: (evToday[0] || {}).n || 0,
-    askCap: +(env.ASK_MONTH_USD || 25)
+    askCap: +(env.ASK_MONTH_USD || 25), ...v504
   });
 }
 
@@ -82,6 +143,7 @@ export async function cleanupAnalytics(env) {
   const cut = addDays(day(), -731);
   // the website's daily visitor codes can never be remade once yesterday's random value is gone
   await env.DB.batch([env.DB.prepare('DELETE FROM an_day WHERE day < ?').bind(cut), env.DB.prepare('DELETE FROM an_active WHERE day < ?').bind(cut), env.DB.prepare('DELETE FROM an_site WHERE day < ?').bind(cut), env.DB.prepare('DELETE FROM an_site_vis WHERE day < ?').bind(cut), env.DB.prepare('DELETE FROM an_salt WHERE day < ?').bind(day())]);
+  await env.DB.prepare('DELETE FROM an_feat WHERE day < ?').bind(cut).run().catch(() => {});
 }
 
 // ================= website (cardtab.app) visits — v50.1 =================
@@ -90,7 +152,7 @@ export async function cleanupAnalytics(env) {
 // tomorrow the same person gets a different code. Country comes from Cloudflare; the page sends only what it is
 // (path, which sections came into view, demo taps, button taps, how far down it was scrolled).
 const SITE_ORIGINS = /^https:\/\/(www\.)?cardtab\.app$|^https:\/\/[a-z0-9-]+\.cardtab-site\.pages\.dev$/;
-const SITE_EV = new Set(['pv', 'sec', 'demo', 'cta', 'scroll', 'join', 'out']);
+const SITE_EV = new Set(['pv', 'sec', 'demo', 'cta', 'scroll', 'join', 'out', 'join_src', 'join_sec', 'join_demo', 'join_scroll']);
 const hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
 function srcOf(ref, utm) {
   if (utm) return clean(utm).toLowerCase();
@@ -117,7 +179,7 @@ export async function handleSiteEvent(env, req) {
   const vh = hex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(salt.salt + '|' + ip + '|' + ua))).slice(0, 24);
   const src = srcOf(b.ref || '', b.utm || ''), cc = clean((req.cf && req.cf.country) || req.headers.get('cf-ipcountry') || '').slice(0, 2) || '—';
   const sum = new Map();
-  for (const x of (Array.isArray(b.ev) ? b.ev.slice(0, 60) : [])) { if (!x || !SITE_EV.has(x.e)) continue; const k = x.e + '\u0001' + clean(x.d); const c = sum.get(k) || { e: x.e, d: clean(x.d), n: 0 }; c.n += 1; sum.set(k, c); }
+  for (const x of (Array.isArray(b.ev) ? b.ev.slice(0, 60) : [])) { if (!x || !SITE_EV.has(x.e)) continue; const dd = x.e === 'join_src' ? src : clean(x.d); const k = x.e + '\u0001' + dd; const c = sum.get(k) || { e: x.e, d: dd, n: 0 }; c.n += 1; sum.set(k, c); }
   const st = [...sum.values()].map(r => env.DB.prepare('INSERT INTO an_site (day,ev,dim,dev,n) VALUES (?,?,?,?,?) ON CONFLICT(day,ev,dim,dev) DO UPDATE SET n=n+excluded.n').bind(d, r.e, r.d, dev, r.n));
   st.push(env.DB.prepare('INSERT INTO an_site_vis (day,vh,dev,src,cc) VALUES (?,?,?,?,?) ON CONFLICT(day,vh) DO NOTHING').bind(d, vh, dev, src, cc));
   await env.DB.batch(st);
