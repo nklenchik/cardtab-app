@@ -1,3 +1,4 @@
+import { handleHealth } from './health.js';
 import { handleShare } from './share.js';
 import { handleEvents, handleStats, handleSiteStats } from './analytics.js';
 import { handleAsk } from './ask.js';
@@ -163,6 +164,10 @@ export async function handleAuth(env, req, path) {
   if ((path === '/auth/share' || path === '/auth/share/invite') && req.method === 'POST') return handleShare(env, req, Object.assign({}, me, { admin: isAdmin(env, me.email) }), path, (body, status = 200) => out(env, req, body, status));
   // v50 analytics: the app's counts, and the admin dashboard's numbers
   if (path === '/auth/ev' && req.method === 'POST') return handleEvents(env, req, me, (body, status = 200) => out(env, req, body, status));
+  if (path === '/auth/admin/health') {
+    if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);
+    return handleHealth(env, req, (body, status = 200) => out(env, req, body, status));
+  }
   if (path === '/auth/admin/stats') {
     if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);
     return handleStats(env, req, (body, status = 200) => out(env, req, body, status));

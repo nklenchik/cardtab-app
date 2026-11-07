@@ -277,7 +277,7 @@ function barsSVG(sp,W,H){
   return s+hit+'</svg>'}
 // v50.10: a chart is drawn for the size its box has at that moment; if the box settles to another size afterwards (a
 // widget that was just added, flown in or resized), it's drawn again, so bars never sit in a box of the wrong size
-const CVRO=window.ResizeObserver?new ResizeObserver(es=>{es.forEach(en=>{const el=en.target;if(!el.isConnected||!el._sp){CVRO.unobserve(el);return}const W=Math.floor(el.clientWidth),H=Math.floor(el.clientHeight);if(W>4&&H>4&&(Math.abs(W-el._wh[0])>2||Math.abs(H-el._wh[1])>2))drawCv(el,el._sp)})}):null;
+const CVRO=window.ResizeObserver?new ResizeObserver(es=>{es.forEach(en=>{const el=en.target;if(!el.isConnected||!el._sp){CVRO.unobserve(el);return}const W=Math.floor(el.clientWidth),H=Math.floor(el.clientHeight);if(W>4&&H>4&&(Math.abs(W-el._wh[0])>2||Math.abs(H-el._wh[1])>2)){drawCv(el,el._sp);if(typeof fitSoon==='function'&&el.closest('#simple'))fitSoon()}})}):null;
 function fillCharts(root,ctx){root.querySelectorAll('.cv[data-cv]').forEach(el=>{const sp=ctx.cv[+el.dataset.cv];if(!sp)return;drawCv(el,sp);if(CVRO&&!el._ro){el._ro=1;CVRO.observe(el)}})}
 function drawCv(el,sp){{const W=Math.floor(el.clientWidth),H=Math.floor(el.clientHeight);el._sp=sp;el._wh=[W,H];el.innerHTML=hideMoney(barsSVG(sp,W,H));
   const svg=el.querySelector('svg');if(!svg||!sp.tip)return;if(TOUCH.matches){scrubChart(el,svg,sp);return}
@@ -1413,7 +1413,7 @@ const FIT_DROP=['.k-pricey .xl','.cap','.kspk','.k-budget .cv','.k-feat .fpc','.
 // widgets, where the words sit on the picture) runs up under the widget's title
 function spills(wb){const R=wb.getBoundingClientRect();if(!R.height)return false;if(wb.scrollHeight>wb.clientHeight+4)return true;// (long names that run wide are shortened with … by their own styles, so only height counts)
   const wh=wb.parentElement.querySelector(':scope>.wh .ttl:not(.fh)'),H=wh&&wh.getBoundingClientRect(),over=H&&H.height&&H.bottom>R.top+2;
-  for(const el of wb.querySelectorAll('*')){if(el.closest('.fh,.d,.ph'))continue;/* .d = a row's details, folded away until tapped */const r=el.getBoundingClientRect();if(!r.width)continue;
+  for(const el of wb.querySelectorAll('*')){if(el.closest('.fh,.d,.ph'))continue;if(el.closest('.cv'))continue;/* v50.12: charts redraw to fit their box, so a chart still drawn for the old size never counts as cut off *//* .d = a row's details, folded away until tapped */const r=el.getBoundingClientRect();if(!r.width)continue;
     const txt=[...el.childNodes].some(n=>n.nodeType===3&&n.textContent.trim());
     if(txt&&el.scrollHeight>el.clientHeight+6){const cs=getComputedStyle(el);/* v50.3: text clamped to a line or two ends in … on purpose — that isn't cut off */if(cs.overflowY!=='visible'&&(cs.webkitLineClamp||'none')==='none')return true}
     if(!r.height)continue;/* v50.5: only words can be cut off — a zoomed card picture or a bar running past the edge is clipped on purpose */if((r.top<R.top-4||r.bottom>R.bottom+3)&&el.tagName!=='IMG'&&(el.textContent||'').trim())return true;
@@ -1589,7 +1589,7 @@ const shHash=s=>{let h=5381;for(let i=0;i<s.length;i++)h=(h*33^s.charCodeAt(i))>
 function shareSnap(){const sim=$('simple'),W=sim.clientWidth||1200,was=viewing;viewing=true;
   const box=document.createElement('div');box.className='simple shsnap';box.setAttribute('style',(sim.getAttribute('style')||'')+';position:fixed;left:-99999px;top:0;width:'+W+'px;visibility:hidden;pointer-events:none');
   let ctx;try{ctx=ctxNow();box.innerHTML=layout.map(w=>widgetHTML(w,ctx)).join('');sim.parentNode.appendChild(box);try{fillCharts(box,ctx)}catch(e){}box.querySelectorAll(':scope>.w').forEach(w=>{try{fitW(w)}catch(e){}})}finally{viewing=was}
-  box.querySelectorAll('.rm,.grip,.wmore,.kback').forEach(x=>x.remove());box.querySelectorAll('.fw').forEach(f=>f.classList.add('in'));fwToBg(box);
+  box.querySelectorAll('.rm,.grip,.wmore,.kback').forEach(x=>x.remove());box.querySelectorAll('.fw').forEach(f=>f.classList.add('in'));fwToBg(box);/* v50.12: each chart also carries a phone-width drawing, which the shared page shows on small screens */{const v0=viewing;viewing=true;try{box.querySelectorAll('.cv').forEach(c=>{if(!c._sp||!c._wh)return;try{const h=hideMoney(barsSVG(c._sp,320,96));if(h)c.insertAdjacentHTML('beforeend','<div class="cvph">'+h+'</div>')}catch(e){}});}finally{viewing=v0}}
   box.querySelectorAll('[data-drill],[tabindex],[role=button],[data-id],[aria-haspopup]').forEach(x=>{['data-drill','tabindex','role','data-id','aria-haspopup','aria-expanded'].forEach(a=>x.removeAttribute(a))});
   box.querySelectorAll('img').forEach(i=>{const s=i.getAttribute('src');if(s&&!/^(https?:|data:)/.test(s))i.setAttribute('src',new URL(s,location.href).href);i.removeAttribute('loading')});
   const html=box.innerHTML;box.remove();const f=(profile.first||'').trim();

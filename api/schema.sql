@@ -62,3 +62,5 @@ CREATE TABLE IF NOT EXISTS an_user ( uid TEXT PRIMARY KEY, first_day TEXT NOT NU
 -- v50.5 shared Card Boards: one link per account; the board as visitors see it (amounts / names already hidden if chosen)
 CREATE TABLE IF NOT EXISTS shares ( id TEXT PRIMARY KEY, uid TEXT NOT NULL UNIQUE, html TEXT NOT NULL, meta TEXT, live INTEGER NOT NULL DEFAULT 1, exp_opt TEXT NOT NULL DEFAULT 'never', exp INTEGER, created INTEGER NOT NULL, updated INTEGER NOT NULL, views INTEGER NOT NULL DEFAULT 0, invites INTEGER NOT NULL DEFAULT 0, inv_day TEXT );
 CREATE TABLE IF NOT EXISTS share_open ( id TEXT PRIMARY KEY, last INTEGER NOT NULL );
+-- v50.12 daily check: one row per day with each check's result (kept 90 days)
+CREATE TABLE IF NOT EXISTS health ( day TEXT PRIMARY KEY, at INTEGER NOT NULL, ok INTEGER NOT NULL, n_bad INTEGER NOT NULL DEFAULT 0, n_warn INTEGER NOT NULL DEFAULT 0, checks TEXT );

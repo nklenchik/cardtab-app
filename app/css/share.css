@@ -16,3 +16,6 @@
 .shv .shfoot{margin:28px 0 0;font-size:12.5px;font-weight:600;color:var(--muted);text-align:center;line-height:1.5}
 .shv .shfoot a{color:inherit}
 .shv #cb .simple>.w{cursor:default}
+/* v50.12: on phones, charts use the drawing made for a narrow screen, so their labels stay readable */
+.shv .cvph{display:none}
+@media(max-width:760px){.shv #cb .cv:has(.cvph)>svg{display:none}.shv #cb .cvph{display:block;width:100%;height:100%}.shv #cb .cvph svg{display:block;width:100%;height:100%}}
