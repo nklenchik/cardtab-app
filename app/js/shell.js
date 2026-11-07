@@ -63,7 +63,7 @@
   function wireBoard() {
     if (wired || !$('cb-edit')) return; wired = true;
     const edit = $('cb-edit'), share = $('cb-share');
-    const eb = document.createElement('button'); eb.type = 'button'; eb.className = 'sh-pillbtn';
+    const eb = document.createElement('button'); eb.type = 'button'; eb.className = 'sh-pillbtn sh-edit';
     const paintEdit = () => { const on = edit.classList.contains('on'); eb.classList.toggle('on', on); eb.innerHTML = (edit.querySelector('svg') ? edit.querySelector('svg').outerHTML : '') + '<span>' + (on ? 'Done' : 'Edit') + '</span>'; };
     paintEdit(); new MutationObserver(paintEdit).observe(edit, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
     eb.addEventListener('click', () => edit.click());

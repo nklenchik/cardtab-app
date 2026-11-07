@@ -84,12 +84,12 @@ const RULES = (view, today) => 'You are Ask, inside Card Tab, an app where a tra
 
 async function claude(env, body) {
   const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, body: JSON.stringify(body) });
-  if (!r.ok) { const e = new Error('ai ' + r.status); e.status = r.status; throw e; }
+  if (!r.ok) { let m = ''; try { const j = await r.json(); m = (j.error && j.error.message) || ''; } catch (er) {} const e = new Error('ai ' + r.status); e.status = r.status; e.detail = String(m).slice(0, 240); throw e; }
   return r.json();
 }
 
 export async function handleAsk(env, req, me, out) {
-  if (!env.ANTHROPIC_API_KEY) return out({ error: 'Ask isn’t set up yet.' }, 503);
+  if (!env.ANTHROPIC_API_KEY) return out({ error: 'setup' }, 503);
   const L = askLimits(env), m = month(), plan = me.plan === 'premium' ? 'premium' : 'free', limit = L[plan], admin = me.role === 'admin';
   const used = (await env.DB.prepare('SELECT n FROM ask_usage WHERE user_id=? AND month=?').bind(me.id, m).first() || {}).n || 0;
   const info = { limit, left: Math.max(0, limit - used), resets: resets(), plan };
@@ -120,7 +120,10 @@ export async function handleAsk(env, req, me, out) {
     }
   } catch (e) {
     if (tin || tout) await spend(env, m, tin, tout);
-    return out(Object.assign({ error: e.status === 429 || e.status === 529 ? 'busy' : 'failed' }, info), 502);
+    // why, in a word the app can explain (admins also see Anthropic's own message, to fix setup problems fast)
+    const why = e.status === 429 || e.status === 529 || e.status === 503 ? 'busy' : e.status === 401 || e.status === 403 ? 'key' : e.status === 400 && /credit|billing|balance/i.test(e.detail || '') ? 'billing' : e.status === 404 ? 'model' : 'failed';
+    console.log('ask error', e.status || '', e.detail || e.message);
+    return out(Object.assign({ error: why, detail: admin ? (e.status ? e.status + ': ' : '') + (e.detail || e.message) : undefined }, info), 502);
   }
   if (!text) text = 'I couldn’t work that one out. Try asking it a different way.';
   const writes = [env.DB.prepare('INSERT INTO ask_usage (user_id,month,n) VALUES (?,?,1) ON CONFLICT(user_id,month) DO UPDATE SET n=n+1').bind(me.id, m)];

@@ -1765,3 +1765,19 @@ dialog.zm::backdrop{background:transparent}
 .sh-lay .sh-pm{font-style:normal;font-size:10px;font-weight:800;color:var(--s-brand,#a50e37);background:color-mix(in srgb,var(--s-brand,#a50e37) 12%,transparent);padding:2px 7px;border-radius:99px;margin-left:2px}
 .sh-lay .sh-pm[hidden]{display:none}
 @media(max-width:760px){.sh-lay{width:38px;padding:0!important;justify-content:center}.sh-lay span,.sh-lay .sh-pm{display:none!important}}
+
+/* ===== v47 phones: the round button changes with the page (Entries: Add · Board: Edit, then Add widget · Stories: Themes) ===== */
+.ct-fab{position:fixed}
+.ct-fab .fi{grid-area:1/1;transition:opacity .2s ease,transform .32s cubic-bezier(.2,.8,.2,1)}
+.ct-fab .fi:not(.fi-add){opacity:0;transform:rotate(-90deg) scale(.6)}
+html[data-fab="edit"] .ct-fab .fi-add,html[data-fab="theme"] .ct-fab .fi-add{opacity:0;transform:rotate(90deg) scale(.6)}
+html[data-fab="edit"] .ct-fab .fi-edit,html[data-fab="theme"] .ct-fab .fi-theme{opacity:1;transform:none}
+html[data-fab="widget"] .ct-fab .fi-add{opacity:1;transform:rotate(180deg)}
+@media(max-width:760px){
+ html[data-fab="edit"] .ct-fab,html[data-fab="theme"] .ct-fab{background:var(--ct-text,#22221f)!important;color:var(--s-card,#fff)!important;box-shadow:0 10px 24px -8px rgba(0,0,0,.45)!important}
+ .ct-fab{transition:transform .18s cubic-bezier(.2,.8,.2,1),opacity .2s,background-color .3s ease!important}
+ /* Board's Edit lives in the round button on phones; the header shows Done only while editing */
+ .ct-shell .sh-edit:not(.on){display:none!important}
+ html.cs-modal .ct-fab{opacity:0;pointer-events:none}
+}
+@media(prefers-reduced-motion:reduce){.ct-fab .fi{transition:opacity .01s}}

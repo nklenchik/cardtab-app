@@ -190,7 +190,31 @@
   }
   window.CTTabGo = go;
   document.addEventListener('click', e => { const a = e.target.closest('[data-tab]'); if (!a) return; go(a.dataset.tab, a); });
-  document.addEventListener('click', e => { if (e.target.closest('#ct-fab')) { e.preventDefault(); if (window.CTOpenAdd) window.CTOpenAdd(); else { const a = $('ct-add'); if (a) a.click(); } } });
+  // v47 phones: the round button does the main thing for the page you're on. Entries: Add New. Board: Edit, and while
+  // editing, Add widget. Stories: Themes. It stays put and its icon turns and cross-fades (transform and opacity only).
+  const fab = $('ct-fab');
+  const FAB = { add: 'Add New', edit: 'Edit board', widget: 'Add widget', theme: 'Themes' };
+  const storiesWin = () => { try { const f = document.querySelector('#csx iframe'); return f && f.contentWindow; } catch (e) { return null; } };
+  function fabMode() {
+    const sh = document.querySelector('.ct-shell'), page = (sh && sh.dataset.page) || 'entries';
+    if (page === 'board') { const ed = $('cb-edit'); return ed ? (ed.classList.contains('on') ? 'widget' : 'edit') : 'add'; }
+    if (page === 'stories') { const w = storiesWin(); return w && w.csThemes ? 'theme' : 'add'; }
+    return 'add';
+  }
+  function paintFab() { if (!fab) return; const m = fabMode(); if (document.documentElement.dataset.fab !== m) { document.documentElement.dataset.fab = m; fab.setAttribute('aria-label', FAB[m]); } }
+  paintFab();
+  // the header (made later, by shell.js), Card Board's Edit and Stories' themes all arrive after this runs, so watch for each
+  { let shW = null, edW = null; const watch = () => {
+      const sh = document.querySelector('.ct-shell'); if (sh && sh !== shW) { shW = sh; new MutationObserver(paintFab).observe(sh, { attributes: true, attributeFilter: ['data-page'] }); }
+      const ed = $('cb-edit'); if (ed && ed !== edW) { edW = ed; new MutationObserver(paintFab).observe(ed, { attributes: true, attributeFilter: ['class'] }); }
+      paintFab(); };
+    watch(); const t = setInterval(() => { watch(); if (shW && edW && storiesWin() && storiesWin().csThemes) clearInterval(t); }, 600); }
+  document.addEventListener('click', e => { if (!e.target.closest('#ct-fab')) return; e.preventDefault();
+    const m = fabMode();
+    if (m === 'edit') { const ed = $('cb-edit'); if (ed) ed.click(); return; }
+    if (m === 'widget') { const a = $('addw'); if (a) a.click(); return; }
+    if (m === 'theme') { const w = storiesWin(); if (w && w.csThemes) w.csThemes.all(); return; }
+    if (window.CTOpenAdd) window.CTOpenAdd(); else { const a = $('ct-add'); if (a) a.click(); } });
   // keep the bar's highlight on the page you're on
   function syncTabs() {
     const cur = stOpen() ? 'stories' : cbOpen() ? 'board' : 'entries';

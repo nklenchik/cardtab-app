@@ -71,7 +71,7 @@ assert.equal(r.status, 429); assert.equal(j.error, 'limit'); assert.equal(j.left
 sq.prepare("UPDATE users SET plan='premium' WHERE email='fan@x.com'").run();
 j = await (await call('/auth/ask', { method: 'POST', cookie: fan, body: { check: true } })).json(); assert.equal(j.limit, 50); assert.equal(j.left, 45);
 // a failed answer doesn't use up a question
-mode = 'down'; r = await call('/auth/ask', { method: 'POST', cookie: fan, body: { q: 'x' } }); j = await r.json(); assert.equal(r.status, 502); assert.equal(j.error, 'busy'); assert.equal(j.left, 45); mode = 'ok';
+mode = 'down'; r = await call('/auth/ask', { method: 'POST', cookie: fan, body: { q: 'x' } }); j = await r.json(); assert.equal(r.status, 502); assert.equal(j.error, 'busy'); assert.equal(j.left, 45); assert.equal(j.detail, undefined, 'only admins see the details'); mode = 'ok';
 // the month's spending cap stops everyone (it reads the tokens used so far)
 const spent = sq.prepare('SELECT tin, tout FROM ask_spend').get(); assert.ok(spent.tin > 0 && spent.tout > 0);
 env.ASK_MONTH_USD = '0.0001'; r = await call('/auth/ask', { method: 'POST', cookie: fan, body: { q: 'x' } }); assert.equal(r.status, 503); assert.equal((await r.json()).error, 'busy'); delete env.ASK_MONTH_USD;
@@ -79,5 +79,9 @@ env.ASK_MONTH_USD = '0.0001'; r = await call('/auth/ask', { method: 'POST', cook
 const boss = await signIn('boss@x.com', '3.3.3.3'); sq.prepare("INSERT INTO ask_usage (user_id,month,n) SELECT id, ?, 99 FROM users WHERE email='boss@x.com'").run(new Date().toISOString().slice(0, 7));
 assert.equal((await call('/auth/ask', { method: 'POST', cookie: boss, body: { q: 'hi' } })).status, 200);
 // no key: says it isn't set up
-delete env.ANTHROPIC_API_KEY; assert.equal((await call('/auth/ask', { method: 'POST', cookie: fan, body: { q: 'x' } })).status, 503);
+mode = 'nokey'; const realFetch = globalThis.fetch; globalThis.fetch = async () => Response.json({ type: 'error', error: { type: 'authentication_error', message: 'invalid x-api-key' } }, { status: 401 });
+r = await call('/auth/ask', { method: 'POST', cookie: boss, body: { q: 'hi' } }); j = await r.json(); assert.equal(j.error, 'key'); assert.match(j.detail, /401: invalid x-api-key/);
+globalThis.fetch = async () => Response.json({ type: 'error', error: { type: 'invalid_request_error', message: 'Your credit balance is too low to access the Anthropic API.' } }, { status: 400 });
+j = await (await call('/auth/ask', { method: 'POST', cookie: boss, body: { q: 'hi' } })).json(); assert.equal(j.error, 'billing'); globalThis.fetch = realFetch;
+delete env.ANTHROPIC_API_KEY; r = await call('/auth/ask', { method: 'POST', cookie: fan, body: { q: 'x' } }); assert.equal(r.status, 503); assert.equal((await r.json()).error, 'setup');
 console.log('ask tests ok');
