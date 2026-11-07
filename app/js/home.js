@@ -276,6 +276,37 @@
     ['app-avatar', 'am-av'].forEach(id => { const el = $(id); if (!el) return; if (a.photo) { el.style.background = 'url(' + a.photo + ') center/cover'; el.textContent = ''; el.classList.add('has-photo'); } else if (a.color) { el.classList.remove('has-photo'); el.style.background = a.color; el.style.color = inkFor(a.color); if (first) el.textContent = first[0].toUpperCase(); } });
     const nm = document.querySelector('#am-name .am-nm'); if (nm && name) nm.textContent = name;
   };
+  // v50.9: your name and picture follow your account to every device. A small copy of the picture (160px) is synced;
+  // the original you cropped from stays on the device where you picked it.
+  window.CTMeSave = async function () {
+    const S = window.CTStore; if (!S || !S.setMeta) return;
+    let a = {}, pr = {}; try { a = JSON.parse(localStorage.getItem('cb.avatar')) || {}; pr = JSON.parse(localStorage.getItem('cb.profile')) || {}; } catch (e) {}
+    let photo = '';
+    if (a.photo) { try { const im = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = a.photo; });
+      for (const [sz, q] of [[160, .82], [128, .72], [96, .66]]) { const cv = document.createElement('canvas'); cv.width = cv.height = sz; cv.getContext('2d').drawImage(im, 0, 0, sz, sz); photo = cv.toDataURL('image/jpeg', q); if (photo.length < 20000) break; }
+      if (photo.length >= 20000) photo = ''; } catch (e) { photo = ''; } }
+    const t = Date.now(); try { localStorage.setItem('cb.me.t', String(t)); } catch (e) {}
+    await S.setMeta('me', { first: pr.first || '', last: pr.last || '', show: pr.show || '', color: a.color || '', photo, t });
+  };
+  function meFromAccount() {
+    const S = window.CTStore, m = S && S.meta && S.meta('me'); if (!m || !m.t) return;
+    let lt = 0; try { lt = +localStorage.getItem('cb.me.t') || 0; } catch (e) {} if (m.t <= lt) return;
+    try {
+      let a = {}; try { a = JSON.parse(localStorage.getItem('cb.avatar')) || {}; } catch (e) {}
+      const na = m.photo ? { color: m.color || a.color, photo: m.photo } : { color: m.color || a.color };
+      localStorage.setItem('cb.avatar', JSON.stringify(na));
+      let pr = {}; try { pr = JSON.parse(localStorage.getItem('cb.profile')) || {}; } catch (e) {}
+      localStorage.setItem('cb.profile', JSON.stringify(Object.assign(pr, { first: m.first || pr.first, last: m.last || '', show: m.show || pr.show })));
+      localStorage.setItem('cb.me.t', String(m.t));
+    } catch (e) {}
+    window.CTMePaint(); if (window.cbReloadMe) window.cbReloadMe();
+  }
+  // the first time after this update: once the account has answered and holds no profile yet, send this device's
+  let meBoot = false;
+  if (window.CTStore && CTStore.on) CTStore.on(r => { if (r === 'meta' || r === 'remote' || r === 'sync') meFromAccount();
+    if (r === 'sync' && !meBoot) { meBoot = true; try { if (!CTStore.meta('me') && (localStorage.getItem('cb.avatar') || localStorage.getItem('cb.profile'))) window.CTMeSave(); } catch (e) {} } });
+  setTimeout(meFromAccount, 1200);
+  setTimeout(() => { if (meBoot) return; meBoot = true; try { const ss = window.CTSession && CTSession.get && CTSession.get(); if (ss && window.CTStore && !CTStore.meta('me') && (localStorage.getItem('cb.avatar') || localStorage.getItem('cb.profile'))) window.CTMeSave(); } catch (e) {} }, 9000);
   setTimeout(() => window.CTMePaint(), 0); addEventListener('storage', e => { if (/^cb\.(avatar|profile)$/.test(e.key || '')) window.CTMePaint(); });
   // tapping your name at the top of the menu opens Edit profile
   document.addEventListener('click', e => { const h = e.target.closest('#app-menu .am-who'); if (!h || e.target.closest('.am-x')) return; e.stopPropagation(); if (window.CTMenu) window.CTMenu.close();

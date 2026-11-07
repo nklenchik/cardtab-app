@@ -1836,3 +1836,16 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 .am #am-cd>button{display:block;width:100%;text-align:left;padding:9px 10px;border:0;border-radius:8px;background:none;color:var(--text);font:inherit;font-size:13px;cursor:pointer}
 @media(hover:hover){.am #am-cd>button:hover{background:var(--am-hl)}}
 .am #am-cd>p{margin:0;padding:0 10px 6px;font-size:11.5px;line-height:1.4;color:var(--muted)}
+
+/* v50.9: Edit is only as wide as "Edit"; it grows to fit "Add widget" when editing starts (the hidden label sits out of
+   the way instead of holding the space) */
+.ct-shell .sh-edit .ebt{position:relative}
+.ct-shell .sh-edit:not(.on) .ebt-a,.ct-shell .sh-edit.on .ebt-e{position:absolute;left:0;top:0;white-space:nowrap;pointer-events:none}
+
+/* v50.9: the full card view's buttons on phones sit two by two with their whole names (they were squeezed into one
+   row and cut to "E…", "Chan…") */
+@media(max-width:560px){
+ .ct-gp .ct-demo-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .ct-gp .ct-demo-actions button{width:100%;height:42px;padding:0 10px;white-space:nowrap;overflow:visible;text-overflow:clip;display:flex;align-items:center;justify-content:center;text-align:center}
+ .ct-gp .ct-demo-actions [data-gact="del"]{margin-left:0!important;border:1px solid var(--s-hair)!important}
+}
