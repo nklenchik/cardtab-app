@@ -259,7 +259,7 @@ addEventListener('popstate',()=>{if(navSkip>0){navSkip--;if(!navSkip)while(navWa
 // cv() leaves a placeholder; fillCharts() measures it after layout and draws the SVG to fit.
 function cv(ctx,spec){ctx.cv.push(spec);return '<div class="cv" data-cv="'+(ctx.cv.length-1)+'"></div>'}
 function barsSVG(sp,W,H){
-  const d=sp.data,n=d.length;if(!n||W<30||H<24)return '';
+  const d=sp.data,n=d.length;if(!n||W<30||H<(sp.labels?24:14))return '';/* v50.10: small bar charts with no month letters still draw in short boxes */
   const slot=W/n,labs=sp.labels&&H>=70,every=slot<15?3:slot<22?2:1,fs=slot>40?11.5:10.5;
   const top=sp.best&&H>=110?40:4,bottom=H-(labs?20:0)-1;
   const vals=d.map(x=>x.v),lim=sp.limit||0,pos=Math.max(0,lim,...vals),neg=Math.max(0,...vals.map(v=>-v));
