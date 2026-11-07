@@ -20,11 +20,11 @@ if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIn
 <meta name="apple-mobile-web-app-title" content="Card Tab">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preload" href="fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/demo.css?v=48.1">
-<link rel="stylesheet" href="css/app.css?v=48.1">
-<link rel="stylesheet" href="css/addsheet.css?v=48.1">
-<link rel="stylesheet" href="css/soft.css?v=48.1">
-<link rel="stylesheet" href="css/new.css?v=48.1">
+<link rel="stylesheet" href="css/demo.css?v=48.2">
+<link rel="stylesheet" href="css/app.css?v=48.2">
+<link rel="stylesheet" href="css/addsheet.css?v=48.2">
+<link rel="stylesheet" href="css/soft.css?v=48.2">
+<link rel="stylesheet" href="css/new.css?v=48.2">
 </head>
 <body class="ct-demo">
 
@@ -99,8 +99,8 @@ if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIn
   </div>
 </div>
 
-<button type="button" class="ct-fab" id="ct-fab" aria-label="Add New"><svg class="fi fi-add" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><svg class="fi fi-edit" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg><svg class="fi fi-theme" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.3 0 2-.8 2-1.8 0-1.4-1.3-1.7-1.3-3 0-1 .8-1.7 1.9-1.7h2.3a3.6 3.6 0 0 0 3.6-3.6C20.5 6.6 16.7 3.5 12 3.5z"/><circle cx="7.6" cy="11.2" r="1" fill="currentColor"/><circle cx="10" cy="7.4" r="1" fill="currentColor"/><circle cx="14.5" cy="7.4" r="1" fill="currentColor"/></svg></button>
-<nav class="ct-tbar" id="ct-tbar" aria-label="Sections"><button type="button" data-tab="entries" aria-current="page"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6.5h11M8 12h11M8 17.5h11"/><circle cx="4.5" cy="6.5" r=".9" fill="currentColor"/><circle cx="4.5" cy="12" r=".9" fill="currentColor"/><circle cx="4.5" cy="17.5" r=".9" fill="currentColor"/></svg></span>Entries</button><button type="button" data-tab="board"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7.4" height="9.8" rx="2.2"/><rect x="3.5" y="15.7" width="7.4" height="4.8" rx="2"/><rect x="13.1" y="3.5" width="7.4" height="4.8" rx="2"/><rect x="13.1" y="10.7" width="7.4" height="9.8" rx="2.2"/></svg></span>Board</button><button type="button" data-tab="stories"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="3"/><path d="M8.2 6.2h3.3M13.5 6.2h2.3"/><path d="M8.5 16.5l2.4-2.8 2 1.8 2.8-3.6"/></svg></span>Stories</button></nav>
+<div class="ct-dock" id="ct-dock"><button type="button" class="ct-fab" id="ct-fab" aria-label="Add New"><svg class="fi fi-add" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><svg class="fi fi-edit" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg><svg class="fi fi-theme" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.3 0 2-.8 2-1.8 0-1.4-1.3-1.7-1.3-3 0-1 .8-1.7 1.9-1.7h2.3a3.6 3.6 0 0 0 3.6-3.6C20.5 6.6 16.7 3.5 12 3.5z"/><circle cx="7.6" cy="11.2" r="1" fill="currentColor"/><circle cx="10" cy="7.4" r="1" fill="currentColor"/><circle cx="14.5" cy="7.4" r="1" fill="currentColor"/></svg></button>
+<nav class="ct-tbar" id="ct-tbar" aria-label="Sections"><button type="button" data-tab="entries" aria-current="page"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6.5h11M8 12h11M8 17.5h11"/><circle cx="4.5" cy="6.5" r=".9" fill="currentColor"/><circle cx="4.5" cy="12" r=".9" fill="currentColor"/><circle cx="4.5" cy="17.5" r=".9" fill="currentColor"/></svg></span>Entries</button><button type="button" data-tab="board"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7.4" height="9.8" rx="2.2"/><rect x="3.5" y="15.7" width="7.4" height="4.8" rx="2"/><rect x="13.1" y="3.5" width="7.4" height="4.8" rx="2"/><rect x="13.1" y="10.7" width="7.4" height="9.8" rx="2.2"/></svg></span>Board</button><button type="button" data-tab="stories"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="3"/><path d="M8.2 6.2h3.3M13.5 6.2h2.3"/><path d="M8.5 16.5l2.4-2.8 2 1.8 2.8-3.6"/></svg></span>Stories</button></nav></div>
 <!-- ============ Avatar menu ============ -->
 <div class="am-bd" id="am-bd" hidden></div>
 <div class="app-menu am" id="app-menu" role="menu" aria-label="Account" hidden>
@@ -271,32 +271,32 @@ if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIn
 
 <div class="app-toasts" id="app-toasts" aria-live="polite"></div>
 
-<script src="js/store.js?v=48.1"></script>
-<script src="js/auth.js?v=48.1"></script>
-<script src="js/sync.js?v=48.1"></script>
+<script src="js/store.js?v=48.2"></script>
+<script src="js/auth.js?v=48.2"></script>
+<script src="js/sync.js?v=48.2"></script>
 <script>/* Live card lookups and real art come from our Worker, which only answers app.cardtab.app. Anywhere else (test copies) uses the built-in sample catalog. */window.CARDTAB_API=/(^|\.)cardtab\.app$/i.test(location.hostname)?"https://api.cardtab.app":"";</script>
-<script src="js/parser.js?v=48.1"></script>
-<script src="js/lookup.js?v=48.1"></script>
-<script src="js/editor.js?v=48.1"></script>
-<script src="js/addsheet.js?v=48.1"></script>
-<script src="js/xlsx-lite.js?v=48.1"></script>
-<script src="js/importer.js?v=48.1"></script>
-<script src="js/import-ui.js?v=48.1"></script>
-<script src="js/zoom.js?v=48.1"></script>
-<script src="js/notify.js?v=48.1"></script>
-<script src="js/motion.js?v=48.1"></script>
-<script src="js/dash.js?v=48.1"></script>
-<script src="js/budget.js?v=48.1"></script>
-<script src="js/home.js?v=48.1"></script>
-<script src="js/month.js?v=48.1"></script>
-  <script src="js/metrics.js?v=48.1"></script>
-<script src="js/artcrop.js?v=48.1"></script>
-<script src="js/shell.js?v=48.1"></script>
-<script src="js/toolbar.js?v=48.1"></script>
-<script src="js/board-loader.js?v=48.1"></script>
-<script src="js/install.js?v=48.1"></script>
-<script src="js/artfill.js?v=48.1"></script>
-<script src="js/main.js?v=48.1"></script>
-<script src="js/settings.js?v=48.1"></script>
+<script src="js/parser.js?v=48.2"></script>
+<script src="js/lookup.js?v=48.2"></script>
+<script src="js/editor.js?v=48.2"></script>
+<script src="js/addsheet.js?v=48.2"></script>
+<script src="js/xlsx-lite.js?v=48.2"></script>
+<script src="js/importer.js?v=48.2"></script>
+<script src="js/import-ui.js?v=48.2"></script>
+<script src="js/zoom.js?v=48.2"></script>
+<script src="js/notify.js?v=48.2"></script>
+<script src="js/motion.js?v=48.2"></script>
+<script src="js/dash.js?v=48.2"></script>
+<script src="js/budget.js?v=48.2"></script>
+<script src="js/home.js?v=48.2"></script>
+<script src="js/month.js?v=48.2"></script>
+  <script src="js/metrics.js?v=48.2"></script>
+<script src="js/artcrop.js?v=48.2"></script>
+<script src="js/shell.js?v=48.2"></script>
+<script src="js/toolbar.js?v=48.2"></script>
+<script src="js/board-loader.js?v=48.2"></script>
+<script src="js/install.js?v=48.2"></script>
+<script src="js/artfill.js?v=48.2"></script>
+<script src="js/main.js?v=48.2"></script>
+<script src="js/settings.js?v=48.2"></script>
 </body>
 </html>

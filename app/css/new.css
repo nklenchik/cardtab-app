@@ -1282,8 +1282,7 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
  .ct-fab{right:max(14px,env(safe-area-inset-right,0px))!important;bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;width:62px!important;height:62px!important;border-radius:50%!important;z-index:56!important;
   will-change:transform;transition:transform .8s cubic-bezier(.22,.61,.36,1),opacity .2s!important}
  .ct-fab:active{transform:scale(.92)}
- /* v48.1: the round button slides down out of the way with the tab bar while scrolling down, and comes back with it */
- html.tb-away .ct-fab{transform:translate3d(0,calc(100% + 24px + env(safe-area-inset-bottom,0px)),0)!important;transition:transform .6s cubic-bezier(.4,0,.2,1),opacity .2s!important}
+ /* (v48.2: the round button now rides in the same layer as the tab bar — see .ct-dock at the end) */
 }
 @media(prefers-reduced-motion:reduce){.ct-fab{transition-duration:.01s!important}}
 /* v37.17: the tab bar and Add New sit above Board and Stories too (Stories' layer is z 90), under the header (95);
@@ -1801,3 +1800,17 @@ html[data-fab="widget"] .ct-fab .fi-add{opacity:1;transform:rotate(180deg)}
 @keyframes shDone{from{opacity:0;transform:translateX(8px) scale(.96)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.ct-shell .sh-edit .ebi,.ct-shell .sh-edit .ebt>span{transition:opacity .01s}.ct-shell .sh-done.on{animation:none}}
 @media(max-width:760px){.ct-shell .sh-edit{display:none!important}.ct-shell .sh-done.on{background:var(--ct-text,#22221f);color:var(--s-card,#fff);border-color:transparent}}
+
+/* ===== v48.2 phones: the tab bar and the round button live in one layer (.ct-dock) that slides away as a whole while
+   scrolling down, so the two can never drift apart or jitter against each other on iPhone ===== */
+#view-app[hidden]~.ct-dock{display:none}
+body:has(#view-app[hidden]) .ct-dock{display:none!important}
+@media(max-width:760px){
+ .ct-dock{position:fixed;left:0;right:0;bottom:0;height:0;z-index:92;transform:translate3d(0,0,0);will-change:transform;transition:transform .8s cubic-bezier(.22,.61,.36,1)}
+ html.tb-away .ct-dock{transform:translate3d(0,calc(100% + 96px + env(safe-area-inset-bottom,0px)),0);transition:transform .6s cubic-bezier(.4,0,.2,1)}
+ html.tb-away .ct-dock .ct-tbar,html.tb-away .ct-dock .ct-fab,.ct-dock .ct-tbar{transform:none!important;will-change:auto!important}
+ .ct-dock .ct-tbar,.ct-dock .ct-fab{transition-property:background-color,opacity,box-shadow,color!important}
+ .ct-dock .ct-fab:active{transform:scale(.92)!important;transition:transform .18s cubic-bezier(.2,.8,.2,1)!important}
+ html:has(#mbd.on) .ct-dock{z-index:45}
+}
+@media(prefers-reduced-motion:reduce){.ct-dock{transition-duration:.01s!important}}
