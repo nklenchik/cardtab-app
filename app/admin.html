@@ -95,9 +95,13 @@ td.n,th.n{text-align:right}
 .empty{color:var(--muted);font-size:13px;font-weight:600;padding:18px 0;text-align:center}
 .load{opacity:.55;transition:opacity .2s}
 @media(max-width:760px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.kpi b{font-size:22px}.kpi{padding:13px}.seg.wide,#cmp.wide{display:none}.dd{display:inline-block}.bar{gap:6px}.range{order:9}}
+.xclose{width:38px;height:38px;border-radius:50%;border:1px solid var(--hair);background:var(--card);color:var(--text);display:grid;place-items:center;cursor:pointer;flex:none;transition:transform .15s}
+.xclose:active{transform:scale(.92)}
+.xclose:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+@media(max-width:760px){.hd{position:relative;padding-right:48px}.hd .note{width:100%;order:9}.xclose{position:absolute;right:0;top:0}}
 </style>
 <div class="wrap" id="app">
-<div class="hd"><span class="logo">C</span><h1>Card Tab Admin</h1><span class="tag" id="mode">Live</span><span class="sp"></span><span class="note">Your own devices are left out of every number</span></div>
+<div class="hd"><span class="logo">C</span><h1>Card Tab Admin</h1><span class="tag" id="mode">Live</span><span class="sp"></span><span class="note">Your own devices are left out of every number</span><button type="button" class="xclose" id="xclose" aria-label="Close the dashboard" title="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
 <div class="bar">
  <div class="seg wide" id="rng"></div>
  <div class="dd" id="rngdd"><button type="button" aria-haspopup="true" aria-expanded="false"><span></span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="mn" hidden role="menu"></div></div>
@@ -220,6 +224,8 @@ function sample(a,b){const n=Math.round((new Date(b)-new Date(a))/864e5)+1,r=i=>
  add('error','TypeError board.js',14);add('error','Promise rejection',8);add('load_ms','phone',800,1,520000);add('load_ms','desk',400,1,240000);
  const prev=E.map(x=>Object.assign({},x,{n:Math.round(x.n*.85),v:x.v*.85})),day0=new Date(a+'T12:00:00'),byDay=[];['story_play','ask','error'].forEach((e,j)=>{for(let i=0;i<n;i++){const t=new Date(day0);t.setDate(day0.getDate()+i);byDay.push({day:t.toISOString().slice(0,10),ev:e,n:Math.round([20,27,1][j]*k*(.7+r(i+j*50)*.6))})}});
  return {from:a,to:b,days:n,active:ser(140,1),activePrev:ser(120,9),secs:ser(680,3),secsPrev:ser(620,4),people:Math.round(900*m),peoplePrev:Math.round(780*m),events:E,eventsPrev:prev,eventsByDay:byDay,members:{free:Math.round(1480*k),premium:Math.round(212*k)},signups:[{day:a,n:Math.round(340*m)}],signupsPrev:Math.round(290*m),cohorts:[{m:'2026-09',n:120,w1:85,w4:58,w8:47},{m:'2026-10',n:160,w1:118,w4:83,w8:0},{m:'2026-11',n:40,w1:28,w4:0,w8:0}],askSpend:{tin:9e6,tout:9e5},askCap:25,eventsToday:23140}}
+// close: shuts this tab when the app opened it; otherwise goes back to the app
+document.getElementById('xclose').onclick=()=>{try{window.close()}catch(e){}setTimeout(()=>{if(!window.closed)location.href='/'},150)};
 chrome();paint();load();
 </script>
 </body></html>
