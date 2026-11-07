@@ -1645,3 +1645,17 @@ html.cs-modal,html.cs-modal body{overflow:hidden!important;overscroll-behavior:n
  .fb-view button::after,.ct-hint .ch-x::after,.cbx #cb .wmore::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,40px);height:max(100%,40px);transform:translate(-50%,-50%)}
  .sh-pillbtn::after{content:"";position:absolute;inset:-6px -2px}
 }
+
+/* v42.26 "frosted dim" behind every window, on every device: a soft warm shade with a fine grain, so the page behind
+   reads like glass without being blurred. Real blur made the phone re-blur the whole page on every frame while a window
+   opened; this costs next to nothing. (Small floating bars like the header and tab bar keep their own light blur.) */
+:root{--frost-grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");--frost-shade:linear-gradient(180deg,rgba(248,246,240,.38),rgba(20,16,12,.36))}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--frost-shade:linear-gradient(180deg,rgba(40,36,32,.5),rgba(0,0,0,.55))}}
+:root[data-theme="dark"]{--frost-shade:linear-gradient(180deg,rgba(40,36,32,.5),rgba(0,0,0,.55))}
+dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backdrop,.am-bd,.as-bd,.mbd,.zm-bg{
+ -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+ background:var(--frost-grain) 0 0/160px 160px repeat,var(--frost-shade)!important}
+
+/* v42.26 Stories' toolbar row on 1100–1299px screens: fewer theme chips, so they never slide over the period button
+   (the theme you're using and "All themes" always stay) */
+@media(min-width:1100px) and (max-width:1299px){.sh-chips .sh-chip[data-i]:nth-child(n+4):not([aria-pressed="true"]){display:none}}
