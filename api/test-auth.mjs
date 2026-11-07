@@ -49,6 +49,15 @@ assert.equal((await call('/auth/email/verify', { method: 'POST', body: { email: 
 // rate limit: 3 per address per 15 minutes
 for (let i = 0; i < 3; i++) await call('/auth/email/start', { method: 'POST', body: { email: 'spam@x.com' }, ip: '9.9.9.' + i });
 assert.equal((await call('/auth/email/start', { method: 'POST', body: { email: 'spam@x.com' }, ip: '9.9.9.9' })).status, 429);
+// sign out of all devices ends every session for the account
+{ const a = await call('/auth/logout-all', { method: 'POST' }); assert.equal(a.status, 401, 'logout-all needs a session');
+  const signIn = async ip => { await call('/auth/email/start', { method: 'POST', body: { email: 'two@x.com' }, ip }); const c = /code in the app: (\d{6})/.exec(mails.at(-1).text)[1]; return cookieOf(await call('/auth/email/verify', { method: 'POST', body: { email: 'two@x.com', code: c }, ip })); };
+  const phone = await signIn('2.2.2.2'), laptop = await signIn('3.3.3.3');
+  assert.equal((await call('/auth/me', { cookie: phone })).status, 200); assert.equal((await call('/auth/me', { cookie: laptop })).status, 200);
+  const o2 = await call('/auth/logout-all', { method: 'POST', cookie: phone }); assert.equal(o2.status, 200); assert.match(o2.headers.get('set-cookie'), /Max-Age=0/);
+  assert.equal((await call('/auth/me', { cookie: phone })).status, 401, 'this device signed out');
+  assert.equal((await call('/auth/me', { cookie: laptop })).status, 401, 'the other device signed out too');
+  assert.equal((await call('/auth/me', { cookie: c2 })).status, 200, 'other accounts untouched'); }
 // logout ends the session
 assert.equal((await call('/auth/logout', { method: 'POST', cookie: c2 })).status, 200);
 assert.equal((await call('/auth/me', { cookie: c2 })).status, 401);

@@ -33,6 +33,8 @@
     },
     fromUser(u, via) { return Session.signIn({ email: u.email, name: u.name, via: via || 'email', role: u.role, plan: u.plan, id: u.id }); },
     signOut() { if (REAL) api('/auth/logout', {}).catch(() => {}); try { localStorage.removeItem(KEY); } catch (e) {} Session._mem = null; },
+    // Settings → Account: ends every session for this account (throws if the account can't be reached, so nothing is half done)
+    async signOutAll() { if (REAL) await api('/auth/logout-all', {}); try { localStorage.removeItem(KEY); } catch (e) {} Session._mem = null; },
     current() { return Session.get() || Session._mem || null; },
     // the server's answer about who's signed in (null when signed out). Network trouble keeps the copy we have.
     async check() { if (!REAL) return Session.current(); try { const j = await api('/auth/me'); return Session.fromUser(j.user, (Session.current() || {}).via); } catch (e) { if (e.status === 401) { try { localStorage.removeItem(KEY); } catch (er) {} Session._mem = null; return null; } return Session.current(); } },

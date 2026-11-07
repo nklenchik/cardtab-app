@@ -8,6 +8,7 @@
    GET  /auth/google/start  -> Google -> GET /auth/google/callback
    GET  /auth/me            the signed-in person, or 401
    POST /auth/logout        end this session
+   POST /auth/logout-all    end every session for this account (Sign out of all devices)
    POST /auth/delete        delete the account and every session
    POST /auth/plan {plan}   admins only: switch your own plan for testing
    POST /auth/sync          send and receive entries and settings (see sync.js) */
@@ -139,6 +140,12 @@ export async function handleAuth(env, req, path) {
   }
   if (path === '/auth/logout' && req.method === 'POST') {
     if (me) await env.DB.prepare('DELETE FROM sessions WHERE id=?').bind(me.sid).run();
+    return out(env, req, { ok: true }, 200, { 'set-cookie': setCookie(env, 'ct_s', '', 0) });
+  }
+  // Settings → Account → Sign out of all devices (v44): ends every session for this account, this one included
+  if (path === '/auth/logout-all' && req.method === 'POST') {
+    if (!me) return out(env, req, { error: 'Sign in first.' }, 401);
+    await env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(me.id).run();
     return out(env, req, { ok: true }, 200, { 'set-cookie': setCookie(env, 'ct_s', '', 0) });
   }
   if (!me) return out(env, req, { error: 'Sign in first.' }, 401);

@@ -108,7 +108,7 @@
   function paintMenu() {
     let row = $('am-hs');
     if (!row) {
-      const ref = document.querySelector('#app-menu [data-soon="Plan and billing"]'); if (!ref) return;
+      const ref = document.querySelector('#app-menu #am-end > *'); if (!ref) return;
       row = document.createElement('button'); row.type = 'button'; row.id = 'am-hs'; row.setAttribute('role', 'menuitem');
       row.innerHTML = '<svg class="mi" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M12 8.5v6M9 11.5h6"/></svg><span>Add to Home Screen</span>';
       row.addEventListener('click', e => { e.stopPropagation(); openSheet(); });

@@ -22,6 +22,8 @@
   function words(s) { return norm(s).split(' ').filter(function (w) { return w.length > 1; }); }
   function hit(hay, needle) { return needle.length && needle.every(function (w) { return hay.some(function (h) { return h.indexOf(w) === 0 || w.indexOf(h) === 0; }); }); }
 
+  // Settings → Adding entries → Games you collect: those games come first when two printings score the same
+  function pref(c) { return root.CTGamePref ? root.CTGamePref(c) : 0; }
   function score(c, p) {
     var sc = 0, nm = words(c.n), pn = words(p.name);
     if (p.number && numKey(p.number) === numKey(c.num)) sc += 3;
@@ -36,7 +38,7 @@
   function search(p) { return rank(CAT, p); }
   function rank(cat, p) {
     if (!p || !p.name && !p.number) return { list: [], pick: -1 };
-    var sc = cat.map(function (c) { return { c: c, s: score(c, p) }; }).filter(function (x) { return x.s >= 3; }).sort(function (a, b) { return b.s - a.s; });
+    var sc = cat.map(function (c) { return { c: c, s: score(c, p) }; }).filter(function (x) { return x.s >= 3; }).sort(function (a, b) { return b.s - a.s || pref(b.c) - pref(a.c); });
     var list = sc.map(function (x) { return x.c; });
     if (!list.length) return { list: [], pick: -1 };
     if (list.length === 1) return { list: list, pick: 0, why: 'one' };

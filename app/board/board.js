@@ -1416,6 +1416,8 @@ const fitSoon=()=>{if(!fitQ)fitQ=requestAnimationFrame(()=>requestAnimationFrame
 (function(){const sim=$('simple');if(!sim)return;new MutationObserver(m=>{if(m.some(x=>x.type==='childList'&&!(x.target.closest&&x.target.closest('.floating'))))fitSoon()}).observe(sim,{childList:true,subtree:true});
   if(window.ResizeObserver)new ResizeObserver(fitSoon).observe(sim);addEventListener('resize',fitSoon);
   sim.addEventListener('load',e=>{if(e.target.tagName==='IMG')fitSoon()},true);document.fonts&&document.fonts.ready.then(fitSoon);fitSoon()})();
+// Settings → Display → Reset Card Board layout (v44): back to the starting widgets for this plan, on this screen and the other
+window.cbResetLayout=function(){layoutD=clone(defL());layoutP=phoneL(clone(layoutD));layout=onPhone?layoutP:layoutD;if(editing)setEditing(false);render(false)};
 
 // ---- the app's side: one back-gesture history shared with the app, live data, open/refresh ----
 if(window.CTNav){navPush=(k,fn)=>window.CTNav.push('cb:'+k,fn);navDone=k=>{if(!navPopping)window.CTNav.done('cb:'+k)}}

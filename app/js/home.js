@@ -223,9 +223,9 @@
     const cur = stOpen() ? 'stories' : cbOpen() ? 'board' : 'entries';
     document.querySelectorAll('#app-menu .amgo [data-go]').forEach(b => { const on = b.dataset.go === cur; b.classList.toggle('here', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
     const g = $('am-page'); if (!g) return; g.querySelectorAll('.am-pact').forEach(x => x.remove());
-    const t = $('am-page-t'), im = $('am-import'), ex = $('am-export');
-    if (cur === 'entries') { t.hidden = true; ex.hidden = false; return; }
-    im.hidden = true; ex.hidden = true;
+    // v44: Import and Export live in Settings → Your data; this group only shows the page's own actions (Board, Stories)
+    const t = $('am-page-t');
+    g.hidden = cur === 'entries'; if (cur === 'entries') { t.hidden = true; return; }
     const [title, acts] = PAGE[cur]; t.textContent = title; t.hidden = false;
     acts.forEach(([ic, label, run]) => { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'menuitem'); b.className = 'am-pact'; b.innerHTML = svg(IC[ic]) + '<span>' + label + '</span>';
       b.addEventListener('click', e => { e.stopPropagation(); if (window.CTMenu) window.CTMenu.close(); setTimeout(run, matchMedia('(max-width:760px)').matches ? 300 : 160); }); g.appendChild(b); });

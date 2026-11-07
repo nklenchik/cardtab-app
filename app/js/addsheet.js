@@ -215,10 +215,11 @@
   if (vv) vv.addEventListener('resize', () => { if (dlg.open && !moving) kbSave(); });
   function open(onDone) {
     st.onDone = onDone || null; st.rows = []; st.total = 0; st.shown = 0; st.sig = '~'; st.sel = -1;
-    const d = mem.get();
-    fillPlatforms(d.plat);
+    const d = mem.get(), df = (S.meta && S.meta('addDefaults')) || {};
+    // Settings → Adding entries: a chosen platform wins; otherwise the last one used
+    fillPlatforms(df.plat || d.plat);
     st.type = d.type === 'sale' ? 'sale' : 'purchase'; setSeg('as-type', st.type === 'sale' ? 1 : 0);
-    st.cond = 0; setSeg('as-cond', 0);
+    st.cond = Math.max(0, CONDS.indexOf(df.cond || 'NM')); setSeg('as-cond', st.cond);
     inp.value = ''; inp.disabled = false; $('as-toast').classList.remove('on'); show(1); render();
     // Phones default to 'after' (Nick's call, Nov 4): the sheet slides up untouched and you tap search to type.
     // 'together' stays available behind ct.kbmode in case the extra tap becomes a hurdle:
