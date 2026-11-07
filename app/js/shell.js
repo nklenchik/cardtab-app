@@ -183,9 +183,13 @@
     if (!PH() || document.querySelector('dialog[open]')) { tbY = scrollOf(cur); return; }
     const y = scrollOf(cur), [sh2, vh] = extentOf(cur);
     if (tbPage !== cur) { tbPage = cur; tbY = y; tbSet(false); return; }
+    // v47.2: iPhone's bounce at either end and the last flick of a fling scroll back a few pixels on their own; only a
+    // real change of direction (30px down to hide, 20px up to show) moves the bar, so it never jitters
+    if (y < 0 || y + vh > sh2 + 1) return;
+    if (y < 40) { tbSet(false); tbY = y; return; }
     const dy = y - tbY;
-    if (y < 40 || y + vh >= sh2 - 6) { tbSet(false); tbY = y; return; }
-    if (dy > 8) { tbSet(true); tbY = y; } else if (dy < -6) { tbSet(false); tbY = y; }
+    if (tbHidden ? dy > 0 : dy < 0) { tbY = y; return; }   // still going the same way: keep the anchor with the scroll
+    if (!tbHidden && dy > 30) { tbSet(true); tbY = y; } else if (tbHidden && dy < -20) { tbSet(false); tbY = y; }
   }
   function frost() {
     fk = false; sh.style.setProperty('--sh-bg', Math.max(0, Math.min(1, (scrollOf(cur) - 3) / 18)).toFixed(3)); /* v42.11: no frost until really scrolled (a Home Screen app can sit a pixel or two off the top) */ tbScroll();
