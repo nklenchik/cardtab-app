@@ -104,7 +104,12 @@
     // v39.6: the stories play from here; each one has its own Share inside the player
     const sShare = proxy('Play stories', '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>', () => { try { const f = document.querySelector('#csx iframe'); f && f.contentWindow.csPlay && f.contentWindow.csPlay(0); } catch (e) {} });
     saveWrap.appendChild(saveAll);
-    G('stories').append(saveWrap, sShare);
+    // v49: on wide screens the story plays on the page, and Style opens its panel (theme, background, Hide amounts)
+    const sStyle = document.createElement('button'); sStyle.type = 'button'; sStyle.className = 'sh-pillbtn sh-style'; sStyle.setAttribute('aria-expanded', 'false');
+    sStyle.innerHTML = '<i class="sh-sdot" aria-hidden="true"></i><span>Style</span>';
+    sStyle.addEventListener('click', () => { try { const w = document.querySelector('#csx iframe').contentWindow; if (w.csStyle) w.csStyle(); } catch (e) {} });
+    window.CTStyleState = (open, bg, acc) => { sStyle.setAttribute('aria-expanded', open ? 'true' : 'false'); sStyle.classList.toggle('on', !!open); if (bg) sStyle.style.cssText = '--tb:' + bg + ';--ta:' + acc; };
+    G('stories').append(sStyle, saveWrap, sShare);
     placeAll();
   }
   sh.querySelector('.sh-bell').addEventListener('click', () => { if (window.CTNotify) window.CTNotify.open('list'); });
