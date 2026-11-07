@@ -67,7 +67,14 @@
     const paintEdit = () => { const on = edit.classList.contains('on'); eb.classList.toggle('on', on); eb.innerHTML = (edit.querySelector('svg') ? edit.querySelector('svg').outerHTML : '') + '<span>' + (on ? 'Done' : 'Edit') + '</span>'; };
     paintEdit(); new MutationObserver(paintEdit).observe(edit, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
     eb.addEventListener('click', () => edit.click());
-    G('board').append(eb, proxy('Share your board', share.querySelector('svg').outerHTML, () => share.click()));
+    // v46: Layouts (saved boards), beside Edit. Free sees a Premium tag; it opens the Premium sheet.
+    const lb = document.createElement('button'); lb.type = 'button'; lb.className = 'sh-pillbtn sh-lay'; lb.setAttribute('aria-haspopup', 'dialog');
+    lb.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="4.5" rx="1.4"/><rect x="13" y="11" width="7" height="9" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/></svg><span>Layouts</span><em class="sh-pm" hidden>Premium</em>';
+    lb.setAttribute('aria-label', 'Layouts');
+    const paintLay = () => { const free = window.CTBoardPlan && window.CTBoardPlan() === 'free'; lb.querySelector('.sh-pm').hidden = !free; lb.classList.toggle('lockd', !!free); };
+    paintLay(); if (window.CTStore) CTStore.on(r => { if (r === 'plan') paintLay(); });
+    lb.addEventListener('click', () => { if (window.cbLayoutsOpen) window.cbLayoutsOpen(lb); });
+    G('board').append(eb, lb, proxy('Share your board', share.querySelector('svg').outerHTML, () => share.click()));
     const saveAll = document.createElement('button'); saveAll.type = 'button'; saveAll.className = 'sh-pillbtn sh-save';
     saveAll.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14"/></svg><span>Save all</span>';
     // v42.27: Save all asks how: photos (free and Premium) or videos (Premium), for all of your stories

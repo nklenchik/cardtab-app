@@ -1761,3 +1761,7 @@ dialog.zm::backdrop{background:transparent}
 .app-menu.am .amp .amg .swt{background:var(--s-dot)}
 .app-menu.am .amp .amg .swt[aria-checked="true"]{background:var(--green)}
 .app-menu.am .am-sel{max-width:62%;min-width:140px}
+/* v46 Layouts button: a pill beside Edit on desktop, an icon on phones; Free sees a small Premium tag */
+.sh-lay .sh-pm{font-style:normal;font-size:10px;font-weight:800;color:var(--s-brand,#a50e37);background:color-mix(in srgb,var(--s-brand,#a50e37) 12%,transparent);padding:2px 7px;border-radius:99px;margin-left:2px}
+.sh-lay .sh-pm[hidden]{display:none}
+@media(max-width:760px){.sh-lay{width:38px;padding:0!important;justify-content:center}.sh-lay span,.sh-lay .sh-pm{display:none!important}}

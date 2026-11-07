@@ -2053,6 +2053,74 @@ html.pg-moving .cbx #cb .wq.k-feat .ttl,html.pg-moving .cbx #cb .fpc,html.pg-mov
 .cbx #cb .bestl span.xai.ph{width:22px!important}
 /* v45 Ask: "Premium gets 50" in the line under the box, as a quiet link */
 #askd .askup{border:0;background:none;padding:0;margin-left:4px;font:inherit;font-weight:800;color:var(--brand);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+/* ===== v46 Layouts: saved boards ===== */
+dialog.lyd .awh{align-items:center}
+dialog.lyd .lyt-h{display:flex;align-items:baseline;gap:10px;min-width:0}
+dialog.lyd .lyn{color:var(--muted);font-weight:700;font-size:12.5px;white-space:nowrap}
+dialog.lyd .lysave{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:44px;border:0;border-radius:14px;background:var(--text);color:var(--cb-alt,var(--bg));font:inherit;font-weight:800;font-size:14px;cursor:pointer;margin:2px 0 12px;transition:opacity .2s,transform .15s}
+dialog.lyd .lysave:active{transform:scale(.985)}
+dialog.lyd .lysave:disabled{background:var(--line);color:var(--muted);cursor:default;transform:none}
+dialog.lyd .lyfull{margin:-4px 0 12px;text-align:center;font-size:12.5px;font-weight:650;color:var(--muted)}
+dialog.lyd .lyfull[hidden],dialog.lyd .lyask[hidden]{display:none}
+dialog.lyd .lyask{margin:0 0 12px;padding:12px 14px;border-radius:14px;background:var(--card);border:1px solid var(--line);box-shadow:0 6px 18px -10px rgba(0,0,0,.25)}
+dialog.lyd .lyask.in{animation:lyIn .28s cubic-bezier(.2,.8,.2,1) both}
+@keyframes lyIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+dialog.lyd .lyask p{margin:0 0 10px;font-weight:750;font-size:13.5px}
+dialog.lyd .lyask div{display:flex;gap:8px;flex-wrap:wrap}
+dialog.lyd .lyk{height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-weight:800;font-size:13px;cursor:pointer}
+dialog.lyd .lyk.p{background:var(--text);color:var(--cb-alt,var(--bg));border-color:var(--text)}
+dialog.lyd .lyk.q{margin-left:auto;border-color:transparent;color:var(--muted)}
+dialog.lyd .lytiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+dialog.lyd .lyt{position:relative;min-width:0}
+dialog.lyd .lyb{display:block;width:100%;text-align:left;padding:8px 8px 9px;border-radius:16px;border:1px solid var(--line);background:var(--cb-alt,var(--bg));color:var(--text);font:inherit;cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .2s cubic-bezier(.2,.8,.2,1)}
+@media(hover:hover){dialog.lyd .lyb:hover{border-color:color-mix(in srgb,var(--text) 35%,transparent)}}
+dialog.lyd .lyb:active{transform:scale(.98)}
+dialog.lyd .lyt.on .lyb{border-color:var(--text);box-shadow:0 0 0 1px var(--text) inset}
+dialog.lyd .lyt.new .lyb{animation:lyNew .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes lyNew{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+dialog.lyd .lym{position:relative;height:100px;border-radius:10px;background:var(--card);overflow:hidden;contain:strict}
+dialog.lyd .lym i{position:absolute;box-sizing:border-box;border:2px solid var(--card);border-radius:5px;background:var(--lyn,#e9e5dd)}
+dialog.lyd .lym .fn{background:var(--lyn)}dialog.lyd .lym .fl{background:var(--lyl)}dialog.lyd .lym .fc{background:var(--lyc)}dialog.lyd .lym .fg{background:var(--lyg)}
+dialog.lyd{--lyn:color-mix(in srgb,var(--text) 9%,var(--card));--lyl:color-mix(in srgb,var(--text) 15%,var(--card));--lyc:color-mix(in srgb,var(--text) 22%,var(--card));--lyg:color-mix(in srgb,var(--cb-pos,#3f9a2a) 45%,var(--card))}
+dialog.lyd .lyuse{position:absolute;top:13px;left:13px;font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;background:var(--text);color:var(--cb-alt,var(--bg))}
+dialog.lyd .lynm{display:block;margin-top:8px;font-weight:800;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:2px}
+dialog.lyd .lydt{display:block;font-size:11.5px;font-weight:650;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+dialog.lyd .lydt b{color:var(--brand);font-weight:800}
+dialog.lyd .lyin{display:block;width:100%;margin-top:6px;font:inherit;font-weight:800;font-size:12.5px;padding:4px 6px;border-radius:8px;border:1px solid var(--brand);background:var(--card);color:var(--text);outline:none}
+dialog.lyd .lymore{position:absolute;top:12px;right:12px;width:26px;height:26px;border-radius:50%;border:0;display:grid;place-items:center;background:color-mix(in srgb,var(--card) 88%,transparent);color:var(--muted);cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+@media(hover:hover){dialog.lyd .lymore:hover{color:var(--text)}}
+dialog.lyd .lyupd{position:absolute;right:8px;bottom:9px;height:24px;padding:0 10px;border-radius:99px;border:0;background:var(--brand);color:#fff;font:inherit;font-size:11px;font-weight:800;cursor:pointer}
+dialog.lyd .lyhint{margin:12px 2px 2px;font-size:12px;font-weight:650;color:var(--muted);min-height:1.4em}
+dialog.lyd .lyhint.flash{color:var(--text);font-weight:800}
+dialog.lyd .lymenu{position:fixed;z-index:5;min-width:190px;padding:5px;border-radius:14px;background:var(--card);border:1px solid var(--line);box-shadow:0 14px 34px rgba(0,0,0,.22);animation:lyIn .2s cubic-bezier(.2,.8,.2,1) both}
+dialog.lyd .lymenu button{display:block;width:100%;text-align:left;padding:9px 11px;border:0;border-radius:9px;background:none;color:var(--text);font:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+@media(hover:hover){dialog.lyd .lymenu button:hover{background:color-mix(in srgb,var(--text) 6%,transparent)}}
+dialog.lyd .lymenu .del,dialog.lyd .lymenu .confirm{color:#d0263f}
+dialog.lyd .lyhov{position:fixed;z-index:4;width:320px;padding:12px;border-radius:18px;background:var(--card);border:1px solid var(--line);box-shadow:0 20px 50px rgba(0,0,0,.24);pointer-events:none;opacity:0;transform:translateX(8px) scale(.97);transform-origin:right center;transition:opacity .16s,transform .2s cubic-bezier(.2,.8,.2,1)}
+dialog.lyd .lyhov.r{transform:translateX(-8px) scale(.97);transform-origin:left center}
+dialog.lyd .lyhov.in{opacity:1;transform:none}
+dialog.lyd .lyhov b{display:block;font-size:14px;font-weight:800}
+dialog.lyd .lyhov small{display:block;color:var(--muted);font-size:11.5px;font-weight:700;margin:1px 0 10px}
+dialog.lyd .lym.big{height:200px;background:var(--cb-alt,var(--bg));contain:strict}
+dialog.lyd .lym.big i{border-width:3px;border-color:var(--cb-alt,var(--bg));border-radius:8px;padding:5px 6px;overflow:hidden}
+dialog.lyd .lym.big em{display:block;font-style:normal;font-size:10px;font-weight:800;line-height:1.15;color:color-mix(in srgb,var(--text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#simple.lyswap{animation:lySwap .36s cubic-bezier(.2,.8,.2,1)}
+@keyframes lySwap{from{opacity:.35;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){dialog.lyd .lyask.in,dialog.lyd .lyt.new .lyb,dialog.lyd .lymenu,#simple.lyswap{animation:none}dialog.lyd .lyhov{transition:none}}
+@media(min-width:761px){
+  dialog.drawer.lyd.pop[open]{display:block}
+  dialog.drawer.lyd.pop .lyp{position:fixed;top:var(--at);right:var(--ar);width:var(--aw);height:auto;max-height:calc(var(--vvh,100vh) - var(--at) - 20px);overflow:auto;border-radius:22px;transform-origin:var(--ox) -12px;box-shadow:0 24px 60px rgba(0,0,0,.22);padding:18px}
+  dialog.drawer.lyd.pop[open] .lyp{animation:askGrow .42s cubic-bezier(.2,.8,.2,1) both}
+  dialog.drawer.lyd.pop.closing .lyp{animation:askShrink .2s cubic-bezier(.4,0,1,1) both}
+  dialog.drawer.lyd.pop::backdrop{background:rgba(10,10,10,.14)}
+}
+@media(max-width:760px){
+  dialog.lyd .lytiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  dialog.lyd .lym{height:112px}
+  dialog.lyd .lyb{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+  dialog.lyd .lymore{display:none}
+}
+dialog.lyd .lyt.chg .lydt{padding-right:66px}
 .tip{position:fixed;z-index:60;pointer-events:none;background:var(--text);color:var(--bg);border-radius:10px;padding:8px 11px;font-size:12.5px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;text-align:left}
 .tip.on{opacity:1}
 .note{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--text);color:var(--bg);border-radius:999px;padding:8px 14px;font-size:12px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}

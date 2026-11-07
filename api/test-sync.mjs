@@ -18,6 +18,10 @@ const e2 = { id: 'e2bbbb', name: 'Gengar', amount: 2000, updatedAt: '2026-11-06T
 let r = await sync(A, { since: 0, entries: [e1, e2], meta: { budget: { v: { cents: 15000 }, t: '2026-11-06T10:00:00.000Z' }, plan: { v: 'premium', t: 'z' } } });
 assert.equal(r.entries.length, 2); const phoneSeq = r.seq;
 assert.deepEqual(r.meta.budget.v, { cents: 15000 }); assert.equal(r.meta.plan, undefined, 'plan is never synced from a device');
+// v46: the newer settings follow the account too (saved Board layouts, Start on, Add New defaults, games, sharing)
+{ const lay = [{ id: 's1', name: "Nick's Board 110726", at: 1, layout: [{ id: 'd0', k: 'profit', size: 'S' }] }];
+  const r2 = await sync(A, { since: 0, entries: [], meta: { boardSavesDesk: { v: lay, t: '2026-11-07T10:00:00.000Z' }, startOn: { v: 'year', t: '2026-11-07T10:00:00.000Z' }, games: { v: ['dbs'], t: '2026-11-07T10:00:00.000Z' } } });
+  assert.deepEqual(r2.meta.boardSavesDesk.v, lay); assert.equal(r2.meta.startOn.v, 'year'); assert.deepEqual(r2.meta.games.v, ['dbs']); }
 // mac starts fresh and gets both
 r = await sync(A, { since: 0 }); assert.deepEqual(r.entries.map(e => e.id).sort(), ['e1aaaa', 'e2bbbb']); const macSeq = r.seq;
 // mac edits e1 (newer), phone edits e1 offline with an older time: newer wins

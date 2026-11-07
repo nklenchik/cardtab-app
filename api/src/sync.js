@@ -2,7 +2,8 @@
    POST /sync {since, entries:[...], meta:{key:{v,t}}}  ->  {seq, more, entries:[...], meta:{...}}
    For each entry (and each synced setting) the most recent edit wins, by its updatedAt time. A delete is an edit
    (deleted:true), so it reaches every device. "seq" numbers the server's changes so a device can ask for what's new. */
-const META_KEYS = ['budget', 'budgetFlags', 'customPlatforms', 'notif', 'storiesFree'];
+// settings that follow the account (v44/v46 added Start on, Add New defaults, games, sharing, and saved Board layouts)
+const META_KEYS = ['budget', 'budgetFlags', 'customPlatforms', 'notif', 'storiesFree', 'startOn', 'addDefaults', 'games', 'sharing', 'boardSavesDesk', 'boardSavesPhone'];
 const MAX_IN = 400, MAX_OUT = 800, MAX_ENTRY = 24000;
 
 export async function handleSync(env, req, me, out) {
