@@ -2126,6 +2126,9 @@ dialog.lyd .lyt.chg .lydt{padding-right:66px}
 /* v49.1 phones: while dragging, the widget it will trade places with is marked; the trade happens on release */
 .simple>.w.swapto{outline:2.5px dashed currentColor;outline-offset:3px;transform:scale(.95);transition:transform .2s cubic-bezier(.2,.8,.2,1),outline-color .2s}
 @media(prefers-reduced-motion:reduce){.simple>.w.swapto{transform:none}}
+/* v49.3 desktop: the dashed Add widget bar sits at the end of the board (new widgets land there); the header's
+   Edit button turns into Add widget at the top, so there's one at each end instead of two side by side */
+.cbx #cb .simple+.addbar{margin:16px 0 8px}
 .tip{position:fixed;z-index:60;pointer-events:none;background:var(--text);color:var(--bg);border-radius:10px;padding:8px 11px;font-size:12.5px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;text-align:left}
 .tip.on{opacity:1}
 .note{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--text);color:var(--bg);border-radius:999px;padding:8px 14px;font-size:12px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}
