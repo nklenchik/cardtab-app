@@ -1,0 +1,18 @@
+/* Shared Card Board viewer (v50.5) */
+.shv .shcbx{position:static;overflow:visible;min-height:100vh}
+.shv #cb .frame{max-width:1400px;margin:0 auto}
+.shv .shtop{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 22px}
+.shv .shbrand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:16px;color:var(--text);text-decoration:none}
+.shv .shbrand img{border-radius:7px}
+.shv .shcta{display:inline-flex;align-items:center;height:38px;padding:0 16px;border-radius:99px;background:var(--brand);color:#fff;font-weight:800;font-size:14px;text-decoration:none;white-space:nowrap}
+.shv .shcta.big{height:48px;padding:0 22px;font-size:15px;margin-top:18px}
+.shv .shhead{text-align:left;margin:0 0 18px}
+.shv .shhead h1{margin:0;font-size:clamp(24px,3.4vw,34px);font-weight:800;letter-spacing:-.02em;color:var(--text);text-wrap:balance}
+.shv .shhead p{margin:4px 0 0;font-size:14px;font-weight:700;color:var(--muted)}
+.shv .shmsg{grid-column:1/-1;color:var(--muted);font-weight:700;padding:40px 0}
+.shv .shgone{grid-column:1/-1;padding:56px 16px;text-align:center}
+.shv .shgone h2{margin:0 0 6px;font-size:22px;color:var(--text)}
+.shv .shgone p{margin:0;color:var(--muted);font-weight:600}
+.shv .shfoot{margin:28px 0 0;font-size:12.5px;font-weight:600;color:var(--muted);text-align:center;line-height:1.5}
+.shv .shfoot a{color:inherit}
+.shv #cb .simple>.w{cursor:default}

@@ -59,3 +59,5 @@ CREATE TABLE IF NOT EXISTS an_salt ( day TEXT PRIMARY KEY, salt TEXT NOT NULL );
 CREATE TABLE IF NOT EXISTS an_feat ( day TEXT NOT NULL, uid TEXT NOT NULL, feat TEXT NOT NULL, plan TEXT NOT NULL, dev TEXT NOT NULL, PRIMARY KEY (day, uid, feat) );
 CREATE INDEX IF NOT EXISTS an_feat_uid ON an_feat (uid);
 CREATE TABLE IF NOT EXISTS an_user ( uid TEXT PRIMARY KEY, first_day TEXT NOT NULL, plan0 TEXT NOT NULL, plan TEXT NOT NULL, up_day TEXT, up_ctx TEXT, last_prem TEXT, src TEXT, sec TEXT, demo TEXT );
+-- v50.5 shared Card Boards: one link per account; the board as visitors see it (amounts / names already hidden if chosen)
+CREATE TABLE IF NOT EXISTS shares ( id TEXT PRIMARY KEY, uid TEXT NOT NULL UNIQUE, html TEXT NOT NULL, meta TEXT, live INTEGER NOT NULL DEFAULT 1, exp_opt TEXT NOT NULL DEFAULT 'never', exp INTEGER, created INTEGER NOT NULL, updated INTEGER NOT NULL, views INTEGER NOT NULL DEFAULT 0, invites INTEGER NOT NULL DEFAULT 0, inv_day TEXT );

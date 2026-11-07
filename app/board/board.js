@@ -936,7 +936,7 @@ shd.addEventListener('click',async e=>{if(e.target===shd){shd.close();return}con
   if(b.id==='sh-view'){shd.close();setViewing(true);return}
   if(b.hasAttribute('data-close'))shd.close()});
 function addEmail(){const i=$('sh-email'),v=i.value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){$('sh-emsg').textContent='Enter an email address like name@example.com.';return}
-  if(!share.emails.includes(v))share.emails.push(v);if(!share.on)share.on=true;i.value='';$('sh-emsg').textContent='They’ll get the link by email once sharing goes live in the app.';saveShare();paintShare();buzz('tick')}
+  if(!share.emails.includes(v))share.emails.push(v);if(!share.on)share.on=true;i.value='';$('sh-emsg').textContent='Sending the link…';saveShare();paintShare();buzz('tick')}
 $('sh-email').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addEmail()}});
 function setViewing(on){viewing=on;paintTitle();if(on&&editing)setEditing(false);$('cb').classList.toggle('viewing',on);$('vbar').hidden=!on;hideTip();render(false);if(on)cbx.scrollTop=0}
 $('vbar-x').addEventListener('click',()=>setViewing(false));
@@ -1412,7 +1412,7 @@ function spills(wb){const R=wb.getBoundingClientRect();if(!R.height)return false
   for(const el of wb.querySelectorAll('*')){if(el.closest('.fh,.d,.ph'))continue;/* .d = a row's details, folded away until tapped */const r=el.getBoundingClientRect();if(!r.width)continue;
     const txt=[...el.childNodes].some(n=>n.nodeType===3&&n.textContent.trim());
     if(txt&&el.scrollHeight>el.clientHeight+6){const cs=getComputedStyle(el);/* v50.3: text clamped to a line or two ends in … on purpose — that isn't cut off */if(cs.overflowY!=='visible'&&(cs.webkitLineClamp||'none')==='none')return true}
-    if(!r.height)continue;if(r.top<R.top-4||r.bottom>R.bottom+3)return true;
+    if(!r.height)continue;/* v50.5: only words can be cut off — a zoomed card picture or a bar running past the edge is clipped on purpose */if((r.top<R.top-4||r.bottom>R.bottom+3)&&el.tagName!=='IMG'&&(el.textContent||'').trim())return true;
     if(over&&txt&&r.top<H.bottom-1&&r.bottom>H.top&&r.left<H.right&&r.right>H.left)return true}return false}
 function fitW(w){const wb=w.querySelector(':scope>.wb');if(!wb)return;
   /* v50.4: never measure while the widget or its rows are still sliding or growing in — a row caught mid-animation looks
@@ -1547,6 +1547,68 @@ if(lyd){lyd.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')return
   lyd.addEventListener('contextmenu',e=>{if(e.target.closest('.lyb'))e.preventDefault()})}
 // a reset (Settings → Display) starts fresh: no save is in use
 {const r0=window.cbResetLayout;window.cbResetLayout=function(){try{localStorage.removeItem('cb.ly.cur.desk');localStorage.removeItem('cb.ly.cur.phone')}catch(e){}r0&&r0()}}
+
+// ---- v50.5: live mini boards in Layouts ----
+// Each saved layout shows as a real, shrunken copy of the board: its widgets drawn with today's numbers, like a screenshot,
+// but nothing is stored or synced (a save is still just its widget list). The gray outline shows at once; the real copies
+// are drawn one at a time while the browser is idle, kept in memory until the numbers change, and never take taps.
+const lyLive=new Map();
+function lyLiveKey(l){const c=ctxNow();return lySig(lyClean(l))+'|'+($('simple').clientWidth||0)+'|'+c.a+'|'+c.b+'|'+plat+'|'+E.length}
+function lyLiveHTML(l){const k=lyLiveKey(l);let h=lyLive.get(k);if(h!=null)return h;const items=lyClean(l),ctx=ctxNow();
+  try{h='<div class="simple lyls">'+items.map(w=>widgetHTML(w,ctx)).join('')+'</div>'}catch(e){h=''}
+  h=h.replace(/\s(id|data-id|data-drill|tabindex)="[^"]*"/g,'').replace(/\sloading="lazy"/g,'');/* no ids: the app's own lookups (#cb .simple>.w[data-id]) must only ever find the real board */if(lyLive.size>40)lyLive.clear();lyLive.set(k,h);return h}
+function lyLiveInto(box,l){const W=$('simple').clientWidth;if(!box||!W||units()<1)return;const h=lyLiveHTML(l);if(!h)return;
+  const wrap=document.createElement('div');wrap.className='lylive';wrap.setAttribute('aria-hidden','true');wrap.inert=true;wrap.style.width=W+'px';wrap.innerHTML=h;
+  const sim=wrap.firstChild,cs=$('simple').getAttribute('style');if(cs)sim.setAttribute('style',cs);
+  box.appendChild(wrap);const sc=()=>{wrap.style.transform='scale('+(box.clientWidth/W)+')'};sc();requestAnimationFrame(()=>{sc();box.classList.add('live')})}
+let lyLiveQ=[],lyLiveT=0;
+function lyLiveRun(){lyLiveT=0;const job=lyLiveQ.shift();if(!job)return;if(job.box.isConnected)lyLiveInto(job.box,job.l);if(lyLiveQ.length)lyLiveT=(window.requestIdleCallback||(f=>setTimeout(f,30)))(lyLiveRun,{timeout:300})}
+{const p0=lyPaint;lyPaint=function(){p0.apply(this,arguments);if(!lyd||!lyd.open&&!lyd.hasAttribute('open'))return;const list=lyGet();lyLiveQ=[];
+  lyd.querySelectorAll('#ly-tiles .lyt').forEach(t=>{const s=list.find(x=>x.id===t.dataset.id),box=t.querySelector('.lym');if(s&&box)lyLiveQ.push({box,l:s.layout})});
+  if(!lyLiveT&&lyLiveQ.length)lyLiveT=(window.requestIdleCallback||(f=>setTimeout(f,30)))(lyLiveRun,{timeout:300})}}
+{const h0=lyHoverShow;lyHoverShow=function(tile){h0(tile);const s=lyGet().find(x=>x.id===tile.dataset.id),h=lyd&&lyd.querySelector('.lyhov .lym');if(s&&h)lyLiveInto(h,s.layout)}}
+if(lyd)new MutationObserver(()=>{if(lyd.open)lyPaint()}).observe(lyd,{attributes:true,attributeFilter:['open']});
+
+// ---- v50.5: share links that work ----
+// Turning on "Share with a link" sends the board, drawn exactly as "See what they'll see" shows it (dollar amounts and card
+// names already hidden if those are off), to the server. Anyone with the link sees that page; no account needed. "Live"
+// sends it again whenever the numbers on this board change (at most every few seconds, only when something changed);
+// "Today's snapshot" stays as it was sent. Turning the link off, or making a new one, stops the old link at once.
+const SHS=()=>window.CTSession,shOnline=()=>{const s=SHS();return !!(s&&s.REAL&&s.API)};
+let shLast='',shT=0,shBusy=false;try{shLast=localStorage.getItem('cb.share.sent')||''}catch(e){}
+const shHash=s=>{let h=5381;for(let i=0;i<s.length;i++)h=(h*33^s.charCodeAt(i))>>>0;return h.toString(36)+':'+s.length};
+function shareSnap(){const sim=$('simple'),W=sim.clientWidth||1200,was=viewing;viewing=true;
+  const box=document.createElement('div');box.className='simple shsnap';box.setAttribute('style',(sim.getAttribute('style')||'')+';position:fixed;left:-99999px;top:0;width:'+W+'px;visibility:hidden;pointer-events:none');
+  let ctx;try{ctx=ctxNow();box.innerHTML=layout.map(w=>widgetHTML(w,ctx)).join('');sim.parentNode.appendChild(box);try{fillCharts(box,ctx)}catch(e){}box.querySelectorAll(':scope>.w').forEach(w=>{try{fitW(w)}catch(e){}})}finally{viewing=was}
+  box.querySelectorAll('.rm,.grip,.wmore,.kback').forEach(x=>x.remove());
+  box.querySelectorAll('[data-drill],[tabindex],[role=button],[data-id],[aria-haspopup]').forEach(x=>{['data-drill','tabindex','role','data-id','aria-haspopup','aria-expanded'].forEach(a=>x.removeAttribute(a))});
+  box.querySelectorAll('img').forEach(i=>{const s=i.getAttribute('src');if(s&&!/^(https?:|data:)/.test(s))i.setAttribute('src',new URL(s,location.href).href);i.removeAttribute('loading')});
+  const html=box.innerHTML;box.remove();const f=(profile.first||'').trim();
+  let th='auto';try{th=localStorage.getItem('cb.theme')||'auto'}catch(e){}
+  return {html,meta:{title:f?f+'’s Card Board':'Card Board',label:$('cb-perl').textContent,plat:$('cb-platl').textContent,theme:th,cbStyle:$('cb').getAttribute('style')||'',simStyle:sim.getAttribute('style')||'',cbClass:$('cb').className.replace(/\b(editing|dragging|grow)\b/g,'').trim(),w:W,amt:!!share.amt,names:!!share.names}}}
+async function sharePush(force){clearTimeout(shT);if(!share.on||shBusy)return;if(!shOnline()){if(force)toast('Share links work when you’re signed in to Card Tab online.');return}
+  const snap=shareSnap(),sig=shHash(share.id+'|'+snap.html+'|'+JSON.stringify(snap.meta)+'|'+share.exp+'|'+share.live);if(!force&&sig===shLast)return;shBusy=true;
+  try{const r=await fetch(SHS().API+'/auth/share',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:JSON.stringify({id:share.id,html:snap.html,meta:snap.meta,live:!!share.live,exp:share.exp})});const j=await r.json().catch(()=>({}));
+    if(r.status===409){share.id=Math.random().toString(36).slice(2,10);saveShare();paintShare();shBusy=false;return sharePush(true)}
+    if(!r.ok){if(force)toast(j.error||'Couldn’t update the share link. Try again.');return}shLast=sig;try{localStorage.setItem('cb.share.sent',sig)}catch(e){}if(force&&shd.open)$('sh-state').textContent='Anyone with the link can view · up to date'}
+  catch(e){if(force)toast('Couldn’t reach Card Tab. The link updates next time you’re online.')}finally{shBusy=false}}
+async function shareOff(){shLast='';try{localStorage.removeItem('cb.share.sent')}catch(e){}if(!shOnline())return;try{await fetch(SHS().API+'/auth/share',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:JSON.stringify({off:true})})}catch(e){}}
+const shareSoon=(ms)=>{clearTimeout(shT);if(share.on&&share.live)shT=setTimeout(()=>sharePush(false),ms||4000)};
+// the share window's switches and buttons (these run after the window's own handler has updated the choices)
+shd.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.id==='sh-on'){if(share.on)setTimeout(()=>sharePush(true),50);else shareOff();return}
+  if(['sh-amt','sh-names','sh-tips'].includes(b.id)||b.parentNode&&['sh-live','sh-exp'].includes(b.parentNode.id)){if(share.on)setTimeout(()=>sharePush(true),50);return}
+  if(b.id==='sh-new'){if(share.on)setTimeout(()=>sharePush(true),50);return}
+  if(b.id==='sh-add'){setTimeout(shareInvite,60)}});
+$('sh-email').addEventListener('keydown',e=>{if(e.key==='Enter')setTimeout(shareInvite,60)});
+let shInvited=new Set();
+async function shareInvite(){const list=share.emails.filter(m=>!shInvited.has(m));if(!list.length||!shOnline())return;if(!share.on)return;
+  await sharePush(false);try{const r=await fetch(SHS().API+'/auth/share/invite',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:JSON.stringify({emails:list})});const j=await r.json().catch(()=>({}));
+    if(r.ok){list.forEach(m=>shInvited.add(m));$('sh-emsg').textContent=j.sent===1?'Sent the link to '+list[0]+'.':'Sent the link to '+j.sent+' people.'}else $('sh-emsg').textContent=j.error||'Couldn’t send it. Copy the link instead.'}catch(e){$('sh-emsg').textContent='Couldn’t reach Card Tab. Copy the link instead.'}}
+// live links follow the board: whenever it's drawn again (new entries, a widget moved, a new range), send it shortly after
+{const r0=render;render=function(){const out=r0.apply(this,arguments);if(!viewing&&!editing)shareSoon();return out}}
+if(share.on&&share.live)setTimeout(()=>shareSoon(1500),3000);
+window.cbShareSnap=()=>shareSnap();
 
 // ---- the app's side: one back-gesture history shared with the app, live data, open/refresh ----
 if(window.CTNav){navPush=(k,fn)=>window.CTNav.push('cb:'+k,fn);navDone=k=>{if(!navPopping)window.CTNav.done('cb:'+k)}}

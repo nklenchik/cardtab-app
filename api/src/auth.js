@@ -1,3 +1,4 @@
+import { handleShare } from './share.js';
 import { handleEvents, handleStats, handleSiteStats } from './analytics.js';
 import { handleAsk } from './ask.js';
 /* Card Tab sign-in: Google, or an emailed link + 6-digit code. No passwords.
@@ -153,11 +154,13 @@ export async function handleAuth(env, req, path) {
   }
   if (!me) return out(env, req, { error: 'Sign in first.' }, 401);
   if (path === '/auth/delete' && req.method === 'POST') {
-    await env.DB.batch([...(await deleteSynced(env, me.id)), env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(me.id), env.DB.prepare('DELETE FROM an_active WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM an_feat WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM an_user WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM login_tokens WHERE email=?').bind(me.email), env.DB.prepare('DELETE FROM users WHERE id=?').bind(me.id)]);
+    await env.DB.batch([...(await deleteSynced(env, me.id)), env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(me.id), env.DB.prepare('DELETE FROM an_active WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM an_feat WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM shares WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM an_user WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM login_tokens WHERE email=?').bind(me.email), env.DB.prepare('DELETE FROM users WHERE id=?').bind(me.id)]);
     return out(env, req, { ok: true }, 200, { 'set-cookie': setCookie(env, 'ct_s', '', 0) });
   }
   if (path === '/auth/sync' && req.method === 'POST') return handleSync(env, req, me, (body, status = 200) => out(env, req, body, status));
   if (path === '/auth/ask' && req.method === 'POST') return handleAsk(env, req, Object.assign({}, me, { role: isAdmin(env, me.email) ? 'admin' : 'user' }), (body, status = 200) => out(env, req, body, status));
+  // v50.5 shared boards
+  if ((path === '/auth/share' || path === '/auth/share/invite') && req.method === 'POST') return handleShare(env, req, Object.assign({}, me, { admin: isAdmin(env, me.email) }), path, (body, status = 200) => out(env, req, body, status));
   // v50 analytics: the app's counts, and the admin dashboard's numbers
   if (path === '/auth/ev' && req.method === 'POST') return handleEvents(env, req, me, (body, status = 200) => out(env, req, body, status));
   if (path === '/auth/admin/stats') {
