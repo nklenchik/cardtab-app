@@ -24,6 +24,7 @@
     search: '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/>',
     alert: '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/>',
     check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    x: '<path d="M6 6l12 12M18 6L6 18"/>',
     card: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/>',
     renew: '<path d="M4 12a8 8 0 0114-5.3L20 9M20 4v5h-5M20 12a8 8 0 01-14 5.3L4 15M4 20v-5h5"/>',
     star: '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.9 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>',
@@ -37,7 +38,8 @@
   // ---------- what's in the list ----------
   function all() {
     const s = st(), p = prefs(), out = [];
-    S.all().filter(e => e.unmatched).forEach(e => out.push({ id: 'um:' + e.id, kind: 'unmatched', cat: 'cards', ts: Date.parse(e.createdAt) || now(), entry: e }));
+    const hid = s.hidden || {};
+    S.all().filter(e => e.unmatched && !hid['um:' + e.id]).forEach(e => out.push({ id: 'um:' + e.id, kind: 'unmatched', cat: 'cards', ts: Date.parse(e.createdAt) || now(), entry: e }));
     (s.items || []).forEach(it => out.push(it));
     return out.filter(it => it.kind === 'payfail' || (p.all && p[it.cat] !== false))
       .filter(it => it.kind !== 'tip' || S.plan() === 'free')
@@ -75,13 +77,15 @@
     else if (it.kind === 'renew') { ic = 'renew'; t = 'Premium renews ' + esc(it.when || 'soon'); p = 'Nothing to do. Change or cancel anytime in Plan and billing.'; }
     else if (it.kind === 'payfail') { ic = 'alert'; t = 'Your payment didn’t go through'; p = 'Update your card to keep Premium. We’ve emailed you too.'; acts = act('billing', 'Update card', 1); }
     else if (it.kind === 'tip') { ic = 'star'; t = esc(it.title); p = esc(it.body); acts = act('premium', 'See Premium', 1) + act('notnow', 'Not now'); }
-    return '<div class="ntf-it' + nw + (it.kind === 'payfail' ? ' urgent' : '') + '"><div class="ntf-t"><span class="ntf-ic">' + svg(ic) + '</span><div class="ntf-tx"><b>' + t + '</b><p>' + p + '</p></div><span class="ntf-when">' + ago(it.ts) + '</span></div>' + (acts ? '<div class="ntf-acts">' + acts + '</div>' : '') + '</div>';
+    return '<div class="ntf-it' + nw + (it.kind === 'payfail' ? ' urgent' : '') + '" data-nid="' + esc(it.id) + '"><div class="ntf-t"><span class="ntf-ic">' + svg(ic) + '</span><div class="ntf-tx"><b>' + t + '</b><p>' + p + '</p></div><span class="ntf-when">' + ago(it.ts) + '</span>' + (it.kind === 'payfail' ? '' : '<button type="button" class="ntf-x" data-act="x" data-id="' + esc(it.id) + '" aria-label="Dismiss">' + svg('x', 13) + '</button>') + '</div>' + (acts ? '<div class="ntf-acts">' + acts + '</div>' : '') + '</div>';
   }
   function renderList() {
     const list = all(), r = st().read || {}, p = prefs();
     if (!list.length) return '<div class="ntf-empty">' + svg('bell', 26) + '<b>You’re all caught up</b><p>' + (p.all ? 'Cards that need a look and account news show up here.' : 'Notifications are off. Payment problems still show here.') + '</p></div>';
     const by = {}; list.forEach(it => { const g = it.kind === 'payfail' ? 'billing' : it.cat; (by[g] = by[g] || []).push(it); });
-    return ['billing', 'cards', 'tips'].filter(g => by[g]).map(g => '<div class="ntf-gl">' + GROUP[g] + '</div>' + by[g].map(it => itemHtml(it, r[it.id])).join('')).join('');
+    const n = list.filter(it => it.kind !== 'payfail').length;
+    return ['billing', 'cards', 'tips'].filter(g => by[g]).map(g => '<div class="ntf-gl">' + GROUP[g] + '</div>' + by[g].map(it => itemHtml(it, r[it.id])).join('')).join('') +
+      (n > 1 ? '<button type="button" class="ntf-clear" data-act="clearall">Clear all</button>' : '');
   }
   const sw = (k, on, label, sub, dis) => '<div class="ntf-sr"><div><b>' + label + '</b><span>' + sub + '</span></div><button type="button" class="swt" role="switch" data-pref="' + k + '" aria-checked="' + on + '" aria-label="' + label + '"' + (dis ? ' disabled' : '') + '><i></i></button></div>';
   function renderSettings() {
@@ -115,6 +119,29 @@
     if (view === 'list') { const ids = all().map(it => it.id); await save(s => { s.read = s.read || {}; ids.forEach(id => { s.read[id] = 1; }); }); }
   }
   function close() { if (dlg.open) dlg.close(); }
+  // dismissing: a notification slides away (transform and opacity only), then the list repaints without it.
+  // Cards that weren't matched stay unmatched on the entry; they just leave this list.
+  async function forget(its) {
+    await save(s => { const ids = new Set(its.map(x => x.id)); s.items = (s.items || []).filter(x => !ids.has(x.id)); s.hidden = s.hidden || {};
+      its.forEach(x => { if (x.kind === 'unmatched') s.hidden[x.id] = 1; if (x.kind === 'tip') s.tips = Object.assign({}, s.tips, { dismissed: now() }); }); });
+  }
+  function dismissOut(els, its) {
+    els = [].concat(els).filter(Boolean); const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    els.forEach((el, i) => { el.style.transition = 'transform .28s cubic-bezier(.4,0,.2,1) ' + (i * 30) + 'ms, opacity .22s ease ' + (i * 30) + 'ms'; el.style.transform = calm ? '' : 'translateX(' + (el.dataset.sx === '-1' ? '-' : '') + '110%)'; el.style.opacity = '0'; });
+    return new Promise(r => setTimeout(async () => { await forget(its); paint(); r(); }, calm ? 120 : 260 + Math.min(els.length, 8) * 30));
+  }
+  // touch: swipe a notification sideways to dismiss it
+  (function swipe() {
+    let d = null;
+    dlg.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' || e.target.closest('button,a,input')) return; const el = e.target.closest('.ntf-it'); if (!el || el.classList.contains('urgent')) return; d = { el, x: e.clientX, y: e.clientY, dx: 0, on: false }; });
+    dlg.addEventListener('pointermove', e => { if (!d) return; const dx = e.clientX - d.x, dy = e.clientY - d.y;
+      if (!d.on) { if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { d = null; return; } if (Math.abs(dx) < 10) return; d.on = true; d.el.style.transition = 'none'; }
+      d.dx = dx; d.el.style.transform = 'translateX(' + dx + 'px)'; d.el.style.opacity = String(Math.max(.25, 1 - Math.abs(dx) / 320)); });
+    const end = () => { if (!d) return; const { el, dx, on } = d; d = null; if (!on) return;
+      if (Math.abs(dx) > Math.min(110, el.offsetWidth * .3)) { el.dataset.sx = dx < 0 ? '-1' : '1'; const it = all().find(x => x.id === el.dataset.nid); if (it) { window.ctBuzz && window.ctBuzz(); dismissOut(el, [it]); return; } }
+      el.style.transition = 'transform .3s cubic-bezier(.2,.8,.2,1), opacity .3s'; el.style.transform = ''; el.style.opacity = ''; };
+    dlg.addEventListener('pointerup', end); dlg.addEventListener('pointercancel', end);
+  })();
   dlg.addEventListener('click', async e => {
     if (e.target === dlg || e.target.closest('[data-ntf-close]')) { close(); return; }
     if (e.target.closest('.ntf-gear')) { view = 'settings'; paint(); return; }
@@ -124,6 +151,8 @@
     if (t && !t.disabled) { const k = t.dataset.pref, v = t.getAttribute('aria-checked') !== 'true'; window.ctBuzz && window.ctBuzz(); await save(s => { s.prefs = Object.assign({}, DEF, s.prefs, { [k]: v }); }); paint(); return; }
     const b = e.target.closest('[data-act]'); if (!b) return;
     const id = b.dataset.id, act = b.dataset.act, it = all().find(x => x.id === id);
+    if (act === 'x' && it) { window.ctBuzz && window.ctBuzz(); await dismissOut(b.closest('.ntf-it'), [it]); return; }
+    if (act === 'clearall') { const its = all().filter(x => x.kind !== 'payfail'); await dismissOut([...dlg.querySelectorAll('.ntf-it:not(.urgent)')], its); return; }
     if (act === 'fix' && it) { close(); setTimeout(() => fix.open(it.entry), 280); return; }
     if (act === 'leave' && it) { await S.matchCard(it.entry.id, null); toast('Kept as typed', true); paint(); return; }
     if (act === 'dismiss') { await save(s => { s.items = (s.items || []).filter(x => x.id !== id); }); paint(); return; }

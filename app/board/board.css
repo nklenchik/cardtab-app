@@ -2029,6 +2029,28 @@ html.pg-moving .cbx #cb .wq.k-feat .ttl,html.pg-moving .cbx #cb .fpc,html.pg-mov
 #aw .awseg button{flex:1 1 auto;min-width:0;padding-left:6px;padding-right:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:600px){#aw .awseg button{font-size:13.5px}}
 @media(max-width:380px){#aw .awseg{padding:3px}#aw .awseg button{font-size:12.5px;padding-left:4px;padding-right:4px}}
+/* v43.2 fit pass: rows and details a widget has no room for are left out whole (never cut in half) */
+.cbx #cb .w .fh{display:none!important}
+.cbx #cb .bestl{margin-top:0;display:flex;flex-direction:column}
+.cbx #cb .bestl .xar:first-child{border-top:0}
+.cbx #cb .bestl .brk{flex:none;width:22px;color:var(--muted);font-weight:800;font-size:12px}
+.cbx #cb .bestl.wide{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:22px}
+.cbx #cb .bestl.wide .xar:nth-child(2){border-top:0}
+.cbx #cb .bestl .xar{padding:5px 0}
+.cbx #cb .bestl .xai{width:22px;height:31px;flex:none}
+@media(max-width:600px){.cbx #cb .simple>.szM:is(.k-profit,.k-sales,.k-spent,.k-fees,.k-after,.k-budget) .cap{display:none}}
+/* small card thumbnails waiting for their art keep the thumbnail's size (they were growing to fit the placeholder letter) */
+.cbx #cb span.xai.ph{display:grid;place-items:center;height:25px;min-height:0;overflow:hidden;padding:0}
+.cbx #cb span.xai.ph i{font-size:10px;line-height:1}
+.cbx #cb .bestl span.xai.ph{height:31px}
+/* Profit by month as a banner: the summary is one line per figure, so it fits beside the chart at one row high */
+.cbx #cb .msum.v{gap:6px}
+.cbx #cb .msum.v>span{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.cbx #cb .msum.v>span small{margin:0}
+.cbx #cb .msum.v>span b{font-size:15px;margin:0}
+.cbx #cb .hz .cap{flex-shrink:0}
+.cbx #cb span.xai.ph{width:18px!important;flex:none}
+.cbx #cb .bestl span.xai.ph{width:22px!important}
 .tip{position:fixed;z-index:60;pointer-events:none;background:var(--text);color:var(--bg);border-radius:10px;padding:8px 11px;font-size:12.5px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;text-align:left}
 .tip.on{opacity:1}
 .note{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--text);color:var(--bg);border-radius:999px;padding:8px 14px;font-size:12px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}

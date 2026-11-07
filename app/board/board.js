@@ -145,7 +145,7 @@ let FREEMODE=cbFree();const defL=()=>FREEMODE?DEFAULT_FREE:DEFAULT;
 const FAMILY={profit:'num',sales:'num',spent:'num',fees:'num',after:'num',budget:'num',win:'card',feat:'card',pricey:'card',glance:'list',where:'list',kept:'list',best:'list',sell:'list',month:'chart'};
 const FAM_SIZES={num:['S','M'],card:['S','L'],list:['M','L'],chart:['B','X']};
 // phones (v43.1): one grid row is one short number tile, so lists and charts need two rows (Large) to be readable
-const PH_SIZES={num:['S','M'],card:['S','L'],list:['L'],chart:['L']};
+const PH_SIZES={num:['S','M'],card:['S','M','L'],list:['L'],chart:['L']};
 const sizesFor=k=>phone.matches?(PH_SIZES[FAMILY[k]]||['S','L']):(FAM_SIZES[FAMILY[k]]||['S','M','L']);
 const phFit=(k,s)=>{const ok=PH_SIZES[FAMILY[k]]||['S','L'];if(ok.includes(s))return s;const near={S:['S','M','L'],M:['M','L','S'],L:['L','M','S'],B:['M','L','S'],X:['L','M','S']}[s]||[];return near.find(x=>ok.includes(x))||ok[0]};
 const phoneL=l=>l&&l.map(w=>Object.assign({},w,{size:phFit(w.k,w.size)}));
@@ -624,8 +624,9 @@ function moveDrag(cx,cy){if(!drag)return;drag.cx=cx;drag.cy=cy;const dy=cy-drag.
   if(drag.skip){const se=$('simple').querySelector('.w[data-id="'+drag.skip+'"]');if(se&&inside(se))return;drag.skip=null}
   const over=[...$('simple').querySelectorAll('.w[data-id]')].find(el=>el!==drag.el&&inside(el));if(!over)return;
   const from=layout.findIndex(w=>w.id===drag.id),to=layout.findIndex(w=>w.id===over.dataset.id);if(from<0||to<0||from===to)return;
-  const before=rects();layout.splice(to,0,layout.splice(from,1)[0]);
-  if(from<to)over.after(drag.el);else over.before(drag.el);
+  // phones (v43.2): the widget you hold trades places with the one under your finger; nothing else moves
+  const before=rects();const t=layout[from];layout[from]=layout[to];layout[to]=t;
+  const mk=document.createComment('');drag.el.replaceWith(mk);over.replaceWith(drag.el);mk.replaceWith(over);
   drag.moved=true;drag.skip=over.dataset.id;buzz('tick');flip(before)}
 // stop the page from scrolling under a finger once a widget is lifted
 document.addEventListener('touchmove',e=>{if(drag||rz)e.preventDefault()},{passive:false});
@@ -1378,6 +1379,45 @@ window.cbSyncPlan();
  const t=h.querySelector('.cbh-t');new MutationObserver(()=>{t.textContent=edit.classList.contains('on')?'Editing':'Card Board'}).observe(edit,{attributes:true,attributeFilter:['class']});
  let tk=false;const sc=()=>{tk=false;h.style.setProperty('--s',Math.min(1,cbx.scrollTop/18).toFixed(3))};cbx.addEventListener('scroll',()=>{if(!tk){tk=true;requestAnimationFrame(sc)}},{passive:true});sc();
 })();
+// ---- v43.2: every widget fits whatever size it's given ----
+// Widgets are drawn for their size, but a size is a different number of pixels on every screen. After each draw (and when
+// the screen changes size) each widget is checked: if anything would be cut off, it gives up the least important things first
+// (the "Also up" rows, then the last rows of its list, then captions and repeated details) until everything left shows whole.
+// Nothing is shrunk or squashed: the rows that show, show in full. Hidden rows come back as soon as there's room.
+NEWW.best=function(ctx,s,w){
+  if(s!=='M'&&s!=='B')return bestBody(ctx,s,w);
+  // Wide: the top sellers as a short ranked list (a row of tall cards doesn't fit one row high)
+  const L=cardStats(ctx).filter(c=>c.sold&&c.b>0&&c.g>0).sort((a,b)=>b.g-a.g).slice(0,s==='B'?4:3);
+  if(!L.length)return '<p class="eg">No card bought and sold in this period yet.</p>';
+  return '<div class="xalso bestl'+(s==='B'?' wide':'')+'">'+L.map((c,i)=>'<div class="xar drill"'+dd({t:c.e.name,sub:'Every entry for this card',card:c.k})+' role="button" tabindex="0"><small class="brk">#'+(i+1)+'</small>'+cardImg(c,'xai','thumb')+'<span>'+esc(nameOf(c))+'</span><b class="num">'+ksigned(c.g)+'</b></div>').join('')+'</div>'};
+// phones: a card widget can be Wide (2×1); it uses the compact card-and-number layout, stretched across
+['win','pricey'].forEach(k=>{const f=NEWW[k];NEWW[k]=(ctx,s,w)=>f(ctx,phone.matches&&s==='M'?'S':s,w)});
+const FIT_ROWS=[['.xalso:not(.bestl) .xar','.xalso:not(.bestl)'],['.alsoup .mr','.alsoup'],['.bestl .xar',null,1],['.lr>.r',null,1],['.gl>.glr',null,1],['.st>.pr',null,1],['.pod>.pc.r3'],['.pod>.pc.r2']];
+// in order: repeated details first; a number widget gives up its little trend line before anything else; the big number stays
+const FIT_DROP=['.k-pricey .xl','.kspk','.k-budget .cv','.k-feat .fpc','.k-feat .fl','.k-feat>.wh .ttl','.cap','.k-month .msum','.k-month svg text','.xm','.chips','.msum','.facts','.xpc','.shb'];
+// something is cut off when it reaches past the widget's edge, is squeezed shorter than its own text, or (on the full-art
+// widgets, where the words sit on the picture) runs up under the widget's title
+function spills(wb){const R=wb.getBoundingClientRect();if(!R.height)return false;if(wb.scrollHeight>wb.clientHeight+4)return true;// (long names that run wide are shortened with … by their own styles, so only height counts)
+  const wh=wb.parentElement.querySelector(':scope>.wh .ttl:not(.fh)'),H=wh&&wh.getBoundingClientRect(),over=H&&H.height&&H.bottom>R.top+2;
+  for(const el of wb.querySelectorAll('*')){if(el.closest('.fh,.d,.ph'))continue;/* .d = a row's details, folded away until tapped */const r=el.getBoundingClientRect();if(!r.width)continue;
+    const txt=[...el.childNodes].some(n=>n.nodeType===3&&n.textContent.trim());
+    if(txt&&el.scrollHeight>el.clientHeight+6&&getComputedStyle(el).overflowY!=='visible')return true;
+    if(!r.height)continue;if(r.top<R.top-4||r.bottom>R.bottom+3)return true;
+    if(over&&txt&&r.top<H.bottom-1&&r.bottom>H.top&&r.left<H.right&&r.right>H.left)return true}return false}
+function fitW(w){const wb=w.querySelector(':scope>.wb');if(!wb)return;
+  wb.querySelectorAll('.fh').forEach(x=>x.classList.remove('fh'));w.classList.remove('fsq');
+  if(!spills(wb))return;
+  for(const [sel,box,keep] of FIT_ROWS){const els=[...wb.querySelectorAll(sel)];const min=keep||0;
+    const boxOff=()=>{if(box&&els.length&&els.every(e=>e.classList.contains('fh'))){const b=wb.querySelector(box);if(b)b.classList.add('fh')}};// no "Also up" heading over nothing
+    for(let i=els.length-1;i>=min;i--){els[i].classList.add('fh');boxOff();if(!spills(wb))return}}
+  for(const sel of FIT_DROP){const els=[...w.querySelectorAll(sel)].filter(e=>wb.contains(e)||sel.includes('.wh'));if(!els.length)continue;els.forEach(e=>e.classList.add('fh'));if(!spills(wb))return}
+  w.classList.add('fsq')}
+let fitQ=0;
+function fitAll(){fitQ=0;const sim=$('simple');if(!sim||$('cb').classList.contains('dragging')||rz)return;sim.querySelectorAll(':scope>.w[data-id]').forEach(fitW)}
+const fitSoon=()=>{if(!fitQ)fitQ=requestAnimationFrame(()=>requestAnimationFrame(fitAll))};
+(function(){const sim=$('simple');if(!sim)return;new MutationObserver(m=>{if(m.some(x=>x.type==='childList'&&!(x.target.closest&&x.target.closest('.floating'))))fitSoon()}).observe(sim,{childList:true,subtree:true});
+  if(window.ResizeObserver)new ResizeObserver(fitSoon).observe(sim);addEventListener('resize',fitSoon);
+  sim.addEventListener('load',e=>{if(e.target.tagName==='IMG')fitSoon()},true);document.fonts&&document.fonts.ready.then(fitSoon);fitSoon()})();
 
 // ---- the app's side: one back-gesture history shared with the app, live data, open/refresh ----
 if(window.CTNav){navPush=(k,fn)=>window.CTNav.push('cb:'+k,fn);navDone=k=>{if(!navPopping)window.CTNav.done('cb:'+k)}}

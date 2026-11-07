@@ -1683,3 +1683,11 @@ dialog:focus-visible,dialog [tabindex="-1"]:focus-visible,.ed-form:focus-visible
 .app-menu.am #am-start button.solk{opacity:.5}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #am-start{background:var(--s-ctl)!important}:root:not([data-theme="light"]) #am-start [aria-checked=true]{background:var(--s-raise)!important}}
 :root[data-theme="dark"] #am-start{background:var(--s-ctl)!important}:root[data-theme="dark"] #am-start [aria-checked=true]{background:var(--s-raise)!important}
+
+/* v43.2 notifications: dismiss with the X (desktop: shows on hover or keyboard focus), swipe sideways on touch, or Clear all */
+.ntf-it{touch-action:pan-y;will-change:transform}
+.ntf-t{position:relative}
+.ntf-x{flex:none;display:grid;place-items:center;width:28px;height:28px;margin:-4px -6px 0 2px;border:0;border-radius:50%;background:transparent;color:var(--muted,#77736d);cursor:pointer;opacity:.7;transition:opacity .18s,background-color .18s}
+@media(hover:hover){.ntf-x{opacity:0}.ntf-it:hover .ntf-x,.ntf-x:focus-visible{opacity:1}.ntf-x:hover{background:color-mix(in srgb,var(--text,#22221f) 8%,transparent);color:var(--text,#22221f)}}
+.ntf-clear{display:block;margin:14px auto 4px;min-height:40px;padding:0 16px;border:0;border-radius:999px;background:none;color:var(--muted,#77736d);font:inherit;font-size:13.5px;font-weight:750;cursor:pointer}
+@media(hover:hover){.ntf-clear:hover{color:var(--text,#22221f);background:color-mix(in srgb,var(--text,#22221f) 6%,transparent)}}
