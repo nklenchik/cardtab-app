@@ -2051,6 +2051,8 @@ html.pg-moving .cbx #cb .wq.k-feat .ttl,html.pg-moving .cbx #cb .fpc,html.pg-mov
 .cbx #cb .hz .cap{flex-shrink:0}
 .cbx #cb span.xai.ph{width:18px!important;flex:none}
 .cbx #cb .bestl span.xai.ph{width:22px!important}
+/* v45 Ask: "Premium gets 50" in the line under the box, as a quiet link */
+#askd .askup{border:0;background:none;padding:0;margin-left:4px;font:inherit;font-weight:800;color:var(--brand);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .tip{position:fixed;z-index:60;pointer-events:none;background:var(--text);color:var(--bg);border-radius:10px;padding:8px 11px;font-size:12.5px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;text-align:left}
 .tip.on{opacity:1}
 .note{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--text);color:var(--bg);border-radius:999px;padding:8px 14px;font-size:12px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}

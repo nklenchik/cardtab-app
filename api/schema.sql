@@ -40,3 +40,6 @@ CREATE TABLE IF NOT EXISTS sync_state ( user_id TEXT PRIMARY KEY, seq INTEGER NO
 CREATE TABLE IF NOT EXISTS usage ( day TEXT NOT NULL, src TEXT NOT NULL, plan TEXT NOT NULL, calls INTEGER NOT NULL DEFAULT 0, reqs INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day, src, plan) );
 CREATE TABLE IF NOT EXISTS usage_user ( day TEXT NOT NULL, user_id TEXT NOT NULL, calls INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day, user_id) );
 CREATE INDEX IF NOT EXISTS cards_name ON cards(name);
+-- Ask (v45): questions asked per account per month, and the month's tokens (for the spending cap)
+CREATE TABLE IF NOT EXISTS ask_usage ( user_id TEXT NOT NULL, month TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (user_id, month) );
+CREATE TABLE IF NOT EXISTS ask_spend ( month TEXT PRIMARY KEY, tin INTEGER NOT NULL DEFAULT 0, tout INTEGER NOT NULL DEFAULT 0, n INTEGER NOT NULL DEFAULT 0 );

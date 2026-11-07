@@ -1,3 +1,4 @@
+import { handleAsk } from './ask.js';
 /* Card Tab sign-in: Google, or an emailed link + 6-digit code. No passwords.
    A session is a random token in an HttpOnly cookie on .cardtab.app (good for 30 days); only its SHA-256 is stored.
    Link tokens and codes are single use, last 15 minutes, and are stored only as hashes. Admins are the emails in
@@ -8,6 +9,7 @@
    GET  /auth/google/start  -> Google -> GET /auth/google/callback
    GET  /auth/me            the signed-in person, or 401
    POST /auth/logout        end this session
+   POST /auth/ask           a question about your own numbers (see ask.js)
    POST /auth/logout-all    end every session for this account (Sign out of all devices)
    POST /auth/delete        delete the account and every session
    POST /auth/plan {plan}   admins only: switch your own plan for testing
@@ -154,6 +156,7 @@ export async function handleAuth(env, req, path) {
     return out(env, req, { ok: true }, 200, { 'set-cookie': setCookie(env, 'ct_s', '', 0) });
   }
   if (path === '/auth/sync' && req.method === 'POST') return handleSync(env, req, me, (body, status = 200) => out(env, req, body, status));
+  if (path === '/auth/ask' && req.method === 'POST') return handleAsk(env, req, Object.assign({}, me, { role: isAdmin(env, me.email) ? 'admin' : 'user' }), (body, status = 200) => out(env, req, body, status));
   if (path === '/auth/usage') {   // card data use this billing month (admins)
     if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);
     return out(env, req, await report(env));
