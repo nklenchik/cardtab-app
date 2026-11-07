@@ -1849,3 +1849,5 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
  .ct-gp .ct-demo-actions button{width:100%;height:42px;padding:0 10px;white-space:nowrap;overflow:visible;text-overflow:clip;display:flex;align-items:center;justify-content:center;text-align:center}
  .ct-gp .ct-demo-actions [data-gact="del"]{margin-left:0!important;border:1px solid var(--s-hair)!important}
 }
+/* v50.10: the account menu's picture lines up with the name at the top on computers too (as on phones) */
+.app-menu.am .amh{align-items:flex-start}.app-menu.am .amh>.av{margin-top:2px}

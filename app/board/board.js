@@ -275,12 +275,16 @@ function barsSVG(sp,W,H){
   if(lim){const y=(base-lim*sc).toFixed(1);s+='<line x1="0" x2="'+W+'" y1="'+y+'" y2="'+y+'" stroke="var(--text)" stroke-opacity=".55" stroke-width="1.5" stroke-dasharray="4 4"/>'}
   if(sp.best&&top>4&&best>-1&&bv>0){const c=Math.max(28,Math.min(W-28,best*slot+slot/2)),y=base-bv*sc;s+='<text x="'+c.toFixed(1)+'" y="'+Math.max(15,y-25).toFixed(1)+'" text-anchor="middle" fill="var(--green)" style="font:800 15px Manrope,-apple-system,Segoe UI,sans-serif">+'+kshort(bv)+'</text><text x="'+c.toFixed(1)+'" y="'+Math.max(28,y-12).toFixed(1)+'" text-anchor="middle" fill="var(--muted)" style="font:700 9.5px Manrope,-apple-system,Segoe UI,sans-serif;letter-spacing:.02em">'+(sp.bestLabel||'best month')+'</text>'}
   return s+hit+'</svg>'}
-function fillCharts(root,ctx){root.querySelectorAll('.cv[data-cv]').forEach(el=>{const sp=ctx.cv[+el.dataset.cv];if(!sp)return;const W=Math.floor(el.clientWidth),H=Math.floor(el.clientHeight);el.innerHTML=hideMoney(barsSVG(sp,W,H));
+// v50.10: a chart is drawn for the size its box has at that moment; if the box settles to another size afterwards (a
+// widget that was just added, flown in or resized), it's drawn again, so bars never sit in a box of the wrong size
+const CVRO=window.ResizeObserver?new ResizeObserver(es=>{es.forEach(en=>{const el=en.target;if(!el.isConnected||!el._sp){CVRO.unobserve(el);return}const W=Math.floor(el.clientWidth),H=Math.floor(el.clientHeight);if(W>4&&H>4&&(Math.abs(W-el._wh[0])>2||Math.abs(H-el._wh[1])>2))drawCv(el,el._sp)})}):null;
+function fillCharts(root,ctx){root.querySelectorAll('.cv[data-cv]').forEach(el=>{const sp=ctx.cv[+el.dataset.cv];if(!sp)return;drawCv(el,sp);if(CVRO&&!el._ro){el._ro=1;CVRO.observe(el)}})}
+function drawCv(el,sp){{const W=Math.floor(el.clientWidth),H=Math.floor(el.clientHeight);el._sp=sp;el._wh=[W,H];el.innerHTML=hideMoney(barsSVG(sp,W,H));
   const svg=el.querySelector('svg');if(!svg||!sp.tip)return;if(TOUCH.matches){scrubChart(el,svg,sp);return}
   svg.querySelectorAll('rect[data-i]').forEach(rc=>{const i=+rc.dataset.i,bar=svg.querySelector('path[data-i="'+i+'"]');
     ['pointerenter','focus'].forEach(ev=>rc.addEventListener(ev,e=>{if(bar&&!rz&&(ev==='focus'||e.pointerType==='mouse'))bar.classList.add('hv')}));
     ['pointerleave','blur'].forEach(ev=>rc.addEventListener(ev,()=>{if(bar)bar.classList.remove('hv')}));
-    bindTip(rc,bar||rc,()=>sp.tip(i));if(sp.ent)rc.addEventListener('click',e=>{if(!canDrill())return;e.stopPropagation();openEntries(sp.ent(i))})})})}
+    bindTip(rc,bar||rc,()=>sp.tip(i));if(sp.ent)rc.addEventListener('click',e=>{if(!canDrill())return;e.stopPropagation();openEntries(sp.ent(i))})})}}
 function spark(vals){const n=vals.length;if(n<2)return '';const mx=Math.max(...vals),mn=Math.min(0,...vals),r=(mx-mn)||1;const pts=vals.map((v,i)=>[(i/(n-1)*100).toFixed(1),(28-((v-mn)/r)*26).toFixed(1)]);
   return '<svg class="spk" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><path d="M'+pts.map(p=>p.join(' ')).join('L')+'" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
 const CHIP={eBay:['--cb-crbg','--cb-cr'],TCGplayer:['--cb-blbg','--cb-bl']};
