@@ -425,7 +425,12 @@ function fitRows(){const cb=$('cb'),sim=$('simple');if(units()<4){cb.style.remov
   if(editing&&cb.style.getPropertyValue('--rowh'))return;// edit mode adds an "Add widget" bar above the widgets; keep the fit you had
   // measure from the top bar (plus the free plan's quiet line), never from edit-mode extras
   const q=cb.querySelector('.cbquiet'),qh=q&&!q.hidden?q.offsetHeight+(parseFloat(getComputedStyle(q).marginBottom)||0):0;
-  const top0=tb.getBoundingClientRect().bottom-cbx.getBoundingClientRect().top+cbx.scrollTop+qh,room=cbx.clientHeight-top0-28-2*rg;
+  // v50.13: the top bar sticks to the top while scrolling, so it only shows where it really sits when the board is
+  // scrolled to the top. Measure it then, and reuse that while scrolled (leaving edit mode lower down used to measure the
+  // stuck bar, think there was less room, and shrink every row so widgets dropped details)
+  const tk=innerWidth+'x'+cbx.clientHeight;let tbB;
+  if(cbx.scrollTop<2||!fitRows.k||fitRows.k!==tk){tbB=tb.getBoundingClientRect().bottom-cbx.getBoundingClientRect().top+(cbx.scrollTop<2?cbx.scrollTop:0);if(cbx.scrollTop<2){fitRows.k=tk;fitRows.b=tbB}else if(fitRows.b)tbB=Math.min(tbB,fitRows.b)}else tbB=fitRows.b;
+  const top0=tbB+qh,room=cbx.clientHeight-top0-28-2*rg;
   let g=48;while(g>24&&(room-g)/4<140)g-=4;const h=Math.max(128,Math.min(168,Math.floor((room-g)/4)));// v43: the first four rows fit (one row of numbers and two-row widgets under it)
   cb.style.setProperty('--topgap',g+'px');cb.style.setProperty('--rowh',h+'px');cb.classList.toggle('rowtight',h<150)}
 function render(animate){
