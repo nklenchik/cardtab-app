@@ -3,12 +3,13 @@
 // Small = 1 cell, Wide = 2 across, Large = 2 across x 2 tall, Extra large = the full width x 2 tall (desktop/tablet).
 // Each metric has its own hand-made layout for each size. Charts are drawn at the exact pixel size of their box.
 const PERIODS=[['d7','Last 7 days'],['d30','Last 30 days'],['l3','Last 3 months'],['ytd','This year'],['l12','Last 12 months'],['ly','Last year'],['all','All time'],['custom','Custom dates…']];
-const SIZES=['S','M','B','L','X'],SIZE_NAMES={S:'Small',M:'Wide',B:'Banner',L:'Large',X:'Extra large'},DIM={S:[1,1],M:[2,1],B:[4,1],L:[2,2],X:[4,2]};
+const SIZES=['S','M','B','L','X'],SIZE_NAMES={S:'Small',M:'Wide',B:'Banner',L:'Large',X:'Extra large'},DIM={S:[1,1],M:[2,1],B:[6,1],L:[2,2],X:[6,2]};
 const CATALOG={
   profit:{t:'Profit',s:'Profit',d:'What you kept after fees, minus what you spent'},
   sales:{t:'Sales',s:'Sales',d:'Everything you sold, before fees'},
   spent:{t:'Spent',s:'Spent',d:'Everything you bought'},
   fees:{t:'Fees and shipping',s:'Fees',d:'What platforms and postage took from your sales'},
+  after:{t:'After fees',s:'After fees',d:'What your sales brought in after fees and shipping'},
   month:{t:'Profit by month',s:'Best month',d:'Your best and worst months at a glance'},
   sell:{t:'How much of it sold',s:'Sold',d:'How many of the cards you bought have sold'},
   where:{t:'Where you buy',s:'Buy from',d:'Which platforms get most of your spending'},
@@ -19,31 +20,54 @@ const CATALOG={
   best:{t:'Best sellers',s:'Best sellers',d:'Your top three cards by profit'},
   pricey:{t:'Priciest card',s:'Priciest',d:'The most you paid for a single card'},
   glance:{t:'At a glance',s:'At a glance',d:'Your quick numbers from Entries, the same ones you picked there'}};
-const DEFAULT=[['feat','L'],['profit','S'],['sales','S'],['spent','S'],['glance','S'],['month','B']].map(([k,size],i)=>({id:'d'+i,k,size}));
+const DEFAULT=[['profit','S'],['sales','S'],['after','S'],['spent','S'],['budget','S'],['fees','S'],['glance','L'],['win','L'],['where','L'],['month','X']].map(([k,size],i)=>({id:'d'+i,k,size}));
 // Free keeps its own arrangement of its 4 widgets, so going Premium (or back) never scrambles either board
-const DEFAULT_FREE=[['profit','S'],['sales','S'],['month','M'],['spent','S']].map(([k,size],i)=>({id:'f'+i,k,size}));
+const DEFAULT_FREE=[['profit','S'],['sales','S'],['after','S'],['spent','S'],['month','X']].map(([k,size],i)=>({id:'f'+i,k,size}));
 let FREEMODE=cbFree();const defL=()=>FREEMODE?DEFAULT_FREE:DEFAULT;
+// v43: widget families, and the two sizes each can use (like single-number widgets on marketing dashboards)
+const FAMILY={profit:'num',sales:'num',spent:'num',fees:'num',after:'num',budget:'num',win:'card',feat:'card',pricey:'card',glance:'list',where:'list',kept:'list',best:'list',sell:'list',month:'chart'};
+const FAM_SIZES={num:['S','M'],card:['S','L'],list:['M','L'],chart:['B','X']};
+// phones (v43.1): one grid row is one short number tile, so lists and charts need two rows (Large) to be readable
+const PH_SIZES={num:['S','M'],card:['S','M','L'],list:['L'],chart:['L']};
+// v51: six more widgets (their layouts are in board19)
+const NEWK={
+  bd:{t:'Breakdown',s:'Breakdown',d:'Pick what to measure and how to split it: spending by game, profit by set, sales by platform…',fam:'list',cat:'list'},
+  tied:{t:'Money tied up in cards',s:'Tied up',d:'What you paid for cards you still hold, and how long you’ve held them',fam:'tied',cat:'num'},
+  hit:{t:'Hit rate',s:'Hit rate',d:'The share of your sales that made money, with your best and worst',fam:'num',cat:'num'},
+  tts:{t:'Time to sell',s:'Time to sell',d:'How many days cards usually take to sell, overall and by game',fam:'num',cat:'num'},
+  inout:{t:'In vs out',s:'In vs out',d:'What you spent next to what came back from sales, each month',fam:'pair',cat:'chart'},
+  ppc:{t:'What you pay per card',s:'Price range',d:'How many cards you buy in each price range, and what each range costs',fam:'list',cat:'list'}};
+Object.keys(NEWK).forEach(k=>{CATALOG[k]={t:NEWK[k].t,s:NEWK[k].s,d:NEWK[k].d};FAMILY[k]=NEWK[k].fam});
+FAM_SIZES.tied=['S','M','L'];PH_SIZES.tied=['S','M','L'];FAM_SIZES.pair=['L','B','X'];PH_SIZES.pair=['L'];
+window.cbCatOf=k=>(NEWK[k]&&NEWK[k].cat)||FAMILY[k];
+const sizesFor=k=>phone.matches?(PH_SIZES[FAMILY[k]]||['S','L']):(FAM_SIZES[FAMILY[k]]||['S','M','L']);
+const phFit=(k,s)=>{const ok=PH_SIZES[FAMILY[k]]||['S','L'];if(ok.includes(s))return s;const near={S:['S','M','L'],M:['M','L','S'],L:['L','M','S'],B:['M','L','S'],X:['L','M','S']}[s]||[];return near.find(x=>ok.includes(x))||ok[0]};
+const phoneL=l=>l&&l.map(w=>Object.assign({},w,{size:phFit(w.k,w.size)}));
+// the nearest size a widget is allowed (for boards arranged before families)
+const fitSize=(k,s)=>{const ok=FAM_SIZES[FAMILY[k]];if(!ok||ok.includes(s))return s;const near={S:['S','M','L','B','X'],M:['M','S','L','B','X'],L:['L','X','M','S','B'],B:['B','X','M','L','S'],X:['X','B','L','M','S']}[s]||[];return near.find(x=>ok.includes(x))||ok[0]};
 // phone and desktop each keep their own arrangement (order and sizes). The phone starts as a copy of desktop.
 // Widgets you add land on both boards; removing, moving, resizing and Reset only touch the screen you're on.
-const LKEY0='cb.layout.v3',LKEYP0='cb.layout.phone.v1',clone=x=>JSON.parse(JSON.stringify(x));let LKEY=LKEY0+(FREEMODE?'.free':''),LKEYP=LKEYP0+(FREEMODE?'.free':'');
-const loadL=k=>{try{const s=JSON.parse(localStorage.getItem(k));if(Array.isArray(s)&&s.every(w=>w.id&&CATALOG[w.k]&&DIM[w.size]&&(!FREEMODE||FREE_K.includes(w.k))))return s}catch(e){}return null};
+const LKEY0='cb.layout.v4',LKEYP0='cb.layout.phone.v2',clone=x=>JSON.parse(JSON.stringify(x));let LKEY=LKEY0+(FREEMODE?'.free':''),LKEYP=LKEYP0+(FREEMODE?'.free':'');
+const loadL=k=>{try{let raw=localStorage.getItem(k);if(raw==null){const old=k.replace('cb.layout.v4','cb.layout.v3').replace('cb.layout.phone.v2','cb.layout.phone.v1');raw=localStorage.getItem(old);if(raw){const o=JSON.parse(raw);if(Array.isArray(o)){o.forEach(w=>{if(w&&w.k)w.size=fitSize(w.k,w.size)});raw=JSON.stringify(o)}}}const s=JSON.parse(raw);if(Array.isArray(s)&&s.every(w=>w.id&&CATALOG[w.k]&&DIM[w.size]&&(!FREEMODE||FREE_K.includes(w.k))))return s}catch(e){}return null};
 const phoneQ=matchMedia('(max-width:600px)');let onPhone=phoneQ.matches,layoutD=loadL(LKEY)||clone(defL()),layoutP=loadL(LKEYP);
-let layout=onPhone?(layoutP||(layoutP=clone(layoutD))):layoutD;
+let layout=onPhone?(layoutP=phoneL(layoutP||clone(layoutD))):layoutD;
 const save=()=>{try{if(onPhone)layoutP=layout;else layoutD=layout;localStorage.setItem(onPhone?LKEYP:LKEY,JSON.stringify(layout));localStorage.setItem('cb.custom','1')}catch(e){}};
 const otherLayout=()=>onPhone?layoutD:layoutP;
 const saveOther=()=>{try{const o=otherLayout();if(o)localStorage.setItem(onPhone?LKEY:LKEYP,JSON.stringify(o))}catch(e){}};
-function swapLayout(){const p=phoneQ.matches;if(p===onPhone)return;if(onPhone)layoutP=layout;else layoutD=layout;onPhone=p;layout=p?(layoutP||(layoutP=clone(layoutD))):layoutD}
+function swapLayout(){const p=phoneQ.matches;if(p===onPhone)return;if(onPhone)layoutP=layout;else layoutD=layout;onPhone=p;layout=p?(layoutP=phoneL(layoutP||clone(layoutD))):layoutD}
 const customized=()=>{try{return localStorage.getItem('cb.custom')==='1'}catch(e){return true}};
 const newId=()=>'w'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 let period='l12',plat='all',editing=false;
 function applyPlan(){const f=cbFree();if(f===FREEMODE)return false;FREEMODE=f;LKEY=LKEY0+(f?'.free':'');LKEYP=LKEYP0+(f?'.free':'');
-  layoutD=loadL(LKEY)||clone(defL());layoutP=loadL(LKEYP);layout=onPhone?(layoutP||(layoutP=clone(layoutD))):layoutD;if(editing)setEditing(false);fitFreePeriod();return true}
+  layoutD=loadL(LKEY)||clone(defL());layoutP=loadL(LKEYP);layout=onPhone?(layoutP=phoneL(layoutP||clone(layoutD))):layoutD;if(editing)setEditing(false);fitFreePeriod();return true}
 function fitFreePeriod(){if(window.cbLinked)return;if(cbFree()&&!FREE_P.includes(period)){period='l3';const l=$('cb-perl');if(l)l.textContent='Last 3 months'}}
 const VKEY='cb.view',saveView=()=>{try{localStorage.setItem(VKEY,JSON.stringify({period,plat,custom}))}catch(e){}};
 let BUDGET=15000; // your monthly budget in cents; inside the app it comes from the budget setting (see fitBudget)
 const fitBudget=()=>{try{const c=window.CTBudgetCents&&window.CTBudgetCents();if(c>0)BUDGET=c}catch(e){}};
 const phone=matchMedia('(max-width:600px)');
-const units=()=>phone.matches?2:4;
+// v43: six columns on desktop, four on mid-size screens, two on phones
+const midQ=matchMedia('(min-width:601px) and (max-width:1099px)');
+const units=()=>phone.matches?2:midQ.matches?4:6;
 const sizesNow=()=>phone.matches?['S','M','L']:SIZES;
 const eff=s=>phone.matches?(s==='X'?'L':s==='B'?'M':s):s; // on phones Extra large shows as Large and Banner as Wide
 const byId=id=>layout.find(w=>w.id===id);
@@ -53,7 +77,7 @@ const byId=id=>layout.find(w=>w.id===id);
 // a double pulse when you remove one. Nothing while scrolling or between snaps. Android vibrates; iPhone Safari has no
 // vibration for web pages, so it uses the system switch's own light tick (iOS 18+). The native app will get full haptics.
 const HAP={tick:[6],tap:[12],firm:[20],warn:[14,70,14]};
-let hapOn=(()=>{try{return localStorage.getItem('cb.haptics')!=='0'}catch(e){return true}})(),hapLast=0,iosSw=null;
+let hapOn=false,/* v43.3: haptics removed (they didn't reach most phones); buzz() stays as a no-op */hapLast=0,iosSw=null;
 const canVibrate=typeof navigator.vibrate==='function',touchDev=matchMedia('(pointer:coarse)').matches;
 function iosTick(){if(!iosSw){iosSw=document.createElement('label');iosSw.className='hapsw';iosSw.setAttribute('aria-hidden','true');iosSw.innerHTML='<input type="checkbox" switch tabindex="-1">';iosSw.addEventListener('click',e=>e.stopPropagation());document.body.appendChild(iosSw)}iosSw.click()}
 function buzz(kind){if(!hapOn||!touchDev)return;const now=performance.now();if(kind==='tick'&&now-hapLast<45)return;hapLast=now;
@@ -84,9 +108,9 @@ const inR=(list,a,b)=>list.filter(e=>e.date>=a&&e.date<=b);
 const pool=()=>plat==='all'?E:E.filter(e=>e.platform===plat);
 const kshort=v=>(v<0?'−':'')+'$'+NFR.format(Math.round(Math.abs(v)/100));
 const ksigned=v=>(v>=0?'+':'−')+'$'+NF2.format(Math.abs(v)/100);
-const KPI={profit:t=>t.profit,sales:t=>t.sales,spent:t=>t.spent,fees:t=>t.fees};
-const GOOD={profit:'up',sales:'up',spent:'down',fees:'down'};
-const KCOL={sales:'var(--cb-pos)',spent:'var(--cb-bl)',fees:'var(--cb-gry)'};
+const KPI={profit:t=>t.profit,sales:t=>t.sales,spent:t=>t.spent,fees:t=>t.fees,after:t=>t.sales-t.fees};
+const GOOD={profit:'up',sales:'up',spent:'down',fees:'down',after:'up'};
+const KCOL={sales:'var(--cb-pos)',spent:'var(--cb-bl)',fees:'var(--cb-gry)',after:'var(--cb-pos)'};
 function ctxNow(){const [a,b]=rangeFor(period),p=pool(),bk=buckets(a,b),n=days(a,b);
   return {a,b,unit:bk.unit,p,inP:inR(p,a,b),prevP:(compare==='off'||cbFree())?null:compare==='year'?inR(p,yBack(a),yBack(b)):inR(p,dPlus(a,-n),dPlus(a,-1)),mt:bk.list.map(x=>Object.assign({},x,{list:inR(p,x.from,x.to)})),cv:[]}}
 const mShort=k=>mLabel(k,{month:'short',year:'numeric'});
@@ -104,7 +128,7 @@ const hideMoney=h=>maskAmt()?h.replace(/[−+-]?\$[\d,]+(?:\.\d\d)?/g,'$••�
 // ---------- see the entries behind a number ----------
 const canDrill=()=>!editing&&!viewing&&!rz&&!drag;
 const dd=o=>' data-drill="'+esc(JSON.stringify(o))+'"';
-const KTYPES={profit:null,sales:['sale'],spent:['purchase'],fees:['sale'],month:null};
+const KTYPES={profit:null,sales:['sale'],spent:['purchase'],fees:['sale'],after:['sale'],month:null};
 // ---------- the site's tooltip ----------
 let tipEl=null;
 function tip(){if(!tipEl){tipEl=document.createElement('div');tipEl.className='cb-tip';tipEl.setAttribute('role','status');$('cb').appendChild(tipEl)}return tipEl}
@@ -129,7 +153,7 @@ addEventListener('popstate',()=>{if(navSkip>0){navSkip--;if(!navSkip)while(navWa
 // cv() leaves a placeholder; fillCharts() measures it after layout and draws the SVG to fit.
 function cv(ctx,spec){ctx.cv.push(spec);return '<div class="cv" data-cv="'+(ctx.cv.length-1)+'"></div>'}
 function barsSVG(sp,W,H){
-  const d=sp.data,n=d.length;if(!n||W<30||H<24)return '';
+  const d=sp.data,n=d.length;if(!n||W<30||H<(sp.labels?24:14))return '';/* v50.10: small bar charts with no month letters still draw in short boxes */
   const slot=W/n,labs=sp.labels&&H>=70,every=slot<15?3:slot<22?2:1,fs=slot>40?11.5:10.5;
   const top=sp.best&&H>=110?40:4,bottom=H-(labs?20:0)-1;
   const vals=d.map(x=>x.v),lim=sp.limit||0,pos=Math.max(0,lim,...vals),neg=Math.max(0,...vals.map(v=>-v));
@@ -145,12 +169,16 @@ function barsSVG(sp,W,H){
   if(lim){const y=(base-lim*sc).toFixed(1);s+='<line x1="0" x2="'+W+'" y1="'+y+'" y2="'+y+'" stroke="var(--text)" stroke-opacity=".55" stroke-width="1.5" stroke-dasharray="4 4"/>'}
   if(sp.best&&top>4&&best>-1&&bv>0){const c=Math.max(28,Math.min(W-28,best*slot+slot/2)),y=base-bv*sc;s+='<text x="'+c.toFixed(1)+'" y="'+Math.max(15,y-25).toFixed(1)+'" text-anchor="middle" fill="var(--green)" style="font:800 15px Manrope,-apple-system,Segoe UI,sans-serif">+'+kshort(bv)+'</text><text x="'+c.toFixed(1)+'" y="'+Math.max(28,y-12).toFixed(1)+'" text-anchor="middle" fill="var(--muted)" style="font:700 9.5px Manrope,-apple-system,Segoe UI,sans-serif;letter-spacing:.02em">'+(sp.bestLabel||'best month')+'</text>'}
   return s+hit+'</svg>'}
-function fillCharts(root,ctx){root.querySelectorAll('.cv[data-cv]').forEach(el=>{const sp=ctx.cv[+el.dataset.cv];if(!sp)return;const W=Math.floor(el.clientWidth),H=Math.floor(el.clientHeight);el.innerHTML=hideMoney(barsSVG(sp,W,H));
+// v50.10: a chart is drawn for the size its box has at that moment; if the box settles to another size afterwards (a
+// widget that was just added, flown in or resized), it's drawn again, so bars never sit in a box of the wrong size
+const CVRO=window.ResizeObserver?new ResizeObserver(es=>{es.forEach(en=>{const el=en.target;if(!el.isConnected||!el._sp){CVRO.unobserve(el);return}const W=Math.floor(el.clientWidth),H=Math.floor(el.clientHeight);if(W>4&&H>4&&(Math.abs(W-el._wh[0])>2||Math.abs(H-el._wh[1])>2)){drawCv(el,el._sp);if(typeof fitSoon==='function'&&el.closest('#simple'))fitSoon()}})}):null;
+function fillCharts(root,ctx){root.querySelectorAll('.cv[data-cv]').forEach(el=>{const sp=ctx.cv[+el.dataset.cv];if(!sp)return;drawCv(el,sp);if(CVRO&&!el._ro){el._ro=1;CVRO.observe(el)}})}
+function drawCv(el,sp){{const W=Math.floor(el.clientWidth),H=Math.floor(el.clientHeight);el._sp=sp;el._wh=[W,H];el.innerHTML=hideMoney((sp.pair?cbPairSVG:barsSVG)(sp,W,H));
   const svg=el.querySelector('svg');if(!svg||!sp.tip)return;if(TOUCH.matches){scrubChart(el,svg,sp);return}
-  svg.querySelectorAll('rect[data-i]').forEach(rc=>{const i=+rc.dataset.i,bar=svg.querySelector('path[data-i="'+i+'"]');
-    ['pointerenter','focus'].forEach(ev=>rc.addEventListener(ev,e=>{if(bar&&!rz&&(ev==='focus'||e.pointerType==='mouse'))bar.classList.add('hv')}));
-    ['pointerleave','blur'].forEach(ev=>rc.addEventListener(ev,()=>{if(bar)bar.classList.remove('hv')}));
-    bindTip(rc,bar||rc,()=>sp.tip(i));if(sp.ent)rc.addEventListener('click',e=>{if(!canDrill())return;e.stopPropagation();openEntries(sp.ent(i))})})})}
+  svg.querySelectorAll('rect[data-i]').forEach(rc=>{const i=+rc.dataset.i,bars=svg.querySelectorAll('path[data-i="'+i+'"]'),bar=bars[0];
+    ['pointerenter','focus'].forEach(ev=>rc.addEventListener(ev,e=>{if(bar&&!rz&&(ev==='focus'||e.pointerType==='mouse'))bars.forEach(b=>b.classList.add('hv'))}));
+    ['pointerleave','blur'].forEach(ev=>rc.addEventListener(ev,()=>{bars.forEach(b=>b.classList.remove('hv'))}));
+    bindTip(rc,bar||rc,()=>sp.tip(i));if(sp.ent)rc.addEventListener('click',e=>{if(!canDrill())return;e.stopPropagation();openEntries(sp.ent(i))})})}}
 function spark(vals){const n=vals.length;if(n<2)return '';const mx=Math.max(...vals),mn=Math.min(0,...vals),r=(mx-mn)||1;const pts=vals.map((v,i)=>[(i/(n-1)*100).toFixed(1),(28-((v-mn)/r)*26).toFixed(1)]);
   return '<svg class="spk" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><path d="M'+pts.map(p=>p.join(' ')).join('L')+'" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
 const CHIP={eBay:['--cb-crbg','--cb-cr'],TCGplayer:['--cb-blbg','--cb-bl']};
@@ -160,12 +188,14 @@ const segCol=p=>CHIP[p]?'var('+CHIP[p][1]+')':'var(--cb-gry)';
 function shareBar(rows,total){if(!rows.length||!total)return '';const top=rows.slice(0,2),rest=total-top.reduce((a,x)=>a+x.v,0),segs=top.map(x=>({k:x.k,v:x.v}));if(rest>0)segs.push({k:'Other',v:rest});
   return '<div class="shb" role="img" aria-label="'+esc(segs.map(x=>x.k+' '+Math.round(x.v/total*100)+'%').join(', '))+'">'+segs.map(x=>'<i style="flex:'+x.v+';background:'+segCol(x.k)+'" title="'+esc(x.k)+'"></i>').join('')+'</div>'}
 // list rows: big sizes open in place like the site's FAQs; small sizes show the same detail in a tooltip
-const row=(inner,detail,open,drill)=>'<div class="r" '+(open?'data-row':'data-tipd="'+esc(detail)+'"'+(drill?dd(drill):''))+'>'+inner+'<div class="d">'+esc(detail)+(open&&drill?' <button type="button" class="seeent"'+dd(drill)+'>See entries ›</button>':'')+'</div></div>';
+/* v50.14: rows never open inside the widget any more (that changed the widget's height and pushed other rows out); the
+   detail shows in a hover card on computers, and a tap opens the entries behind the row */
+const row=(inner,detail,_open,drill,open=false)=>'<div class="r" '+(open?'data-row':'data-tipd="'+esc(detail)+'"'+(drill?dd(drill):''))+'>'+inner+'<div class="d">'+esc(detail)+(open&&drill?' <button type="button" class="seeent"'+dd(drill)+'>See entries ›</button>':'')+'</div></div>';
 
 // v37: At a glance, the same quick numbers as Entries (and the same picks), for the board's period and platform
 NEWW.glance=function(ctx,s){const rows=window.CTMetrics&&CTMetrics.rows?CTMetrics.rows(ctx.inP):[];if(!rows.length)return '<p class="eg">Nothing in this period yet.</p>';
   const n={S:2,M:2,B:3,L:5,X:6}[s]||3,cls=s==='B'?' gl3':s==='X'?' gl2':'';
-  return '<div class="gl'+cls+'">'+rows.slice(0,n).map(r=>'<div class="glr'+(r.art?' gla':'')+'">'+(r.art&&!maskNames()?'<div class="glbg" style="background-image:url(\''+esc(r.art)+'\')"></div>':(r.icon?'<span class="glic">'+r.icon+'</span>':'<span class="glic ct-cardph" aria-hidden="true"></span>'))+
+  return '<div class="gl'+cls+'">'+rows.slice(0,n).map(r=>'<div class="glr'+(r.art?' gla':'')+'">'+(r.art&&!maskNames()?'<div class="glbg" data-meta="'+esc(r.meta||'')+'" style="background-image:url(\''+esc(r.art)+'\')"></div>':(r.icon?'<span class="glic">'+r.icon+'</span>':'<span class="glic ct-cardph" aria-hidden="true"></span>'))+
     '<div class="gltx"><small>'+esc(r.label)+'</small><em>'+esc(maskNames()&&r.art?'A card from your collection':r.title)+'</em></div><div class="glv"><b class="num'+(r.green?' g':'')+'">'+hideMoney(esc(r.value))+'</b>'+(r.sub?'<span>'+hideMoney(esc(r.sub))+'</span>':'')+'</div></div>').join('')+'</div>'};
 // ---------- widget bodies: one layout per metric per size ----------
 function body(k,ctx,s,w){
@@ -188,9 +218,13 @@ function body(k,ctx,s,w){
     const TY={Bought:'purchase',Sold:'sale',Refunded:'refund'};const prs=open=>rows.map(([l,n,wd,c,d])=>'<div class="pr" '+(open?'data-row':'data-tipd="'+esc(d)+'"'+dd({t:l,a:'0000-01-01',b:ctx.b,types:[TY[l]]}))+'><div class="t"><span>'+l+'</span><span>'+cnt(n,'card','cards')+'</span></div><div class="bar"><i style="width:'+wd.toFixed(1)+'%;background:'+c+'"></i></div><div class="d">'+esc(d)+(open?' <button type="button" class="seeent"'+dd({t:l,sub:'Up to '+dLong(ctx.b),a:'0000-01-01',b:ctx.b,types:[TY[l]]})+'>See entries ›</button>':'')+'</div></div>').join('');
     const hero='<div class="cq">'+bn(pct+'%','g',s==='S'?44:64)+'</div><small class="cap">of the cards you’ve bought have sold</small>';
     if(s==='S')return '<div class="sS"><div class="cq">'+bn(pct+'%','g',44)+'</div><small class="cap">of cards sold</small><div class="prog"><div class="bar"><i style="width:'+pct+'%"></i></div><small>'+sd+' of '+b+'</small></div></div>';
-    if(s==='M'||s==='B')return '<div class="split'+(s==='B'?' wide':'')+'"><div class="hz">'+hero+'</div><div class="st tight">'+prs(false)+'</div></div>';
-    if(s==='L')return '<div class="col"><div class="hz">'+hero+'</div><div class="st">'+prs(true)+'</div></div>';
-    return '<div class="split wide"><div class="hz">'+hero+'<div class="facts"><span><small>Spent</small><b class="num">'+money(spent)+'</b></span><span><small>Made back</small><b class="num">'+money(made)+'</b></span></div></div><div class="st">'+prs(true)+'</div></div>'}
+    /* v50.14: wide-short sizes show one bar split into sold, refunded and not sold yet, with the three counts under it (each
+       with its detail on hover and its entries on tap), so nothing has to be hidden to fit */
+    if(s==='M'||s==='B'){const un=Math.max(0,b-sd-r),seg=(n,c)=>n?'<i style="width:'+(n/b*100).toFixed(2)+'%;background:'+c+'"></i>':'';
+      const key=rows.map(([l,n,wd,c,d])=>'<span class="sk" data-tipd="'+esc(d)+'"'+dd({t:l,a:'0000-01-01',b:ctx.b,types:[TY[l]]})+'><i style="background:'+c+'"></i>'+n+' '+l.toLowerCase()+'</span>').join('');
+      return '<div class="split'+(s==='B'?' wide':'')+'"><div class="hz">'+hero+'</div><div class="sstack"><div class="sbar">'+seg(sd,'var(--cb-pos)')+seg(r,'var(--cb-neg)')+seg(un,'var(--cb-gry)')+'</div><div class="skey">'+key+'</div></div></div>'}
+    if(s==='L')return '<div class="col"><div class="hz">'+hero+'</div><div class="st">'+prs(false)+'</div></div>';
+    return '<div class="split wide"><div class="hz">'+hero+'<div class="facts"><span><small>Spent</small><b class="num">'+money(spent)+'</b></span><span><small>Made back</small><b class="num">'+money(made)+'</b></span></div></div><div class="st">'+prs(false)+'</div></div>'}
   if(k==='where'){const sp={},n={};inP.filter(e=>e.type==='purchase').forEach(e=>{sp[e.platform]=(sp[e.platform]||0)+e.amount;n[e.platform]=(n[e.platform]||0)+e.qty});const rows=Object.keys(sp).map(x=>({k:x,v:sp[x],n:n[x]})).sort((a,b)=>b.v-a.v);
     if(!rows.length)return '<p class="eg">No purchases in this period.</p>';
     const pc=x=>Math.round(x.v/Math.max(1,t.spent)*100)+'% of spend',det=x=>cnt(x.n,'card','cards')+' · about '+kshort(x.v/x.n)+' each';
@@ -238,7 +272,7 @@ function body(k,ctx,s,w){
 function kpiBody(k,ctx,s,t,w){const T=!(w&&w.trend===false);
   const {inP,mt,unit}=ctx,v=KPI[k](t),pv=ctx.prevP?KPI[k](totals(ctx.prevP)):0,chg=pv?((v-pv)/Math.abs(pv))*100:null,up=chg!=null&&chg>=0,good=chg==null?null:(GOOD[k]==='up'?up:!up);
   const series=mt.map(x=>KPI[k](totals(x.list))),bi=series.reduce((a,x,i)=>x>series[a]?i:a,0);
-  const sub=k==='profit'?cnt(t.n,'entry','entries'):k==='sales'?cnt(inP.filter(e=>e.type==='sale').length,'sale','sales'):k==='spent'?cnt(inP.filter(e=>e.type==='purchase').length,'purchase','purchases'):(t.sales?(t.fees/t.sales*100).toFixed(1):'0.0')+'% of sales';
+  const sub=k==='profit'?cnt(t.n,'entry','entries'):k==='sales'?cnt(inP.filter(e=>e.type==='sale').length,'sale','sales'):k==='spent'?cnt(inP.filter(e=>e.type==='purchase').length,'purchase','purchases'):k==='after'?kshort(t.fees)+' in fees':(t.sales?(t.fees/t.sales*100).toFixed(1):'0.0')+'% of sales';
   // the change now sits beside the widget's name; under the number only the count shows, and only when there's nothing to compare
   const cls=k==='profit'?(v>=0?'g':'r'):'',dl=chg==null?'<span class="sm">'+sub+'</span>':'',kdv=dl?'<div class="kd">'+dl+'</div>':'';
   const spk='<div class="kspk'+(k==='profit'?(v<0?' r':''):' mu')+'">'+spark(series)+'</div>';
@@ -258,7 +292,7 @@ function kpiDelta(k,ctx){if(!KPI[k]||!ctx.prevP)return '';const v=KPI[k](totals(
   const chg=(v-pv)/Math.abs(pv)*100,up=chg>=0,good=GOOD[k]==='up'?up:!up,vs=compare==='year'?'vs last year':'vs previous period';
   return '<span class="dl hd '+(good?'up':'dn')+'" title="'+vs+'" aria-label="'+(up?'Up ':'Down ')+Math.abs(chg).toFixed(0)+'% '+vs+'">'+(up?'▲':'▼')+'\u2009'+Math.abs(chg).toFixed(0)+'%</span>'}
 const GRIP='<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M13 5L5 13M13 9.5L9.5 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
-function widgetHTML(w,ctx,extra){const s=eff(w.size),t=w.name||(w.k==='month'?'Profit by '+ctx.unit:w.k==='feat'?FEAT[FEAT[w.metric]?w.metric:'win'].t:CATALOG[w.k].t),tt=w.name||(s==='S'&&w.k!=='feat'?(w.k==='month'?'Best '+ctx.unit:CATALOG[w.k].s):t);
+function widgetHTML(w,ctx,extra){const s=eff(w.size),t=w.name||(w.k==='month'?'Profit by '+ctx.unit:w.k==='feat'?FEAT[FEAT[w.metric]?w.metric:'win'].t:w.k==='bd'?cbBdTitle(w):w.k==='inout'?'In vs out by '+ctx.unit:CATALOG[w.k].t),tt=w.name||(s==='S'&&w.k!=='feat'?(w.k==='month'?'Best '+ctx.unit:CATALOG[w.k].s):t);
   return '<section class="w wq sz'+w.size+' e'+s+(s==='B'?' eM':'')+' k-'+w.k+(extra?' '+extra:'')+'" data-id="'+w.id+'" data-k="'+w.k+'" aria-label="'+esc(t)+', '+SIZE_NAMES[s]+'"><div class="wh"><div class="wtl"><h3 class="ttl" title="'+esc(t)+'">'+esc(tt)+'</h3>'+kpiDelta(w.k,ctx)+'</div><button type="button" class="wmore" aria-label="Options for '+t+'" aria-haspopup="true">⋯</button></div><div class="wb">'+hideMoney(body(w.k,ctx,s,w))+'</div>'+
     '<button type="button" class="rm" aria-label="Remove '+t+'"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 2l6 6M8 2L2 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>'+
     '<button type="button" class="grip" aria-label="Resize '+t+'. Now '+SIZE_NAMES[s]+'. Arrow keys change the size." title="Drag to resize">'+GRIP+'</button></section>'}
@@ -286,14 +320,19 @@ function flip(before,skip){markEdges();if(calm.matches)return;const els=[...$('s
 // desktop: size the rows so the first three always fit in the window under the top bar (between 150 and 206px tall)
 // desktop: the first three rows always fit in the window. Rows grow up to 206px; on short windows the space under the
 // top bar gives way first (60px down to 28px) so widgets stay at least 180px tall, then rows shrink no lower than 168px.
-function fitRows(){const cb=$('cb'),sim=$('simple');if(units()!==4){cb.style.removeProperty('--rowh');cb.style.removeProperty('--topgap');cb.classList.remove('rowtight');return}
+function fitRows(){const cb=$('cb'),sim=$('simple');if(units()<4){cb.style.removeProperty('--rowh');cb.style.removeProperty('--topgap');cb.classList.remove('rowtight');return}
   const tb=cb.querySelector('.topbar'),rg=parseFloat(getComputedStyle(sim).rowGap)||16;
   if(editing&&cb.style.getPropertyValue('--rowh'))return;// edit mode adds an "Add widget" bar above the widgets; keep the fit you had
   // measure from the top bar (plus the free plan's quiet line), never from edit-mode extras
   const q=cb.querySelector('.cbquiet'),qh=q&&!q.hidden?q.offsetHeight+(parseFloat(getComputedStyle(q).marginBottom)||0):0;
-  const top0=tb.getBoundingClientRect().bottom-cbx.getBoundingClientRect().top+cbx.scrollTop+qh,room=cbx.clientHeight-top0-28-2*rg;
-  let g=60;while(g>28&&(room-g)/3<180)g-=4;const h=Math.max(168,Math.min(206,Math.floor((room-g)/3)));
-  cb.style.setProperty('--topgap',g+'px');cb.style.setProperty('--rowh',h+'px');cb.classList.toggle('rowtight',h<190)}
+  // v50.13: the top bar sticks to the top while scrolling, so it only shows where it really sits when the board is
+  // scrolled to the top. Measure it then, and reuse that while scrolled (leaving edit mode lower down used to measure the
+  // stuck bar, think there was less room, and shrink every row so widgets dropped details)
+  const tk=innerWidth+'x'+cbx.clientHeight;let tbB;
+  if(cbx.scrollTop<2||!fitRows.k||fitRows.k!==tk){tbB=tb.getBoundingClientRect().bottom-cbx.getBoundingClientRect().top+(cbx.scrollTop<2?cbx.scrollTop:0);if(cbx.scrollTop<2){fitRows.k=tk;fitRows.b=tbB}else if(fitRows.b)tbB=Math.min(tbB,fitRows.b)}else tbB=fitRows.b;
+  const top0=tbB+qh,room=cbx.clientHeight-top0-28-2*rg;
+  let g=48;while(g>24&&(room-g)/4<140)g-=4;const h=Math.max(128,Math.min(168,Math.floor((room-g)/4)));// v43: the first four rows fit (one row of numbers and two-row widgets under it)
+  cb.style.setProperty('--topgap',g+'px');cb.style.setProperty('--rowh',h+'px');cb.classList.toggle('rowtight',h<150)}
 function render(animate){
   fitBudget();fitRows();const before=animate?rects():null,ctx=ctxNow();hideTip();
   $('simple').innerHTML=layout.map(w=>widgetHTML(w,ctx)).join('')+(!editing&&!customized()&&!viewing?'<button type="button" class="mkw szS" id="mkw"><span class="pl" aria-hidden="true">+</span><b>Make it yours</b><small>Add, resize and move widgets</small></button>':'');$('addw').hidden=!editing;
@@ -301,7 +340,7 @@ function render(animate){
   if(before)flip(before)}
 function grow(){const cb=$('cb');if(calm.matches)return;cb.classList.add('grow');void cb.offsetWidth;requestAnimationFrame(()=>requestAnimationFrame(()=>cb.classList.remove('grow')))}
 phone.addEventListener('change',()=>{swapLayout();if(shown)render(false)});
-let rsT=0,lastW=innerWidth,lastH=innerHeight;addEventListener('resize',()=>{if(!shown||rz||drag||(Math.abs(innerWidth-lastW)<2&&(units()!==4||Math.abs(innerHeight-lastH)<2)))return;clearTimeout(rsT);rsT=setTimeout(()=>{lastW=innerWidth;lastH=innerHeight;render(false)},120)});
+let rsT=0,lastW=innerWidth,lastH=innerHeight;addEventListener('resize',()=>{if(!shown||rz||drag||(Math.abs(innerWidth-lastW)<2&&(units()<4||Math.abs(innerHeight-lastH)<2)))return;clearTimeout(rsT);rsT=setTimeout(()=>{lastW=innerWidth;lastH=innerHeight;render(false)},120)});
 
 // ---------- period and platform pickers ----------
 // menus inside the scrolling phone toolbar would be cut off, so there they float above everything, under their button
@@ -385,7 +424,7 @@ rs.addEventListener('click',e=>{if(e.target===rs){rs.close();return}const b=e.ta
 $('addw').addEventListener('click',()=>openAdd());
 let undoT=0;function showUndo(msg,fn){const u=$('undo');$('undo-t').textContent=msg;u.hidden=false;u.classList.remove('out');$('undo-b').onclick=()=>{clearTimeout(undoT);hideUndo();fn()};clearTimeout(undoT);undoT=setTimeout(hideUndo,5000)}
 function hideUndo(){const u=$('undo');if(u.hidden)return;u.classList.add('out');setTimeout(()=>{u.hidden=true;u.classList.remove('out')},200)}
-function removeWidget(id){buzz('warn');const el=$('simple').querySelector('.w[data-id="'+id+'"]'),i=layout.findIndex(w=>w.id===id);if(i<0)return;const gone=layout[i];layout.splice(i,1);save();
+function removeWidget(id){buzz('warn');const el=$('simple').querySelector('.w[data-id="'+id+'"]'),i=layout.findIndex(w=>w.id===id);if(i<0)return;const gone=layout[i];window.CTTrack&&CTTrack.ev('widget_remove',CATALOG[gone.k].t);layout.splice(i,1);save();
   showUndo((gone.name||CATALOG[gone.k].t)+' removed',()=>{layout.splice(Math.min(i,layout.length),0,gone);save();buzz('tick');render(true)});
   if(!el||calm.matches){render(true);return}
   el.style.pointerEvents='none';el.animate([{opacity:1,transform:'none'},{opacity:0,transform:'scale(.9)'}],{duration:180,easing:'ease-in',fill:'forwards'}).onfinish=()=>render(true)}
@@ -397,29 +436,31 @@ $('simple').addEventListener('click',e=>{
   const dr=e.target.closest('[data-drill]');if(dr&&canDrill()){e.stopPropagation();openEntries(JSON.parse(dr.dataset.drill));return}
   const sec=e.target.closest('.w[data-id]');if(!sec)return;const w=byId(sec.dataset.id);if(!w)return;
   if(e.target.closest('.rm')){removeWidget(w.id);return}
-  const more=e.target.closest('.wmore');if(more){e.stopPropagation();openWidgetMenu(more,w)}
+  const more=e.target.closest('.wmore,.bdpick');if(more){e.stopPropagation();openWidgetMenu(more,w)}
 });
 // swap one widget's content for its layout at a new size, in place
 function rebuild(id){const w=byId(id),el=$('simple').querySelector('.w[data-id="'+id+'"]');if(!w||!el)return null;const ctx=ctxNow(),tmp=document.createElement('div');tmp.innerHTML=widgetHTML(w,ctx);const nw=tmp.firstChild;el.replaceWith(nw);wire(nw,ctx);return nw}
-function setSize(id,s){const w=byId(id);if(!w||w.size===s)return;buzz('tick');const before=rects();w.size=s;save();const el=rebuild(id);flip(before);
+function setSize(id,s){const w=byId(id);if(!w||w.size===s)return;window.CTTrack&&CTTrack.ev('widget_size',s);buzz('tick');const before=rects();w.size=s;save();const el=rebuild(id);flip(before);
   if(el&&!calm.matches)el.animate([{opacity:.4},{opacity:1}],{duration:260,easing:'ease-out'})}
 // widget menu (⋯): size, move, remove
 const SZL={S:'Small',M:'Wide',B:'Banner',L:'Large',X:'X-Large'};
 function openWidgetMenu(btn,w){closeMenus();hideTip();const m=$('wmenu'),cur=eff(w.size);
-  m.innerHTML='<div class="mh">Size</div><div class="msz2" style="--n:'+sizesNow().length+'">'+sizesNow().map(s=>'<button type="button" data-msize="'+s+'" aria-pressed="'+(cur===s)+'" aria-label="'+SIZE_NAMES[s]+'"><i class="sg sg'+s+'"></i><span>'+SZL[s]+'</span></button>').join('')+'</div>'+
+  m.innerHTML='<div class="mh">Size</div><div class="msz2" style="--n:'+sizesFor(w.k).length+'">'+sizesFor(w.k).map(s=>'<button type="button" data-msize="'+s+'" aria-pressed="'+(cur===s)+'" aria-label="'+SIZE_NAMES[s]+'"><i class="sg sg'+s+'"></i><span>'+SZL[s]+'</span></button>').join('')+'</div>'+
     (w.k==='feat'?'<div class="mh">Featuring</div><div class="mfeat">'+FEAT_ORDER.map(m=>'<button type="button" data-fm="'+m+'" aria-pressed="'+((w.metric||'win')===m)+'">'+FEAT[m].t.replace('Your biggest win','Biggest win')+'</button>').join('')+'</div><div class="mrow"><span>Show</span><div class="seg fshow" role="radiogroup" aria-label="Show">'+[['both','Both'],['$','$'],['%','%']].map(o=>'<button type="button" role="radio" data-fs="'+o[0]+'" aria-checked="'+((w.show||'both')===o[0])+'">'+o[1]+'</button>').join('')+'</div></div>':'')+
+    (w.k==='bd'?cbBdMenu(w):'')+
     (KPI[w.k]?'<div class="mrow"><span>Show trend</span><button type="button" class="swt" data-act="trend" role="switch" aria-checked="'+(w.trend!==false)+'" aria-label="Show trend"><i></i></button></div>':'')+
     '<div class="msep"></div><button type="button" data-act="rename">Rename</button><button type="button" data-act="up">Move up</button><button type="button" data-act="down">Move down</button><button type="button" data-act="rm" class="danger">Remove</button>';
   const r=btn.getBoundingClientRect(),host=$('cb').getBoundingClientRect();m.hidden=false;const mw=m.offsetWidth;m.style.top=(r.bottom-host.top+6)+'px';m.style.left=Math.max(8,Math.min(r.right-host.left-mw,host.width-mw-8))+'px';
   m.onclick=ev=>{const b=ev.target.closest('button');if(!b)return;
     if(b.dataset.fm){w.metric=b.dataset.fm;save();buzz('tick');m.querySelectorAll('[data-fm]').forEach(x=>x.setAttribute('aria-pressed',x===b));rebuild(w.id);return}
     if(b.dataset.fs){w.show=b.dataset.fs;save();buzz('tick');m.querySelectorAll('[data-fs]').forEach(x=>x.setAttribute('aria-checked',x===b));rebuild(w.id);return}
+    if(b.dataset.bdm||b.dataset.bdby){if(b.dataset.bdm)w.m=b.dataset.bdm;else w.by=b.dataset.bdby;save();buzz('tick');m.querySelectorAll(b.dataset.bdm?'[data-bdm]':'[data-bdby]').forEach(x=>x.setAttribute('aria-pressed',x===b));rebuild(w.id);return}
     if(b.dataset.act==='trend'){w.trend=w.trend===false;save();b.setAttribute('aria-checked',w.trend!==false);buzz('tick');rebuild(w.id);return}
     m.hidden=true;if(b.dataset.msize){setSize(w.id,b.dataset.msize);return}
     if(b.dataset.act==='rename'){startRename(w.id);return}if(b.dataset.act==='up')moveWidget(w.id,-1);else if(b.dataset.act==='down')moveWidget(w.id,1);else removeWidget(w.id)}}
 
 // rename: the title becomes a text field; an empty name goes back to the suggested one
-function startRename(id){const w=byId(id),el=$('simple').querySelector('.w[data-id="'+id+'"]');if(!w||!el)return;const h=el.querySelector('.ttl'),def=w.k==='month'?'Profit by '+ctxNow().unit:CATALOG[w.k].t;
+function startRename(id){const w=byId(id),el=$('simple').querySelector('.w[data-id="'+id+'"]');if(!w||!el)return;const h=el.querySelector('.ttl'),def=w.k==='month'?'Profit by '+ctxNow().unit:w.k==='bd'?cbBdTitle(w):CATALOG[w.k].t;
   const inp=document.createElement('input');inp.className='ttlin';inp.value=w.name||def;inp.maxLength=40;inp.setAttribute('aria-label','Widget name');h.replaceWith(inp);inp.focus();inp.select();let done=false;
   const fin=ok=>{if(done)return;done=true;const v=inp.value.trim();if(ok){w.name=v&&v!==def?v:undefined;save();buzz('tick')}rebuild(id)};
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();fin(true)}else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();fin(false)}});inp.addEventListener('blur',()=>fin(true))}
@@ -432,7 +473,7 @@ function gridSpec(){const g=$('simple'),r=g.getBoundingClientRect(),cs=getComput
 const pxW=(g,c)=>c*g.col+(c-1)*g.gap,pxH=(g,n)=>n*g.row+(n-1)*g.rgap;
 function box(g,s){let [c,r]=DIM[s];c=Math.min(c,g.u);return [pxW(g,c),pxH(g,r)]}
 // nearest size to the dragged corner, measured in cells; the current pick gets a small head start so it never flickers
-function snap(g,w,h,cur){let best=cur,bd=Infinity;sizesNow().forEach(s=>{const [W,H]=box(g,s),d=Math.hypot((w-W)/g.col,(h-H)/g.row)-(s===cur?.3:0);if(d<bd){bd=d;best=s}});return best}
+function snap(g,w,h,cur){let best=cur,bd=Infinity;(rz?sizesFor(byId(rz.id).k):sizesNow()).forEach(s=>{const [W,H]=box(g,s),d=Math.hypot((w-W)/g.col,(h-H)/g.row)-(s===cur?.3:0);if(d<bd){bd=d;best=s}});return best}
 function rzLayers(g,rowsNeeded){const sim=$('simple');let ov=$('rzgrid');if(!ov){ov=document.createElement('div');ov.id='rzgrid';ov.className='rzgrid';ov.setAttribute('aria-hidden','true');sim.appendChild(ov)}
   ov.style.gridTemplateColumns='repeat('+g.u+',minmax(0,1fr))';ov.style.gridAutoRows=g.row+'px';ov.style.gap=g.rgap+'px '+g.gap+'px';ov.innerHTML='<i></i>'.repeat(g.u*rowsNeeded);
   const c=document.createElement('div');c.className='rzg';c.setAttribute('aria-hidden','true');sim.appendChild(c);return {c}}
@@ -468,7 +509,7 @@ let pending=null;
 function startDrag(pd){pending=null;try{$('simple').setPointerCapture(pd.pid)}catch(e){}hideTip();const sim=$('simple'),g=sim.getBoundingClientRect(),r=pd.el.getBoundingClientRect();
   const fl=pd.el.cloneNode(true);fl.removeAttribute('data-id');fl.classList.add('floating');fl.setAttribute('aria-hidden','true');
   fl.style.cssText='position:absolute;left:0;top:0;width:'+r.width+'px;height:'+r.height+'px;margin:0';sim.appendChild(fl);
-  drag={id:pd.id,el:pd.el,fl,x:pd.x,y:pd.y,cx:pd.cx,cy:pd.cy,ox:r.left-g.left,oy:r.top-g.top,w:r.width,h:r.height,st0:cbx.scrollTop,vy:0,moved:false,skip:null,desk:units()===4,cand:null,candT:0,edgeT:0};
+  drag={id:pd.id,el:pd.el,fl,x:pd.x,y:pd.y,cx:pd.cx,cy:pd.cy,ox:r.left-g.left,oy:r.top-g.top,w:r.width,h:r.height,st0:cbx.scrollTop,vy:0,moved:false,skip:null,desk:units()>2,cand:null,candT:0,edgeT:0};
   pd.el.classList.add('slot');$('cb').classList.add('dragging');buzz('tap');moveDrag(pd.cx,pd.cy);drag.loop=requestAnimationFrame(scrollLoop)}
 // Lay widgets out the way the grid does (each one in the first spot from the top where it fits), so we can try every
 // position for the one you're holding and pick the one whose landing spot is closest to it, before anything moves.
@@ -490,13 +531,10 @@ function moveDrag(cx,cy){if(!drag)return;drag.cx=cx;drag.cy=cy;const dy=cy-drag.
   drag.fl.style.transform='translate('+(drag.ox+cx-drag.x)+'px,'+(drag.oy+dy)+'px) scale(1.03)';
   if(drag.desk){deskDrag(drag.ox+cx-drag.x,drag.oy+dy);return}
   const inside=el=>{const r=el.getBoundingClientRect();return cx>r.left&&cx<r.right&&cy>r.top&&cy<r.bottom};
-  // after a swap, wait until you've left that widget before it can swap back, so nothing flickers
-  if(drag.skip){const se=$('simple').querySelector('.w[data-id="'+drag.skip+'"]');if(se&&inside(se))return;drag.skip=null}
-  const over=[...$('simple').querySelectorAll('.w[data-id]')].find(el=>el!==drag.el&&inside(el));if(!over)return;
-  const from=layout.findIndex(w=>w.id===drag.id),to=layout.findIndex(w=>w.id===over.dataset.id);if(from<0||to<0||from===to)return;
-  const before=rects();layout.splice(to,0,layout.splice(from,1)[0]);
-  if(from<to)over.after(drag.el);else over.before(drag.el);
-  drag.moved=true;drag.skip=over.dataset.id;buzz('tick');flip(before)}
+  // phones (v49.1): the widget under your finger is marked; the two trade places when you let go. Nothing moves while
+  // you're still dragging, so passing over other widgets on the way doesn't shuffle them.
+  const over=[...$('simple').querySelectorAll('.w[data-id]')].find(el=>el!==drag.el&&inside(el)),id=over?over.dataset.id:null;
+  if(id!==drag.tgt){if(drag.tgtEl)drag.tgtEl.classList.remove('swapto');drag.tgt=id;drag.tgtEl=over||null;if(over){over.classList.add('swapto');buzz('tick')}}}
 // stop the page from scrolling under a finger once a widget is lifted
 document.addEventListener('touchmove',e=>{if(drag||rz)e.preventDefault()},{passive:false});
 $('simple').addEventListener('pointermove',e=>{
@@ -508,6 +546,8 @@ function endPointer(){
   if(pending){clearTimeout(pending.t);pending=null}
   if(rz){const r=rz;rz=null;if(r.raf)cancelAnimationFrame(r.raf);cancelAnimationFrame(r.loop);placeRzFinal(r);return}
   if(!drag)return;const d=drag;drag=null;cancelAnimationFrame(d.loop);justDragged=true;setTimeout(()=>{justDragged=false},0);
+  if(!d.desk&&d.tgtEl){d.tgtEl.classList.remove('swapto');const from=layout.findIndex(w=>w.id===d.id),to=layout.findIndex(w=>w.id===d.tgt);
+    if(from>=0&&to>=0&&from!==to){const before=rects(),t=layout[from];layout[from]=layout[to];layout[to]=t;const over=d.tgtEl,mk=document.createComment('');d.el.replaceWith(mk);over.replaceWith(d.el);mk.replaceWith(over);d.moved=true;flip(before)}}
   $('cb').classList.remove('dragging');if(d.moved){save();buzz('firm')}
   // the floating copy glides into the slot, then the real widget takes its place
   const g=$('simple').getBoundingClientRect(),t=d.el.getBoundingClientRect(),tx=t.left-g.left,ty=t.top-g.top;
@@ -516,7 +556,7 @@ function endPointer(){
   const a=d.fl.animate([{transform:d.fl.style.transform},{transform:'translate('+tx+'px,'+ty+'px) scale(1)'}],{duration:240,easing:'cubic-bezier(.2,.7,.2,1)',fill:'forwards'});a.onfinish=done}
 function placeRzFinal(r){
   const size=r.s||r.s0,w=byId(r.id);$('cb').classList.remove('rzing');
-  buzz(size!==r.s0?'firm':'tick');if(eff(w.size)!==size)w.size=size;
+  buzz(size!==r.s0?'firm':'tick');if(size!==r.s0)window.CTTrack&&CTTrack.ev('widget_size',size);if(eff(w.size)!==size)w.size=size;
   const before=rects();
   let el=rebuild(r.id);if(!el){r.c.remove();save();return}
   // widened from the left corner of a right-hand widget: it takes the row and its left neighbour moves down, instead of the
@@ -532,13 +572,13 @@ function placeRzFinal(r){
 $('simple').addEventListener('pointerup',endPointer);$('simple').addEventListener('pointercancel',endPointer);
 $('simple').addEventListener('contextmenu',e=>{if(editing)e.preventDefault()});
 // keyboard: arrow keys on the grip step through the sizes
-$('simple').addEventListener('keydown',e=>{const gp=e.target.closest('.grip');if(!gp)return;const id=gp.closest('.w[data-id]').dataset.id,w=byId(id),L=sizesNow(),i=L.indexOf(eff(w.size));
+$('simple').addEventListener('keydown',e=>{const gp=e.target.closest('.grip');if(!gp)return;const id=gp.closest('.w[data-id]').dataset.id,w=byId(id),L=sizesFor(w.k),i=L.indexOf(eff(w.size));
   let j=-1;if((e.key==='ArrowRight'||e.key==='ArrowDown')&&i<L.length-1)j=i+1;if((e.key==='ArrowLeft'||e.key==='ArrowUp')&&i>0)j=i-1;
   if(j>-1){e.preventDefault();setSize(id,L[j]);const ng=$('simple').querySelector('.w[data-id="'+id+'"] .grip');if(ng)ng.focus()}});
 
 // ---------- add widgets: a gallery of small widgets; tap to add to the top of the board, tap again to take it back ----------
-const aw=$('aw'),DEF_SIZE={profit:'S',sales:'S',spent:'S',fees:'S',month:'M',sell:'M',where:'S',kept:'M',win:'M',budget:'M',feat:'L',best:'L',pricey:'M',glance:'M'};
-const CATS={profit:'num',sales:'num',spent:'num',fees:'num',sell:'num',win:'num',month:'chart',budget:'chart',where:'list',kept:'list',feat:'num',best:'list',pricey:'num',glance:'list'};
+const aw=$('aw'),DEF_SIZE={profit:'S',sales:'S',spent:'S',fees:'S',after:'S',month:'X',sell:'M',where:'L',kept:'M',win:'L',budget:'S',feat:'L',best:'L',pricey:'S',glance:'L',bd:'L',tied:'M',hit:'M',tts:'M',inout:'X',ppc:'L'};
+const CATS=FAMILY; // v43: the gallery's kinds are the widget families
 const PLUS_I='<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
 const CHECK_I='<svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.4l2.6 2.5L11 4.4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 let added={},awCat='all';
@@ -548,7 +588,7 @@ function prebuildAdd(){if(aw.open||awSig===awSigNow())return;const st=aw.style.c
 function openAdd(){$('aw-hint').textContent=AW_TIP;$('aw-hint').classList.remove('msg');const fresh=awCat==='all'&&!$('aw-q').value&&!Object.keys(added).length&&awSig===awSigNow();
   added={};awCat='all';$('aw-q').value='';$('aw-cats').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c==='all'));aw.showModal();if(!fresh){drawThumbs();awSig=awSigNow()}}
 function drawThumbs(){const g=gridSpec(),W=g.col,H=g.row,ctx=ctxNow(),q=$('aw-q').value.trim().toLowerCase(),host=$('aw-list');
-  const keys=Object.keys(CATALOG).filter(k=>(awCat==='all'||CATS[k]===awCat)&&(!q||(CATALOG[k].t+' '+CATALOG[k].d).toLowerCase().includes(q)));
+  const keys=Object.keys(CATALOG).filter(k=>(awCat==='all'||cbCatOf(k)===awCat)&&(!q||(CATALOG[k].t+' '+CATALOG[k].d).toLowerCase().includes(q)));
   PVMODE=true;try{host.innerHTML=keys.length?keys.map(k=>{const lk=cbFree()&&!FREE_K.includes(k);return '<div role="button" tabindex="0" class="thumb'+(added[k]?' added':'')+(lk?' lockd':'')+'" data-k="'+k+'" aria-pressed="'+!!added[k]+'" aria-label="'+(lk?CATALOG[k].t+', Premium':(added[k]?'Remove ':'Add ')+CATALOG[k].t)+'"><span class="tbox"><span class="tin">'+widgetHTML({id:'pv'+k,k,size:'S'},ctx,'pv')+'</span></span><span class="badge">'+(lk?LOCK_I:added[k]?CHECK_I:PLUS_I)+'</span></div>'}).join(''):'<p class="awnone">No widgets match “'+esc(q)+'”.</p>'}finally{PVMODE=false}
   const bxs=[...host.querySelectorAll('.tbox')],ws=bxs.map(bx=>bx.clientWidth);bxs.forEach((bx,i)=>{const sc=ws[i]/W,inn=bx.firstChild,el=inn.firstChild;el.style.width=W+'px';el.style.height=H+'px';inn.style.transform='scale('+sc+')';bx.style.height=(H*sc)+'px'});
   wire(host,ctx)}
@@ -560,8 +600,9 @@ $('aw-list').addEventListener('keydown',e=>{const th=e.target.closest('.thumb');
 $('aw-cats').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;awCat=b.dataset.c;$('aw-cats').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));drawThumbs()});
 aw.addEventListener('click',e=>{if(e.target===aw){aw.close();return}const th=e.target.closest('.thumb');
   if(th){const k=th.dataset.k;
+    window.CTTrack&&CTTrack.ev(added[k]?'widget_remove':'widget_add',CATALOG[k].t);
     if(added[k]){const i=layout.findIndex(w=>w.id===added[k]);if(i>-1)layout.splice(i,1);const o=otherLayout();if(o){const j=o.findIndex(w=>w.id===added[k]);if(j>-1){o.splice(j,1);saveOther()}}delete added[k];save();buzz('warn');render(true);awToast(CATALOG[k].t+' removed')}
-    else{const id=newId();layout.unshift({id,k,size:DEF_SIZE[k]});const o=otherLayout();if(o){o.unshift({id,k,size:DEF_SIZE[k]});saveOther()}added[k]=id;save();buzz('firm');render(true);awToast(CATALOG[k].t+' added to the top of your board')}
+    else{const id=newId();layout.push({id,k,size:DEF_SIZE[k]});const o=otherLayout();if(o){o.push({id,k,size:DEF_SIZE[k]});saveOther()}added[k]=id;save();buzz('firm');render(true);awToast(CATALOG[k].t+' added to your board')}
     th.classList.toggle('added',!!added[k]);th.setAttribute('aria-pressed',!!added[k]);th.setAttribute('aria-label',(added[k]?'Remove ':'Add ')+CATALOG[k].t);th.querySelector('.badge').innerHTML=added[k]?CHECK_I:PLUS_I;
     const bd=th.querySelector('.badge');if(!calm.matches)bd.animate([{transform:'scale(.6)'},{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:260,easing:'cubic-bezier(.2,.7,.2,1)'});return}
   const b=e.target.closest('button');if(b&&b.hasAttribute('data-close'))aw.close()});
@@ -640,7 +681,9 @@ function pageGo(from,to,dir,done){
 function fromEl(){const o=(window.CTBoardFrom&&window.CTBoardFrom())||ins;const r=o&&o.getBoundingClientRect();return r&&r.width?r:{left:innerWidth/2-60,top:innerHeight/2-60,width:120,height:120}}
 function open(){
   if(busy||shown)return;navPush('board',()=>close());busy=true;xb.classList.remove('hint');$('note').hidden=true;
-  if(!ready){render(false);ready=true}
+  // v42.25: when the board hasn't been drawn yet, draw it first and start the slide two frames later, so the drawing
+  // never lands in the middle of the motion (it's usually drawn ahead of time, while you're on Entries)
+  const cold=!ready;if(cold){render(false);ready=true}
   const r=fromEl();shown=true;cbx.scrollTop=0;document.documentElement.style.overflow='hidden';document.documentElement.classList.add('cbopen');xb.setAttribute('aria-expanded','true');
   cbx.inert=false;cbx.removeAttribute('aria-hidden');
   if(calm.matches&&!window.CTPage){cbx.classList.remove('off','enter');busy=false;$('close').focus({preventScroll:true});return}
@@ -648,7 +691,7 @@ function open(){
   // from the right while the one you're leaving moves out to the left, in step, like turning a page.
   {const inst=window.cbInstant;window.cbInstant=false;cbx.classList.remove('off','enter');
     if(inst){busy=false;return}
-    pageGo('entries','board',1,()=>{busy=false;$('close').focus({preventScroll:true})});return}
+    const go=()=>pageGo('entries','board',1,()=>{busy=false;$('close').focus({preventScroll:true})});if(cold)requestAnimationFrame(()=>requestAnimationFrame(go));else go();return}
   cbx.classList.add('anim','enter');cbx.classList.remove('off');bgl.classList.add('on');
   bgl.animate([{transform:fromRect(r)},{transform:'none'}],{duration:460,easing:EASE});
   $('cb').animate([{opacity:0},{opacity:1}],{duration:240,delay:170,easing:'ease-out',fill:'backwards'});
@@ -670,7 +713,7 @@ function close(){
     bgl.animate([{transform:'none'},{transform:fromRect(r)}],{duration:360,easing:EASE,fill:'forwards'}).onfinish=function(){finish();$('cb').style.opacity='';this.cancel()}};
 }
 xb.addEventListener('click',open);$('close').addEventListener('click',close);
-document.addEventListener('click',e=>{const wm=$('wmenu');if(!wm.hidden&&!e.target.closest('#wmenu')&&!e.target.closest('.wmore'))wm.hidden=true});
+document.addEventListener('click',e=>{const wm=$('wmenu');if(!wm.hidden&&!e.target.closest('#wmenu')&&!e.target.closest('.wmore,.bdpick'))wm.hidden=true});
 cbx.addEventListener('scroll',hideTip,{passive:true});
 document.addEventListener('keydown',e=>{if(e.key!=='Escape'||!shown||document.querySelector('dialog[open]'))return;if(!$('wmenu').hidden){$('wmenu').hidden=true;return}if(!$('cb-menu').hidden||!$('cb-pmenu').hidden||!$('cb-amenu').hidden){closeMenus();return}if(editing){setEditing(false);return}close()});
 
@@ -691,9 +734,7 @@ function applyTheme(th){if($('cb-amenu').parentNode===mhost)setTimeout(mhVars,30
 applyTheme((()=>{try{return localStorage.getItem('cb.theme')||'auto'}catch(e){return 'auto'}})());
 $('am-theme').addEventListener('click',e=>{const b=e.target.closest('button');if(b){applyTheme(b.dataset.th);buzz('tick');setTimeout(()=>render(false),30)}});
 // haptics switch; hidden on computers, where there is nothing to feel
-function paintHap(){$('am-hap').setAttribute('aria-checked',hapOn)}paintHap();
-if(!touchDev)$('am-hapr').hidden=true;
-$('am-hap').addEventListener('click',()=>{hapOn=!hapOn;try{localStorage.setItem('cb.haptics',hapOn?'1':'0')}catch(e){}paintHap();buzz('tap')});
+if($('am-hapr'))$('am-hapr').remove();
 $('cb-amenu').addEventListener('click',e=>{const b=e.target.closest('[data-am]');if(!b)return;closeMenus();const a=b.dataset.am;
   const inSt=()=>{try{return $('csx').querySelector('iframe').contentWindow}catch(e){return null}};
   if(a==='go-board'){if($('cb-amenu').dataset.ctx==='stories')window.cbStoriesBack();return}
@@ -738,7 +779,7 @@ av.addEventListener('click',e=>{if(e.target===av){av.close();return}const b=e.ta
       avatar={color:ad.color,photo:url,src:ad.src,x:ad.x,y:ad.y,z:ad.z}}else avatar={color:ad.color};
     try{localStorage.setItem('cb.avatar',JSON.stringify(avatar))}catch(e){try{localStorage.setItem('cb.avatar',JSON.stringify({color:avatar.color,photo:avatar.photo}))}catch(e2){}}
     profile={first:$('pf-first').value.trim()||profile.first,last:$('pf-last').value.trim(),show:ad.show};try{localStorage.setItem('cb.profile',JSON.stringify(profile))}catch(e){}
-    paintAvatar();buzz('firm');av.close();toast('Profile saved')}
+    window.CTMeSave&&CTMeSave();paintAvatar();buzz('firm');av.close();toast('Profile saved')}
   else if(b.hasAttribute('data-close'))av.close()});
 // a color square (saturation and brightness) and a hue slider, drawn with CSS gradients
 let hsv={h:345,s:.9,v:.65};
@@ -800,33 +841,40 @@ shd.addEventListener('click',async e=>{if(e.target===shd){shd.close();return}con
   if(b.dataset.v&&b.parentNode.id==='sh-live'){share.live=b.dataset.v==='live';saveShare();paintShare();return}
   if(b.dataset.v&&b.parentNode.id==='sh-exp'){share.exp=b.dataset.v;saveShare();paintShare();return}
   if(b.id==='sh-copy'){try{await navigator.clipboard.writeText(SH_URL());b.textContent='Copied ✓';b.classList.add('ok');setTimeout(()=>{b.textContent='Copy link';b.classList.remove('ok')},1500)}catch(err){const i=$('sh-link');i.focus();i.select();toast('Press ⌘C or Ctrl+C to copy')}buzz('tick');return}
-  if(b.id==='sh-new'){share.id=Math.random().toString(36).slice(2,10);saveShare();paintShare();toast('New link made. The old one no longer works.');return}
+  if(b.id==='sh-new'){share.id=(window.cbShNewId?cbShNewId():Math.random().toString(36).slice(2,12).padEnd(10,'x'));saveShare();paintShare();toast('New link made. The old one no longer works.');return}
   if(b.id==='sh-add'){addEmail();return}
   if(b.dataset.rm){share.emails.splice(+b.dataset.rm,1);saveShare();paintShare();return}
   if(b.id==='sh-view'){shd.close();setViewing(true);return}
   if(b.hasAttribute('data-close'))shd.close()});
 function addEmail(){const i=$('sh-email'),v=i.value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){$('sh-emsg').textContent='Enter an email address like name@example.com.';return}
-  if(!share.emails.includes(v))share.emails.push(v);if(!share.on)share.on=true;i.value='';$('sh-emsg').textContent='They’ll get the link by email once sharing goes live in the app.';saveShare();paintShare();buzz('tick')}
+  if(!share.emails.includes(v))share.emails.push(v);if(!share.on)share.on=true;i.value='';$('sh-emsg').textContent='Sending the link…';saveShare();paintShare();buzz('tick')}
 $('sh-email').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addEmail()}});
 function setViewing(on){viewing=on;paintTitle();if(on&&editing)setEditing(false);$('cb').classList.toggle('viewing',on);$('vbar').hidden=!on;hideTip();render(false);if(on)cbx.scrollTop=0}
 $('vbar-x').addEventListener('click',()=>setViewing(false));
 $('cb-share').addEventListener('click',openShare);
 
 // ---------- Ask: questions about this board, answered by Claude from your numbers ----------
-const askd=$('askd'),ASK_LIMIT=50,askKey=()=>'cb.ask.'+TODAY.slice(0,7);let sampleFn=null,askTurns=[],askCtl=null;
-const askUsed=()=>{try{return +localStorage.getItem(askKey())||0}catch(e){return 0}};
-const resetDay=()=>{const x=new Date(TODAY.slice(0,7)+'-15T12:00:00');x.setMonth(x.getMonth()+1);return dFmt(iso(x).slice(0,7)+'-01',{month:'short',day:'numeric'})};
-function paintAskLeft(){const left=Math.max(0,ASK_LIMIT-askUsed()),el=$('ask-left');el.classList.toggle('warn',left<=5);
-  el.textContent=left===0?'You’ve used all '+ASK_LIMIT+' questions this month. They reset on '+resetDay()+'.':left<=5?'Only '+cnt(left,'question','questions')+' left this month. They reset on '+resetDay()+'.':left+' of '+ASK_LIMIT+' questions left this month';
-  $('ask-in').disabled=left===0;$('ask-go').disabled=left===0;$('ask-starts').querySelectorAll('button').forEach(b=>b.disabled=left===0)}
+// v45 Ask: answered by Card Tab's server (Claude Haiku 5.5). The server works every number out from your entries, exactly;
+// the questions left this month come from the server too (Free 5, Premium 50). sampleFn stays for the Claude preview.
+const askd=$('askd');let sampleFn=null,askTurns=[],askCtl=null,askInfo=null;
+const ASK_URL=()=>window.CT_ASK_URL||(window.CTSession&&CTSession.REAL?CTSession.API+'/auth/ask':'');
+const askReady=()=>!!ASK_URL()||!!sampleFn;
+const resetOn=()=>{const r=askInfo&&askInfo.resets;return r?dFmt(r,{month:'short',day:'numeric'}):''};
+function paintAskLeft(){const el=$('ask-left');if(!askInfo||sampleFn){el.hidden=true;return}const {left,limit,plan}=askInfo,free=plan!=='premium';
+  el.hidden=!(free||left<=5);el.classList.toggle('warn',left<=(free?1:5));
+  el.innerHTML=left===0?(free?'You’ve used your '+limit+' free questions this month. They reset on '+resetOn()+'. <button type="button" class="askup" data-askup>Premium gets 50</button>':'You’ve used all '+limit+' questions this month. They reset on '+resetOn()+'.')
+    :free?left+' of '+limit+' free questions left this month':'Only '+cnt(left,'question','questions')+' left this month. They reset on '+resetOn()+'.';
+  const off=left===0;$('ask-in').disabled=off;$('ask-go').disabled=off;$('ask-starts').querySelectorAll('button').forEach(b=>b.disabled=off)}
 if(window.claude&&claude.use)claude.use('sample').then(f=>{sampleFn=f;paintAskAvail()},()=>{});
-function paintAskAvail(){$('ask-off').hidden=!!sampleFn;$('ask-form').hidden=!sampleFn;$('ask-starts').hidden=!sampleFn||askTurns.length>0;$('ask-left').hidden=!sampleFn;if(sampleFn)paintAskLeft()}
-const STARTS=['Which platform costs me the most in fees?','Why was profit down the last few months?','What was my best flip, and why did it work?','Am I buying more than I’m selling?'];
+async function askPost(body,signal){let r;try{r=await fetch(ASK_URL(),{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:JSON.stringify(body),signal})}catch(e){if(e&&e.name==='AbortError')throw e;throw Object.assign(new Error('offline'),{code:'offline'})}let j={};try{j=await r.json()}catch(e){}
+  if(j&&j.limit!=null)askInfo={limit:j.limit,left:j.left,resets:j.resets,plan:j.plan};if(!r.ok)throw Object.assign(new Error(j.error||'failed'),{code:r.status===401?'signin':r.status===404?'nosrv':j.error||'failed',detail:j.detail});return j}
+function askCheck(){if(!ASK_URL()||sampleFn)return;askPost({check:true}).then(()=>paintAskLeft(),()=>{})}
+function paintAskAvail(){const ok=askReady(),asked=!!$('ask-log').children.length;$('ask-off').hidden=ok;$('ask-form').hidden=!ok;$('ask-starts').hidden=!ok||askTurns.length>0||asked;paintAskLeft()}
+const STARTS=['Which platform costs me the most in fees?','Why was profit down the last few months?','What was my best sale, and why did it work?','Am I buying more than I’m selling?'];
 window.CTAskOpen=function(){
-  // Free: the Premium sheet about Ask opens instead, right over whatever page you're on
-  if(window.CTBoardPlan&&window.CTBoardPlan()!=='premium'){if(window.CTPremiumOpen)window.CTPremiumOpen('ask');return}
+  // v45: Free asks too (5 questions a month); the window says how many are left
   if(cbx.classList.contains('off')){cbx.inert=false;cbx.removeAttribute('aria-hidden');cbx.classList.add('pmonly');const d=$('askd');if(d)d.addEventListener('close',function back(){d.removeEventListener('close',back);if(cbx.classList.contains('off')){cbx.inert=true;cbx.setAttribute('aria-hidden','true')}cbx.classList.remove('pmonly')})}openAsk()};
-function openAsk(){closeMenus();placeAsk();$('ask-starts').innerHTML=STARTS.map(q=>'<button type="button" data-q="'+esc(q)+'">'+esc(q)+'</button>').join('');$('ask-scope').textContent=$('cb-perl').textContent+' · '+$('cb-platl').textContent;paintAskAvail();askd.showModal();if(matchMedia('(hover:hover) and (pointer:fine)').matches)setTimeout(()=>{if(askd.open)$('ask-in').focus({preventScroll:true})},420)}
+function openAsk(){closeMenus();placeAsk();$('ask-starts').innerHTML=STARTS.map(q=>'<button type="button" data-q="'+esc(q)+'">'+esc(q)+'</button>').join('');$('ask-scope').textContent=$('cb-perl').textContent+' · '+$('cb-platl').textContent;paintAskAvail();askCheck();askd.showModal();if(matchMedia('(hover:hover) and (pointer:fine)').matches)setTimeout(()=>{if(askd.open)$('ask-in').focus({preventScroll:true})},420)}
 // everything Claude sees: the period you picked, with exact cents
 function askData(){const ctx=ctxNow(),t=totals(ctx.inP),d=c=>(c/100).toFixed(2),pt={};
   ctx.inP.forEach(e=>{const o=pt[e.platform]||(pt[e.platform]={bought:0,sold:0,fees:0,sales:0,n:0});if(e.type==='purchase')o.bought+=e.amount;if(e.type==='sale'){o.sales+=e.amount;o.fees+=e.amount-e.net;o.n++}});
@@ -841,16 +889,22 @@ const ASK_RULES='You are the assistant inside Card Tab, an app where a trading c
 function fmtAns(t){const lines=esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').split('\n');let h='',inl=false;
   lines.forEach(l=>{if(/^\s*[-•]\s+/.test(l)){if(!inl){h+='<ul>';inl=true}h+='<li>'+l.replace(/^\s*[-•]\s+/,'')+'</li>'}else{if(inl){h+='</ul>';inl=false}if(l.trim())h+='<p>'+l+'</p>'}});return h+(inl?'</ul>':'')}
 function addBubble(role,html){const el=document.createElement('div');el.className='bub '+role;el.innerHTML=html;$('ask-log').appendChild(el);$('ask-log').scrollTop=1e6;return el}
-async function ask(q){if(!sampleFn||askCtl||!q.trim()||askUsed()>=ASK_LIMIT)return;try{localStorage.setItem(askKey(),askUsed()+1)}catch(e){}paintAskLeft();$('ask-starts').hidden=true;addBubble('me',esc(q));const out=addBubble('ai','<p class="think">Thinking…</p>');
-  const input=askTurns.length?askTurns.concat([{role:'user',content:q}]):[{role:'user',content:ASK_RULES+askData()+'\n\nQUESTION\n'+q}];
+// the answer appears quickly, word by word, once it arrives (the server sends it whole)
+function reveal(out,text,signal){return new Promise(res=>{const words=text.split(/(\s+)/),n=words.length,ms=Math.min(900,120+n*9),t0=performance.now();
+  const step=now=>{if(signal&&signal.aborted){out.innerHTML=fmtAns(text);res();return}const k=Math.min(n,Math.ceil(n*(now-t0)/ms));out.innerHTML=fmtAns(words.slice(0,k).join(''));$('ask-log').scrollTop=1e6;if(k<n)requestAnimationFrame(step);else res()};requestAnimationFrame(step)})}
+async function ask(q){q=(q||'').trim();if(!askReady()||askCtl||!q||(askInfo&&askInfo.left<=0&&!sampleFn))return;$('ask-starts').hidden=true;addBubble('me',esc(q));const out=addBubble('ai','<p class="think">Thinking…</p>');
   askCtl=new AbortController();$('ask-go').hidden=true;$('ask-stop').hidden=false;
-  try{const {text}=await sampleFn(input,{signal:askCtl.signal,onText:({text})=>{out.innerHTML=fmtAns(text);$('ask-log').scrollTop=1e6}});out.innerHTML=fmtAns(text);
-    askTurns=input.concat([{role:'assistant',content:text}]).slice(-9);if(askTurns[0].role!=='user')askTurns.shift()}
-  catch(err){const c=err&&err.code;out.innerHTML=(err&&err.text?fmtAns(err.text):'')+'<p class="err">'+(c==='aborted'?'Stopped.':c==='not_granted'?'Ask needs your OK to use Claude. Open Ask again to allow it.':c==='rate_limited'?'Too many questions at once. Try again in a moment.':'That didn’t go through. Try asking again.')+'</p>'}
+  try{
+    if(sampleFn){const input=askTurns.length?askTurns.concat([{role:'user',content:q}]):[{role:'user',content:ASK_RULES+askData()+'\n\nQUESTION\n'+q}];
+      const {text}=await sampleFn(input,{signal:askCtl.signal,onText:({text})=>{out.innerHTML=fmtAns(text);$('ask-log').scrollTop=1e6}});out.innerHTML=fmtAns(text);
+      askTurns=input.concat([{role:'assistant',content:text}]).slice(-9);if(askTurns[0].role!=='user')askTurns.shift()}
+    else{window.CTTrack&&CTTrack.ev('ask',askTurns.length?'follow-up':'first');const c=ctxNow(),j=await askPost({q,turns:askTurns,view:{label:$('cb-perl').textContent,from:c.a,to:c.b,platform:plat}},askCtl.signal);
+      paintAskLeft();await reveal(out,j.text,askCtl.signal);askTurns=askTurns.concat([{role:'user',content:q},{role:'assistant',content:j.text}]).slice(-8)}}
+  catch(err){const c=err&&(err.code||err.name);out.innerHTML=(err&&err.text?fmtAns(err.text):'')+'<p class="err">'+(c==='aborted'||c==='AbortError'?'Stopped.':c==='limit'?'That’s all your questions for this month.':c==='signin'?'Sign in again to keep asking.':c==='busy'?'Ask is busy right now. Try again in a few minutes.':c==='nosrv'?'Ask isn’t on Card Tab’s server yet. It starts working once the server has its update.':c==='setup'?'Ask is on the server, but its AI key isn’t set yet.':c==='key'||c==='billing'||c==='model'?'Ask can’t reach its AI right now. Try again later.':c==='offline'?'Couldn’t reach Card Tab. Check your connection and try again.':c==='not_granted'?'Ask needs your OK to use Claude. Open Ask again to allow it.':c==='rate_limited'?'Too many questions at once. Try again in a moment.':'That didn’t go through. Try asking again.')+(err&&err.detail?' <small class="askdet">('+esc(err.detail)+')</small>':'')+'</p>';paintAskLeft()}
   finally{askCtl=null;$('ask-go').hidden=false;$('ask-stop').hidden=true}}
 $('ask-form').addEventListener('submit',e=>{e.preventDefault();const v=$('ask-in').value;$('ask-in').value='';ask(v)});
 askd.addEventListener('click',e=>{if(e.target===askd){askd.close();return}const b=e.target.closest('button');if(!b)return;if(b.dataset.q){ask(b.dataset.q);return}
-  if(b.id==='ask-stop'&&askCtl){askCtl.abort();return}if(b.id==='ask-new'){askTurns=[];$('ask-log').innerHTML='';paintAskAvail();return}if(b.hasAttribute('data-close'))askd.close()});
+  if(b.hasAttribute('data-askup')){askd.close();setTimeout(()=>window.CTPremiumOpen&&window.CTPremiumOpen('ask'),calm.matches?0:260);return}if(b.id==='ask-stop'&&askCtl){askCtl.abort();return}if(b.id==='ask-new'){askTurns=[];$('ask-log').innerHTML='';paintAskAvail();return}if(b.hasAttribute('data-close'))askd.close()});
 $('cb-ask').addEventListener('click',openAsk);
 
 // ---------- sheets: the title and the main button stay put; only the part between them scrolls, with its own scrollbar ----------
@@ -984,12 +1038,13 @@ addEventListener('resize',()=>document.querySelectorAll('dialog.sheet[open]').fo
 // The page loads quietly in the background once the board is open, so the first slide-in already has the stories on it.
 ;(()=>{const csx=$('csx');let csf=null,open=false;
 function load(){if(csf)return;csf=document.createElement('iframe');csf.title='Card Stories';csf.srcdoc=STORIES_HTML;csx.appendChild(csf)}
-function openStories(){if(open)return;open=true;navPush('stories',()=>window.cbStoriesBack());load();
+function openStories(){if(open)return;open=true;navPush('stories',()=>window.cbStoriesBack());const fresh=!csf;load();let heavy=fresh;
   // only redraw Stories when the entries changed since it last drew (refresh() already keeps it current), so switching never repaints it
-  try{if(csf.__ver!==window.cbDataVer){csf.contentWindow.csSync();csf.__ver=window.cbDataVer}}catch(e){}
+  try{if(csf.__ver!==window.cbDataVer){csf.contentWindow.csSync();csf.__ver=window.cbDataVer;heavy=true}}catch(e){}
   const fromE=window.cbFromEntries;window.cbFromEntries=false;csx.classList.remove('out');csx.classList.add('in');csx.removeAttribute('aria-hidden');csx.inert=false;
   // straight from Entries: Entries is the page you leave (the board opened underneath, out of sight until Stories covers it)
-  if(window.CTPage)pageGo(fromE?'entries':'board','stories',1,null);
+  // v42.25: after a redraw, start the slide two frames later so the drawing never lands mid-motion
+  if(window.CTPage){const go=()=>pageGo(fromE?'entries':'board','stories',1,null);if(heavy)requestAnimationFrame(()=>requestAnimationFrame(go));else go()}
   else if(!calm.matches){if(fromE)cbx.style.visibility='hidden';pageGo(fromE?'entries':'board','stories',1,()=>{cbx.style.visibility=''})}
   setTimeout(()=>{try{csf.contentWindow.focus()}catch(e){}},calm.matches?0:420)}
 window.cbStoriesBack=function(toEntries){if(!open)return;open=false;navDone('stories');csx.setAttribute('aria-hidden','true');csx.inert=true;

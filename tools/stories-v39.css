@@ -167,7 +167,10 @@
 /* Premium: cardtab.app as plain text in the lower right */
 .st .pmark{position:absolute;right:24px;bottom:calc(84px + env(safe-area-inset-bottom,0px));font:700 13px Manrope,sans-serif;letter-spacing:.01em}
 @media(min-width:761px){.pl .st .pmark{bottom:80px}}
-#xhost .xst .pmark{bottom:26px}
+/* v51: on saved pictures and videos the mark sits on the left, above the bottom fifth that Instagram, TikTok and
+   YouTube cover with captions and buttons (and clear of the right-hand button column) */
+#xhost .xst .pmark{bottom:140px;left:24px;right:auto}
+#xhost .xst .sin{padding-bottom:172px}
 #xhost .xst.only-vis .pmark{visibility:hidden}
 .topt{position:relative}
 .topt .lk{position:absolute;top:6px;right:6px;width:18px;height:18px;margin:0}.topt .lk svg{width:11px;height:11px}
@@ -214,7 +217,7 @@
 .spanel .sph em{font-style:normal;font-weight:800;font-size:13px}
 .spanel .sptg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
 .spanel .spt{position:relative;aspect-ratio:1;border:0;border-radius:11px;padding:0;overflow:hidden;cursor:pointer;outline:2px solid transparent;outline-offset:2px;transition:outline-color .15s,transform .15s}
-.spanel .spt:hover{transform:translateY(-1px)}
+@media(hover:hover){.spanel .spt:hover{transform:translateY(-1px)}}
 .spanel .spt.on{outline-color:currentColor}
 .spanel .spt i{position:absolute;border-radius:99px}.spanel .spt .t{left:18%;top:24%;width:46%;height:9%}.spanel .spt .a{width:46%;height:46%;right:-8%;bottom:-8%;border-radius:50%}
 .spanel .spt .lk{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.3);color:#fff}
@@ -242,3 +245,410 @@
 #ths .tgrid{overflow:visible;flex:none;max-height:none}
 #ths .bgw,#ths .hidew,#ths .shh{flex:none}
 #ths .go{position:sticky;bottom:0;z-index:2;box-shadow:0 -14px 18px var(--bg)}
+
+/* v42.4 slide tweaks. 3: a bigger headline and the platform bars sit closer to it. 4: the checks sit in the middle, a bit narrower.
+   5: the fan of cards sits higher so it clears the cardtab.app mark. 6 stays as it is. */
+.st.s-plat h4{font-size:clamp(34px,10.5cqw,42px);line-height:1}
+.st.s-plat .svis{margin-block:auto}
+.st.s-bud .svis{margin-block:auto}
+.st.s-bud .mo{max-width:300px;margin-inline:auto}
+.st.s-io .svis{margin-bottom:46px}
+@media(max-height:620px){.st.s-io .svis{margin-bottom:34px}.st.s-io .sfan{height:180px}}
+
+/* v42.7 sheets (Themes and the rest): the sheet itself scrolls, never the page behind it */
+.sheetw>.sheet{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.sheetw{overscroll-behavior:contain}
+html.sh-lock,html.sh-lock body{overflow:hidden!important;overscroll-behavior:none}
+
+/* v42.8 Stories sheets (Themes, Save, Dates) fall away like the profile menu instead of vanishing */
+@keyframes shFall{to{transform:translateY(100%)}}
+@keyframes shSink{to{transform:translateY(28px);opacity:0}}
+/* only the dim fades; the sheet itself stays solid as it falls */
+.sheetw.out{animation:none!important;background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.sheetw.out::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--win-veil,rgba(8,8,8,.5));-webkit-backdrop-filter:var(--win-blur,none);backdrop-filter:var(--win-blur,none);animation:fadeo .24s ease-in both}
+.sheetw.out>.sheet{animation:shSink .24s cubic-bezier(.4,0,1,1) both}
+@media(max-width:600px){.sheetw.out>.sheet{animation:shFall .24s cubic-bezier(.4,0,.8,.6) both}}
+@media(prefers-reduced-motion:reduce){.sheetw.out,.sheetw.out>.sheet{animation:none}}
+
+/* v42.22 theme sheet: Done sits on a solid strip of the sheet's own color, so nothing scrolls into view below or beside it */
+#ths .go{box-shadow:0 0 0 22px var(--bg),0 -26px 20px 4px var(--bg)!important}
+
+/* v42.26 frosted dim behind Stories sheets too (no blur), the same as the rest of the app */
+:root{--frost-grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");--frost-shade:linear-gradient(180deg,rgba(248,246,240,.38),rgba(20,16,12,.36))}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--frost-shade:linear-gradient(180deg,rgba(40,36,32,.5),rgba(0,0,0,.55))}}
+:root[data-theme="dark"]{--frost-shade:linear-gradient(180deg,rgba(40,36,32,.5),rgba(0,0,0,.55))}
+.sheetw,.sheetw.out::before{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:var(--frost-grain) 0 0/160px 160px repeat,var(--frost-shade)!important}
+.sheetw.out{background:transparent!important}
+/* v42.26 theme sheet: room under Hide amounts, so it scrolls fully clear of the Done button */
+#ths .hidew{margin-bottom:34px}
+
+/* v42.28 focus on brand in Stories too: no browser-blue rings */
+input:focus,textarea:focus,select:focus{outline:none!important}
+:focus:not(:focus-visible){outline:none!important}
+a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:2px solid color-mix(in srgb,#a50e37 60%,transparent)!important;outline-offset:2px}
+.sheet[tabindex="-1"]:focus-visible,.sheetw:focus-visible{outline:none!important}
+/* v47 phones in the app: one line about Stories where the theme chips were (Themes is the round button now) */
+.stintro{display:none}
+@media(max-width:760px){
+  html.inapp #thm{display:none!important}
+  html.inapp .stintro{display:block;margin:2px 0 14px;font-size:clamp(11.5px,3.5vw,14px);font-weight:650;color:var(--muted,#77736d);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+}
+/* v47.1 "All 24" tile: filled and outlined like the buttons beside it (it was see-through, nearly invisible in dark mode) */
+.spanel .spall{background:color-mix(in srgb,currentColor 6%,var(--card,#fff));border:1px solid color-mix(in srgb,currentColor 16%,transparent);box-shadow:0 1px 2px rgba(0,0,0,.05)}
+@media(hover:hover){.spanel .spall:hover{border-color:color-mix(in srgb,currentColor 35%,transparent)}}
+/* ===== v48: the 14 new stories — every motion is transform/opacity only ===== */
+.st .sdrop{position:relative;width:52%;max-width:210px;margin:0 auto 10px}
+.st .sdrop .shd{position:absolute;left:12%;right:12%;bottom:-14px;height:12px;border-radius:50%;opacity:.18;filter:blur(4px)}
+.st.on .sdrop .cd{animation:stDrop 1.1s cubic-bezier(.3,0,.3,1) both .35s}
+.st.on .sdrop .shd{animation:stShd 1.1s cubic-bezier(.3,0,.3,1) both .35s}
+@keyframes stDrop{0%{transform:translateY(-140%) rotate(-8deg);opacity:0}45%{transform:translateY(0) rotate(2deg);opacity:1}62%{transform:translateY(-9%) rotate(-1deg)}78%{transform:translateY(0)}88%{transform:translateY(-2%)}100%{transform:none}}
+@keyframes stShd{0%{transform:scaleX(.2);opacity:0}45%{transform:scaleX(1);opacity:.22}62%{transform:scaleX(.8)}100%{transform:none;opacity:.18}}
+.st .smb{display:flex;align-items:flex-end;gap:5px;height:170px}
+.st .smb i{flex:1;border-radius:5px 5px 2px 2px;transform-origin:bottom}
+.st.on .smb i{animation:stBar .9s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--d,0s)}
+@keyframes stBar{from{transform:scaleY(0)}}
+.st .sdt{display:grid;grid-template-columns:repeat(7,1fr);gap:9px;max-width:300px}
+.st .sdt i{aspect-ratio:1;border-radius:50%;box-shadow:inset 0 0 0 2px currentColor}
+.st.on .sdt i{animation:stDot .5s cubic-bezier(.2,.9,.25,1.4) both;animation-delay:var(--d,0s)}
+@keyframes stDot{from{transform:scale(0);opacity:0}}
+.st .sturn{display:flex;justify-content:center;gap:14px}
+.st .sturn>span{position:relative;width:40%;max-width:150px}
+.st .sturn b{position:absolute;left:50%;bottom:-12px;transform:translateX(-50%);font-size:12px;font-weight:800;background:rgba(17,17,17,.88);color:#fff;padding:4px 11px;border-radius:99px;z-index:1}
+.st .sturn .in{transform:rotate(-6deg)}.st .sturn .out{transform:rotate(6deg)}
+.st.on .sturn .in{animation:stInL .8s cubic-bezier(.2,.8,.2,1) both .3s}
+.st.on .sturn .out{animation:stInR .8s cubic-bezier(.2,.8,.2,1) both .75s}
+@keyframes stInL{from{transform:translateX(-120%) rotate(-20deg);opacity:0}to{transform:rotate(-6deg)}}
+@keyframes stInR{from{transform:translateX(120%) rotate(20deg);opacity:0}to{transform:rotate(6deg)}}
+.st .stl .tr{height:12px;border-radius:9px;background:color-mix(in srgb,currentColor 18%,transparent);overflow:hidden}
+.st .stl .tr i{display:block;height:100%;border-radius:9px;transform-origin:left}
+.st.on .stl .tr i{animation:stGrow 2.2s cubic-bezier(.45,0,.2,1) both .4s}
+.st .stl .tl{display:flex;justify-content:space-between;margin-top:9px;font-size:12.5px;font-weight:800}
+.st.on .stl .tl span:last-child{animation:stFade .6s ease both 2.4s}
+.st .srcpt{max-width:270px;margin:0 auto;overflow:hidden;border-radius:4px}
+.st .srcpt .rp{background:#fffdf7;color:#1b1a17;padding:16px 16px 22px;font:700 13px/1.3 ui-monospace,Menlo,monospace;display:grid;gap:8px;-webkit-mask:linear-gradient(#000 calc(100% - 8px),transparent 0),conic-gradient(from 135deg at 50% 100%,#000 25%,transparent 0) bottom/14px 8px repeat-x;mask:linear-gradient(#000 calc(100% - 8px),transparent 0),conic-gradient(from 135deg at 50% 100%,#000 25%,transparent 0) bottom/14px 8px repeat-x}
+.st .srcpt .rp div{display:flex;justify-content:space-between;gap:10px}
+.st .srcpt .rp .tot{border-top:2px dashed #1b1a17;padding-top:8px;font-weight:800}
+.st.on .srcpt .rp{animation:stUnroll 1.6s cubic-bezier(.3,.7,.2,1) both .35s}
+@keyframes stUnroll{from{transform:translateY(-100%)}}
+.st .sfn{position:relative;height:200px;max-width:300px;margin:0 auto}
+.st .sfn .cd{position:absolute;bottom:0;left:30%;width:40%;transform-origin:50% 120%}
+.st.on .sfn .cd:nth-child(1){animation:stFanL .9s cubic-bezier(.2,.8,.2,1) both .4s}
+.st.on .sfn .cd:nth-child(3){animation:stFanR .9s cubic-bezier(.2,.8,.2,1) both .4s}
+.st .sfn .cd:nth-child(1){transform:rotate(-16deg)}.st .sfn .cd:nth-child(3){transform:rotate(16deg)}.st .sfn .cd:nth-child(2){z-index:1}
+@keyframes stFanL{from{transform:none}to{transform:rotate(-16deg)}}
+@keyframes stFanR{from{transform:none}to{transform:rotate(16deg)}}
+.st .sstk{position:relative;height:210px;max-width:200px;margin:0 auto}
+.st .sstk .cd{position:absolute;left:15%;width:70%;bottom:0}
+.st .sstk .cd:nth-child(1){transform:rotate(-7deg)}.st .sstk .cd:nth-child(2){transform:translateY(-10px) rotate(4deg)}.st .sstk .cd:nth-child(3){transform:translateY(-20px) rotate(-3deg)}.st .sstk .cd:nth-child(4){transform:translateY(-30px) rotate(2deg)}
+.st.on .sstk .cd{animation:stPile .6s cubic-bezier(.2,.8,.3,1.1) both}
+.st.on .sstk .cd:nth-child(1){animation-delay:.3s}.st.on .sstk .cd:nth-child(2){animation-delay:.55s}.st.on .sstk .cd:nth-child(3){animation-delay:.8s}.st.on .sstk .cd:nth-child(4){animation-delay:1.05s}
+@keyframes stPile{from{opacity:0;translate:0 -90px}}
+.st .sspn{width:48%;max-width:190px;margin:0 auto;perspective:700px}
+.st.on .sspn .cd{animation:stSpin 1.4s cubic-bezier(.3,0,.2,1) both .35s}
+@keyframes stSpin{from{transform:rotateY(-540deg) scale(.7);opacity:0}30%{opacity:1}}
+.st .swk{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;align-items:end;height:120px}
+.st .swk i{font-style:normal;display:grid;place-items:center;aspect-ratio:1;border-radius:12px;border:2px solid;font-size:14px;font-weight:800}
+.st .swk i.hot{border:0;transform:scale(1.32);z-index:1}
+.st.on .swk i{animation:stDot .45s cubic-bezier(.2,.9,.25,1.4) both;animation-delay:var(--d,0s)}
+.st.on .swk i.hot{animation:stHot 1.2s cubic-bezier(.2,.9,.25,1.3) both;animation-delay:calc(var(--d,0s) + .4s)}
+@keyframes stHot{0%{transform:scale(0)}50%{transform:scale(1.55)}70%{transform:scale(1.22)}100%{transform:scale(1.32)}}
+.st .sst{display:grid;gap:9px;justify-items:start}
+.st .sst i{font-style:normal;font-size:15px;font-weight:800;padding:10px 15px;border-radius:999px;border:2px solid;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st.on .sst i{animation:stSlide .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--d,0s)}
+@keyframes stSlide{from{transform:translateX(-110%);opacity:0}}
+.st .sbn{position:relative;max-width:260px;margin:0 auto;perspective:900px}
+.st .sbn>div{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:10px;border-radius:10px;background:color-mix(in srgb,currentColor 12%,transparent)}
+.st .sbn .cd{border-radius:5px;box-shadow:none}
+.st .sbn .pgf{position:absolute;inset:0;transform-origin:left;backface-visibility:hidden;background:color-mix(in srgb,currentColor 12%,#fff)}
+.st.on .sbn .pgf{animation:stPage 1.4s cubic-bezier(.5,0,.3,1) both 1s}
+@keyframes stPage{to{transform:rotateY(-180deg)}}
+.st .sfst{position:relative;width:46%;max-width:180px;margin:0 auto;padding-top:60px}
+.st .sfst .ball{position:absolute;left:50%;top:0;width:34px;height:34px;margin-left:-17px;border-radius:50%;z-index:2}
+.st.on .sfst .ball{animation:stBall 1.5s cubic-bezier(.55,0,.75,.4) both .25s}
+.st.on .sfst .cd{animation:stUpCard 1s cubic-bezier(.2,.8,.2,1) both 1.45s}
+@keyframes stBall{0%{transform:translateY(-120px);opacity:0}15%{opacity:1}70%{transform:translateY(130px) scale(1)}80%{transform:translateY(130px) scale(1.4,.6)}100%{transform:translateY(130px) scale(0);opacity:0}}
+@keyframes stUpCard{from{transform:translateY(60%) scale(.6);opacity:0}}
+.st .scal{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.st .scal i{font-style:normal;text-align:center;font-size:13px;font-weight:800;padding:12px 0;border-radius:10px;border:2px solid color-mix(in srgb,currentColor 25%,transparent)}
+.st .scal i.past{opacity:.45}
+.st .scal i.hot{border-color:transparent;transform:scale(1.12)}
+.st.on .scal i{animation:stTick .35s ease both;animation-delay:var(--d,0s)}
+.st.on .scal i.hot{animation:stHot2 .8s cubic-bezier(.2,.9,.25,1.3) both;animation-delay:var(--d,0s)}
+@keyframes stTick{from{opacity:0;transform:translateY(8px)}}
+@keyframes stHot2{0%{opacity:0;transform:scale(.5)}60%{transform:scale(1.25);opacity:1}100%{transform:scale(1.12)}}
+/* Free: the stories that come with Premium */
+.scv.lkcv{position:relative}.scv.lkcv .sin{opacity:.82}
+.scv .pmt{position:absolute;top:8px;right:8px;z-index:2;font:800 9.5px Manrope,sans-serif;letter-spacing:.03em;padding:3px 7px;border-radius:99px;background:#111;color:#fff}
+/* v48 style panel: as tall as the big story, theme tiles are tiny stories, favorites starred */
+@media(min-width:1200px){.spanel{display:flex;flex-direction:column;gap:12px;position:static;align-self:flex-start}.spanel .hrow{margin-top:auto}}
+.spanel .sptg{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.spanel .spt{aspect-ratio:1/1.08;border-radius:12px;text-align:left}
+.spanel .spt::before{content:"";position:absolute;right:-16px;top:-16px;width:46px;height:46px;border-radius:50%;background:var(--a);opacity:.9}
+.spanel .spt i.t,.spanel .spt i.t2{position:absolute;left:8px;top:10px;width:52%;height:5px;right:auto;bottom:auto;border-radius:9px;background:var(--k);opacity:.9}
+.spanel .spt i.t2{top:19px;width:34%;opacity:.55}
+.spanel .spt b{position:absolute;left:8px;right:6px;bottom:19px;font-size:clamp(11px,1.15vw,15px);font-weight:800;color:var(--a);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spanel .spt .nm{position:absolute;left:8px;right:6px;bottom:6px;font-size:9px;font-weight:800;color:var(--k);opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spanel .spt .star{position:absolute;top:6px;right:6px;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center;font-size:9px;font-style:normal;color:#d49b00;line-height:1;z-index:1}
+.spanel .spt .tg{bottom:auto;top:30px;left:6px;right:auto;padding:1px 6px}
+.spanel .spt:has(.tg) .t2{display:none}
+.spanel .spall{aspect-ratio:1/1.08;border-radius:12px;display:grid;place-content:center;gap:2px;font-size:12px;line-height:1.2}
+.spanel .spall small{display:block;font-size:10px;color:var(--muted,#77736d);font-weight:700}
+.spanel .spbg{gap:8px}.spanel .spbg .bgpv svg{aspect-ratio:3/2}
+.tgrid .topt{position:relative}
+.tgrid .tfav{position:absolute;top:calc(50% - 13px);right:8px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:14px;line-height:1;color:var(--muted,#77736d);background:color-mix(in srgb,currentColor 8%,transparent);cursor:pointer;transition:transform .15s}
+.tgrid .tfav.on{color:#d49b00;background:rgba(212,155,0,.14)}
+.tgrid .tfav:active{transform:scale(.88)}
+.tgrid .topt.lockd .tfav{right:34px}
+.tgrid .topt{padding-right:38px}
+/* v48 fit the panel to the big story's height (two rows of covers) */
+@media(min-width:1200px){.spanel{gap:10px;padding:13px 14px}.spanel .spt,.spanel .spall{aspect-ratio:1/.8}.spanel .spt b{bottom:17px}.spanel .spbg button{padding:4px 4px 5px;gap:3px}.spanel .hrow{padding-top:10px}}
+/* ===== v49 new backgrounds (SVG, drawn in the theme's colors) ===== */
+.bgl .sunr{transform-box:fill-box;transform-origin:50% 100%;transform:scaleY(.4)}
+.st.on .bgl .sunr,.hero .bgl .sunr,.dpl .st.on .bgl .sunr,.bgpv .sunr{animation:bgSun 18s cubic-bezier(.45,0,.55,1) infinite alternate}
+@keyframes bgSun{from{transform:scaleY(.1);opacity:.6}to{transform:scaleY(.6);opacity:1}}
+.bgl .rip{transform-box:fill-box;transform-origin:center;opacity:.18}
+.st.on .bgl .rip,.hero .bgl .rip,.bgpv .rip{opacity:0;animation:bgRip 9s linear infinite}
+.bgl .rip.r1{animation-delay:-3s!important}.bgl .rip.r2{animation-delay:-6s!important}
+@keyframes bgRip{0%{transform:scale(.15);opacity:0}15%{opacity:.26}100%{transform:scale(1.6);opacity:0}}
+.bgl .dust{transform-box:fill-box}
+.st.on .bgl .dust,.hero .bgl .dust,.bgpv .dust{animation-name:bgDust;animation-timing-function:linear;animation-iteration-count:infinite}
+@keyframes bgDust{0%{transform:translateY(60px);opacity:0}15%{opacity:.6}85%{opacity:.4}100%{transform:translateY(-420px);opacity:0}}
+.bgpv .fl,.bgpv .dr{animation:stFl 6s ease-in-out infinite alternate}
+@media(prefers-reduced-motion:reduce){.bgl *{animation:none!important}}
+/* ================= v49 Stage (wide desktop) ================= */
+.stg{display:none}.stbtn{display:none!important}
+.stall{position:fixed;inset:0;z-index:130;background:rgba(0,0,0,.5);display:grid;place-items:center;padding:24px}
+.stall[hidden]{display:none}
+.stall .sa{background:var(--card,#fff);color:var(--text);border-radius:24px;padding:20px 22px 24px;width:min(900px,100%);max-height:86vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+.stall .sah{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.stall h3{margin:0;font-size:19px;letter-spacing:-.02em}
+.stall .x{width:36px;height:36px;border-radius:50%;border:0;background:color-mix(in srgb,currentColor 9%,transparent);color:inherit;font:800 14px Manrope,sans-serif;cursor:pointer}
+.stall .sag{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
+.stall .scv{aspect-ratio:3/4.2;container-type:inline-size}
+.stall .scv.cur{outline:3px solid var(--text);outline-offset:3px}
+@media(min-width:1180px){
+ html.stg-on .shelfrow,html.stg-on .controls,html.stg-on #shelf{display:none!important}
+ html.stg-on .stbtn{display:inline-flex!important}
+ html.stg-on .stg{display:block;margin-top:8px}
+ .stbtn .dot{width:16px;height:16px;border-radius:50%;background:var(--tb);box-shadow:inset 0 0 0 4px var(--tb),inset 0 0 0 9px var(--ta);flex:none}
+ .stbtn.on{background:var(--text);color:var(--bg,#fff);border-color:transparent}
+ /* three columns: story · Up next · Style (slides in) */
+ .stg .stl3{--sw:370px;--sh:calc(var(--sw) * 16 / 9);display:grid;grid-template-columns:var(--sw) minmax(0,1fr) 0px;align-items:start;transition:grid-template-columns .45s cubic-bezier(.2,.8,.2,1)}
+ .stg.open .stl3{grid-template-columns:var(--sw) minmax(230px,1fr) 380px}
+ .stg .dpl{position:relative;width:var(--sw);aspect-ratio:9/16;border-radius:24px;overflow:hidden;background:#000;box-shadow:0 1px 2px rgba(0,0,0,.06),0 18px 40px -18px rgba(0,0,0,.35);isolation:isolate}
+ .stg .dpl .dsl{position:absolute;inset:0}
+ .stg .dpl .st .sin{padding:46px 22px 74px!important}
+ .stg .dpl .pbars{position:absolute;left:12px;right:12px;top:12px;display:flex;gap:4px;z-index:6;color:#fff}
+ .stg .dpl .pbars i{flex:1;height:3px;border-radius:9px;background:color-mix(in srgb,currentColor 30%,transparent);overflow:hidden;position:relative}
+ .stg .dpl .pbars i b{position:absolute;inset:0;background:currentColor;transform-origin:left;transform:scaleX(0)}
+ .stg .dpl .tapz{position:absolute;top:44px;bottom:70px;z-index:5;cursor:pointer}.dpl .tapz.l{left:0;width:33%}.dpl .tapz.r{right:0;width:67%}
+ .stg .dpl .dbot{position:absolute;left:12px;right:12px;bottom:12px;z-index:6;display:flex;gap:8px;align-items:center}
+ .stg .dpl .dbot button{font:800 13px Manrope,sans-serif;border:0;border-radius:999px;height:38px;padding:0 15px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.94);color:#111}
+ .stg .dpl .dbot .ghost{background:rgba(0,0,0,.3);color:#fff;width:38px;padding:0;justify-content:center;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+ .stg .dpl .dbot .sp{flex:1}
+ .stg .dpl .pvtag{position:absolute;left:50%;top:26px;transform:translateX(-50%);z-index:7;background:rgba(0,0,0,.62);color:#fff;font:800 11.5px Manrope,sans-serif;padding:5px 11px;border-radius:99px;white-space:nowrap;opacity:0;transition:opacity .2s;pointer-events:none}
+ .stg .dpl .pvtag.on{opacity:1}
+ /* Up next + totals, running to the bottom of the story */
+ .stg .stl3>.side{height:var(--sh);display:flex;flex-direction:column;gap:6px;padding:0 0 0 30px;min-width:0;transition:padding .45s cubic-bezier(.2,.8,.2,1)}
+ .stg.open .stl3>.side{padding:0 24px 0 26px}
+ .stg .side h3{margin:0 0 6px;font-size:15px;font-weight:800}
+ .stg .nxl{display:grid;gap:4px}
+ .stg .nx{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:8px;border-radius:14px;cursor:pointer;min-width:0;transition:background .15s}
+ .stg .nx:hover{background:var(--card,#fff)}.nx.on{background:var(--card,#fff);box-shadow:inset 0 0 0 1px var(--line,rgba(0,0,0,.09))}
+ .stg .nx:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+ .stg .nx .th{flex:none;width:36px;aspect-ratio:3/4;border-radius:8px;position:relative;overflow:hidden}
+ .stg .nx .th::after{content:"";position:absolute;right:-8px;top:-8px;width:22px;height:22px;border-radius:50%;background:var(--a)}
+ .stg .nx span{min-width:0;flex:1}.nx b{display:block;font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .stg .nx em{font-style:normal;font-weight:800;font-size:13.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+ .stg .side .lnk{all:unset;cursor:pointer;font-weight:800;font-size:13.5px;color:var(--brand,#a50e37);padding:6px 8px;align-self:flex-start}
+ .stg .side .lnk:focus-visible{outline:2px solid currentColor;border-radius:6px}
+ .stg .tot{margin-top:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+ .stg .tot div{background:var(--card,#fff);border:1px solid var(--line,rgba(0,0,0,.09));border-radius:16px;padding:15px 17px;min-height:84px;display:flex;flex-direction:column;justify-content:space-between;gap:6px;min-width:0}
+ .stg .tot small{font-size:12px;font-weight:700;color:var(--muted,#77736d)}
+ .stg .tot b{font-size:24px;font-weight:800;letter-spacing:-.025em;font-variant-numeric:tabular-nums;white-space:nowrap}
+ .stg.open .tot{grid-template-columns:1fr;gap:10px}
+ .stg.open .tot div{min-height:0;flex-direction:row;align-items:center;padding:12px 16px;border-radius:14px}
+ .stg.open .tot b{font-size:22px}
+ .stg.open .nx:nth-child(5){display:none}
+ /* the Style panel */
+ .stg .dockw{overflow:hidden;min-width:0;height:var(--sh)}
+ .stg .stp{width:380px;height:100%;box-sizing:border-box;background:var(--card,#fff);border:1px solid var(--line,rgba(0,0,0,.09));border-radius:22px;padding:18px 20px;display:flex;flex-direction:column;justify-content:space-between;gap:14px;
+  transform:translate3d(105%,0,0);opacity:0;transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .3s}
+ .stg.open .stp{transform:none;opacity:1}
+ .stg .stp.v-themes,.stg .stp.v-bgs{justify-content:flex-start}
+ .stg .stp.swap>*{animation:stpIn .3s cubic-bezier(.2,.8,.2,1) both}
+ @keyframes stpIn{from{opacity:0;transform:translate3d(14px,0,0)}}
+ .stg .stp .ph{display:flex;justify-content:space-between;align-items:center;gap:10px}
+ .stg .stp h3{margin:0;font-size:17px;font-weight:800}
+ .stg .stp .vt{margin:0;font-size:17px}.stp .vt span{font-size:12px;color:var(--muted,#77736d);font-weight:700;margin-left:4px}
+ .stg .stp .done{border:0;border-radius:999px;padding:9px 17px;background:var(--text);color:var(--card,#fff);font:800 13.5px Manrope,sans-serif;cursor:pointer}
+ .stg .stp .back{all:unset;cursor:pointer;font-weight:800;font-size:14px;padding:6px 0}
+ .stg .stp .sg{display:grid;gap:10px;min-width:0}
+ .stg .stp h5{margin:0;display:flex;justify-content:space-between;align-items:baseline;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted,#77736d)}
+ .stg .stp h5 em{font-style:normal;text-transform:none;letter-spacing:0;font-size:13px;color:var(--text)}
+ .stg .stp .seeall{margin-left:8px;color:var(--brand,#a50e37);cursor:pointer;font-weight:800;font-size:12.5px}
+ /* rows: 2 whole previews and half of the third, which fades out inside the panel — nothing hits the panel's edge */
+ .stg .carw{position:relative;min-width:0}
+ .stg .car{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:4px;margin:-4px;cursor:grab;scroll-behavior:smooth;overscroll-behavior-x:contain;scroll-padding-inline:4px;
+  -webkit-mask:linear-gradient(90deg,#000 calc(100% - 46px),transparent);mask:linear-gradient(90deg,#000 calc(100% - 46px),transparent)}
+ .stg .car::-webkit-scrollbar{display:none}
+ .stg .car.drag{cursor:grabbing;scroll-snap-type:none;scroll-behavior:auto}
+ .stg .car>.tb,.stg .car>.bb,.stg .car>.allc{flex:0 0 calc((100% - 28px) / 2.5);scroll-snap-align:start}
+ .stg .carw:has(.arr.r[disabled]) .car{-webkit-mask:none;mask:none}
+ .stg .arr{position:absolute;top:calc(50% - 28px);width:32px;height:32px;border-radius:50%;border:1px solid var(--line,rgba(0,0,0,.09));background:var(--card,#fff);color:var(--text);box-shadow:0 4px 14px rgba(0,0,0,.2);cursor:pointer;font:800 16px Manrope,sans-serif;z-index:2;display:grid;place-items:center;transition:opacity .2s}
+ .stg .arr.l{left:6px}.arr.r{right:6px}.arr[disabled]{opacity:0;pointer-events:none}
+ .stg .tb,.stg .bb,.stg .allc{all:unset;box-sizing:border-box;display:grid;gap:6px;cursor:pointer;min-width:0}
+ .stg .tb:focus-visible .bx,.stg .bb:focus-visible .bx,.stg .allc:focus-visible .bx{outline:2px solid var(--brand,#a50e37);outline-offset:2px}
+ .stg .tb .bx,.stg .bb .bx,.stg .allc .bx{position:relative;display:block;aspect-ratio:9/13;border-radius:12px;overflow:hidden;outline:2px solid transparent;outline-offset:2px;transition:transform .15s,outline-color .15s}
+ @media(hover:hover){.stg .tb:hover .bx,.stg .bb:hover .bx,.stg .allc:hover .bx{transform:translate3d(0,-2px,0)}}
+ .stg .tb.on .bx,.stg .bb.on .bx{outline-color:var(--text)}
+ .stg .tb .bx i{position:absolute;left:9px;height:5px;border-radius:9px;background:var(--k)}.tb .bx i.a{top:13px;width:58%}.tb .bx i.b{top:23px;width:38%;opacity:.6}
+ .stg .tb .bx b{position:absolute;left:9px;right:6px;top:36px;font-size:16px;font-weight:800;letter-spacing:-.03em;color:var(--a);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .stg .tb .bx s{position:absolute;left:9px;bottom:11px;width:34%;height:12px;border-radius:4px;background:var(--a)}
+ .stg .tb .bx u{position:absolute;right:-22%;bottom:-10%;width:70%;aspect-ratio:1;border-radius:50%;background:var(--a)}
+ .stg .bx .lk{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.55);color:#fff;z-index:2}
+ .stg .bb .bx .bgl{position:absolute;inset:0;width:100%;height:100%}
+ .stg .tb .nm,.stg .bb .nm,.stg .allc .nm{font-size:12px;font-weight:800;display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden}
+ .stg .allc .nm{color:var(--brand,#a50e37)}
+ .stg .fv{color:#d49b00;font-size:12px;line-height:1}
+ .stg .stp .allg .fv{margin-left:auto;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:var(--muted,#77736d);background:color-mix(in srgb,currentColor 10%,transparent);cursor:pointer;font-size:13px}
+ .stg .stp .allg .fv.on{color:#d49b00;background:rgba(212,155,0,.14)}
+ .stg .allc .bx.mos{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:3px;padding:3px;background:color-mix(in srgb,currentColor 8%,transparent)}
+ .stg .allc .bx.mos i{border-radius:5px;position:relative;overflow:hidden;display:block}
+ .stg .allc .bx.mos i .bgl{position:absolute;inset:0;width:100%;height:100%}
+ .stg .allc .bx em{position:absolute;left:8px;right:8px;bottom:8px;text-align:center;font-style:normal;font-weight:800;font-size:13px;padding:7px 0;border-radius:99px;background:rgba(0,0,0,.72);color:#fff}
+ .stg .allg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 10px;overflow-y:auto;min-height:0;flex:1;padding:4px;margin:-4px;scrollbar-width:thin}
+ .stg .stp .hrow{border-top:1px solid var(--line,rgba(0,0,0,.09));padding-top:12px}
+}
+@media(min-width:1180px) and (prefers-reduced-motion:reduce){.stg .stl3,.stg .stp,.stg .stl3>.side{transition:none!important}.stg .stp.swap>*{animation:none}}
+/* v49 the theme sheet's backgrounds: 9 now, so they slide sideways (3 and a bit in view) */
+.bgrow{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:3px;margin:-3px;overscroll-behavior-x:contain;scroll-padding-inline:3px}
+.bgrow::-webkit-scrollbar{display:none}
+.bgrow>.bgo{flex:0 0 calc((100% - 24px) / 3.4);scroll-snap-align:start}
+
+/* v49.2 the Stage fits the window: heights come from the window (set by the page), Up next keeps whole rows */
+@media(min-width:1180px){
+ .stg .nxl{flex:0 1 auto;min-height:0;overflow:hidden;align-content:start}
+ .stg .nx[hidden]{display:none}
+ .stg .car>.tb,.stg .car>.bb,.stg .car>.allc{flex:0 0 var(--tw,calc((100% - 28px) / 2.5))}
+ .stg .stp .ph{min-height:38px}
+}
+/* ===== v49.3 story polish ===== */
+/* The splurge: the card itself fills the story, faded and darkened behind the text; the card still drops in front */
+.st .sfull{position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none;background:#0d0c0b}
+.st .sfull img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 20%;opacity:.42;transform:scale(1.55);transform-origin:50% 22%}
+.st .sfull::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.3) 40%,rgba(0,0,0,.85) 72%)}
+.st.s-drop{color:#fff!important}
+.st.s-drop .sin{z-index:1}
+.st.on .sfull img{animation:stFullIn 9s cubic-bezier(.2,.6,.2,1) both}
+@keyframes stFullIn{from{opacity:0;transform:scale(1.75)}20%{opacity:.42}to{opacity:.42;transform:scale(1.55)}}
+/* Best month: the bars sit right under the words */
+.st.s-mbars .svis{margin-top:30px}
+.st.s-mbars .smb{height:190px}
+/* Patience paid: a line climbs from what it cost to what it sold for, then the card lands at the top */
+.st .spat{position:relative;padding-top:8px}
+.st .spat svg{display:block;width:100%;height:auto;overflow:visible}
+.st .spat .ppf{opacity:.16}.st .spat .ppg{opacity:.35}
+.st .spat .ppl{stroke-dasharray:1;stroke-dashoffset:0}
+.st.on .spat .ppl{animation:stDraw 2.4s cubic-bezier(.45,0,.2,1) both .3s}
+.st.on .spat .ppf{animation:stFade .9s ease both 1.9s}
+.st.on .spat .pp1{animation:stPopC .5s cubic-bezier(.2,.9,.3,1.5) both 2.5s;transform-box:fill-box;transform-origin:center}
+@keyframes stDraw{from{stroke-dashoffset:1}}
+@keyframes stPopC{from{transform:scale(0)}}
+.st .spat .pin{position:absolute;right:2%;top:-16%;width:24%;transform:rotate(6deg)}
+.st .spat .pin b{position:absolute;left:-14px;bottom:-10px;font-size:15px;font-weight:800;padding:5px 10px;border-radius:99px;box-shadow:0 6px 16px rgba(0,0,0,.25)}
+.st.on .spat .pin{animation:stPin .7s cubic-bezier(.2,.9,.3,1.3) both 2.55s}
+@keyframes stPin{from{opacity:0;transform:translateY(30px) rotate(-6deg) scale(.7)}}
+.st .spat .tl{display:flex;justify-content:space-between;margin-top:10px;font-size:12.5px;font-weight:800;gap:10px}
+.st .spat .tl span{display:grid;gap:1px}.st .spat .tl span:last-child{text-align:right}
+.st .spat .tl i{font-style:normal;font-size:10px;letter-spacing:.07em;text-transform:uppercase;opacity:.7}
+/* Still in the binder: both pages solid, no light frame */
+.st .sbn>div{box-shadow:inset 0 0 0 1px rgba(0,0,0,.12),0 14px 30px rgba(0,0,0,.25)}
+.st .sbn .cd{box-shadow:0 2px 6px rgba(0,0,0,.25);border:0}
+.st .sbn .pgf{backface-visibility:hidden;-webkit-backface-visibility:hidden}
+/* Biggest month for buying: a desk calendar tears off month after month, ending on the big one */
+.st .scal2{position:relative;width:62%;max-width:240px;aspect-ratio:1/1;margin:0 auto 6px;perspective:900px}
+.st .scal2 .cpg{position:absolute;inset:0;border-radius:18px;background:#fbfaf7;color:#1b1a17;display:grid;place-content:center;text-align:center;gap:2px;box-shadow:0 16px 34px rgba(0,0,0,.28);transform-origin:50% 0;backface-visibility:hidden}
+.st .scal2 .cpg .rg{position:absolute;top:12px;left:28%;right:28%;height:8px;background:radial-gradient(circle,rgba(0,0,0,.35) 3.5px,transparent 4px) 0 0/50% 100% repeat-x}
+.st .scal2 .cpg small{font-size:12px;font-weight:800;letter-spacing:.08em;opacity:.6}
+.st .scal2 .cpg b{font-size:58px;font-weight:800;letter-spacing:-.04em;line-height:1}
+.st .scal2 .cpg em{font-style:normal;font-size:13px;font-weight:800;opacity:.85;margin-top:4px}
+.st.on .scal2 .cpg:not(.hot){animation:stTear .5s cubic-bezier(.5,0,.75,.3) both;animation-delay:var(--d)}
+.st.on .scal2 .cpg.hot{animation:stLand .7s cubic-bezier(.2,.9,.3,1.4) both;animation-delay:var(--d)}
+@keyframes stTear{to{transform:rotateX(-100deg) translateY(-30px);opacity:0}}
+.st.on .scal2 .cpg:not(.hot){animation-duration:.6s}
+@keyframes stLand{0%{transform:scale(.96)}50%{transform:scale(1.08)}100%{transform:none}}
+/* the shelf shows 5 stories, then See all */
+.covers .scv.xtra{display:none}
+.covers .scv.seeall{position:relative;display:block;padding:0;background:color-mix(in srgb,currentColor 6%,transparent)!important;color:var(--text)!important;border:1.5px dashed color-mix(in srgb,currentColor 28%,transparent);box-shadow:none}
+.covers .scv.seeall::before,.covers .scv.seeall::after{display:none!important}
+.covers .scv.seeall .fan{position:absolute;left:50%;top:16%;width:42%;aspect-ratio:3/4;transform:translateX(-50%)}
+.covers .scv.seeall .fan i{position:absolute;inset:0;border-radius:9px;transform:rotate(var(--r));transform-origin:50% 100%;box-shadow:0 4px 12px rgba(0,0,0,.25);overflow:hidden;transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.covers .scv.seeall .fan i::after{content:"";position:absolute;right:-30%;top:-20%;width:70%;aspect-ratio:1;border-radius:50%;background:var(--a);opacity:.85}
+.covers .scv.seeall .sal{position:absolute;left:10px;right:10px;bottom:10px;display:grid;line-height:1.2;text-align:center;text-transform:none;letter-spacing:0}
+.covers .scv.seeall .sal b{font-size:15px;font-weight:800}.covers .scv.seeall .sal small{font-size:12px;font-weight:700;opacity:.6;text-transform:none;letter-spacing:0}
+@media(hover:hover){.covers .scv.seeall:hover .fan i{transform:rotate(calc(var(--r) * 1.6))}}
+
+/* ===== v49.4 layout: each story's picture sits centered under the words (not pushed to the bottom) ===== */
+.st .svis{margin-block:auto}
+.st .svw{transform-origin:50% 0}
+.st.s-io .svis{margin-bottom:auto}
+/* Still in the binder: a big number, then "cards, still holding." */
+.st.s-bind h4:empty{display:none}
+.st.s-bind .sbig{margin-top:6px}
+.st.s-bind .line{font-size:clamp(22px,7cqw,28px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin-top:4px}
+.st .sbn{max-width:230px}
+/* Biggest month for buying: torn pages fade before they swing up out of sight */
+@keyframes stTear{55%{opacity:0}to{transform:rotateX(-100deg) translateY(-60px);opacity:0}}
+/* the dim behind Stories' sheets: the same plain one as the rest of the app (no grain) */
+html .sheetw,html .sheetw.out::before{background:var(--win-veil,rgba(8,8,8,.5))!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html .sheetw.out{background:transparent!important}
+html .stall{background:var(--win-veil,rgba(8,8,8,.5))}
+
+/* ===== v50.2 All stories: a readable list (a bottom sheet on phones) ===== */
+.stall{overscroll-behavior:contain;touch-action:none}
+.stall .sa{display:flex;flex-direction:column;width:min(720px,100%);max-height:86vh;overflow:hidden;padding:0;touch-action:auto}
+.stall .sah{padding:20px 22px 10px;margin:0;flex:none}
+.stall .sab{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:0 14px 22px;touch-action:pan-y}
+.stall .sagrab{display:none}
+.stall .sgr{display:grid;gap:4px;margin-top:8px}
+.stall .sgr h4{margin:10px 8px 4px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted,#77736d)}
+.stall .sar{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:14px;padding:8px;border-radius:16px;cursor:pointer;transition:background .15s}
+@media(hover:hover){.stall .sar:hover{background:color-mix(in srgb,currentColor 6%,transparent)}}
+.stall .sar:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+.stall .sar.cur{background:color-mix(in srgb,currentColor 8%,transparent)}
+.stall .sat{position:relative;flex:none;width:58px;aspect-ratio:3/4;border-radius:11px;overflow:hidden;isolation:isolate;display:grid;align-items:end;padding:6px}
+.stall .sat .bgl{position:absolute;inset:0;width:100%;height:100%;z-index:-1}
+.stall .sat b{font-size:11.5px;font-weight:800;line-height:1.1;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stall .sax{flex:1;min-width:0;display:grid;gap:2px}
+.stall .sax b{font-size:16px;font-weight:800;letter-spacing:-.01em}
+.stall .sax small{font-size:14px;font-weight:600;color:var(--muted,#77736d);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.stall .sap{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,currentColor 8%,transparent)}
+.stall .sap svg{width:14px;height:14px}
+.stall .pmt2{flex:none;font-style:normal;font-size:11px;font-weight:800;padding:4px 9px;border-radius:99px;background:#111;color:#fff}
+.stall .sar.lk .sat{opacity:.75}
+@media(max-width:760px){
+ .stall{place-items:end stretch;padding:0}
+ .stall .sa{width:100%;max-height:88dvh;border-radius:24px 24px 0 0;padding-bottom:env(safe-area-inset-bottom,0px)}
+ .stall .sagrab{display:block;width:40px;height:5px;border-radius:9px;background:color-mix(in srgb,currentColor 18%,transparent);margin:10px auto 0;flex:none}
+ .stall .sah{padding-top:10px}
+}
+/* the shelf's covers say what each story is about, not just a number */
+.scv .cvh{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;margin-top:6px;font-size:clamp(12px,11.5cqw,17px);font-weight:800;line-height:1.12;letter-spacing:-.015em}
+.scv .sin b{margin-top:auto}
+.scv.lkcv small{padding-right:66px}
+.stall .sat b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:11px}
+
+/* v50.4: video ready window */
+.vready{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:24px;background:var(--win-veil,rgba(8,8,8,.5));animation:vrIn .2s ease both}
+.vready .vrc{background:var(--card,#fff);color:var(--text);border-radius:24px;padding:18px 18px 14px;width:min(320px,100%);display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.35);animation:vrUp .32s cubic-bezier(.2,.8,.2,1) both}
+.vready video{width:132px;aspect-ratio:9/16;border-radius:14px;object-fit:cover;background:#111;margin-bottom:8px;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.vready .vrn{width:110px;height:110px;border-radius:20px;display:grid;place-content:center;background:color-mix(in srgb,currentColor 7%,transparent);margin-bottom:8px}.vready .vrn b{font:800 40px/1 Manrope,sans-serif}.vready .vrn span{font:700 12px Manrope,sans-serif;opacity:.6}
+.vready .vrt{font:800 18px/1.2 Manrope,sans-serif;letter-spacing:-.01em}
+.vready small{font:600 13px/1.35 Manrope,sans-serif;opacity:.65;margin-bottom:8px}
+.vready .vrs{width:100%;height:48px;border:0;border-radius:99px;background:var(--brand,#c0123f);color:#fff;font:800 15px Manrope,sans-serif;cursor:pointer}
+.vready .vrx{border:0;background:none;color:inherit;opacity:.6;font:700 13px Manrope,sans-serif;padding:10px;cursor:pointer}
+@keyframes vrIn{from{opacity:0}}@keyframes vrUp{from{opacity:0;transform:translateY(16px) scale(.97)}}
+@media(prefers-reduced-motion:reduce){.vready,.vready .vrc{animation:none}}
+/* v50.9 Sunrise: rises once in about 5 seconds and stays up for the rest of the story (was an 18-second loop) */
+.st.on .bgl .sunr,.hero .bgl .sunr,.dpl .st.on .bgl .sunr,.bgpv .sunr{animation:bgSun 5s cubic-bezier(.22,.7,.2,1) both!important}
+.bgl .sunr{transform:scaleY(.6)}

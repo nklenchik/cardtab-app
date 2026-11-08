@@ -5,7 +5,7 @@ args=[a for a in sys.argv[1:] if a not in ('soft','nosoft','app')]
 MAIN=not args
 VAR=args[0] if args else 'A'  # the main board uses phone layout A
 P=json.load(open('dash-parts.json'))
-board_css=open('board-part.html').read().replace('__SITECSS__',open('site-cb.css').read())+open('board4.css').read()+open('board5.css').read()+open('board6.css').read()+open('board7.css').read()+open('board8.css').read()+open('board9.css').read()+open('board10.css').read()+open('board11.css').read()+open('board12.css').read()+(open('board13.css').read() if VAR else '')+(open('board14-soft.css').read() if SOFT else '')+open('board15.css').read()+open('board16.css').read()
+board_css=open('board-part.html').read().replace('__SITECSS__',open('site-cb.css').read())+open('board4.css').read()+open('board5.css').read()+open('board6.css').read()+open('board7.css').read()+open('board8.css').read()+open('board9.css').read()+open('board10.css').read()+open('board11.css').read()+open('board12.css').read()+(open('board13.css').read() if VAR else '')+(open('board14-soft.css').read() if SOFT else '')+open('board15.css').read()+open('board16.css').read()+open('board17.css').read()
 markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
 <section class="cbx off" id="cbx" inert aria-hidden="true" role="dialog" aria-modal="true" aria-label="Card Board">
 <div id="cb"><div class="frame">
@@ -35,8 +35,8 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
 </div></div>
   </div>
   <div class="vbar" id="vbar" hidden><span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>This is what people with your link see</span><button type="button" class="tbtn" id="vbar-x">Back to my board</button></div>
-  <button type="button" class="addbar" id="addw" hidden><span aria-hidden="true">+</span> Add widget</button>
   <div class="simple" id="simple"></div>
+  <button type="button" class="addbar" id="addw" hidden><span aria-hidden="true">+</span> Add widget</button>
   <div class="editfoot" id="editfoot" hidden><button type="button" class="tlink rst" id="cb-reset"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg>Reset to the starting layout</button></div>
 </div>
 <div class="cb-menu" id="wmenu" hidden role="menu"></div>
@@ -55,14 +55,22 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
   <button type="button" class="go ghost" id="sh-view">See what they’ll see</button>
   <p class="shnote">Preview: links and emails start working once Card Tab is online.</p>
 </div></dialog>
+<dialog id="lyd" class="sheet drawer lyd" aria-labelledby="ly-h"><div class="awp lyp">
+  <div class="awh"><div class="lyt-h"><h2 id="ly-h">Layouts</h2><small class="lyn" id="ly-n"></small></div><button type="button" class="x" data-close aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <button type="button" class="lysave" id="ly-save"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Save this layout</span></button>
+  <p class="lyfull" id="ly-full" hidden>All 9 are used. Delete one, or use ⋯ → Update to save over it.</p>
+  <div class="lyask" id="ly-ask" hidden role="alertdialog" aria-live="polite"></div>
+  <div class="lytiles" id="ly-tiles" role="list"></div>
+  <p class="lyhint" id="ly-hint"></p>
+</div></dialog>
 <dialog id="askd" class="sheet drawer" aria-labelledby="ask-h"><div class="awp askp">
   <div class="awh"><div class="askt"><span class="askic" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2 5.3 5.5 1.9-5.5 2-2 5.3-2-5.3-5.5-2 5.5-1.9z"/><path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg></span><div><h2 id="ask-h">Ask</h2><small class="askscope" id="ask-scope"></small></div></div><div class="askh"><button type="button" class="tlink" id="ask-new">New chat</button><button type="button" class="x" data-close aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
   <div class="asklog" id="ask-log" aria-live="polite"></div>
   <div class="askstarts" id="ask-starts"></div>
-  <p class="askoff" id="ask-off">Ask isn’t available in this view. It works inside Claude now and in the Card Tab app later.</p>
+  <p class="askoff" id="ask-off">Ask works when you’re signed in to Card Tab online.</p>
   <form class="askform" id="ask-form" hidden><input id="ask-in" placeholder="Ask about your numbers" autocomplete="off" aria-label="Your question"><button type="submit" class="askgo" id="ask-go" aria-label="Ask"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button><button type="button" class="askgo stop" id="ask-stop" hidden aria-label="Stop"><i></i></button></form>
   <p class="askleft" id="ask-left" role="status" hidden></p>
-  <p class="askfine">Answers use only the numbers on this board, for the dates and platforms you picked.</p>
+  <p class="askfine">Every number comes straight from your entries, worked out to the cent.</p>
 </div></dialog>
 <dialog id="ent" class="sheet" aria-labelledby="ent-h"><div class="awp entp">
   <div class="awh"><div><h2 id="ent-h"></h2><small class="askscope" id="ent-sub"></small></div><button type="button" class="x" data-close aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -109,7 +117,7 @@ markup='''<div class="cbxbg" id="cbxbg" aria-hidden="true"></div>
 <dialog id="aw" class="sheet awg" aria-labelledby="aw-h"><div class="awp">
   <div class="awtop"><div class="awh"><h2 id="aw-h">Add widgets</h2><button type="button" class="x" data-close aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <label class="aws"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="aw-q" type="search" placeholder="Search widgets" autocomplete="off" aria-label="Search widgets"></label>
-  <div class="seg awseg" id="aw-cats" role="group" aria-label="Kind"><button type="button" data-c="all" aria-pressed="true">All</button><button type="button" data-c="num" aria-pressed="false">Numbers</button><button type="button" data-c="chart" aria-pressed="false">Charts</button><button type="button" data-c="list" aria-pressed="false">Lists</button></div></div>
+  <div class="seg awseg" id="aw-cats" role="group" aria-label="Kind"><button type="button" data-c="all" aria-pressed="true">All</button><button type="button" data-c="num" aria-pressed="false">Numbers</button><button type="button" data-c="card" aria-pressed="false">Cards</button><button type="button" data-c="chart" aria-pressed="false">Charts</button><button type="button" data-c="list" aria-pressed="false">Lists</button></div></div>
   <div class="thumbs" id="aw-list"></div>
   <div class="awfoot"><p class="awhint" id="aw-hint" role="status" aria-live="polite">Tap to add · tap again to remove · resize from the corner on your board</p>
   <button type="button" class="go" data-close>Done</button></div>
@@ -145,7 +153,7 @@ function totals(list){let sales=0,after=0,spent=0,ref=0,fees=0;list.forEach(e=>{
 const calm=matchMedia('(prefers-reduced-motion: reduce)');
 const STORIES_HTML=__STORIES__;
 '''.replace('__DATA__',data).replace('__STORIES__',stories_js)
-page=P['css']+board_css+tipcss+'</style>\n\n'+P['html']+markup+head_js+P['js']+open('board15.js').read()+open('board5.js').read()+(open('board13.js').read() if VAR else '')+open('board16.js').read()+'\n})();\n</script>\n'
+page=P['css']+board_css+tipcss+'</style>\n\n'+P['html']+markup+head_js+P['js']+open('board15.js').read()+open('board5.js').read()+(open('board13.js').read() if VAR else '')+open('board16.js').read()+open('board18.js').read()+open('board19.js').read()+'\n})();\n</script>\n'
 logo='data:image/webp;base64,'+base64.b64encode(open('/home/claude/cardtab-app/app/assets/logo-128.webp','rb').read()).decode()
 out=page.replace('__LOGO__',logo)
 if not MAIN:out=out.replace('<title>Card Board Preview</title>','<title>Card Board Phone '+VAR+'</title>',1)
@@ -177,7 +185,7 @@ if APP:
     # the standalone preview's hint note has no place in the app (it showed on the sign-in screen once the board preloaded)
     markup=markup.replace('<div class="note" id="note">Preview with your real entries · click ⤢ on Insights</div>','')
     assert 'id="note"' not in markup
-    js='/* Card Board for the Card Tab app. Built by tools/build-cb.py app; loaded on demand by js/board-loader.js. */\n(function(){\nif(window.CTBoard)return;\nconst CBROOT=document.createElement("div");CBROOT.className="cbroot";CBROOT.innerHTML='+json.dumps(markup)+';document.body.appendChild(CBROOT);\n'+("document.documentElement.dataset.cbv='"+VAR+"';\n")+hj.split("(function(){",1)[1]+b5+b13+open('board16.js').read()+open('board-app-tail.js').read()+'\n})();\n'
+    js='/* Card Board for the Card Tab app. Built by tools/build-cb.py app; loaded on demand by js/board-loader.js. */\n(function(){\nif(window.CTBoard)return;\nconst CBROOT=document.createElement("div");CBROOT.className="cbroot";CBROOT.innerHTML='+json.dumps(markup)+';document.body.appendChild(CBROOT);\n'+("document.documentElement.dataset.cbv='"+VAR+"';\n")+hj.split("(function(){",1)[1]+b5+b13+open('board16.js').read()+open('board18.js').read()+open('board19.js').read()+open('board-app-tail.js').read()+'\n})();\n'
     # the app's own menu already uses these ids; the board's copies get their own names
     idfix=lambda x:re.sub(r'\bam-(name|theme|hapr|hap)\b',r'cb-am-\1',x)
     js=idfix(js);css=idfix(css).replace('#cb,:root{--hair-l:1;}','#cb{--hair-l:1;}')
