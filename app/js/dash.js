@@ -170,7 +170,8 @@
     const top = t.type === 'sale' ? r('Sold', money(t.amount)) + r('Fees and shipping', (fee ? '−' : '') + money(fee), fee ? 'neg' : '') : each;
     return '<div class="ct-money' + (top ? '' : ' ct-money-solo') + '">' + top + '<div class="ct-mtot"><i class="ct-mdash"></i>' + keptRow(t) + '</div></div>';
   }
-  function factsHtml(t) { return t.note ? '<div class="ct-row-note">' + esc(t.note) + '</div>' : ''; }
+  // a note that only repeated the grade ("Graded CGC 10 Pristine", from before grades had their own field) isn't shown twice
+  function factsHtml(t) { let n = t.note || ''; if (G && G.of(t)) n = n.replace(/^\s*graded\s+(psa|bgs|beckett|cgc|sgc|tag)\s*\d[^\n]*\n?/i, '').trim(); return n ? '<div class="ct-row-note">' + esc(n) + '</div>' : ''; }
   const COND = { 'near mint': 'NM', 'mint': 'M', 'lightly played': 'LP', 'moderately played': 'MP', 'heavily played': 'HP', 'damaged': 'DMG' };
   const condShort = c => c ? (COND[String(c).toLowerCase()] || c) : '';
   const condOf = t => (G && G.of(t)) ? '' : t.condition; // graded cards show their grade instead (the chip, the slab)

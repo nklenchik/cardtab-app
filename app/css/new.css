@@ -2006,3 +2006,7 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
    the grade word step away when the slab is too narrow to read them. Small keeps "PSA 10". */
 @container slab (max-width:175px){#ct-rows.ct-gal:not(.gs-s) .sl-meta,#ct-rows.ct-gal:not(.gs-s) .sl-gr small{display:block}#ct-rows.ct-gal:not(.gs-s) .sl-gr{grid-row:1/4}#ct-rows.ct-gal:not(.gs-s) .sl-co{font-size:5.6cqw}#ct-rows.ct-gal:not(.gs-s) .sl-nm{font-size:6.6cqw}#ct-rows.ct-gal:not(.gs-s) .sl-gr b{font-size:17cqw}}
 @container slab (max-width:118px){#ct-rows.ct-gal:not(.gs-s) .sl-lbl{display:grid;padding:3.6cqw 4.4cqw}#ct-rows.ct-gal:not(.gs-s) .sl-co,#ct-rows.ct-gal:not(.gs-s) .sl-nm,#ct-rows.ct-gal:not(.gs-s) .sl-gr{display:block}#ct-rows.ct-gal:not(.gs-s) .sl-tiny,#ct-rows.ct-gal:not(.gs-s) .sl-meta,#ct-rows.ct-gal:not(.gs-s) .sl-gr small{display:none}#ct-rows.ct-gal:not(.gs-s) .sl-gr{grid-row:1/3}}
+/* open rows: the name runs full width and the chip follows it inline */
+.ct-demo .ct-row.expanded .ct-row-name.ct-rn-g{display:block!important}
+.ct-demo .ct-row.expanded .ct-rn-g .ct-rn{display:inline}
+.ct-demo .ct-row.expanded .ct-rn-g .sl-chip{margin:0 0 0 8px;vertical-align:.14em}
