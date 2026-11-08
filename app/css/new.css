@@ -2002,3 +2002,7 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 .ct-rn-g .ct-rn{min-width:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .ct-demo .ct-row.expanded .ct-rn-g .ct-rn{display:block;-webkit-line-clamp:unset;overflow:visible}
 .ct-rn-g .sl-chip{flex:none;margin:0 0 .18em}
+/* v50.31: grid tiles (Medium and Large) keep the full label at every size, in proportion with Large; only the number and
+   the grade word step away when the slab is too narrow to read them. Small keeps "PSA 10". */
+@container slab (max-width:175px){#ct-rows.ct-gal:not(.gs-s) .sl-meta,#ct-rows.ct-gal:not(.gs-s) .sl-gr small{display:block}#ct-rows.ct-gal:not(.gs-s) .sl-gr{grid-row:1/4}#ct-rows.ct-gal:not(.gs-s) .sl-co{font-size:5.6cqw}#ct-rows.ct-gal:not(.gs-s) .sl-nm{font-size:6.6cqw}#ct-rows.ct-gal:not(.gs-s) .sl-gr b{font-size:17cqw}}
+@container slab (max-width:118px){#ct-rows.ct-gal:not(.gs-s) .sl-lbl{display:grid;padding:3.6cqw 4.4cqw}#ct-rows.ct-gal:not(.gs-s) .sl-co,#ct-rows.ct-gal:not(.gs-s) .sl-nm,#ct-rows.ct-gal:not(.gs-s) .sl-gr{display:block}#ct-rows.ct-gal:not(.gs-s) .sl-tiny,#ct-rows.ct-gal:not(.gs-s) .sl-meta,#ct-rows.ct-gal:not(.gs-s) .sl-gr small{display:none}#ct-rows.ct-gal:not(.gs-s) .sl-gr{grid-row:1/3}}
