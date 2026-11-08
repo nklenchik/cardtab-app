@@ -136,6 +136,13 @@ export async function handleArt(env, req, path, cors, ctx) {
     if (!share || share.status === 'no') await env.DB.prepare('INSERT INTO art_uploads (id,user_id,card_id,name,w,h,status,reason,seen,created) VALUES (?,?,?,?,?,?,?,?,?,?)').bind(id, me.id, cardId || null, name, files.detail.info.w, files.detail.info.h, 'private', '', '', now()).run();
     return J(env, cors, { ok: true, art, share });
   }
+  // v50.51: the latest nightly database backup, for the admin dashboard's Download button
+  if (path === '/api/admin/backup' && req.method === 'GET') {
+    if (!me || !isAdmin(env, me.email)) return J(env, cors, { error: 'not allowed' }, 403);
+    const o = await env.ART.get('_backup/latest.sql.gz'); if (!o) return J(env, cors, { error: 'No backup yet. The first one runs tonight.' }, 404);
+    const st = await env.ART.get('_backup/status.json'), d = st ? (JSON.parse(await st.text()).day || 'latest') : 'latest';
+    return new Response(o.body, { headers: { 'content-type': 'application/gzip', 'content-disposition': 'attachment; filename="card-tab-database-' + d + '.sql.gz"', 'cache-control': 'no-store', ...cors(env) } });
+  }
   // the review queue (admins)
   if (path === '/api/admin/art') {
     if (!me || !isAdmin(env, me.email)) return J(env, cors, { error: 'not allowed' }, 403);

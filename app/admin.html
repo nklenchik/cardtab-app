@@ -323,8 +323,13 @@ function hcPaint(){const el=document.getElementById('hc');if(!el)return;const L=
     body='<div class="hcsum '+(bad?'dn':warn?'fl':'up')+'">'+(bad?bad+' problem'+(bad>1?'s':''):warn?'Everything works · '+warn+' to look at':'Everything passed')+'<small> · '+new Date((L.at||0)*1000).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</small></div>'+
       '<div class="hclist">'+C.map(c=>'<div class="hcr"><span class="hci">'+(c.ok?(c.warn?'🟡':'✅'):'❌')+'</span><span class="hct"><b>'+esc(c.name)+'</b>'+(c.note?'<small>'+esc(c.note)+'</small>':'')+(c.fix?'<em>Suggested fix: '+esc(c.fix)+'</em>':'')+'</span><span class="hcm">'+(c.ms?c.ms+' ms':'')+'</span></div>').join('')+'</div>'+
       (H.length?'<div class="hchist" title="Last 30 days, newest on the right">'+H.slice().reverse().map(h=>'<i class="'+(!h.ok?'b':h.warn?'w':'g')+'" title="'+esc(h.day||'')+'"></i>').join('')+'</div>':'')}
-  el.innerHTML='<div class="hch"><div><h3>Daily check</h3><div class="sub">Every morning the server checks the basics and emails you the result</div></div><button type="button" class="chip" id="hcrun"'+(hcBusy?' disabled':'')+'>Run check now</button></div>'+body;
-  const b=document.getElementById('hcrun');if(b)b.onclick=()=>hcLoad(true)}
+  el.innerHTML='<div class="hch"><div><h3>Daily check</h3><div class="sub">Every morning the server checks the basics and emails you the result</div></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="chip" id="bkdl">Download backup</button><button type="button" class="chip" id="hcrun"'+(hcBusy?' disabled':'')+'>Run check now</button></div></div>'+body;
+  const b=document.getElementById('hcrun');if(b)b.onclick=()=>hcLoad(true);
+  // v50.51: the latest nightly database backup (made by the GitHub job; card pictures and photos are in the backup bucket and Google Drive)
+  const dl=document.getElementById('bkdl');if(dl)dl.onclick=async()=>{if(!REAL){dl.textContent='Downloads on cardtab.app';return}dl.disabled=true;dl.textContent='Downloading…';
+    try{const r=await fetch(API+'/api/admin/backup',{credentials:'include'});if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.error||'Couldn’t download')}
+      const cd=r.headers.get('content-disposition')||'',nm=(/filename="([^"]+)"/.exec(cd)||[])[1]||'card-tab-database.sql.gz',u=URL.createObjectURL(await r.blob()),a=document.createElement('a');a.href=u;a.download=nm;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);dl.textContent='Downloaded'}
+    catch(e){dl.textContent=e.message}setTimeout(()=>{dl.disabled=false;dl.textContent='Download backup'},3500)}}
 // v50.46: shared card photos the automatic check flagged (or couldn't check) wait here
 let AQ=null,aqBusy=false;
 async function aqLoad(){if(aqBusy)return;if(st.smp||!REAL){AQ={items:[{id:'s1',name:'Blastoise · 009/165 · 151',reason:'Doesn’t look like this card',seen:'Wartortle',email:'fan@example.com',created:Date.now()/1000-120,art:{list:'assets/card-art/blastoise-sm.webp',detail:'assets/card-art/blastoise.webp'},sample:1}]};aqPaint();return}

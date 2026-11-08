@@ -1,0 +1,92 @@
+# Nightly backup of Card Tab (runs on GitHub, free; nothing here uses the Worker's free allowance).
+#
+# Three copies, in three places:
+#   1. live data, plus Cloudflare D1's own 7-day rollback (already on)
+#   2. every night, a copy in the separate R2 bucket "card-tab-backup": the database (last 30 nights + the 1st of every
+#      month for a year) and every card picture (auto-fill art, shared default art, uploaded photos)
+#   3. every night, an ENCRYPTED copy in Google Drive ("Card Tab backups"): the database (same keeping rules) and uploaded
+#      photos + shared default art. Only the passphrase opens it.
+# Each night the database copy is opened and checked (a restore test) before anything is kept; if it fails, the run fails
+# and GitHub emails you. The result also shows in the daily check email.
+#
+# Secrets (repo Settings -> Secrets and variables -> Actions; never in chat):
+#   CLOUDFLARE_API_TOKEN   account token with D1: Edit
+#   R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY   R2 API token, Object Read & Write on card-tab-art and card-tab-backup
+#   GDRIVE_TOKEN           from:  rclone authorize "drive"   (the whole {...} it prints)
+#   BACKUP_PASSPHRASE      any long passphrase you keep somewhere safe (without it the Drive copy can't be opened)
+name: Nightly backup
+on:
+  schedule:
+    - cron: '23 7 * * *'     # 2:23 AM Eastern (07:23 UTC)
+  workflow_dispatch: {}       # "Run workflow" button for a backup right now
+concurrency: { group: backup, cancel-in-progress: false }
+permissions: { contents: read }
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 09e344eec1c9830145d72415cc310763
+      # rclone remotes, set up from secrets (no config file on disk)
+      RCLONE_CONFIG_R2_TYPE: s3
+      RCLONE_CONFIG_R2_PROVIDER: Cloudflare
+      RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      RCLONE_CONFIG_R2_ENDPOINT: https://09e344eec1c9830145d72415cc310763.r2.cloudflarestorage.com
+      RCLONE_CONFIG_R2_NO_CHECK_BUCKET: 'true'
+      RCLONE_CONFIG_GD_TYPE: drive
+      RCLONE_CONFIG_GD_SCOPE: drive
+      RCLONE_CONFIG_GD_TOKEN: ${{ secrets.GDRIVE_TOKEN }}
+      RCLONE_CONFIG_SAFE_TYPE: crypt
+      RCLONE_CONFIG_SAFE_REMOTE: 'gd:Card Tab backups'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Install tools
+        run: |
+          curl -fsSL https://rclone.org/install.sh | sudo bash >/dev/null
+          sudo apt-get install -y -qq sqlite3 >/dev/null
+          echo "RCLONE_CONFIG_SAFE_PASSWORD=$(rclone obscure "${{ secrets.BACKUP_PASSPHRASE }}")" >> "$GITHUB_ENV"
+          echo "RCLONE_CONFIG_SAFE_PASSWORD2=$(rclone obscure "card-tab-salt:${{ secrets.BACKUP_PASSPHRASE }}")" >> "$GITHUB_ENV"
+          echo "DAY=$(date -u +%Y-%m-%d)" >> "$GITHUB_ENV"
+      - name: Export the database
+        working-directory: api
+        run: npx --yes wrangler@4 d1 export card-tab --remote --output="$RUNNER_TEMP/db.sql"
+      - name: Restore test (open the copy and check it)
+        run: |
+          rm -f "$RUNNER_TEMP/test.db"; sqlite3 "$RUNNER_TEMP/test.db" < "$RUNNER_TEMP/db.sql"
+          for t in users entries user_meta cards art_uploads; do
+            sqlite3 "$RUNNER_TEMP/test.db" "SELECT COUNT(*) FROM $t" >/dev/null || { echo "::error::table $t missing from the backup"; exit 1; }
+          done
+          echo "USERS=$(sqlite3 "$RUNNER_TEMP/test.db" 'SELECT COUNT(*) FROM users')" >> "$GITHUB_ENV"
+          echo "ENTRIES=$(sqlite3 "$RUNNER_TEMP/test.db" 'SELECT COUNT(*) FROM entries')" >> "$GITHUB_ENV"
+          gzip -9 -c "$RUNNER_TEMP/db.sql" > "$RUNNER_TEMP/db-$DAY.sql.gz"
+      - name: Copy 2 - Cloudflare backup bucket
+        run: |
+          rclone copyto "$RUNNER_TEMP/db-$DAY.sql.gz" "r2:card-tab-backup/db/db-$DAY.sql.gz"
+          rclone copyto "$RUNNER_TEMP/db-$DAY.sql.gz" "r2:card-tab-art/_backup/latest.sql.gz"   # for the admin Download button
+          rclone copy r2:card-tab-art/art r2:card-tab-backup/art --fast-list --transfers 16
+          rclone copy r2:card-tab-art/up  r2:card-tab-backup/up  --fast-list --transfers 16
+      - name: Copy 3 - Google Drive (encrypted)
+        run: |
+          rclone copyto "$RUNNER_TEMP/db-$DAY.sql.gz" "safe:db/db-$DAY.sql.gz"
+          rclone copy r2:card-tab-art/up    safe:photos     --fast-list --transfers 8
+          rclone copy r2:card-tab-art/art/c safe:shared-art --fast-list --transfers 8
+      - name: Keep 30 nights + the 1st of each month for a year
+        run: |
+          prune() { rclone lsf "$1" --files-only | while read -r f; do
+              d=${f#db-}; d=${d%.sql.gz}; age=$(( ( $(date -u +%s) - $(date -u -d "$d" +%s) ) / 86400 ))
+              if [ "$age" -gt 30 ] && { [ "${d:8:2}" != "01" ] || [ "$age" -gt 366 ]; }; then rclone deletefile "$1/$f"; fi
+            done; }
+          prune r2:card-tab-backup/db
+          prune safe:db
+      - name: Record the result (shown in the daily check)
+        if: always()
+        run: |
+          size() { rclone size "$1" --json 2>/dev/null | sed -n 's/.*"bytes":\([0-9]*\).*/\1/p'; }
+          ART=$(size r2:card-tab-art); BAK=$(size r2:card-tab-backup)
+          printf '{"day":"%s","at":%s,"ok":%s,"users":"%s","entries":"%s","artBytes":%s,"backupBytes":%s}' \
+            "$DAY" "$(date -u +%s)" "${{ job.status == 'success' && 'true' || 'false' }}" "${USERS:-}" "${ENTRIES:-}" "${ART:-0}" "${BAK:-0}" > "$RUNNER_TEMP/status.json"
+          rclone copyto "$RUNNER_TEMP/status.json" r2:card-tab-art/_backup/status.json

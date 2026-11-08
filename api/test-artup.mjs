@@ -11,7 +11,7 @@ const stmt = (sql) => { const o = { sql, args: [], bind(...a) { o.args = a; retu
   async first() { return sq.prepare(sql).get(...o.args) || null; }, async all() { return { results: sq.prepare(sql).all(...o.args) }; }, async run() { sq.prepare(sql).run(...o.args); return {}; } }; return o; };
 const DB = { prepare: stmt, async batch(list) { for (const s of list) await s.run(); return []; } };
 const store = new Map();
-const ART = { async get(k) { const v = store.get(k); return v ? { body: new Blob([v.b]).stream(), httpMetadata: v.m, async arrayBuffer() { return v.b.buffer.slice(v.b.byteOffset, v.b.byteOffset + v.b.byteLength); } } : null; },
+const ART = { async get(k) { const v = store.get(k); return v ? { body: new Blob([v.b]).stream(), httpMetadata: v.m, async text() { return new TextDecoder().decode(v.b); }, async arrayBuffer() { return v.b.buffer.slice(v.b.byteOffset, v.b.byteOffset + v.b.byteLength); } } : null; },
   async head(k) { return store.has(k) ? {} : null; }, async put(k, b, o) { store.set(k, { b: new Uint8Array(b instanceof ArrayBuffer ? b : b.buffer ? b : await new Response(b).arrayBuffer()), m: (o || {}).httpMetadata }); } };
 let aiAnswer = '{"card":true,"name_read":"Charizard ex","number_read":"223/197","same_card":true,"unsafe":false}', aiCalls = 0;
 const AI = { async run(model, inp) { aiCalls++; assert.ok(Array.isArray(inp.image) && inp.image.length > 1000); return { response: aiAnswer }; } };
@@ -84,3 +84,17 @@ import('./src/artup.js').then(async ({ aiCheck, numSame }) => {
   c = await aiCheck(e2('{"card":true,"name_read":"Charizard ex","number_read":"223/197","same_card":true,"unsafe":true}'), px, W); assert.equal(c.ok, false); assert.equal(c.reason, 'Might be inappropriate');
   console.log('art upload tests ok');
 });
+// v50.51: the backup download and the daily check's backup line
+{
+  const st = { day: '2026-11-08', at: Math.floor(Date.now() / 1000) - 3600, ok: true, users: '12', entries: '340', artBytes: 2e9, backupBytes: 2.1e9 };
+  await ART.put('_backup/status.json', new TextEncoder().encode(JSON.stringify(st)), {}); await ART.put('_backup/latest.sql.gz', new Uint8Array([31, 139, 8, 0]), {});
+  assert.equal((await call('/api/admin/backup', { cookie: fan })).status, 403);
+  const r = await call('/api/admin/backup', { cookie: boss }); assert.equal(r.status, 200); assert.ok(/card-tab-database-2026-11-08/.test(r.headers.get('content-disposition')));
+  assert.equal((await call('/art/_backup/latest.sql.gz')).status, 404, 'backups are never public');
+  const { runHealth } = await import('./src/health.js');
+  const h = await runHealth(Object.assign({}, env, { ADMIN_EMAILS: '' }), { send: false }); const b = h.checks.find(c => c.key === 'backup');
+  assert.ok(b.ok && /12 accounts, 340 entries/.test(b.note) && /4\.10 of 10 GB/.test(b.note), b.note);
+  st.at -= 40 * 3600; await ART.put('_backup/status.json', new TextEncoder().encode(JSON.stringify(st)), {});
+  const h2 = await runHealth(Object.assign({}, env, { ADMIN_EMAILS: '' }), { send: false }); assert.equal(h2.checks.find(c => c.key === 'backup').ok, false);
+  console.log('backup checks ok');
+}

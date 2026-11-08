@@ -140,7 +140,7 @@ export default {
     if (req.method === 'OPTIONS') return new Response(null, { headers: { ...cors(env), 'access-control-allow-methods': 'GET,POST', 'access-control-allow-headers': 'content-type' } });
     try {
       // v50.46: your own card photos, shared default art and its review queue
-      if (u.pathname.startsWith('/up/') || u.pathname === '/api/art/upload' || u.pathname === '/api/admin/art') { const r = await handleArt(env, req, u.pathname, cors, ctx); if (r) return r; }
+      if (u.pathname.startsWith('/up/') || u.pathname === '/api/art/upload' || u.pathname === '/api/admin/art' || u.pathname === '/api/admin/backup') { const r = await handleArt(env, req, u.pathname, cors, ctx); if (r) return r; }
       if (u.pathname === '/api/lookup') {
         const q = { name: u.searchParams.get('name') || '', number: u.searchParams.get('number') || '', set: u.searchParams.get('set') || '', game: u.searchParams.get('game') || '' };
         if (!q.name && !q.number) return json(env, { error: 'name or number required' }, 400);

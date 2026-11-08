@@ -41,6 +41,14 @@ export async function runHealth(env, { send = true } = {}) {
     const j = await r.json().catch(() => ({})); return { ok: false, note: r.status + ': ' + String((j.error && j.error.message) || '').slice(0, 100) };
   }), 'Ask’s AI key was refused or out of credit. Check Billing and API keys at platform.claude.com, then: npx wrangler secret put ANTHROPIC_API_KEY');
 
+  // v50.51: last night's backup (written by the GitHub job .github/workflows/backup.yml) and how much free storage is used
+  add('backup', 'Nightly backup', await timed(async () => {
+    const o = await env.ART.get('_backup/status.json'); if (!o) return { ok: true, warn: true, note: 'no backup has run yet' };
+    const b = JSON.parse(await o.text()), hrs = (now() - (b.at || 0)) / 3600, gb = ((b.artBytes || 0) + (b.backupBytes || 0)) / 1e9, pct = Math.round(gb / 10 * 100);
+    const note = (b.ok ? 'last night: ' : 'FAILED: ') + (b.users || '?') + ' accounts, ' + (b.entries || '?') + ' entries · storage ' + gb.toFixed(2) + ' of 10 GB free (' + pct + '%)';
+    return { ok: b.ok !== false && hrs < 36, warn: pct >= 80, note: hrs >= 36 ? 'last backup ' + Math.round(hrs) + ' hours ago · ' + note : note };
+  }), 'Open GitHub → nklenchik/cardtab-app → Actions → Nightly backup and read the failed step (or press Run workflow). If storage is near 10 GB, extra space costs about $0.015 per GB a month.');
+
   // how yesterday went (warnings, not failures)
   add('spend', 'Ask spending this month', await timed(async () => {
     const m = new Date().toISOString().slice(0, 7), r = await env.DB.prepare('SELECT tin, tout FROM ask_spend WHERE month=?').bind(m).first().catch(() => null);
