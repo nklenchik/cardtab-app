@@ -8,10 +8,11 @@
 (function () {
   'use strict';
   const CO = ['PSA', 'BGS', 'CGC', 'SGC', 'TAG'];
-  const RE = /\b(PSA|BGS|BECKETT|CGC|SGC|TAG)\s*(10|[1-9](?:\.5)?)(?:\s+(pristine|gem mint|gem-mt|mint\+?|black label|perfect))?\b/i;
+  const RE = /\b(?:graded\s+)?(PSA|BGS|BECKETT|CGC|SGC|TAG)\s*(10|[1-9](?:\.5)?)(?:\s+(pristine|gem mint|gem-mt|mint\+?|black label|perfect))?\b/i;
   const WORDS = { '10': 'GEM MINT', '9.5': 'MINT+', '9': 'MINT', '8.5': 'NM-MT+', '8': 'NM-MT', '7.5': 'NM+', '7': 'NEAR MINT', '6.5': 'EX-MT+', '6': 'EX-MT', '5.5': 'EX+', '5': 'EXCELLENT', '4.5': 'VG-EX+', '4': 'VG-EX', '3.5': 'VG+', '3': 'VERY GOOD', '2.5': 'GOOD+', '2': 'GOOD', '1.5': 'FAIR', '1': 'POOR' };
   // where companies name a grade differently from the general scale
-  const BY = { BGS: { '10': 'PRISTINE', '9.5': 'GEM MINT' }, CGC: { '9.5': 'MINT+' }, SGC: { '9.5': 'MINT+' } };
+  // (a 10 is GEM MINT unless saved as Pristine: CGC, BGS, SGC and TAG give both)
+  const BY = { BGS: { '9.5': 'GEM MINT' } };
   const word = (co, g) => (BY[co] && BY[co][g]) || WORDS[g] || '';
   const clean = (s, n) => String(s == null ? '' : s).replace(/[<>]/g, '').trim().slice(0, n);
 
@@ -38,10 +39,39 @@
     const n = /\bgraded\b/i.test(e.note || '') || /graded/i.test(e.condition || '') ? parse(e.note) : null;
     return n || parse(e.condition) || null;
   }
-  const label = gr => gr ? gr.co + ' ' + gr.g : '';
+  const pristine = gr => !!gr && gr.g === '10' && gr.w === 'PRISTINE';
+  const label = gr => gr ? gr.co + ' ' + gr.g + (pristine(gr) ? ' Pristine' : '') : '';
+  // v50.30: the entry's name without the grade in it ("Charizard PSA 10" -> "Charizard"); the grade shows as the chip instead
+  const tidy = s => String(s || '').replace(/\(\s*\)/g, '').replace(/\s*([-–|/])(\s*[-–|/])+\s*/g, ' $1 ').replace(/\s*[-–|/,]\s*$/, '').replace(/^\s*[-–|/,]\s*/, '').replace(/\s{2,}/g, ' ').trim();
+  function title(e) {
+    const n = String((e && e.name) || ''); if (!of(e)) return n;
+    const t = tidy(n.replace(new RegExp(RE.source, 'gi'), ' ')); return t || n;
+  }
+  // the card itself for the label: no game, no set, no number ("Dragon Ball Super Zenkai Series: SS Rose Goku Black,
+  // Future of Despair SLR PSA 10" -> "SS Rose Goku Black, Future of Despair SLR")
+  const GAME = /^(?:pok[eé]mon(?:\s+(?:tcg|trading card game|cards?))?|dragon ball(?:\s+super)?(?:\s+(?:fusion world|masters|card game|ccg|tcg))?|fusion world|one piece(?:\s+(?:card game|tcg|ccg))?|magic(?::)?(?:\s+the gathering)?|mtg|yu-?gi-?oh!?|disney lorcana|lorcana|digimon(?:\s+card game)?|union arena|weiss schwarz|flesh and blood|star wars unlimited)\b[\s:,-]*/i;
+  const RAR = /\(?\b(SPR|SCR|SLR|SEC|TPR|UR|SR|HR|AR|SAR|SIR|CHR|CSR|IR|ACE)\b\)?/;
+  const NUM = /#?\b(?:[A-Z]{0,4}\d{1,4}\/[A-Z]{0,4}\d{1,4}|[A-Z]{1,4}\d{1,3}-\d{2,3}|P-\d{2,4})\b/gi;
+  const hasNum = x => { NUM.lastIndex = 0; const r = NUM.test(x); NUM.lastIndex = 0; return r; };
+  const SETY = /:|\b(set|series|pack|box|deck|vol(?:ume)?|collection|expansion|booster|promos?|celebration|edition)\b|^(?:SV|SWSH|SM|XY|BW|ME|OP|EB|ST|FB|BT)\d/i;
+  function cardName(e) {
+    let n = title(e).replace(/\s*[×x]\d+$/, ''), rar = '';
+    const hadGame = GAME.test(n); n = n.replace(GAME, '');
+    const rm = RAR.exec(n); if (rm) { rar = rm[1]; n = n.replace(rm[0], ' '); }
+    let segs = n.split(/\s+[-–|]\s+|\s*\/\s+|\s+\/\s*/).map(x => x.trim()).filter(Boolean);
+    segs = segs.filter(x => x.replace(NUM, '').replace(/[\s#.,]/g, '') !== '');   // drop bare numbers
+    let pick = segs[0] || '';
+    if (segs.length > 1) {
+      const card = segs.filter(x => !SETY.test(x)), withNum = segs.find(x => hasNum(x) && !SETY.test(x));
+      pick = withNum || card[0] || segs[0];
+    }
+    // "Set Name: Card Name" after a game ("Pokemon Surging Sparks: Pikachu ex")
+    if (/:/.test(pick) && (hadGame || segs.length === 1)) { const after = pick.slice(pick.lastIndexOf(':') + 1).trim(); if (after) pick = after; }
+    pick = pick.replace(NUM, ' ').replace(/\s{2,}/g, ' ').replace(/[\s,-]+$/, '').trim();
+    return (pick || title(e)) + (rar ? ' ' + rar : '');
+  }
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const numOf = n => { const m = /(?:^|[\s#-])([A-Z]{0,4}\d{1,4}\/[A-Z]{0,4}\d{1,4})\b/i.exec(n || ''); return m ? m[1] : ''; };
-  const short = n => String(n || '').split(' - ')[0].replace(/\s*[×x]\d+$/, '');
 
   // the slab. `art` is the image markup (or a placeholder) that sits in the well
   function slab(e, art, cls) {
@@ -49,12 +79,12 @@
     const meta = [numOf(e.name), gr.cert ? '#' + gr.cert : ''].filter(Boolean).join(' · ');
     return '<span class="slab' + (cls ? ' ' + cls : '') + '" aria-label="' + esc(label(gr) + (gr.w ? ' ' + gr.w : '')) + ' graded">' +
       '<span class="sl-in"><span class="sl-lbl">' +
-        '<span class="sl-co">' + esc(gr.co) + '</span><span class="sl-nm">' + esc(short(e.name)) + '</span>' + (meta ? '<span class="sl-meta">' + esc(meta) + '</span>' : '') +
+        '<span class="sl-co">' + esc(gr.co) + '</span><span class="sl-nm">' + esc(cardName(e)) + '</span>' + (meta ? '<span class="sl-meta">' + esc(meta) + '</span>' : '') +
         '<span class="sl-gr"><b>' + esc(gr.g) + '</b><small>' + esc(gr.w || word(gr.co, gr.g)) + '</small></span>' +
-        '<span class="sl-tiny">' + esc(label(gr)) + '</span>' +
+        '<span class="sl-tiny"><span>' + esc(gr.co) + '</span><b>' + esc(gr.g) + '</b></span>' +
       '</span><span class="sl-well">' + art + '</span></span></span>';
   }
   const chip = e => { const gr = of(e); return gr ? '<span class="sl-chip">' + esc(label(gr)) + '</span>' : ''; };
 
-  window.CTGrade = { CO, parse, norm, of, word, label, slab, chip, GRADES: ['10', '9.5', '9', '8.5', '8', '7.5', '7', '6.5', '6', '5.5', '5', '4.5', '4', '3.5', '3', '2.5', '2', '1.5', '1'] };
+  window.CTGrade = { CO, parse, norm, of, word, label, title, cardName, pristine, slab, chip, GRADES: ['10', '9.5', '9', '8.5', '8', '7.5', '7', '6.5', '6', '5.5', '5', '4.5', '4', '3.5', '3', '2.5', '2', '1.5', '1'] };
 })();

@@ -144,6 +144,7 @@
 
   // ---------- entries list ----------
   const G = window.CTGrade;
+  const nmOf = t => G ? G.title(t) : t.name; // graded: the grade leaves the name and shows as the chip
   function artHtml(t, open) {
     // v50.29: a graded card sits in a slab drawn in code; the art goes in its well
     if (G && G.of(t)) {
@@ -245,7 +246,7 @@
     return '<button type="button" class="ct-tile' + (t.id === justAdded ? ' ct-new' : '') + '" data-tile="' + t.id + '" aria-label="' + esc(t.name) + ', ' + badgeOf(t) + ', ' + amtText(t) + '">' +
       (G && G.of(t) ? '<span class="ct-tile-art ct-slabbed">' + G.slab(t, src ? '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async">' : '<i class="sl-ph"></i>') + '</span>'
         : '<span class="ct-tile-art">' + (src ? '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async">' : '<i>' + esc(t.name) + '</i>') + '</span>') +
-      '<b class="ct-tile-nm"><span class="ct-tile-full">' + esc(t.name) + (t.qty > 1 ? ' ×' + t.qty : '') + '</span><span class="ct-tile-short">' + esc(shortName(t.name)) + '</span></b>' +
+      '<b class="ct-tile-nm"><span class="ct-tile-full">' + esc(nmOf(t)) + (t.qty > 1 ? ' ×' + t.qty : '') + '</span><span class="ct-tile-short">' + esc(shortName(nmOf(t))) + '</span></b>' +
       '<small class="ct-tile-ln"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span><span class="ct-tile-meta">' + badgeOf(t) + ' · ' + niceDate(t.date) + '</span><span class="ct-tile-pl">' + esc(t.platform || badgeOf(t)) + '</span></small>' +
       '<strong class="ct-tile-amt ' + t.type + '">' + amtText(t) + '</strong></button>';
   }
@@ -272,8 +273,8 @@
     gp.innerHTML = '<div class="gp-in"><i class="gp-grab" aria-hidden="true"></i><button type="button" class="gp-x" data-gx aria-label="Close">' + X + '</button>' +
       (G && G.of(t) ? '<div class="gp-art ct-slabbed">' + G.slab(t, src ? '<img src="' + esc(src) + '" alt="">' : '<i class="sl-ph"></i>') + '</div>'
         : '<div class="gp-art">' + (src ? '<img src="' + esc(src) + '" alt="">' : '<i>' + esc(t.name) + '</i>') + '</div>') +
-      '<div class="gp-body"><small class="gp-line"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span>' + badgeOf(t) + ' · ' + (G && G.of(t) ? esc(G.label(G.of(t))) + ' · ' : t.condition ? esc(condShort(t.condition)) + ' · ' : '') + (t.platform ? esc(t.platform) + ' · ' : '') + niceDate(t.date) + '</small>' +
-      '<h2 class="gp-nm">' + esc(t.name) + (t.qty > 1 ? ' ×' + t.qty : '') + '</h2>' +
+      '<div class="gp-body"><small class="gp-line"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span>' + badgeOf(t) + ' · ' + (G && G.of(t) ? '' : t.condition ? esc(condShort(t.condition)) + ' · ' : '') + (t.platform ? esc(t.platform) + ' · ' : '') + niceDate(t.date) + '</small>' +
+      '<h2 class="gp-nm">' + esc(nmOf(t)) + (t.qty > 1 ? ' ×' + t.qty : '') + (G ? G.chip(t) : '') + '</h2>' +
       moneyHtml(t) + '<div class="ct-row-expanded-info">' + factsHtml(t) + ACTS.replace(/data-act=/g, 'data-gact=') + '</div></div>' +
       (ids.length > 1 ? '<button type="button" class="gp-nav gp-prev" data-gstep="-1" aria-label="Previous card"' + (i <= 0 ? ' disabled' : '') + '>' + A(-1) + '</button><button type="button" class="gp-nav gp-next" data-gstep="1" aria-label="Next card"' + (i >= ids.length - 1 ? ' disabled' : '') + '>' + A(1) + '</button>' : '') + '</div>';
   }
@@ -340,7 +341,7 @@
       const open = expanded === t.id, badge = t.type === 'sale' ? 'Sale' : t.type === 'refund' ? 'Refund' : 'Purchase';
       const after = t.type === 'sale' ? ' &nbsp; After fees <em>' + money(t.net) + '</em>' : '';
       const verb = t.type === 'sale' ? 'Sold' : t.type === 'refund' ? 'Refunded to buyer' : 'Paid';
-      chunks.push('<div class="ct-row ' + (open ? 'expanded' : '') + (t.id === justAdded ? ' ct-new' : '') + '"><button type="button" class="ct-row-toggle" data-tx="' + t.id + '" aria-expanded="' + open + '" aria-label="' + (open ? 'Collapse' : 'Expand') + ' ' + esc(t.name) + '">' + artHtml(t, open) + '<div class="ct-expanded-right"><div class="ct-row-meta">' + shortDate(t.date) + (t.platform ? ' · ' + esc(t.platform) : '') + '</div><div class="ct-row-name">' + esc(t.name) + (t.qty > 1 ? ' ×' + t.qty : '') + (G ? G.chip(t) : '') + '</div><div class="ct-row-bottom">' + verb + ' <strong>' + money(t.amount) + '</strong>' + after + '</div>' +
+      chunks.push('<div class="ct-row ' + (open ? 'expanded' : '') + (t.id === justAdded ? ' ct-new' : '') + '"><button type="button" class="ct-row-toggle" data-tx="' + t.id + '" aria-expanded="' + open + '" aria-label="' + (open ? 'Collapse' : 'Expand') + ' ' + esc(t.name) + '">' + artHtml(t, open) + '<div class="ct-expanded-right"><div class="ct-row-meta">' + shortDate(t.date) + (t.platform ? ' · ' + esc(t.platform) : '') + '</div>' + (G && G.of(t) ? '<div class="ct-row-name ct-rn-g"><span class="ct-rn">' + esc(nmOf(t)) + (t.qty > 1 ? ' ×' + t.qty : '') + '</span>' + G.chip(t) + '</div>' : '<div class="ct-row-name">' + esc(t.name) + (t.qty > 1 ? ' ×' + t.qty : '') + '</div>') + '<div class="ct-row-bottom">' + verb + ' <strong>' + money(t.amount) + '</strong>' + after + '</div>' +
         // desktop: one quiet line under the name (type, platform, date) and the money on the right edge
         '<div class="ct-row-line"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span>' + badge + ' · ' + (condOf(t) ? '<span class="ct-cond" title="' + esc(t.condition) + '">' + esc(condShort(t.condition)) + ' · </span>' : '') + (t.platform ? esc(t.platform) + ' · ' : '') + niceDate(t.date) + '</div>' + (open ? moneyHtml(t) : '') + '</div>' +
         '<span class="ct-row-amt ' + t.type + '"><strong>' + amtText(t) + '</strong><small>' + (t.type === 'sale' ? money(t.net) + ' after fees' : t.type === 'refund' ? 'Refunded' : 'Paid') + '</small></span><span class="ct-tag ' + t.type + '">' + badge + '</span><span class="ct-row-chevron" aria-hidden="true">' + (open ? '−' : '+') + '</span></button>' + (open ? detailsHtml(t) : '') + '</div>');

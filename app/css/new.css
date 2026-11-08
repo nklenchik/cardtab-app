@@ -1984,7 +1984,7 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 /* mid-size slabs: the label keeps the company, the name and the grade */
 @container slab (max-width:175px){.sl-meta,.sl-gr small{display:none}.sl-gr{grid-row:1/3}.sl-co{font-size:6.4cqw}.sl-nm{font-size:7.6cqw}.sl-gr b{font-size:19cqw}}
 /* small slabs: just "PSA 10" */
-@container slab (max-width:118px){.sl-lbl{display:block;text-align:center;padding:3cqw 2cqw}.sl-co,.sl-nm,.sl-meta,.sl-gr{display:none}.sl-tiny{display:block;font-size:14cqw;font-weight:800;letter-spacing:-.01em;white-space:nowrap}}
+@container slab (max-width:118px){.sl-lbl{display:block;padding:3cqw 2cqw}.sl-co,.sl-nm,.sl-meta,.sl-gr{display:none}.sl-tiny{display:flex;justify-content:space-between;align-items:baseline;padding:0 3cqw;font-size:14cqw;font-weight:800;letter-spacing:-.01em;white-space:nowrap}.sl-tiny span{font-size:.78em;letter-spacing:.06em;color:var(--sl-sub)}}
 /* list-row icons: a blank label strip, like a slab seen from across the table */
 @container slab (max-width:60px){.sl-in{padding:6cqw;gap:5cqw;border-radius:7cqw}.sl-lbl{height:16cqw;padding:0;border-radius:3cqw}.sl-tiny{display:none}.sl-well{border-radius:4cqw}.slab .sl-well>img{inset:5cqw;max-width:calc(100% - 10cqw);max-height:calc(100% - 10cqw);border-radius:3cqw;box-shadow:none}}
 /* where the slab sits: the card's own box, so rows and grids stay lined up */
@@ -1997,3 +1997,8 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 .ed .ed-row.ed-grade{grid-template-columns:minmax(0,1fr) minmax(0,.8fr) minmax(0,1.2fr)}
 .ed .ed-row.ed-grade[hidden]{display:none}
 @media(max-width:350px){.ed .ed-g-when .ed-row.ed-grade{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.ed .ed-grade .ed-f:last-child{grid-column:1/-1}}
+/* graded rows: the name keeps its two lines and the grade chip always shows after it */
+.ct-demo .ct-row .ct-row-name.ct-rn-g{display:flex!important;align-items:flex-end;gap:6px;overflow:visible!important;-webkit-line-clamp:unset!important}
+.ct-rn-g .ct-rn{min-width:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ct-demo .ct-row.expanded .ct-rn-g .ct-rn{display:block;-webkit-line-clamp:unset;overflow:visible}
+.ct-rn-g .sl-chip{flex:none;margin:0 0 .18em}

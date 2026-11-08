@@ -20,11 +20,11 @@ if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIn
 <meta name="apple-mobile-web-app-title" content="Card Tab">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preload" href="fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/demo.css?v=50.29">
-<link rel="stylesheet" href="css/app.css?v=50.29">
-<link rel="stylesheet" href="css/addsheet.css?v=50.29">
-<link rel="stylesheet" href="css/soft.css?v=50.29">
-<link rel="stylesheet" href="css/new.css?v=50.29">
+<link rel="stylesheet" href="css/demo.css?v=50.30">
+<link rel="stylesheet" href="css/app.css?v=50.30">
+<link rel="stylesheet" href="css/addsheet.css?v=50.30">
+<link rel="stylesheet" href="css/soft.css?v=50.30">
+<link rel="stylesheet" href="css/new.css?v=50.30">
 </head>
 <body class="ct-demo">
 
@@ -211,7 +211,7 @@ if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIn
     <label class="ed-f"><span>Condition</span><select name="condition"><option value="">Not set</option><option>Near Mint</option><option>Lightly Played</option><option>Moderately Played</option><option>Heavily Played</option><option>Damaged</option><option>Graded</option><option>Sealed</option></select></label>
     <div class="ed-row ed-grade" id="ed-grade" hidden>
       <label class="ed-f"><span>Graded by</span><select name="gco"><option>PSA</option><option>BGS</option><option>CGC</option><option>SGC</option><option>TAG</option></select></label>
-      <label class="ed-f"><span>Grade</span><select name="gg"><option value="">Pick</option><option>10</option><option>9.5</option><option>9</option><option>8.5</option><option>8</option><option>7.5</option><option>7</option><option>6.5</option><option>6</option><option>5.5</option><option>5</option><option>4.5</option><option>4</option><option>3.5</option><option>3</option><option>2.5</option><option>2</option><option>1.5</option><option>1</option></select></label>
+      <label class="ed-f"><span>Grade</span><select name="gg"><option value="">Pick</option><option value="10">10 Gem Mint</option><option value="10P">10 Pristine</option><option>9.5</option><option>9</option><option>8.5</option><option>8</option><option>7.5</option><option>7</option><option>6.5</option><option>6</option><option>5.5</option><option>5</option><option>4.5</option><option>4</option><option>3.5</option><option>3</option><option>2.5</option><option>2</option><option>1.5</option><option>1</option></select></label>
       <label class="ed-f"><span>Cert number</span><input name="gcert" autocomplete="off" inputmode="numeric" placeholder="Optional" maxlength="20"></label>
     </div>
     <label class="ed-f"><span>Note</span><textarea name="note" rows="2" placeholder="Optional"></textarea></label>
@@ -280,35 +280,35 @@ if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIn
 
 <div class="app-toasts" id="app-toasts" aria-live="polite"></div>
 
-<script src="js/grade.js?v=50.29"></script>
-<script src="js/store.js?v=50.29"></script>
-<script src="js/prefs.js?v=50.29"></script>
-<script src="js/auth.js?v=50.29"></script>
-<script src="js/sync.js?v=50.29"></script>
+<script src="js/grade.js?v=50.30"></script>
+<script src="js/store.js?v=50.30"></script>
+<script src="js/prefs.js?v=50.30"></script>
+<script src="js/auth.js?v=50.30"></script>
+<script src="js/sync.js?v=50.30"></script>
 <script>/* Live card lookups and real art come from our Worker, which only answers app.cardtab.app. Anywhere else (test copies) uses the built-in sample catalog. */window.CARDTAB_API=/(^|\.)cardtab\.app$/i.test(location.hostname)?"https://api.cardtab.app":"";</script>
-<script src="js/parser.js?v=50.29"></script>
-<script src="js/lookup.js?v=50.29"></script>
-<script src="js/editor.js?v=50.29"></script>
-<script src="js/addsheet.js?v=50.29"></script>
-<script src="js/xlsx-lite.js?v=50.29"></script>
-<script src="js/importer.js?v=50.29"></script>
-<script src="js/import-ui.js?v=50.29"></script>
-<script src="js/zoom.js?v=50.29"></script>
-<script src="js/notify.js?v=50.29"></script>
-<script src="js/motion.js?v=50.29"></script>
-<script src="js/dash.js?v=50.29"></script>
-<script src="js/budget.js?v=50.29"></script>
-<script src="js/home.js?v=50.29"></script>
-<script src="js/month.js?v=50.29"></script>
-  <script src="js/metrics.js?v=50.29"></script>
-<script src="js/artcrop.js?v=50.29"></script>
-<script src="js/shell.js?v=50.29"></script>
-<script src="js/toolbar.js?v=50.29"></script>
-<script src="js/board-loader.js?v=50.29"></script>
-<script src="js/install.js?v=50.29"></script>
-<script src="js/artfill.js?v=50.29"></script>
-<script src="js/main.js?v=50.29"></script>
-<script src="js/settings.js?v=50.29"></script>
-<script src="js/track.js?v=50.29"></script>
+<script src="js/parser.js?v=50.30"></script>
+<script src="js/lookup.js?v=50.30"></script>
+<script src="js/editor.js?v=50.30"></script>
+<script src="js/addsheet.js?v=50.30"></script>
+<script src="js/xlsx-lite.js?v=50.30"></script>
+<script src="js/importer.js?v=50.30"></script>
+<script src="js/import-ui.js?v=50.30"></script>
+<script src="js/zoom.js?v=50.30"></script>
+<script src="js/notify.js?v=50.30"></script>
+<script src="js/motion.js?v=50.30"></script>
+<script src="js/dash.js?v=50.30"></script>
+<script src="js/budget.js?v=50.30"></script>
+<script src="js/home.js?v=50.30"></script>
+<script src="js/month.js?v=50.30"></script>
+  <script src="js/metrics.js?v=50.30"></script>
+<script src="js/artcrop.js?v=50.30"></script>
+<script src="js/shell.js?v=50.30"></script>
+<script src="js/toolbar.js?v=50.30"></script>
+<script src="js/board-loader.js?v=50.30"></script>
+<script src="js/install.js?v=50.30"></script>
+<script src="js/artfill.js?v=50.30"></script>
+<script src="js/main.js?v=50.30"></script>
+<script src="js/settings.js?v=50.30"></script>
+<script src="js/track.js?v=50.30"></script>
 </body>
 </html>

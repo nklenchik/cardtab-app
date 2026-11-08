@@ -25,7 +25,9 @@
 
   // v50.29: "Graded" opens the grade fields (company, grade, cert number); the card then shows as a slab
   const G = window.CTGrade, gRow = document.getElementById('ed-grade');
-  const gShow = () => { gRow.hidden = f('condition').value !== 'Graded'; };
+  // PSA has one 10 (Gem Mint); CGC, BGS, SGC and TAG also give a 10 Pristine
+  const gShow = () => { gRow.hidden = f('condition').value !== 'Graded'; const p = gRow.querySelector('option[value="10P"]'), psa = f('gco').value === 'PSA'; p.hidden = p.disabled = psa; if (psa && f('gg').value === '10P') f('gg').value = '10'; };
+  f('gco').addEventListener('change', gShow);
   f('condition').addEventListener('change', () => { gShow(); if (!gRow.hidden && !f('gg').value) f('gg').focus(); });
   const LEGACY = /^graded\s+(psa|bgs|beckett|cgc|sgc|tag)\s*\d[^\n]*\n?/i;
 
@@ -79,7 +81,7 @@
     f('qty').value = e.qty || 1; f('date').value = e.date || S.today(); f('platform').value = e.platform || '';
     f('condition').value = e.condition || ''; f('note').value = e.note || ''; keep();
     const gr = G && G.of(e);
-    if (gr) { f('condition').value = 'Graded'; f('gco').value = G.CO.includes(gr.co) ? gr.co : 'PSA'; f('gg').value = gr.g; f('gcert').value = gr.cert || ''; f('note').value = (e.note || '').replace(LEGACY, '').trim(); }
+    if (gr) { f('condition').value = 'Graded'; f('gco').value = G.CO.includes(gr.co) ? gr.co : 'PSA'; f('gg').value = G.pristine(gr) ? '10P' : gr.g; f('gcert').value = gr.cert || ''; f('note').value = (e.note || '').replace(LEGACY, '').trim(); }
     else { f('gco').value = 'PSA'; f('gg').value = ''; f('gcert').value = ''; }
     gShow();
     fillPlat(f('platform').value);
@@ -112,7 +114,7 @@
     const data = { type, name: f('name').value, amount: f('amount').value, fees: f('fees').value, ship: f('ship').value, qty: f('qty').value, date: f('date').value, platform: f('platform').value, condition: f('condition').value, note: f('note').value };
     if (G) {
       const was = editing && G.of(editing);
-      if (data.condition === 'Graded' && f('gg').value) { const g = { co: f('gco').value, g: f('gg').value, cert: f('gcert').value }; if (was && was.w && was.co === g.co && was.g === g.g) g.w = was.w; data.grade = g; }
+      if (data.condition === 'Graded' && f('gg').value) { const v = f('gg').value, g = { co: f('gco').value, g: v === '10P' ? '10' : v, cert: f('gcert').value }; if (v === '10P') g.w = 'PRISTINE'; else if (was && was.w && was.w !== 'PRISTINE' && was.co === g.co && was.g === g.g) g.w = was.w; data.grade = g; }
       else if (was) data.grade = false;
     }
     const v = S.validate(data, editing || undefined);
