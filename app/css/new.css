@@ -2089,7 +2089,10 @@ img,.slab,.sl-well,.zm-slab{-webkit-touch-callout:none;-webkit-user-drag:none;us
 @media(min-width:761px) and (max-width:900px){
  .sh-acts .sh-pillbtn:not(.sh-done){font-size:0!important;gap:0!important;width:44px;min-width:44px;padding:0!important;justify-content:center}
 }
-/* v50.51: long card names on big slabs (zoom, large grid, Board): slightly smaller type and up to 3 lines, like a real label */
-.slab.sl-long .sl-nm{font-size:5.9cqw;-webkit-line-clamp:3}
-.slab.sl-xlong .sl-nm{font-size:5.3cqw}
-@container slab (max-width:175px){.slab.sl-long .sl-nm{-webkit-line-clamp:2;font-size:7.6cqw}}
+/* v50.53: the label keeps its size: names get two lines at the normal type, and a longer name fades out at the end of the
+   second line (no "…"), the way a printed label runs out of room */
+.sl-nm{max-height:2.24em;text-overflow:clip;
+ -webkit-mask-image:linear-gradient(#000,#000),linear-gradient(90deg,#000 62%,transparent 97%);mask-image:linear-gradient(#000,#000),linear-gradient(90deg,#000 62%,transparent 97%);
+ -webkit-mask-size:100% 1.12em,100% 1.12em;mask-size:100% 1.12em,100% 1.12em;-webkit-mask-position:0 0,0 1.12em;mask-position:0 0,0 1.12em;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+@container slab (min-width:119px){.slab .sl-nm{display:block;-webkit-line-clamp:unset}}
+.sl-nm i{font-style:normal}.sl-nm.sl-run{overflow-wrap:normal}.sl-nm.sl-run>span{white-space:nowrap}

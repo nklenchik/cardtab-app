@@ -554,8 +554,10 @@ function moreStories(){const x=D.x,L=x.L,t=x.t,H=hideAmt,M=x.M,out=[];
   const sales=L.filter(e=>e.type==='sale'),buysL=L.filter(e=>e.type==='purchase');
   // every card in this period that was bought (any time) and sold (in this period)
   const B={},Sx={};E.forEach(e=>{if(e.type==='purchase')(B[key(e)]=B[key(e)]||[]).push(e)});sales.forEach(e=>{(Sx[key(e)]=Sx[key(e)]||[]).push(e)});
-  const flips=Object.keys(Sx).filter(k=>B[k]).map(k=>{const b=B[k].slice().sort((p,q)=>p.date<q.date?-1:1)[0],sl=Sx[k].slice().sort((p,q)=>p.date<q.date?-1:1),s1=sl[sl.length-1],cost=B[k].reduce((a,e)=>a+e.amount,0),kept=sl.reduce((a,e)=>a+e.net,0),gross=sl.reduce((a,e)=>a+e.amount,0);
-    return {name:b.name,b,s:s1,cost,kept,gross,gain:kept-cost,held:Math.max(0,days(b.date,s1.date)),roi:cost?(kept-cost)/cost:0}}).filter(f=>f.s.date>=f.b.date);
+  // v50.53: one flip per sale, priced at the card's average cost per copy (not every sale of a card added up)
+  const flips=[];Object.keys(Sx).filter(k=>B[k]).forEach(k=>{const b=B[k].slice().sort((p,q)=>p.date<q.date?-1:1)[0],bq=B[k].reduce((a,e)=>a+(e.qty||1),0),per=B[k].reduce((a,e)=>a+e.amount,0)/Math.max(1,bq);
+    Sx[k].forEach(s1=>{const cost=Math.round(per*(s1.qty||1)),kept=s1.net,gross=s1.amount;flips.push({name:b.name,b,s:s1,cost,kept,gross,gain:kept-cost,held:Math.max(0,days(b.date,s1.date)),roi:cost?(kept-cost)/cost:0})})});
+  for(let i=flips.length-1;i>=0;i--)if(flips[i].s.date<flips[i].b.date)flips.splice(i,1);
   // 7 · the splurge: the priciest single card bought — it drops in and lands
   const top=buysL.slice().sort((a,b)=>b.amount/(b.qty||1)-a.amount/(a.qty||1))[0];
   if(top)out.push({c:'s-drop',k:'The splurge',cover:H?'Top buy':short(top.amount/(top.qty||1)),h:'One card, all in.',big:H?'':cntSpan(Math.round(top.amount/(top.qty||1)/100),'$',''),

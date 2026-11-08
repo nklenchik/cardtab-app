@@ -1,0 +1,21 @@
+// v50.53: "Your biggest win" and the Top win story pick the best single sale, not every sale of a card added up
+const { chromium, devices } = require('playwright');
+(async () => { const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 1280, height: 900 } }); const p = await ctx.newPage();
+ const errs = []; p.on('pageerror', e => errs.push(e.message)); const ok = (n, v, d) => console.log((v ? 'PASS ' : 'FAIL ') + n + (d ? ' — ' + d : ''));
+ await p.goto('http://localhost:8765/index.html'); await p.evaluate(() => localStorage.setItem('ct.session', JSON.stringify({ email: 'w' + Date.now() + '@x.test', via: 'email', at: Date.now(), exp: Date.now() + 864e5 })));
+ await p.reload(); await p.waitForTimeout(1200);
+ for (const back of [0, 1]) await p.evaluate(async back => { await CTStore.setPlan('premium'); const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - back); const m = d.toISOString().slice(0, 8), day = n => m + String(n).padStart(2, '0');
+   await CTStore.add({ type: 'purchase', name: 'Supreme Kai of Time - BT26-001 - Ultimate Advent', qty: 10, amount: 1000, date: day(1), platform: 'eBay' });
+   for (let i = 0; i < 9; i++) await CTStore.add({ type: 'sale', name: 'Supreme Kai of Time - BT26-001 - Ultimate Advent', qty: 1, amount: 1000, net: 1000, date: day(2), platform: 'eBay' });
+   await CTStore.add({ type: 'purchase', name: 'Son Gohan : Youth - BT29-086 - Fearsome Rivals', qty: 1, amount: 5000, date: day(1), platform: 'eBay' });
+   await CTStore.add({ type: 'sale', name: 'Son Gohan : Youth - BT29-086 - Fearsome Rivals', qty: 1, amount: 13000, net: 12000, date: day(2), platform: 'TCGplayer' }); }, back);
+ await p.waitForTimeout(600);
+ await p.evaluate(() => document.querySelector('.sh-tabs [data-tab="board"]').click()); await p.waitForTimeout(3000);
+ await p.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => /last month|October|previous/i.test(x.getAttribute('aria-label') || '')); });
+ const win = await p.evaluate(() => { const all = [...document.querySelectorAll('*')].filter(e => e.children.length < 40 && /Your biggest win|Biggest win/.test(e.textContent) && e.querySelector('.num')); const w = all.sort((a, z) => a.textContent.length - z.textContent.length)[0]; return w ? w.innerText.replace(/\s+/g, ' ').slice(0, 220) : 'not found'; });
+ ok('Biggest win is the Gohan sale (+$70), not Supreme Kai added up (+$80)', /Gohan/.test(win) && /70/.test(win), win);
+ await p.evaluate(() => document.querySelector('.sh-tabs [data-tab="stories"]').click()); await p.waitForTimeout(5000);
+ let S = null; for (const f of p.frames()) if (await f.evaluate(() => !!document.getElementById('shelf')).catch(() => false)) S = f;
+ const top = S ? await S.evaluate(() => [...document.querySelectorAll('#shelf .scv, #shelf .hero')].map(c => c.innerText.replace(/\s+/g, ' ')).find(t => /TOP WIN/i.test(t)) || 'none') : 'no stories';
+ ok('Top win story is Gohan', /Gohan/.test(top), top);
+ ok('No errors', !errs.length, errs.join(' | ')); await b.close(); })();

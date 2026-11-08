@@ -15,12 +15,17 @@ function cardStats(ctx){
     else if(e.type==='sale'){c.sq+=e.qty;if(e.date>=ctx.a){c.s+=e.net==null?e.amount:e.net;c.sold+=e.qty;c.sells.push(e);if(!c.lastSale||e.date>c.lastSale)c.lastSale=e.date}}});
   return Object.values(by).map(c=>Object.assign(c,{g:c.s-c.b,roi:c.b>0?(c.s-c.b)/c.b:null,left:c.bq-c.sq,meta:[c.e.no,c.e.set].filter(Boolean).join(' · ')}));
 }
+// v50.53: one row per sale, priced against what those copies cost (the card's average cost per copy), so a card sold many
+// times doesn't add up into one big "win". Same shape as a card, with b/s/g/roi for just that sale.
+function saleWins(L){const out=[];L.forEach(c=>{if(!(c.bq>0&&c.b>0))return;const per=c.b/c.bq;
+  c.sells.forEach(e=>{const q=e.qty||1,b=Math.round(per*q),s=e.net==null?e.amount:e.net;out.push(Object.assign({},c,{b,s,g:s-b,roi:b>0?(s-b)/b:null,sold:q,sells:[e],sale:e}))})});
+  return out}
 const pctTxt=v=>(v>=0?'▲ ':'▼ ')+Math.abs(Math.round(v*100))+'%';
 const shareOf=(v,t)=>t>0?Math.round(v/t*100)+'%':'';
 const shortD=d=>dFmt(d,{month:'short',day:'numeric'});
 // ---- the eight things a Featured card can feature ----
 const FEAT={
-  win:{t:'Your biggest win',pick:L=>L.filter(c=>c.sold&&c.b>0&&c.g>0).sort((a,b)=>b.g-a.g)[0],
+  win:{t:'Your biggest win',pick:L=>saleWins(L).filter(c=>c.g>0).sort((a,b)=>b.g-a.g)[0],
     num:c=>ksigned(c.g),pc:c=>pctTxt(c.roi)+' return',line:c=>'Bought '+kshort(c.b)+' · Sold '+kshort(c.s),good:1,none:'No card bought and sold in this period yet'},
   roi:{t:'Best return',pick:L=>L.filter(c=>c.sold&&c.b>=100&&c.g>0).sort((a,b)=>b.roi-a.roi)[0],
     num:c=>ksigned(c.g),pc:c=>pctTxt(c.roi),line:c=>'Bought '+kshort(c.b)+' · Sold '+kshort(c.s),good:1,none:'No card bought and sold in this period yet'},
@@ -78,7 +83,7 @@ function priceyBody(ctx,s,w){const L=cardStats(ctx),c=FEAT.pricey.pick(L,ctx);if
   return cardHero(c,FEAT.pricey,ctx,L,Object.assign({},w,{show:'$'}),s).replace('<div class="xbig','<div class="chips"><span>'+esc(c.buy.platform)+'</span><span>'+esc(shortD(c.buy.date))+'</span>'+(c.left>0?'<span class="g">Still yours</span>':'')+'</div><div class="xbig')}
 // ---- Biggest win, redesigned: the same numbers in the card-and-details layout ----
 function winBody(ctx,s,w){const L=cardStats(ctx),F=FEAT.win,c=F.pick(L,ctx);if(!c)return '<p class="eg">No card bought and sold in this period yet.</p>';
-  const others=L.filter(x=>x.sold&&x.b>0&&x.g>0&&x!==c).sort((a,b)=>b.g-a.g),also=m=>others.length?'<div class="xalso"><p class="lab">Also up</p>'+others.slice(0,m).map(x=>'<div class="xar">'+cardImg(x,'xai','thumb')+'<span>'+esc(nameOf(x))+'</span><b class="num">'+ksigned(x.g)+'</b></div>').join('')+'</div>':'';
+  const seen=new Set([c.k]),others=saleWins(L).filter(x=>x.g>0).sort((a,b)=>b.g-a.g).filter(x=>!seen.has(x.k)&&seen.add(x.k)),also=m=>others.length?'<div class="xalso"><p class="lab">Also up</p>'+others.slice(0,m).map(x=>'<div class="xar">'+cardImg(x,'xai','thumb')+'<span>'+esc(nameOf(x))+'</span><b class="num">'+ksigned(x.g)+'</b></div>').join('')+'</div>':'';
   if(s==='S')return '<div class="xs drill"'+dd({t:c.e.name,sub:'Every entry for this card',card:c.k})+' role="button" tabindex="0">'+cardImg(c,'xsart','thumb')+'<div><div class="cq">'+bn(ksigned(c.g),'g',26)+'</div><b class="nm">'+esc(nameOf(c))+'</b></div></div>';
   const hero=cardHero(c,F,ctx,L,Object.assign({},w,{show:'$'}),s);
   if(s==='M')return hero;if(s==='B')return '<div class="xsplit">'+hero+also(2)+'</div>';

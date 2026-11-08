@@ -82,8 +82,8 @@
   function slab(e, art, cls) {
     const gr = of(e); if (!gr) return '';
     const meta = [numOf(e.name) || (e.no && /\d/.test(e.no) && e.no.length < 14 ? e.no : ''), gr.cert ? '#' + gr.cert : ''].filter(Boolean).join(' · ');
-    const nm = cardName(e), long = nm.length > 20 ? (nm.length > 34 ? ' sl-long sl-xlong' : ' sl-long') : '';   // v50.51: long names get a smaller third line instead of "…"
-    return '<span class="slab' + long + (cls ? ' ' + cls : '') + '" aria-label="' + esc(label(gr) + (gr.w ? ' ' + gr.w : '')) + ' graded">' +
+    const nm = cardName(e);
+    return '<span class="slab' + (cls ? ' ' + cls : '') + '" aria-label="' + esc(label(gr) + (gr.w ? ' ' + gr.w : '')) + ' graded">' +
       '<span class="sl-in"><span class="sl-lbl">' +
         '<span class="sl-co">' + esc(gr.co) + '</span><span class="sl-nm">' + esc(cardName(e)) + '</span>' + (meta ? '<span class="sl-meta">' + esc(meta) + '</span>' : '') +
         '<span class="sl-gr"><b>' + esc(gr.g) + '</b><small>' + esc(gr.w || word(gr.co, gr.g)) + '</small></span>' +
@@ -92,5 +92,25 @@
   }
   const chip = e => { const gr = of(e); return gr ? '<span class="sl-chip">' + esc(label(gr)) + '</span>' : ''; };
 
-  window.CTGrade = { CO, parse, norm, of, word, label, title, cardName, pristine, slab, chip, GRADES: ['10', '9.5', '9', '8.5', '8', '7.5', '7', '6.5', '6', '5.5', '5', '4.5', '4', '3.5', '3', '2.5', '2', '1.5', '1'] };
+  // v50.53: a name too long for the label's two lines keeps going on the second line and fades out at the label's edge
+  // (no third line, no "…"): the words that fit on the first line stay as they are, the rest run on one line.
+  function fitName(nm) {
+    if (!nm.isConnected || !nm.offsetWidth) return;
+    const full = nm.dataset.full || (nm.dataset.full = nm.textContent);
+    if (nm.dataset.fitW === String(nm.offsetWidth)) return;
+    nm.dataset.fitW = String(nm.offsetWidth); nm.classList.remove('sl-run'); nm.textContent = full;
+    if (nm.scrollHeight <= nm.clientHeight + 1) return;
+    const words = full.split(' '); nm.innerHTML = words.map(w => '<i>' + esc(w) + '</i>').join(' ');
+    const ws = nm.querySelectorAll('i'), top = ws[0].offsetTop; let k = 0; while (k < ws.length && ws[k].offsetTop === top) k++;
+    nm.innerHTML = esc(words.slice(0, k).join(' ')) + ' <span>' + esc(words.slice(k).join(' ')) + '</span>'; nm.classList.add('sl-run');
+  }
+  let fitQ = false;
+  const fitAll = () => { fitQ = false; document.querySelectorAll('.slab .sl-nm').forEach(fitName); };
+  const fitSoon = () => { if (!fitQ) { fitQ = true; requestAnimationFrame(fitAll); } };
+  if (typeof MutationObserver !== 'undefined' && document.documentElement) {
+    new MutationObserver(ms => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1 && (n.classList.contains('slab') || n.querySelector && n.querySelector('.slab'))) return fitSoon(); })
+      .observe(document.documentElement, { childList: true, subtree: true });
+    addEventListener('resize', fitSoon); document.addEventListener('DOMContentLoaded', fitSoon);
+  }
+  window.CTGrade = { CO, parse, norm, of, word, label, title, cardName, pristine, slab, chip, fit: fitSoon, fitName, GRADES: ['10', '9.5', '9', '8.5', '8', '7.5', '7', '6.5', '6', '5.5', '5', '4.5', '4', '3.5', '3', '2.5', '2', '1.5', '1'] };
 })();
