@@ -1949,7 +1949,7 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
  #ct-rows.gs-l .ct-tile-meta{display:inline}#ct-rows.gs-l .ct-tile-pl{margin-left:0}#ct-rows.gs-l .ct-tile-pl::before{content:"· "}
 }
 /* ===== v50.28 settings search ===== */
-.app-menu.am .am-q{display:flex;align-items:center;gap:8px;margin:2px 12px 8px;padding:0 12px;height:38px;border-radius:999px;background:var(--s-track);color:var(--ct-muted)}
+.app-menu.am .am-q{display:flex;align-items:center;gap:12px;margin:2px 0 8px;padding:0 10px;height:38px;border-radius:10px;background:var(--s-track);color:var(--ct-muted);box-shadow:inset 0 0 0 1px var(--s-hair)}
 .app-menu.am .am-q input{all:unset;flex:1;min-width:0;font:inherit;font-size:14px;font-weight:600;color:var(--ct-text)}
 .app-menu.am .am-q input::placeholder{color:var(--ct-muted);opacity:1}
 .app-menu.am .am-q input::-webkit-search-cancel-button{display:none}
@@ -1960,7 +1960,8 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 .app-menu.am .am-flash{position:relative}
 .app-menu.am .am-flash::after{content:"";position:absolute;inset:0;border-radius:12px;background:var(--tab-onbg,rgba(176,18,61,.12));pointer-events:none;animation:amFlash 1.6s ease both}
 @keyframes amFlash{0%,35%{opacity:1}100%{opacity:0}}
-@media(max-width:760px){.app-menu.am .am-q{height:42px;margin:2px 14px 10px}.app-menu.am .am-q input{font-size:16px}}
+/* v50.38: phones: the search is a card like the rows around it (same width, same white), so it reads in light mode */
+@media(max-width:760px){.app-menu.am .am-q{height:52px;margin:0 0 10px;padding:0 16px;gap:14px;border-radius:18px;background:var(--s-card);box-shadow:none;color:var(--ct-text)}.app-menu.am .am-q svg{width:18px;height:18px;color:var(--ct-muted)}.app-menu.am .am-q input{font-size:16px}}
 
 /* ===== v50.29 graded cards: a slab drawn in code (clear case, plain label, the card in its well). Sizes follow the slab's
    own width, so the same markup reads right in a list row, each grid size and the details panel ===== */
