@@ -42,7 +42,12 @@ function bgSvg(style,p,seed,W,H){W=W||300;H=H||540;const r=rnd(seed+7),a=p.acc,k
 const AG=['linear-gradient(155deg,#d9577a,#7d0b2b)','linear-gradient(155deg,#5fa0d6,#174b78)','linear-gradient(155deg,#8cc96a,#2e5c12)','linear-gradient(155deg,#8a8983,#3a3936)','linear-gradient(155deg,#f0a35c,#a5551a)'];
 const agOf=n=>AG[[...String(n)].reduce((a,c)=>a+c.charCodeAt(0),0)%AG.length];
 const artOf=n=>ART.get(String(n).toLowerCase());
-const cardEl=n=>{const a=artOf(n);return a?'<img class="cd" src="'+esc(a)+'" alt="">':'<span class="cd ph" style="background:'+agOf(n)+'">'+esc(String(n).replace(/^(SS|SSB)\s+/,'')[0]||'?')+'</span>'};
+// v50.38: a graded card shows in its slab (drawn by the app's own CTGrade, so it matches Entries and the Board)
+const GRD=()=>{const m=new Map();try{const G=parent.CTGrade;if(!G||typeof parent.cbEntries!=='function')return m;(parent.cbEntries()||[]).forEach(r=>{if(r&&r.grade&&r.name){const k=String(r.name).toLowerCase();if(!m.has(k)||r.type==='purchase')m.set(k,r)}})}catch(e){}return m};
+let GRM=null;const gradedRow=n=>{if(!GRM)GRM=GRD();return GRM.get(String(n).toLowerCase())};
+const cardEl=n=>{const a=artOf(n),gr=gradedRow(n);let G=null;try{G=parent.CTGrade}catch(e){}
+  if(gr&&G){const s=G.slab(gr,a?'<img src="'+esc(a)+'" alt="">':'<i class="sl-ph"></i>');if(s)return '<span class="cd xslab">'+s+'</span>'}
+  return a?'<img class="cd" src="'+esc(a)+'" alt="">':'<span class="cd ph" style="background:'+agOf(n)+'">'+esc(String(n).replace(/^(SS|SSB)\s+/,'')[0]||'?')+'</span>'};
 // ---------- which game a card is from (the card search knows; names are the fallback) ----------
 function gameOf(e){try{if(parent.CardLookup){const r=parent.CardLookup.search({name:e.name,number:e.no});const c=r&&r.list&&r.list[0];if(c&&c.g&&r.list.every(x=>x.g===c.g))return c.g}}catch(x){}
   const n=(e.name+' '+(e.set||'')).toLowerCase();
@@ -814,3 +819,4 @@ function saveReady(files,share){
       catch(e){if(e&&e.name==='AbortError')return}}
     for(const f of files){download(f.blob,f.name);if(files.length>1)await new Promise(r=>setTimeout(r,450))}pl.toast(files.length>1?'Saved '+files.length+' videos.':'Saved to Downloads.');close()};
   w.hidden=false;modalSync();setTimeout(()=>{const b=w.querySelector('.vrs');b&&b.focus()},50)}
+{const _lr=loadReal;loadReal=function(){GRM=null;return _lr.apply(this,arguments)}}

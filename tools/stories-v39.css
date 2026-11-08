@@ -657,3 +657,30 @@ html .stall{background:var(--win-veil,rgba(8,8,8,.5))}
 /* v50.26 saved pictures/videos: the card wall runs behind cardtab.app and fades out toward the bottom; the mark stays on top */
 #xhost .xst .st:has(.wall) .pmark{z-index:3;text-shadow:0 1px 10px rgba(0,0,0,.5)}
 #xhost .xst .wall{-webkit-mask:linear-gradient(transparent,#000 10%,#000 52%,transparent 94%);mask:linear-gradient(transparent,#000 10%,#000 52%,transparent 94%)}
+
+/* v50.38: graded cards in Stories use the same slab as the app (light case, so it reads on every story theme) */
+:root{--sl-case:linear-gradient(155deg,rgba(255,255,255,.8),rgba(222,227,234,.6) 40%,rgba(255,255,255,.66) 70%,rgba(206,213,222,.6));--sl-rim:inset 0 0 0 1.5px rgba(255,255,255,.95),inset 0 0 0 2.6px rgba(150,162,176,.38);--sl-drop:0 1px 2px rgba(0,0,0,.12),0 12px 26px -14px rgba(0,0,0,.45);--sl-well:linear-gradient(180deg,rgba(255,255,255,.4),rgba(196,203,212,.38));--sl-wellrim:inset 0 0 0 1px rgba(140,152,166,.42),inset 0 2px 6px rgba(0,0,0,.08);--sl-lbl:#fff;--sl-ink:#1d1d1b;--sl-sub:#7d7a72;--sl-shine:.55;--sl-chip:#ecebe5;--sl-chipink:#45433f}
+.slab{display:block;position:relative;width:82.5%;aspect-ratio:3.1/5.25;container:slab/inline-size;margin:auto;font-style:normal}
+.sl-in{position:absolute;inset:0;display:flex;flex-direction:column;gap:3.5cqw;padding:5cqw;border-radius:4.5cqw;background:var(--sl-case);box-shadow:var(--sl-rim),var(--sl-drop);box-sizing:border-box}
+.sl-in::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:var(--sl-shine);background:linear-gradient(115deg,transparent 30%,#fff 38%,transparent 46%,transparent 70%,rgba(255,255,255,.5) 74%,transparent 78%)}
+.sl-lbl{flex:none;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:3cqw;padding:3.6cqw 4.4cqw;border-radius:2.6cqw;background:var(--sl-lbl);color:var(--sl-ink);box-shadow:0 0 0 1px rgba(0,0,0,.08);text-align:left;line-height:1.15}
+.sl-co{font-size:5.6cqw;font-weight:800;letter-spacing:.09em;color:var(--sl-sub)}
+.sl-nm{font-size:6.6cqw;font-weight:800;letter-spacing:-.01em;line-height:1.12;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow-wrap:anywhere}
+.sl-meta{font-size:4.6cqw;font-weight:650;color:var(--sl-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.sl-gr{grid-row:1/4;grid-column:2;text-align:center;line-height:1}
+.sl-gr b{display:block;font-size:17cqw;font-weight:800;letter-spacing:-.05em}
+.sl-gr small{display:block;margin-top:.6cqw;font-size:4cqw;font-weight:800;letter-spacing:.06em;color:var(--sl-sub);white-space:nowrap}
+.sl-tiny{display:none}
+.sl-well{flex:1;min-height:0;position:relative;border-radius:3cqw;background:var(--sl-well);box-shadow:var(--sl-wellrim)}
+.slab .sl-well>img{position:absolute;inset:4cqw;margin:auto;width:auto;height:auto;max-width:calc(100% - 8cqw);max-height:calc(100% - 8cqw);object-fit:contain;border-radius:2.6cqw;box-shadow:0 1px 4px rgba(0,0,0,.28);display:block;background:none}
+.slab .sl-ph{position:absolute;inset:6cqw;border-radius:3cqw;background:var(--s-track)}
+@container slab (max-width:175px){.sl-meta,.sl-gr small{display:none}.sl-gr{grid-row:1/3}.sl-co{font-size:6.4cqw}.sl-nm{font-size:7.6cqw}.sl-gr b{font-size:19cqw}}
+@container slab (max-width:118px){.sl-lbl{display:block;padding:3cqw 2cqw}.sl-co,.sl-nm,.sl-meta,.sl-gr{display:none}.sl-tiny{display:flex;justify-content:space-between;align-items:baseline;padding:0 3cqw;font-size:14cqw;font-weight:800;letter-spacing:-.01em;white-space:nowrap}.sl-tiny span{font-size:.78em;letter-spacing:.06em;color:var(--sl-sub)}}
+@container slab (max-width:60px){.sl-in{padding:6cqw;gap:5cqw;border-radius:7cqw}.sl-lbl{height:16cqw;padding:0;border-radius:3cqw}.sl-tiny{display:none}.sl-well{border-radius:4cqw}.slab .sl-well>img{inset:5cqw;max-width:calc(100% - 10cqw);max-height:calc(100% - 10cqw);border-radius:3cqw;box-shadow:none}}
+@container slab (max-width:175px){:is(#ct-rows.ct-gal:not(.gs-s),.cbx #cb .xslab:is(.xart,.pimg)) .sl-meta,:is(#ct-rows.ct-gal:not(.gs-s),.cbx #cb .xslab:is(.xart,.pimg)) .sl-gr small{display:block}:is(#ct-rows.ct-gal:not(.gs-s),.cbx #cb .xslab:is(.xart,.pimg)) .sl-gr{grid-row:1/4}:is(#ct-rows.ct-gal:not(.gs-s),.cbx #cb .xslab:is(.xart,.pimg)) .sl-co{font-size:5.6cqw}:is(#ct-rows.ct-gal:not(.gs-s),.cbx #cb .xslab:is(.xart,.pimg)) .sl-nm{font-size:6.6cqw}:is(#ct-rows.ct-gal:not(.gs-s),.cbx #cb .xslab:is(.xart,.pimg)) .sl-gr b{font-size:17cqw}}
+@container slab (max-width:118px){:is(#ct-rows.ct-gal:not(.gs-s),.cbx #cb .xslab:is(.xart,.pimg)) .sl-lbl{display:grid;padding:3.6cqw 4.4cqw}:is(#ct-rows.ct-gal:not(.gs-s),.cbx #cb .xslab:is(.xart,.pimg)) .sl-co,:is(#ct-rows.ct-gal:not(.gs-s),.cbx #cb .xslab:is(.xart,.pimg)) .sl-gr{display:block}:is(#ct-rows.ct-gal:not(.gs-s),.cbx #cb .xslab:is(.xart,.pimg)) .sl-nm{display:-webkit-box}:is(#ct-rows.ct-gal:not(.gs-s),.cbx #cb .xslab:is(.xart,.pimg)) .sl-tiny,:is(#ct-rows.ct-gal:not(.gs-s),.cbx #cb .xslab:is(.xart,.pimg)) .sl-meta,:is(#ct-rows.ct-gal:not(.gs-s),.cbx #cb .xslab:is(.xart,.pimg)) .sl-gr small{display:none}:is(#ct-rows.ct-gal:not(.gs-s),.cbx #cb .xslab:is(.xart,.pimg)) .sl-gr{grid-row:1/3}}
+.st .cd.xslab{display:grid;place-items:center;background:none!important;box-shadow:none!important;border-radius:0!important;overflow:visible;object-fit:initial}
+.st .cd.xslab .slab{width:82.5%}
+.st .cd.xslab .sl-in{box-shadow:var(--sl-rim),0 18px 40px rgba(0,0,0,.35)}
+/* the sticker sits below a slab's label, so it never covers the grade */
+.st .cd.xslab~.stick{top:34%}
