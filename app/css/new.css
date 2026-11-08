@@ -1897,9 +1897,9 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 @media(prefers-reduced-motion:reduce){html.tb-web .ct-tbar button,html.tb-web .ct-tbar .tbg,html.tb-web .ct-tbar .tbg i,html.tb-web .ct-dock .ct-fab{transition-duration:.01s!important}}
 
 /* ===== v50.21 phones, installed app (Home Screen): the tab bar and round button sit lower, inside the space the phone
-   keeps for its home swipe, but never closer than ~14px above where that space ends. On an iPhone with Face ID (34pt
-   kept) that's 20pt from the bottom instead of 44, still clear of the home bar; phones that keep little or nothing
+   keeps for its home swipe, but never closer than ~10px above where that space ends (v50.22: 4px higher). On an iPhone with Face ID (34pt
+   kept) that's 24pt from the bottom instead of 44, still clear of the home bar; phones that keep little or nothing
    (iPhone SE, most Android) stay at 10px. Phone browsers are left alone: their own toolbar lives down there. ===== */
 @media(max-width:760px){
- html:not(.tb-web) .ct-tbar,html:not(.tb-web) .ct-fab{bottom:max(10px,calc(env(safe-area-inset-bottom,0px) - 14px))!important}
+ html:not(.tb-web) .ct-tbar,html:not(.tb-web) .ct-fab{bottom:max(10px,calc(env(safe-area-inset-bottom,0px) - 10px))!important}
 }
