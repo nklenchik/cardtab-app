@@ -71,7 +71,7 @@
     return (pick || title(e)) + (rar ? ' ' + rar : '');
   }
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const numOf = n => { const m = /(?:^|[\s#-])([A-Z]{0,4}\d{1,4}\/[A-Z]{0,4}\d{1,4})\b/i.exec(n || ''); return m ? m[1] : ''; };
+  const numOf = n => { const m = /(?:^|[\s#(-])([A-Z]{0,4}\d{1,4}\/[A-Z]{0,4}\d{1,4}|[A-Z]{1,4}\d{1,3}-\d{2,3}|P-\d{2,4})\b/i.exec(n || ''); return m ? m[1].toUpperCase() : ''; };
 
   // the slab. `art` is the image markup (or a placeholder) that sits in the well
   function slab(e, art, cls) {

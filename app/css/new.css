@@ -1972,7 +1972,7 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 .sl-in::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:var(--sl-shine);background:linear-gradient(115deg,transparent 30%,#fff 38%,transparent 46%,transparent 70%,rgba(255,255,255,.5) 74%,transparent 78%)}
 .sl-lbl{flex:none;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:3cqw;padding:3.6cqw 4.4cqw;border-radius:2.6cqw;background:var(--sl-lbl);color:var(--sl-ink);box-shadow:0 0 0 1px rgba(0,0,0,.08);text-align:left;line-height:1.15}
 .sl-co{font-size:5.6cqw;font-weight:800;letter-spacing:.09em;color:var(--sl-sub)}
-.sl-nm{font-size:6.6cqw;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em}
+.sl-nm{font-size:6.6cqw;font-weight:800;letter-spacing:-.01em;line-height:1.12;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow-wrap:anywhere}
 .sl-meta{font-size:4.6cqw;font-weight:650;color:var(--sl-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .sl-gr{grid-row:1/4;grid-column:2;text-align:center;line-height:1}
 .sl-gr b{display:block;font-size:17cqw;font-weight:800;letter-spacing:-.05em}
@@ -2005,7 +2005,7 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 /* v50.31: grid tiles (Medium and Large) keep the full label at every size, in proportion with Large; only the number and
    the grade word step away when the slab is too narrow to read them. Small keeps "PSA 10". */
 @container slab (max-width:175px){#ct-rows.ct-gal:not(.gs-s) .sl-meta,#ct-rows.ct-gal:not(.gs-s) .sl-gr small{display:block}#ct-rows.ct-gal:not(.gs-s) .sl-gr{grid-row:1/4}#ct-rows.ct-gal:not(.gs-s) .sl-co{font-size:5.6cqw}#ct-rows.ct-gal:not(.gs-s) .sl-nm{font-size:6.6cqw}#ct-rows.ct-gal:not(.gs-s) .sl-gr b{font-size:17cqw}}
-@container slab (max-width:118px){#ct-rows.ct-gal:not(.gs-s) .sl-lbl{display:grid;padding:3.6cqw 4.4cqw}#ct-rows.ct-gal:not(.gs-s) .sl-co,#ct-rows.ct-gal:not(.gs-s) .sl-nm,#ct-rows.ct-gal:not(.gs-s) .sl-gr{display:block}#ct-rows.ct-gal:not(.gs-s) .sl-tiny,#ct-rows.ct-gal:not(.gs-s) .sl-meta,#ct-rows.ct-gal:not(.gs-s) .sl-gr small{display:none}#ct-rows.ct-gal:not(.gs-s) .sl-gr{grid-row:1/3}}
+@container slab (max-width:118px){#ct-rows.ct-gal:not(.gs-s) .sl-lbl{display:grid;padding:3.6cqw 4.4cqw}#ct-rows.ct-gal:not(.gs-s) .sl-co,#ct-rows.ct-gal:not(.gs-s) .sl-gr{display:block}#ct-rows.ct-gal:not(.gs-s) .sl-nm{display:-webkit-box}#ct-rows.ct-gal:not(.gs-s) .sl-tiny,#ct-rows.ct-gal:not(.gs-s) .sl-meta,#ct-rows.ct-gal:not(.gs-s) .sl-gr small{display:none}#ct-rows.ct-gal:not(.gs-s) .sl-gr{grid-row:1/3}}
 /* open rows: the name runs full width and the chip follows it inline */
 .ct-demo .ct-row.expanded .ct-row-name.ct-rn-g{display:block!important}
 .ct-demo .ct-row.expanded .ct-rn-g .ct-rn{display:inline}
