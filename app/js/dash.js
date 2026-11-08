@@ -239,9 +239,22 @@
     requestAnimationFrame(step);
   }
   function toggle(id) {
-    const list = $('ct-rows'), prevId = expanded; expanded = expanded === id ? null : id;
+    const list = $('ct-rows'), prevId = expanded; expanded = expanded === id ? null : id; let prevIdDone = false;
     let pinDelta = 0;
-    if (prevId != null) { const btn = list.querySelector('[data-tx="' + prevId + '"]'); if (btn) { const row = btn.parentElement; const box0 = row.querySelector('.ct-open-actions'); pinDelta += flip(row, () => row.classList.remove('expanded'), box0) || 0; setBtn(btn, false); const box = row.querySelector('.ct-open-actions'); if (box) setTimeout(() => { if (!row.classList.contains('expanded')) { box.remove(); const m = row.querySelector('.ct-money'); if (m) m.remove(); } fadeSync(); }, 360); } }
+    // v50.58: the open entry is above the one being opened: close it in one step and move the page by exactly as much in the
+    // same frame, so the tapped entry doesn't move at all (scrolling along an animation every frame looked jittery on iPhone)
+    if (prevId != null && expanded != null) { const pb = list.querySelector('[data-tx="' + prevId + '"]'), nb = list.querySelector('[data-tx="' + id + '"]');
+      if (pb && nb && (pb.compareDocumentPosition(nb) & Node.DOCUMENT_POSITION_FOLLOWING)) {
+        const prow = pb.parentElement, nrow = nb.parentElement, sc = scrollerOf(), y0 = nrow.getBoundingClientRect().top, h0 = list.getBoundingClientRect().height;
+        // the list keeps its height until the new entry has opened, so a page near its end can't run out of room and shift
+        list.style.minHeight = h0 + 'px'; clearTimeout(list._mhT); list._mhT = setTimeout(() => { list.style.minHeight = ''; }, 420);
+        if (prow._flipT) { clearTimeout(prow._flipT); prow._flipT = 0; }
+        prow.classList.add('ct-noanim'); ['height', 'minHeight', 'overflow', 'transition'].forEach(k => { prow.style[k] = ''; });
+        prow.classList.remove('expanded'); setBtn(pb, false); const bx = prow.querySelector('.ct-open-actions'); if (bx) bx.remove(); const mm = prow.querySelector('.ct-money'); if (mm) mm.remove();
+        void prow.offsetWidth; prow.classList.remove('ct-noanim');
+        const dy = nrow.getBoundingClientRect().top - y0; if (dy) { if (sc) sc.scrollTop += dy; else window.scrollTo(0, window.scrollY + dy); }
+        prevIdDone = true; } }
+    if (prevId != null && !prevIdDone) { const btn = list.querySelector('[data-tx="' + prevId + '"]'); if (btn) { const row = btn.parentElement; const box0 = row.querySelector('.ct-open-actions'); pinDelta += flip(row, () => row.classList.remove('expanded'), box0) || 0; setBtn(btn, false); const box = row.querySelector('.ct-open-actions'); if (box) setTimeout(() => { if (!row.classList.contains('expanded')) { box.remove(); const m = row.querySelector('.ct-money'); if (m) m.remove(); } fadeSync(); }, 360); } }
     if (expanded != null) {
       const btn = list.querySelector('[data-tx="' + id + '"]'), t = S.get(id); if (!btn || !t) return;
       const row = btn.parentElement; const old = row.querySelector('.ct-open-actions'); if (old) old.remove();
