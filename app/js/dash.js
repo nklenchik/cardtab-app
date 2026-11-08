@@ -226,6 +226,15 @@
     const tbt = tb && tb.offsetParent ? tb.getBoundingClientRect().top : innerHeight; return { top, bottom: Math.min(innerHeight, tbt) - 12 };
   }
   const scrollBy2 = (sc, dy, smooth) => { if (!dy) return; const o = { top: dy, behavior: smooth && !calm.matches ? 'smooth' : 'auto' }; if (sc) sc.scrollBy(o); else window.scrollBy(o); };
+  // v50.59: show the whole entry in the same motion as it opens: its final size is known as soon as it starts opening, so the
+  // page (or list) starts one native smooth scroll right away instead of a second scroll after the opening finishes
+  function fitRow(row) {
+    const sc = scrollerOf(), v = viewBox(sc), r = row.getBoundingClientRect(), h = parseFloat(row.style.height) || r.height, bottom = r.top + h;
+    const l = $('ct-rows'); l.style.overflowAnchor = 'none'; document.documentElement.style.overflowAnchor = 'none';
+    setTimeout(() => { l.style.overflowAnchor = ''; document.documentElement.style.overflowAnchor = ''; fadeSync(); }, 400);
+    if (r.top < v.top) scrollBy2(sc, r.top - v.top, true);
+    else if (bottom > v.bottom) scrollBy2(sc, Math.min(bottom - v.bottom, r.top - v.top), true);
+  }
   function holdRow(row, ms) {
     const sc = scrollerOf(), vb = viewBox(sc), y0 = Math.max(vb.top, row.getBoundingClientRect().top), end = performance.now() + ms;
     const l = $('ct-rows'); l.style.overflowAnchor = 'none'; document.documentElement.style.overflowAnchor = 'none';
@@ -249,9 +258,12 @@
         // the list keeps its height until the new entry has opened, so a page near its end can't run out of room and shift
         list.style.minHeight = h0 + 'px'; clearTimeout(list._mhT); list._mhT = setTimeout(() => { list.style.minHeight = ''; }, 420);
         if (prow._flipT) { clearTimeout(prow._flipT); prow._flipT = 0; }
-        prow.classList.add('ct-noanim'); ['height', 'minHeight', 'overflow', 'transition'].forEach(k => { prow.style[k] = ''; });
+        prow.classList.add('ct-noanim', 'ct-snap'); ['height', 'minHeight', 'overflow', 'transition'].forEach(k => { prow.style[k] = ''; });
         prow.classList.remove('expanded'); setBtn(pb, false); const bx = prow.querySelector('.ct-open-actions'); if (bx) bx.remove(); const mm = prow.querySelector('.ct-money'); if (mm) mm.remove();
-        void prow.offsetWidth; prow.classList.remove('ct-noanim');
+        void prow.offsetWidth; prow.classList.remove('ct-noanim'); requestAnimationFrame(() => requestAnimationFrame(() => {
+          // the closed entry settles to its real height once its transitions come back; correct by whatever is left, before that frame paints
+          prow.classList.remove('ct-snap'); const d2 = nrow.getBoundingClientRect().top - y0; if (Math.abs(d2) > .5) { if (sc) sc.scrollTop += d2; else window.scrollTo(0, window.scrollY + d2); }
+          if (nrow.classList.contains('expanded')) fitRow(nrow); }));   // then show the whole entry (starting it earlier would be cut off by the correction)
         const dy = nrow.getBoundingClientRect().top - y0; if (dy) { if (sc) sc.scrollTop += dy; else window.scrollTo(0, window.scrollY + dy); }
         prevIdDone = true; } }
     if (prevId != null && !prevIdDone) { const btn = list.querySelector('[data-tx="' + prevId + '"]'); if (btn) { const row = btn.parentElement; const box0 = row.querySelector('.ct-open-actions'); pinDelta += flip(row, () => row.classList.remove('expanded'), box0) || 0; setBtn(btn, false); const box = row.querySelector('.ct-open-actions'); if (box) setTimeout(() => { if (!row.classList.contains('expanded')) { box.remove(); const m = row.querySelector('.ct-money'); if (m) m.remove(); } fadeSync(); }, 360); } }
@@ -261,7 +273,7 @@
       row.insertAdjacentHTML('beforeend', detailsHtml(t));
       { const er = row.querySelector('.ct-expanded-right'), om = er.querySelector('.ct-money'); if (om) om.remove(); er.insertAdjacentHTML('beforeend', moneyHtml(t)); }
       pinDelta += flip(row, () => row.classList.add('expanded')) || 0; setBtn(btn, true); fullArt(btn.querySelector('img.ct-card-art,.ct-slab-art img'));
-      holdRow(row, calm.matches ? 0 : 360);
+      if (!prevIdDone) fitRow(row);
     }
     pinList(pinDelta, 360);
   }

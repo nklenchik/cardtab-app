@@ -2129,3 +2129,6 @@ img,.slab,.sl-well,.zm-slab{-webkit-touch-callout:none;-webkit-user-drag:none;us
  .fb-view .fb-vopts button[aria-pressed="true"] .fb-vck{display:block}
  @media(prefers-reduced-motion:reduce){.fb-view .fb-vopts{transition:none!important}}
 }
+
+/* v50.59: an entry closed in one step (opening one below it) has no transitions for that moment */
+.ct-snap,.ct-snap *,.ct-snap::before,.ct-snap::after,.ct-snap *::before,.ct-snap *::after{transition:none!important}
