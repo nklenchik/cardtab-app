@@ -2096,3 +2096,8 @@ img,.slab,.sl-well,.zm-slab{-webkit-touch-callout:none;-webkit-user-drag:none;us
  -webkit-mask-size:100% 1.12em,100% 1.12em;mask-size:100% 1.12em,100% 1.12em;-webkit-mask-position:0 0,0 1.12em;mask-position:0 0,0 1.12em;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
 @container slab (min-width:119px){.slab .sl-nm{display:block;-webkit-line-clamp:unset}}
 .sl-nm i{font-style:normal}.sl-nm.sl-run{overflow-wrap:normal}.sl-nm.sl-run>span{white-space:nowrap}
+
+/* v50.55: Settings → Display → Hide amounts (this device): dollar amounts blur across the app; editing an entry still shows them */
+.ct-hideamt :is(.ct-row-amt strong,.ct-tile-amt,.ct-stats strong,.ct-stats .ct-line,.ct-money b,.ct-mtot b,.glv b,.glv span,.qm-v strong,.qm-v span,.lr .v,.lr .d,.msum b,.cbx .num,.cbx .bn,.xbig,.x2 b,.wtl .dl,.r .n small,#ct-rows .gp-amt,.gp-in .num){filter:blur(.36em);-webkit-user-select:none;user-select:none}
+.ct-hideamt dialog.ed :is(b,strong,span){filter:none}
+.app-menu.am .seg.am-seg5{grid-template-columns:repeat(5,minmax(0,1fr))}.app-menu.am .amr .am-seg5 button{padding-left:4px;padding-right:4px}

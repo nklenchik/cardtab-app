@@ -79,8 +79,10 @@
   const numOf = n => { const m = /(?:^|[\s#(-])([A-Z]{0,4}\d{1,4}\/[A-Z]{0,4}\d{1,4}|[A-Z]{1,4}\d{1,3}-\d{2,3}|P-\d{2,4}|(?:SWSH|SVP|SV|SM|XY|BW|HGSS|DP|MEP)\s?\d{2,3})\b/i.exec(n || ''); return m ? m[1].toUpperCase().replace(/\s/, '') : ''; };
 
   // the slab. `art` is the image markup (or a placeholder) that sits in the well
+  // v50.55: Settings → Display → Show graded cards as slabs (follows the account; on unless turned off)
+  const on = () => { const S = window.CTStore; try { return !(S && S.meta && S.meta('slabs') === false); } catch (e) { return true; } };
   function slab(e, art, cls) {
-    const gr = of(e); if (!gr) return '';
+    const gr = of(e); if (!gr || !on()) return '';
     const meta = [numOf(e.name) || (e.no && /\d/.test(e.no) && e.no.length < 14 ? e.no : ''), gr.cert ? '#' + gr.cert : ''].filter(Boolean).join(' · ');
     const nm = cardName(e);
     return '<span class="slab' + (cls ? ' ' + cls : '') + '" aria-label="' + esc(label(gr) + (gr.w ? ' ' + gr.w : '')) + ' graded">' +
@@ -112,5 +114,5 @@
       .observe(document.documentElement, { childList: true, subtree: true });
     addEventListener('resize', fitSoon); document.addEventListener('DOMContentLoaded', fitSoon);
   }
-  window.CTGrade = { CO, parse, norm, of, word, label, title, cardName, pristine, slab, chip, fit: fitSoon, fitName, GRADES: ['10', '9.5', '9', '8.5', '8', '7.5', '7', '6.5', '6', '5.5', '5', '4.5', '4', '3.5', '3', '2.5', '2', '1.5', '1'] };
+  window.CTGrade = { CO, parse, norm, of, word, label, title, cardName, pristine, slab, chip, on, fit: fitSoon, fitName, GRADES: ['10', '9.5', '9', '8.5', '8', '7.5', '7', '6.5', '6', '5.5', '5', '4.5', '4', '3.5', '3', '2.5', '2', '1.5', '1'] };
 })();

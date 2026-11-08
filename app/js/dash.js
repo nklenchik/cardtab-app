@@ -147,7 +147,7 @@
   const nmOf = t => G ? G.title(t) : t.name; // graded: the grade leaves the name and shows as the chip
   function artHtml(t, open) {
     // v50.29: a graded card sits in a slab drawn in code; the art goes in its well
-    if (G && G.of(t)) {
+    if (G && G.on() && G.of(t)) {
       const has = t.art && (t.art.list || t.art.detail);
       const inner = has ? '<img class="sl-img" src="' + esc(open ? (t.art.detail || t.art.list) : (t.art.list || t.art.detail)) + '" data-full="' + esc(t.art.detail || t.art.list) + '" alt="" loading="lazy" decoding="async">' : '<i class="sl-ph"></i>';
       return '<span class="ct-card-art ct-slab-art">' + G.slab(t, inner) + '</span>';
@@ -247,7 +247,7 @@
   function tileHtml(t) {
     const src = t.art && (t.art.detail || t.art.list);
     return '<button type="button" class="ct-tile' + (t.id === justAdded ? ' ct-new' : '') + '" data-tile="' + t.id + '" aria-label="' + esc(t.name) + ', ' + badgeOf(t) + ', ' + amtText(t) + '">' +
-      (G && G.of(t) ? '<span class="ct-tile-art ct-slabbed">' + G.slab(t, src ? '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async">' : '<i class="sl-ph"></i>') + '</span>'
+      (G && G.on() && G.of(t) ? '<span class="ct-tile-art ct-slabbed">' + G.slab(t, src ? '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async">' : '<i class="sl-ph"></i>') + '</span>'
         : '<span class="ct-tile-art">' + (src ? '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async">' : '<i>' + esc(t.name) + '</i>') + '</span>') +
       '<b class="ct-tile-nm"><span class="ct-tile-full">' + esc(nmOf(t)) + (t.qty > 1 ? ' ×' + t.qty : '') + '</span><span class="ct-tile-short">' + esc(shortName(nmOf(t))) + '</span></b>' +
       '<small class="ct-tile-ln"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span><span class="ct-tile-meta">' + badgeOf(t) + ' · ' + niceDate(t.date) + '</span><span class="ct-tile-pl">' + esc(t.platform || badgeOf(t)) + '</span></small>' +
@@ -274,7 +274,7 @@
     const X = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
     const A = d => '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + (d < 0 ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6') + '"/></svg>';
     gp.innerHTML = '<div class="gp-in"><i class="gp-grab" aria-hidden="true"></i><button type="button" class="gp-x" data-gx aria-label="Close">' + X + '</button>' +
-      (G && G.of(t) ? '<div class="gp-art ct-slabbed">' + G.slab(t, src ? '<img src="' + esc(src) + '" alt="">' : '<i class="sl-ph"></i>') + '</div>'
+      (G && G.on() && G.of(t) ? '<div class="gp-art ct-slabbed">' + G.slab(t, src ? '<img src="' + esc(src) + '" alt="">' : '<i class="sl-ph"></i>') + '</div>'
         : '<div class="gp-art">' + (src ? '<img src="' + esc(src) + '" alt="">' : '<i>' + esc(t.name) + '</i>') + '</div>') +
       '<div class="gp-body"><small class="gp-line"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span>' + badgeOf(t) + ' · ' + (t.platform ? esc(t.platform) + ' · ' : '') + niceDate(t.date) + '</small>' +
       '<h2 class="gp-nm">' + esc(nmOf(t)) + (t.qty > 1 ? ' ×' + t.qty : '') + (pillOf(t) ? ' ' + pillOf(t) : '') + '</h2>' +

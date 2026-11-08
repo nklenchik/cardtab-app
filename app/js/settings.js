@@ -23,11 +23,14 @@
 
   // ---------- sharing defaults: applied each time the app opens, so every visit starts from them ----------
   function applySharing() {
-    const sh = S.meta('sharing'); if (!sh) return;
-    put('cs.hide', sh.amt ? '1' : '0');
+    const sh = S.meta('sharing') || {}, mine = get('ct.hideamt', '0') === '1'; if (!S.meta('sharing') && !mine) return;
+    put('cs.hide', sh.amt || mine ? '1' : '0');
     try { const c = JSON.parse(localStorage.getItem('cb.share') || '{}') || {}; c.amt = !sh.amt; c.names = !sh.names; localStorage.setItem('cb.share', JSON.stringify(c)); } catch (e) {}
   }
 
+  // ---------- v50.55: hide amounts in the app (this device): dollar amounts blur everywhere in the app, and Stories show % ----------
+  function applyHide() { document.documentElement.classList.toggle('ct-hideamt', get('ct.hideamt', '0') === '1'); }
+  applyHide();
   // ---------- what each row says it's set to ----------
   const THEME = { light: 'Light', dark: 'Dark', auto: 'Auto' }, START = { month: 'Month', year: 'Year', all: 'All time' };
   function paint() {
@@ -84,6 +87,7 @@
       const df = S.meta('addDefaults') || {}, sel = $('am-dplat'), plats = S.pickerPlatforms();
       sel.innerHTML = '<option value="">Last one used</option>' + plats.map(p => '<option' + (p === df.plat ? ' selected' : '') + '>' + esc(p) + '</option>').join('');
       $('am-dcond').querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.c === (df.cond || 'NM'))));
+      $('am-dgco').querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.co === (df.gco || 'PSA'))));
       const g = myGames();
       $('am-games').innerHTML = GAMES.map(([k, l]) => '<button type="button" class="am-chip" data-g="' + k + '" aria-pressed="' + g.includes(k) + '">' + esc(l) + '</button>').join('');
     }
@@ -96,6 +100,7 @@
       $('am-taxy').innerHTML = ys.map(y => '<option' + (y === pick ? ' selected' : '') + '>' + y + '</option>').join('');
     }
     if (id === 'display') { pdev = window.CTPrefs ? window.CTPrefs.kind() : 'desk'; paintDev(); }
+    if (id === 'display') { $('am-slabs').setAttribute('aria-checked', String(S.meta('slabs') !== false)); $('am-hideamt').setAttribute('aria-checked', String(get('ct.hideamt', '0') === '1')); }
     if (id === 'display') { const r = $('am-rboard'); r.classList.remove('confirm'); $('am-rboard-s').textContent = 'Back to the starting widgets for your plan'; }
     if (id === 'account') { const o = $('am-outall'); o.classList.remove('confirm'); $('am-outall-s').textContent = 'Your phone, computer and anywhere else'; }
   }
@@ -117,6 +122,9 @@
     const op = t.closest('#am-open button'); if (op && window.CTPrefs) { e.stopPropagation(); await window.CTPrefs.set('ct.open', op.dataset.op === 'entries' ? null : op.dataset.op, pdev); paintDev(); return; }
     const vw = t.closest('#am-view button'); if (vw && window.CTPrefs) { e.stopPropagation(); const x = vw.dataset.vw; if (x !== 'list') await window.CTPrefs.set('ct.gsize', x === 'm' ? null : x, pdev); await window.CTPrefs.set('ct.view', x === 'list' ? 'list' : 'gallery', pdev); paintDev(); return; }
     const c = t.closest('#am-dcond button'); if (c) { $('am-dcond').querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(b === c))); await saveMeta('addDefaults', { cond: c.dataset.c }); return; }
+    const gc = t.closest('#am-dgco button'); if (gc) { $('am-dgco').querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(b === gc))); await saveMeta('addDefaults', { gco: gc.dataset.co }); return; }
+    const sl = t.closest('#am-slabs'); if (sl) { const on = sl.getAttribute('aria-checked') !== 'true'; sl.setAttribute('aria-checked', String(on)); await S.setMeta('slabs', on); return; }
+    const ha = t.closest('#am-hideamt'); if (ha) { const on = ha.getAttribute('aria-checked') !== 'true'; ha.setAttribute('aria-checked', String(on)); put('ct.hideamt', on ? '1' : '0'); applyHide(); applySharing(); return; }
     const g = t.closest('.am-chip'); if (g) { const on = g.getAttribute('aria-pressed') !== 'true'; g.setAttribute('aria-pressed', String(on)); const list = myGames().filter(x => x !== g.dataset.g); if (on) list.push(g.dataset.g); await S.setMeta('games', list); return; }
     const us = t.closest('#am-usage'); if (us) { const on = us.getAttribute('aria-checked') !== 'true'; us.setAttribute('aria-checked', String(on)); await S.setMeta('shareUsage', on); return; }
     const sw = t.closest('#am-shamt, #am-shnames'); if (sw) { const on = sw.getAttribute('aria-checked') !== 'true'; sw.setAttribute('aria-checked', String(on)); await saveMeta('sharing', sw.id === 'am-shamt' ? { amt: on } : { names: on }); applySharing(); return; }
@@ -166,7 +174,7 @@
     'Sort': 'order newest oldest highest amount', 'Reset Card Board layout': 'widgets default board start over', 'Platform': 'default platform ebay tcgplayer marketplace add new',
     'Condition': 'nm mint near mint grade default', 'Your platforms': 'custom platforms add my own stores', 'Games you collect': 'pokemon magic yugioh one piece lorcana tcg games',
     'Monthly budget': 'budget limit spending allowance alert', 'Sales show': 'after fees kept gross sold price fees net amount', 'Hide amounts': 'privacy dollars money share stories percent',
-    'Hide card names': 'privacy share names', 'Share anonymous usage': 'analytics tracking privacy data opt out', 'Import a spreadsheet': 'import csv excel upload sheet google',
+    'Hide card names': 'privacy share names', 'Graded by': 'grading company psa bgs cgc sgc tag beckett default graded', 'Show graded cards as slabs': 'slab graded case label psa bgs plain art', 'Hide amounts in the app': 'privacy blur hide money dollars amounts public', 'Share anonymous usage': 'analytics tracking privacy data opt out', 'Import a spreadsheet': 'import csv excel upload sheet google',
     'Export everything': 'export download backup csv', 'One year of sales and purchases': 'taxes tax irs csv export year 1099', 'Profile': 'name photo picture avatar edit profile',
     'Signed in with': 'google email login account', 'Sign out of all devices': 'log out logout sign out password security devices', 'Delete account': 'remove close delete account erase',
     'Help and feedback': 'help support feedback bug', 'Contact support': 'email contact help support hello', 'Notifications': 'alerts reminders email notify', 'Plan and billing': 'premium subscription cancel upgrade payment price billing plan'

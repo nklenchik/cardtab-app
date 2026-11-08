@@ -82,7 +82,7 @@
     f('condition').value = e.condition || ''; f('note').value = e.note || ''; keep();
     const gr = G && G.of(e);
     if (gr) { f('condition').value = 'Graded'; f('gco').value = G.CO.includes(gr.co) ? gr.co : 'PSA'; f('gg').value = G.pristine(gr) ? '10P' : gr.g; f('gcert').value = gr.cert || ''; f('note').value = (e.note || '').replace(LEGACY, '').trim(); }
-    else { f('gco').value = 'PSA'; f('gg').value = ''; f('gcert').value = ''; }
+    else { const dco = ((window.CTStore.meta && window.CTStore.meta('addDefaults')) || {}).gco; f('gco').value = G.CO.includes(dco) ? dco : 'PSA'; f('gg').value = ''; f('gcert').value = ''; }   // v50.55: the default grading company from Settings
     gShow();
     fillPlat(f('platform').value);
     const u = S.usage(), left = document.getElementById('ed-left');
