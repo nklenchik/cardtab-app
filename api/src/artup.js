@@ -37,11 +37,34 @@ export function picInfo(u8) {
 }
 
 // ---- the automatic check ----
-export async function aiCheck(env, u8, cardName) {
+// The model reads the card's printed name (in whatever language and script it's printed) and its card number, and says
+// whether it's the same card as the one it's being shared for (a Japanese or other-language printing of the same card
+// counts). The decision is made here, not by the model:
+//   a readable card number that doesn't match  -> held for review (the clearest sign it's a different card)
+//   the number matches, or the name is the same card  -> passes
+//   neither can be confirmed  -> held for review
+export const numNorm = s => String(s || '').toUpperCase().replace(/[\s#]+/g, '').replace(/^NO\.?/, '').replace(/(^|[^0-9])0+(?=\d)/g, '$1');
+export function numSame(read, want) {
+  const a = numNorm(read), b = numNorm(want); if (!a || !b) return null;
+  if (a === b) return true;
+  const ma = a.split('/')[0], mb = b.split('/')[0];
+  if (ma && mb && ma === mb && (a.includes('/') !== b.includes('/'))) return true;   // "223" vs "223/197"
+  return false;
+}
+export async function aiCheck(env, u8, want) {
   if (!env.AI) return { ok: false, reason: 'Automatic check isn’t set up' };
-  const prompt = 'You check photos people upload as the picture for a trading card in a collection app. The card should be: "' + String(cardName || '').slice(0, 120) + '".\n' +
-    'Answer with JSON only, no other text: {"card": true|false (is the main subject a single trading card?), "match": true|false (does the name printed on it plausibly match the card above? true if unsure but it is a card of the same character or name), "unsafe": true|false (nudity, sexual content, gore, hate symbols, or anything inappropriate for a general audience), "seen": "the card name you can read, or empty"}';
-  const run = () => env.AI.run(VISION, { messages: [{ role: 'user', content: prompt }], image: [...u8], max_tokens: 120 });
+  const w = typeof want === 'string' ? { name: want } : (want || {});
+  const desc = [w.name && 'name "' + w.name + '"', w.number && 'card number "' + w.number + '"', w.set && 'set "' + w.set + '"', w.game && 'game ' + w.game].filter(Boolean).join(', ');
+  const prompt = 'You check photos people upload as the picture for a trading card in a collection app. The card it is being shared for: ' + desc + '.\n' +
+    'Read the card in the photo. Cards can be printed in any language (Japanese, Chinese, Korean, French, German, etc.).\n' +
+    'Answer with JSON only, no other text:\n' +
+    '{"card": true|false (is the main subject a single trading card?),\n' +
+    ' "name_read": "the card name exactly as printed, in its own language and script, or empty",\n' +
+    ' "name_english": "that name in English if you know it, or empty",\n' +
+    ' "number_read": "the collector number exactly as printed (for example 223/197, BT29-086, P-455, SV-P 027), or empty if you cannot read it",\n' +
+    ' "same_card": true|false (is it the same card as described above? A printing of the same card in another language counts as the same card. A different character, or a different card of the same character, is not),\n' +
+    ' "unsafe": true|false (nudity, sexual content, gore, hate symbols, or anything inappropriate for a general audience)}';
+  const run = () => env.AI.run(VISION, { messages: [{ role: 'user', content: prompt }], image: [...u8], max_tokens: 200 });
   let out;
   try { out = await run(); }
   catch (e) {
@@ -52,10 +75,13 @@ export async function aiCheck(env, u8, cardName) {
   const txt = String((out && (out.response || out.result || out.description)) || ''), m = /\{[\s\S]*\}/.exec(txt);
   let j = null; try { j = m ? JSON.parse(m[0]) : null; } catch (e) {}
   if (!j) return { ok: false, reason: 'Automatic check wasn’t sure' };
-  if (j.unsafe === true) return { ok: false, reason: 'Might be inappropriate', seen: j.seen || '' };
-  if (j.card === false) return { ok: false, reason: 'Doesn’t look like a card', seen: j.seen || '' };
-  if (j.match === false) return { ok: false, reason: 'Doesn’t look like this card', seen: j.seen || '' };
-  return { ok: true, seen: j.seen || '' };
+  const seen = [j.name_read, j.name_english && j.name_english !== j.name_read ? '(' + j.name_english + ')' : '', j.number_read].filter(Boolean).join(' ').slice(0, 120);
+  if (j.unsafe === true) return { ok: false, reason: 'Might be inappropriate', seen };
+  if (j.card === false) return { ok: false, reason: 'Doesn’t look like a card', seen };
+  const num = numSame(j.number_read, w.number);
+  if (num === false) return { ok: false, reason: 'Card number doesn’t match', seen };
+  if (num === true || j.same_card === true) return { ok: true, seen, by: num === true ? 'number' : 'name' };
+  return { ok: false, reason: j.same_card === false ? 'Doesn’t look like this card' : 'Couldn’t confirm it’s this card', seen };
 }
 
 const J = (env, cors, body, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...cors(env) } });
@@ -94,12 +120,12 @@ export async function handleArt(env, req, path, cors, ctx) {
     const art = { list: `/up/${me.id}/${id}/list`, detail: `/up/${me.id}/${id}/detail` };
     let share = null;
     if (wantShare) {
-      const card = /^[\w-]{3,240}$/.test(cardId) ? await env.DB.prepare('SELECT id,name,number,set_name FROM cards WHERE id=?').bind(cardId).first() : null;
+      const card = /^[\w-]{3,240}$/.test(cardId) ? await env.DB.prepare('SELECT id,game,name,number,set_name FROM cards WHERE id=?').bind(cardId).first() : null;
       if (!card) share = { status: 'no', why: 'Only cards picked from the search can be shared.' };
       else if (files.detail.info.w < SHARE_MIN_W) share = { status: 'no', why: 'Sharing needs a sharper photo.' };
       else {
         const full = [card.name, card.number, card.set_name].filter(Boolean).join(' · ');
-        const chk = await aiCheck(env, files.detail.u8, full || name);
+        const chk = await aiCheck(env, files.detail.u8, { name: card.name || name, number: card.number, set: card.set_name, game: card.game });
         const had = await env.ART.head(`art/c/${card.id}/detail`).catch(() => null);
         const ok = chk.ok && !had, reason = chk.ok ? (had ? 'This card already has shared art' : '') : chk.reason;
         await env.DB.prepare('INSERT INTO art_uploads (id,user_id,card_id,name,w,h,status,reason,seen,created) VALUES (?,?,?,?,?,?,?,?,?,?)').bind(id, me.id, card.id, full || name, files.detail.info.w, files.detail.info.h, ok ? 'approved' : 'pending', reason, chk.seen || '', now()).run();

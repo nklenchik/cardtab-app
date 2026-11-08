@@ -13,7 +13,7 @@ const DB = { prepare: stmt, async batch(list) { for (const s of list) await s.ru
 const store = new Map();
 const ART = { async get(k) { const v = store.get(k); return v ? { body: new Blob([v.b]).stream(), httpMetadata: v.m, async arrayBuffer() { return v.b.buffer.slice(v.b.byteOffset, v.b.byteOffset + v.b.byteLength); } } : null; },
   async head(k) { return store.has(k) ? {} : null; }, async put(k, b, o) { store.set(k, { b: new Uint8Array(b instanceof ArrayBuffer ? b : b.buffer ? b : await new Response(b).arrayBuffer()), m: (o || {}).httpMetadata }); } };
-let aiAnswer = '{"card":true,"match":true,"unsafe":false,"seen":"Charizard ex"}', aiCalls = 0;
+let aiAnswer = '{"card":true,"name_read":"Charizard ex","number_read":"223/197","same_card":true,"unsafe":false}', aiCalls = 0;
 const AI = { async run(model, inp) { aiCalls++; assert.ok(Array.isArray(inp.image) && inp.image.length > 1000); return { response: aiAnswer }; } };
 const mails = [];
 const env = { DB, ART, AI, ALLOWED_ORIGIN: 'https://app.cardtab.app', APP_URL: 'https://app.cardtab.app', API_URL: 'https://api.cardtab.app', ADMIN_EMAILS: 'boss@x.com', EMAIL: { async send(m) { mails.push(m); } } };
@@ -45,7 +45,7 @@ g = await call('/art/sv3-223/detail'); assert.equal(g.status, 200); assert.equal
 // a second share for the same card waits for review
 r = await (await call('/api/art/upload', { method: 'POST', cookie: fan, form: fd(D, L, { card: 'sv3-223', share: '1' }) })).json(); assert.equal(r.share.status, 'review');
 // flagged by the check: waits for review with the reason
-aiAnswer = 'Sure! {"card":true,"match":false,"unsafe":false,"seen":"Blastoise"}';
+aiAnswer = 'Sure! {"card":true,"name_read":"Blastoise","number_read":"","same_card":false,"unsafe":false}';
 r = await (await call('/api/art/upload', { method: 'POST', cookie: fan, form: fd(D, L, { card: 'sv3-125', share: '1' }) })).json(); assert.equal(r.share.status, 'review');
 assert.equal((await call('/art/sv3-125/detail')).status, 404);
 // too soft to share, or a typed (unmatched) card: kept private, sharing declined
@@ -58,6 +58,7 @@ assert.equal((await call('/api/admin/art', { cookie: fan })).status, 403);
 let q = await (await call('/api/admin/art', { cookie: boss })).json();
 assert.equal(q.items.length, 3); assert.ok(q.items.some(x => x.reason === 'Doesn’t look like this card' && x.seen === 'Blastoise'));
 const flagged = q.items.find(x => x.card_id === 'sv3-125' && x.seen === 'Blastoise');
+
 assert.ok((await (await call('/api/admin/art', { method: 'POST', cookie: boss, body: { id: flagged.id, action: 'approve' } })).json()).ok);
 assert.equal((await call('/art/sv3-125/detail')).status, 200, 'approved: now the default');
 const other = q.items.find(x => x.id !== flagged.id); await call('/api/admin/art', { method: 'POST', cookie: boss, body: { id: other.id, action: 'reject' } });
@@ -65,4 +66,21 @@ q = await (await call('/api/admin/art', { cookie: boss })).json(); assert.equal(
 // daily cap
 for (let i = 0; i < 40; i++) sq.prepare("INSERT INTO art_uploads (id,user_id,status,created) VALUES (?,?,?,?)").run('x' + i, sq.prepare("SELECT id FROM users WHERE email='fan@x.com'").get().id, 'private', Math.floor(Date.now() / 1000));
 assert.equal((await call('/api/art/upload', { method: 'POST', cookie: fan, form: fd(D, L) })).status, 429);
-console.log('art upload tests ok');
+// the check's decision rules, directly
+import('./src/artup.js').then(async ({ aiCheck, numSame }) => {
+  assert.equal(numSame('223/197', '223/197'), true); assert.equal(numSame('0223 / 197', '223/197'), true); assert.equal(numSame('223', '223/197'), true);
+  assert.equal(numSame('224/197', '223/197'), false); assert.equal(numSame('BT29-086', 'bt29-86'), true); assert.equal(numSame('', '223/197'), null);
+  const e2 = (ans) => ({ AI: { async run() { return { response: ans }; } } }), px = new Uint8Array(2000);
+  const W = { name: 'Charizard ex', number: '223/197', set: 'Obsidian Flames', game: 'pokemon' };
+  // a Japanese printing: the name is in Japanese, the model says it's the same card -> passes
+  assert.equal((await aiCheck(e2('{"card":true,"name_read":"リザードンex","name_english":"Charizard ex","number_read":"","same_card":true,"unsafe":false}'), px, W)).ok, true);
+  // number matches even though the name couldn't be judged -> passes
+  let c = await aiCheck(e2('{"card":true,"name_read":"","number_read":"223/197","same_card":false,"unsafe":false}'), px, W); assert.equal(c.ok, true); assert.equal(c.by, 'number');
+  // a different card of the same character (number differs) -> held, even if the model says same
+  c = await aiCheck(e2('{"card":true,"name_read":"Charizard ex","number_read":"125/197","same_card":true,"unsafe":false}'), px, W); assert.equal(c.ok, false); assert.equal(c.reason, 'Card number doesn’t match');
+  // nothing confirmed -> held
+  c = await aiCheck(e2('{"card":true,"name_read":"","number_read":"","unsafe":false}'), px, W); assert.equal(c.ok, false); assert.equal(c.reason, 'Couldn’t confirm it’s this card');
+  // unsafe wins over everything
+  c = await aiCheck(e2('{"card":true,"name_read":"Charizard ex","number_read":"223/197","same_card":true,"unsafe":true}'), px, W); assert.equal(c.ok, false); assert.equal(c.reason, 'Might be inappropriate');
+  console.log('art upload tests ok');
+});
