@@ -41,15 +41,20 @@ jobs:
       RCLONE_CONFIG_SAFE_TYPE: crypt
       RCLONE_CONFIG_SAFE_REMOTE: 'gd:Card Tab backups'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 22 }
       - name: Install tools
+        env:
+          PASS: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
           curl -fsSL https://rclone.org/install.sh | sudo bash >/dev/null
           sudo apt-get install -y -qq sqlite3 >/dev/null
-          echo "RCLONE_CONFIG_SAFE_PASSWORD=$(rclone obscure "${{ secrets.BACKUP_PASSPHRASE }}")" >> "$GITHUB_ENV"
-          echo "RCLONE_CONFIG_SAFE_PASSWORD2=$(rclone obscure "card-tab-salt:${{ secrets.BACKUP_PASSPHRASE }}")" >> "$GITHUB_ENV"
+          # the scrambled passwords are reversible, so hide them from the (public) run log before saving them for later steps
+          P1=$(rclone obscure "$PASS"); P2=$(rclone obscure "card-tab-salt:$PASS")
+          echo "::add-mask::$P1"; echo "::add-mask::$P2"
+          echo "RCLONE_CONFIG_SAFE_PASSWORD=$P1" >> "$GITHUB_ENV"
+          echo "RCLONE_CONFIG_SAFE_PASSWORD2=$P2" >> "$GITHUB_ENV"
           echo "DAY=$(date -u +%Y-%m-%d)" >> "$GITHUB_ENV"
       - name: Export the database
         working-directory: api
@@ -60,8 +65,9 @@ jobs:
           for t in users entries user_meta cards art_uploads; do
             sqlite3 "$RUNNER_TEMP/test.db" "SELECT COUNT(*) FROM $t" >/dev/null || { echo "::error::table $t missing from the backup"; exit 1; }
           done
-          echo "USERS=$(sqlite3 "$RUNNER_TEMP/test.db" 'SELECT COUNT(*) FROM users')" >> "$GITHUB_ENV"
-          echo "ENTRIES=$(sqlite3 "$RUNNER_TEMP/test.db" 'SELECT COUNT(*) FROM entries')" >> "$GITHUB_ENV"
+          U=$(sqlite3 "$RUNNER_TEMP/test.db" 'SELECT COUNT(*) FROM users'); E=$(sqlite3 "$RUNNER_TEMP/test.db" 'SELECT COUNT(*) FROM entries')
+          echo "users and entries counted"   # counts stay out of the public log; they show in the admin daily check
+          { echo "USERS=$U"; echo "ENTRIES=$E"; } >> "$GITHUB_ENV"
           gzip -9 -c "$RUNNER_TEMP/db.sql" > "$RUNNER_TEMP/db-$DAY.sql.gz"
       - name: Copy 2 - Cloudflare backup bucket
         run: |
