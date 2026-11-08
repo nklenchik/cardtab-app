@@ -18,10 +18,16 @@
     const nameF = f('name').closest('.ed-f'), condF = f('condition').closest('.ed-f'), noteF = f('note').closest('.ed-f');
     wrap([nameF], 'ed-g-name');
     wrap([rows[0], at('#ed-net-f')], 'ed-g-money');
-    wrap([rows[1], condF], 'ed-g-when');
+    wrap([rows[1], condF, at('#ed-grade')], 'ed-g-when');
     wrap([noteF], 'ed-g-note');
     const grab = document.createElement('i'); grab.className = 'ed-grab'; grab.setAttribute('aria-hidden', 'true'); at('.ed-head').prepend(grab);
   })();
+
+  // v50.29: "Graded" opens the grade fields (company, grade, cert number); the card then shows as a slab
+  const G = window.CTGrade, gRow = document.getElementById('ed-grade');
+  const gShow = () => { gRow.hidden = f('condition').value !== 'Graded'; };
+  f('condition').addEventListener('change', () => { gShow(); if (!gRow.hidden && !f('gg').value) f('gg').focus(); });
+  const LEGACY = /^graded\s+(psa|bgs|beckett|cgc|sgc|tag)\s*\d[^\n]*\n?/i;
 
   const AMOUNT_LABEL = { purchase: 'Total paid', sale: 'Sold for', refund: 'Refunded to buyer' };
 
@@ -72,6 +78,10 @@
     else { f('fees').value = ''; f('ship').value = last.ship != null ? S.fromCents(last.ship) : ''; }
     f('qty').value = e.qty || 1; f('date').value = e.date || S.today(); f('platform').value = e.platform || '';
     f('condition').value = e.condition || ''; f('note').value = e.note || ''; keep();
+    const gr = G && G.of(e);
+    if (gr) { f('condition').value = 'Graded'; f('gco').value = G.CO.includes(gr.co) ? gr.co : 'PSA'; f('gg').value = gr.g; f('gcert').value = gr.cert || ''; f('note').value = (e.note || '').replace(LEGACY, '').trim(); }
+    else { f('gco').value = 'PSA'; f('gg').value = ''; f('gcert').value = ''; }
+    gShow();
     fillPlat(f('platform').value);
     const u = S.usage(), left = document.getElementById('ed-left');
     left.hidden = !!editing || !(u.warn);
@@ -100,6 +110,11 @@
   form.addEventListener('submit', async ev => {
     ev.preventDefault();
     const data = { type, name: f('name').value, amount: f('amount').value, fees: f('fees').value, ship: f('ship').value, qty: f('qty').value, date: f('date').value, platform: f('platform').value, condition: f('condition').value, note: f('note').value };
+    if (G) {
+      const was = editing && G.of(editing);
+      if (data.condition === 'Graded' && f('gg').value) { const g = { co: f('gco').value, g: f('gg').value, cert: f('gcert').value }; if (was && was.w && was.co === g.co && was.g === g.g) g.w = was.w; data.grade = g; }
+      else if (was) data.grade = false;
+    }
     const v = S.validate(data, editing || undefined);
     if (!v.ok) { showErrors(v.errors); return; }
     try {

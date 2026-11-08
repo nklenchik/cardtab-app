@@ -164,7 +164,9 @@
       e.name = rawName ? displayName(rawName, p) : 'Untitled entry';
       if (p && p.qty) e.qty = p.qty; const q = parseInt(get('qty'), 10); if (q > 0) e.qty = q;
       e.condition = condOf(get('condition')) || (p && p.condition ? ({ NM: 'Near Mint', LP: 'Lightly Played', MP: 'Moderately Played', HP: 'Heavily Played' }[p.condition] || '') : '') || (p && p.grade ? 'Graded' : '');
-      if (p && p.grade) e.note = ('Graded ' + p.grade + (e.note ? '\n' + e.note : '')).trim();
+      // v50.29: a grade in the card name ("PSA 10") or the condition/grade column is kept as the entry's grade (shown as a slab)
+      const G = window.CTGrade, gr = G ? (G.parse(get('condition')) || (p && p.grade ? G.parse(p.grade) : null)) : null;
+      if (gr) { e.grade = gr; e.condition = 'Graded'; } else if (p && p.grade) e.note = ('Graded ' + p.grade + (e.note ? '\n' + e.note : '')).trim();
       const ref = refOf(get('image'));
       e.ref = ref || null;
       // Keep the sheet's own image link too, so art can be brought in (converted to small WebP by our art service) even when the card can't be matched exactly

@@ -143,7 +143,14 @@
   }
 
   // ---------- entries list ----------
+  const G = window.CTGrade;
   function artHtml(t, open) {
+    // v50.29: a graded card sits in a slab drawn in code; the art goes in its well
+    if (G && G.of(t)) {
+      const has = t.art && (t.art.list || t.art.detail);
+      const inner = has ? '<img class="sl-img" src="' + esc(open ? (t.art.detail || t.art.list) : (t.art.list || t.art.detail)) + '" data-full="' + esc(t.art.detail || t.art.list) + '" alt="" loading="lazy" decoding="async">' : '<i class="sl-ph"></i>';
+      return '<span class="ct-card-art ct-slab-art">' + G.slab(t, inner) + '</span>';
+    }
     if (t.art && (t.art.list || t.art.detail)) return '<img class="ct-card-art" src="' + esc(open ? (t.art.detail || t.art.list) : (t.art.list || t.art.detail)) + '" data-full="' + esc(t.art.detail || t.art.list) + '" alt="" width="44" height="61" loading="lazy" onerror="window.CTArtBroken&&CTArtBroken(this)">';
     const letter = (t.name.match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase();
     return '<span class="ct-card-art ct-art-ph" aria-hidden="true"><i>' + esc(letter) + '</i></span>';
@@ -165,6 +172,7 @@
   function factsHtml(t) { return t.note ? '<div class="ct-row-note">' + esc(t.note) + '</div>' : ''; }
   const COND = { 'near mint': 'NM', 'mint': 'M', 'lightly played': 'LP', 'moderately played': 'MP', 'heavily played': 'HP', 'damaged': 'DMG' };
   const condShort = c => c ? (COND[String(c).toLowerCase()] || c) : '';
+  const condOf = t => (G && G.of(t)) ? '' : t.condition; // graded cards show their grade instead (the chip, the slab)
   const ACTS = '<div class="ct-demo-actions ct-acts4"><button type="button" data-act="edit">Edit</button><button type="button" data-act="card">Change card</button><button type="button" data-act="dup">Duplicate</button><button type="button" data-act="del">Delete</button></div>';
   function detailsHtml(t) {
     return '<div class="ct-open-actions"><div class="ct-row-expanded-info"><div class="ct-dtot"><i class="ct-mdash"></i><div class="ct-dtrow">' + ACTS + keptRow(t) + '</div></div>' + factsHtml(t) + '<div class="ct-pacts">' + ACTS + '</div></div></div>';
@@ -213,7 +221,7 @@
       const row = btn.parentElement; const old = row.querySelector('.ct-open-actions'); if (old) old.remove();
       row.insertAdjacentHTML('beforeend', detailsHtml(t));
       { const er = row.querySelector('.ct-expanded-right'), om = er.querySelector('.ct-money'); if (om) om.remove(); er.insertAdjacentHTML('beforeend', moneyHtml(t)); }
-      pinDelta += flip(row, () => row.classList.add('expanded')) || 0; setBtn(btn, true); fullArt(btn.querySelector('.ct-card-art'));
+      pinDelta += flip(row, () => row.classList.add('expanded')) || 0; setBtn(btn, true); fullArt(btn.querySelector('img.ct-card-art,.ct-slab-art img'));
       setTimeout(() => { if (phone.matches) { fadeSync(); return; } const l = $('ct-rows'); if (l.scrollHeight <= l.clientHeight + 1) { fadeSync(); return; } const rb = row.getBoundingClientRect(), lb = l.getBoundingClientRect(); if (rb.bottom > lb.bottom) l.scrollBy({ top: Math.min(rb.bottom - lb.bottom + 10, rb.top - lb.top - 4), behavior: calm.matches ? 'auto' : 'smooth' }); fadeSync(); }, 360);
     }
     pinList(pinDelta, 360);
@@ -235,7 +243,8 @@
   function tileHtml(t) {
     const src = t.art && (t.art.detail || t.art.list);
     return '<button type="button" class="ct-tile' + (t.id === justAdded ? ' ct-new' : '') + '" data-tile="' + t.id + '" aria-label="' + esc(t.name) + ', ' + badgeOf(t) + ', ' + amtText(t) + '">' +
-      '<span class="ct-tile-art">' + (src ? '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async">' : '<i>' + esc(t.name) + '</i>') + '</span>' +
+      (G && G.of(t) ? '<span class="ct-tile-art ct-slabbed">' + G.slab(t, src ? '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async">' : '<i class="sl-ph"></i>') + '</span>'
+        : '<span class="ct-tile-art">' + (src ? '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async">' : '<i>' + esc(t.name) + '</i>') + '</span>') +
       '<b class="ct-tile-nm"><span class="ct-tile-full">' + esc(t.name) + (t.qty > 1 ? ' ×' + t.qty : '') + '</span><span class="ct-tile-short">' + esc(shortName(t.name)) + '</span></b>' +
       '<small class="ct-tile-ln"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span><span class="ct-tile-meta">' + badgeOf(t) + ' · ' + niceDate(t.date) + '</span><span class="ct-tile-pl">' + esc(t.platform || badgeOf(t)) + '</span></small>' +
       '<strong class="ct-tile-amt ' + t.type + '">' + amtText(t) + '</strong></button>';
@@ -261,8 +270,9 @@
     const X = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
     const A = d => '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + (d < 0 ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6') + '"/></svg>';
     gp.innerHTML = '<div class="gp-in"><i class="gp-grab" aria-hidden="true"></i><button type="button" class="gp-x" data-gx aria-label="Close">' + X + '</button>' +
-      '<div class="gp-art">' + (src ? '<img src="' + esc(src) + '" alt="">' : '<i>' + esc(t.name) + '</i>') + '</div>' +
-      '<div class="gp-body"><small class="gp-line"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span>' + badgeOf(t) + ' · ' + (t.condition ? esc(condShort(t.condition)) + ' · ' : '') + (t.platform ? esc(t.platform) + ' · ' : '') + niceDate(t.date) + '</small>' +
+      (G && G.of(t) ? '<div class="gp-art ct-slabbed">' + G.slab(t, src ? '<img src="' + esc(src) + '" alt="">' : '<i class="sl-ph"></i>') + '</div>'
+        : '<div class="gp-art">' + (src ? '<img src="' + esc(src) + '" alt="">' : '<i>' + esc(t.name) + '</i>') + '</div>') +
+      '<div class="gp-body"><small class="gp-line"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span>' + badgeOf(t) + ' · ' + (G && G.of(t) ? esc(G.label(G.of(t))) + ' · ' : t.condition ? esc(condShort(t.condition)) + ' · ' : '') + (t.platform ? esc(t.platform) + ' · ' : '') + niceDate(t.date) + '</small>' +
       '<h2 class="gp-nm">' + esc(t.name) + (t.qty > 1 ? ' ×' + t.qty : '') + '</h2>' +
       moneyHtml(t) + '<div class="ct-row-expanded-info">' + factsHtml(t) + ACTS.replace(/data-act=/g, 'data-gact=') + '</div></div>' +
       (ids.length > 1 ? '<button type="button" class="gp-nav gp-prev" data-gstep="-1" aria-label="Previous card"' + (i <= 0 ? ' disabled' : '') + '>' + A(-1) + '</button><button type="button" class="gp-nav gp-next" data-gstep="1" aria-label="Next card"' + (i >= ids.length - 1 ? ' disabled' : '') + '>' + A(1) + '</button>' : '') + '</div>';
@@ -330,9 +340,9 @@
       const open = expanded === t.id, badge = t.type === 'sale' ? 'Sale' : t.type === 'refund' ? 'Refund' : 'Purchase';
       const after = t.type === 'sale' ? ' &nbsp; After fees <em>' + money(t.net) + '</em>' : '';
       const verb = t.type === 'sale' ? 'Sold' : t.type === 'refund' ? 'Refunded to buyer' : 'Paid';
-      chunks.push('<div class="ct-row ' + (open ? 'expanded' : '') + (t.id === justAdded ? ' ct-new' : '') + '"><button type="button" class="ct-row-toggle" data-tx="' + t.id + '" aria-expanded="' + open + '" aria-label="' + (open ? 'Collapse' : 'Expand') + ' ' + esc(t.name) + '">' + artHtml(t, open) + '<div class="ct-expanded-right"><div class="ct-row-meta">' + shortDate(t.date) + (t.platform ? ' · ' + esc(t.platform) : '') + '</div><div class="ct-row-name">' + esc(t.name) + (t.qty > 1 ? ' ×' + t.qty : '') + '</div><div class="ct-row-bottom">' + verb + ' <strong>' + money(t.amount) + '</strong>' + after + '</div>' +
+      chunks.push('<div class="ct-row ' + (open ? 'expanded' : '') + (t.id === justAdded ? ' ct-new' : '') + '"><button type="button" class="ct-row-toggle" data-tx="' + t.id + '" aria-expanded="' + open + '" aria-label="' + (open ? 'Collapse' : 'Expand') + ' ' + esc(t.name) + '">' + artHtml(t, open) + '<div class="ct-expanded-right"><div class="ct-row-meta">' + shortDate(t.date) + (t.platform ? ' · ' + esc(t.platform) : '') + '</div><div class="ct-row-name">' + esc(t.name) + (t.qty > 1 ? ' ×' + t.qty : '') + (G ? G.chip(t) : '') + '</div><div class="ct-row-bottom">' + verb + ' <strong>' + money(t.amount) + '</strong>' + after + '</div>' +
         // desktop: one quiet line under the name (type, platform, date) and the money on the right edge
-        '<div class="ct-row-line"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span>' + badge + ' · ' + (t.condition ? '<span class="ct-cond" title="' + esc(t.condition) + '">' + esc(condShort(t.condition)) + ' · </span>' : '') + (t.platform ? esc(t.platform) + ' · ' : '') + niceDate(t.date) + '</div>' + (open ? moneyHtml(t) : '') + '</div>' +
+        '<div class="ct-row-line"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span>' + badge + ' · ' + (condOf(t) ? '<span class="ct-cond" title="' + esc(t.condition) + '">' + esc(condShort(t.condition)) + ' · </span>' : '') + (t.platform ? esc(t.platform) + ' · ' : '') + niceDate(t.date) + '</div>' + (open ? moneyHtml(t) : '') + '</div>' +
         '<span class="ct-row-amt ' + t.type + '"><strong>' + amtText(t) + '</strong><small>' + (t.type === 'sale' ? money(t.net) + ' after fees' : t.type === 'refund' ? 'Refunded' : 'Paid') + '</small></span><span class="ct-tag ' + t.type + '">' + badge + '</span><span class="ct-row-chevron" aria-hidden="true">' + (open ? '−' : '+') + '</span></button>' + (open ? detailsHtml(t) : '') + '</div>');
       lastRow = chunks.length - 1;
     });
@@ -378,12 +388,12 @@
       return;
     }
     // the card art in an open entry opens the art viewer (instead of closing the entry)
-    const zart = e.target.closest('.ct-row.expanded img.ct-card-art');
+    const zart = e.target.closest('.ct-row.expanded img.ct-card-art,.ct-row.expanded .ct-slab-art img');
     if (zart && window.CTZoom) { e.stopPropagation(); window.CTZoom.open(zart.dataset.full || zart.src, zart); return; }
     const tile = e.target.closest('[data-tile]'); if (tile) { openGP(tile.dataset.tile); return; }
     const tg = e.target.closest('.ct-row-toggle'); if (tg) toggle(tg.dataset.tx);
   });
-  $('ct-rows').addEventListener('pointerover', e => { const tg = e.target.closest && e.target.closest('.ct-row-toggle'); const a = tg && tg.querySelector('img.ct-card-art'); if (a && !a.dataset.warm && !a.dataset.loaded) { a.dataset.warm = 1; const w = new Image(); w.src = a.dataset.full; } }, { passive: true });
+  $('ct-rows').addEventListener('pointerover', e => { const tg = e.target.closest && e.target.closest('.ct-row-toggle'); const a = tg && tg.querySelector('img.ct-card-art,.ct-slab-art img'); if (a && !a.dataset.warm && !a.dataset.loaded) { a.dataset.warm = 1; const w = new Image(); w.src = a.dataset.full; } }, { passive: true });
   $('ct-rows').addEventListener('scroll', fadeSync, { passive: true });
 
   function clearFilters() {

@@ -1961,3 +1961,39 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 .app-menu.am .am-flash::after{content:"";position:absolute;inset:0;border-radius:12px;background:var(--tab-onbg,rgba(176,18,61,.12));pointer-events:none;animation:amFlash 1.6s ease both}
 @keyframes amFlash{0%,35%{opacity:1}100%{opacity:0}}
 @media(max-width:760px){.app-menu.am .am-q{height:42px;margin:2px 14px 10px}.app-menu.am .am-q input{font-size:16px}}
+
+/* ===== v50.29 graded cards: a slab drawn in code (clear case, plain label, the card in its well). Sizes follow the slab's
+   own width, so the same markup reads right in a list row, each grid size and the details panel ===== */
+:root{--sl-case:linear-gradient(155deg,rgba(255,255,255,.8),rgba(222,227,234,.6) 40%,rgba(255,255,255,.66) 70%,rgba(206,213,222,.6));--sl-rim:inset 0 0 0 1.5px rgba(255,255,255,.95),inset 0 0 0 2.6px rgba(150,162,176,.38);--sl-drop:0 1px 2px rgba(0,0,0,.12),0 12px 26px -14px rgba(0,0,0,.45);--sl-well:linear-gradient(180deg,rgba(255,255,255,.4),rgba(196,203,212,.38));--sl-wellrim:inset 0 0 0 1px rgba(140,152,166,.42),inset 0 2px 6px rgba(0,0,0,.08);--sl-lbl:#fff;--sl-ink:#1d1d1b;--sl-sub:#7d7a72;--sl-shine:.55;--sl-chip:#ecebe5;--sl-chipink:#45433f}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sl-case:linear-gradient(155deg,rgba(255,255,255,.17),rgba(255,255,255,.06) 40%,rgba(255,255,255,.12) 70%,rgba(255,255,255,.05));--sl-rim:inset 0 0 0 1.5px rgba(255,255,255,.24),inset 0 0 0 2.6px rgba(255,255,255,.06);--sl-drop:0 1px 2px rgba(0,0,0,.4),0 12px 26px -14px rgba(0,0,0,.85);--sl-well:rgba(0,0,0,.28);--sl-wellrim:inset 0 0 0 1px rgba(255,255,255,.12),inset 0 2px 6px rgba(0,0,0,.3);--sl-lbl:#f3f1ea;--sl-ink:#1d1d1b;--sl-sub:#77746c;--sl-shine:.2;--sl-chip:#34312d;--sl-chipink:#e6e3da}}
+:root[data-theme="dark"]{--sl-case:linear-gradient(155deg,rgba(255,255,255,.17),rgba(255,255,255,.06) 40%,rgba(255,255,255,.12) 70%,rgba(255,255,255,.05));--sl-rim:inset 0 0 0 1.5px rgba(255,255,255,.24),inset 0 0 0 2.6px rgba(255,255,255,.06);--sl-drop:0 1px 2px rgba(0,0,0,.4),0 12px 26px -14px rgba(0,0,0,.85);--sl-well:rgba(0,0,0,.28);--sl-wellrim:inset 0 0 0 1px rgba(255,255,255,.12),inset 0 2px 6px rgba(0,0,0,.3);--sl-lbl:#f3f1ea;--sl-ink:#1d1d1b;--sl-sub:#77746c;--sl-shine:.2;--sl-chip:#34312d;--sl-chipink:#e6e3da}
+.slab{display:block;position:relative;width:82.5%;aspect-ratio:3.1/5.25;container:slab/inline-size;margin:auto;font-style:normal}
+.sl-in{position:absolute;inset:0;display:flex;flex-direction:column;gap:3.5cqw;padding:5cqw;border-radius:4.5cqw;background:var(--sl-case);box-shadow:var(--sl-rim),var(--sl-drop);box-sizing:border-box}
+.sl-in::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:var(--sl-shine);background:linear-gradient(115deg,transparent 30%,#fff 38%,transparent 46%,transparent 70%,rgba(255,255,255,.5) 74%,transparent 78%)}
+.sl-lbl{flex:none;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:3cqw;padding:3.6cqw 4.4cqw;border-radius:2.6cqw;background:var(--sl-lbl);color:var(--sl-ink);box-shadow:0 0 0 1px rgba(0,0,0,.08);text-align:left;line-height:1.15}
+.sl-co{font-size:5.6cqw;font-weight:800;letter-spacing:.09em;color:var(--sl-sub)}
+.sl-nm{font-size:6.6cqw;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em}
+.sl-meta{font-size:4.6cqw;font-weight:650;color:var(--sl-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.sl-gr{grid-row:1/4;grid-column:2;text-align:center;line-height:1}
+.sl-gr b{display:block;font-size:17cqw;font-weight:800;letter-spacing:-.05em}
+.sl-gr small{display:block;margin-top:.6cqw;font-size:4cqw;font-weight:800;letter-spacing:.06em;color:var(--sl-sub);white-space:nowrap}
+.sl-tiny{display:none}
+.sl-well{flex:1;min-height:0;position:relative;border-radius:3cqw;background:var(--sl-well);box-shadow:var(--sl-wellrim)}
+.slab .sl-well>img{position:absolute;inset:4cqw;margin:auto;width:auto;height:auto;max-width:calc(100% - 8cqw);max-height:calc(100% - 8cqw);object-fit:contain;border-radius:2.6cqw;box-shadow:0 1px 4px rgba(0,0,0,.28);display:block;background:none}
+.slab .sl-ph{position:absolute;inset:6cqw;border-radius:3cqw;background:var(--s-track)}
+/* mid-size slabs: the label keeps the company, the name and the grade */
+@container slab (max-width:175px){.sl-meta,.sl-gr small{display:none}.sl-gr{grid-row:1/3}.sl-co{font-size:6.4cqw}.sl-nm{font-size:7.6cqw}.sl-gr b{font-size:19cqw}}
+/* small slabs: just "PSA 10" */
+@container slab (max-width:118px){.sl-lbl{display:block;text-align:center;padding:3cqw 2cqw}.sl-co,.sl-nm,.sl-meta,.sl-gr{display:none}.sl-tiny{display:block;font-size:14cqw;font-weight:800;letter-spacing:-.01em;white-space:nowrap}}
+/* list-row icons: a blank label strip, like a slab seen from across the table */
+@container slab (max-width:60px){.sl-in{padding:6cqw;gap:5cqw;border-radius:7cqw}.sl-lbl{height:16cqw;padding:0;border-radius:3cqw}.sl-tiny{display:none}.sl-well{border-radius:4cqw}.slab .sl-well>img{inset:5cqw;max-width:calc(100% - 10cqw);max-height:calc(100% - 10cqw);border-radius:3cqw;box-shadow:none}}
+/* where the slab sits: the card's own box, so rows and grids stay lined up */
+.ct-tile-art.ct-slabbed,.gp-art.ct-slabbed{background:none!important;box-shadow:none!important;overflow:visible;border-radius:0!important}
+.ct-demo .ct-row .ct-card-art.ct-slab-art{display:grid;place-items:center;aspect-ratio:44/61;height:auto;border-radius:0!important;background:none;overflow:visible}
+.ct-slab-art .slab{width:82%}
+.ct-row.expanded .ct-slab-art .sl-well>img,.ct-gp .gp-art.ct-slabbed .sl-well>img{cursor:zoom-in}
+.ct-gp .gp-art.ct-slabbed img:hover{transform:none;box-shadow:0 1px 4px rgba(0,0,0,.28)}
+.sl-chip{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:99px;background:var(--sl-chip);color:var(--sl-chipink);font-size:.72em;font-weight:800;letter-spacing:.01em;vertical-align:.12em;white-space:nowrap;line-height:1.5}
+.ed .ed-row.ed-grade{grid-template-columns:minmax(0,1fr) minmax(0,.8fr) minmax(0,1.2fr)}
+.ed .ed-row.ed-grade[hidden]{display:none}
+@media(max-width:350px){.ed .ed-g-when .ed-row.ed-grade{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.ed .ed-grade .ed-f:last-child{grid-column:1/-1}}

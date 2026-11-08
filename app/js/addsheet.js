@@ -154,7 +154,7 @@
     const sale = st.type === 'sale', c = st.card, v = S.toCents(price.value), fe = S.toCents(fees.value) || 0, sh = S.toCents(ship.value) || 0, k = v - fe - sh;
     const name = c.typed ? c.n : listName(c);
     try {
-      const e = await S.add({ type: st.type, name, platform: $('as-plat').value, qty: st.qty, amount: v, fees: sale ? fe : null, ship: sale ? sh : null, condition: COND_FULL[CONDS[st.cond]], art: c.art || null, note: st.grade ? 'Graded ' + st.grade : '', unmatched: !!c.typed });
+      const e = await S.add({ type: st.type, name, platform: $('as-plat').value, qty: st.qty, amount: v, fees: sale ? fe : null, ship: sale ? sh : null, condition: st.grade ? 'Graded' : COND_FULL[CONDS[st.cond]], grade: st.grade && window.CTGrade ? window.CTGrade.parse(st.grade) : undefined, art: c.art || null, note: st.grade && !window.CTGrade ? 'Graded ' + st.grade : '', unmatched: !!c.typed });
       const amt = sale ? k : v;
       st.rows.unshift({ n: c.n, m: (c.typed ? '' : c.s + ' · ') + (st.qty > 1 ? '×' + st.qty + ' · ' : '') + CONDS[st.cond], h: c.h, art: c.art, sale, amt, qty: st.qty, isNew: true, id: e.id });
       st.total += sale ? amt : -amt; window.ctBuzz && window.ctBuzz();
