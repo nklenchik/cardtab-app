@@ -1993,7 +1993,7 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 .ct-slab-art .slab{width:82%}
 .ct-row.expanded .ct-slab-art .sl-well>img,.ct-gp .gp-art.ct-slabbed .sl-well>img{cursor:zoom-in}
 .ct-gp .gp-art.ct-slabbed img:hover{transform:none;box-shadow:0 1px 4px rgba(0,0,0,.28)}
-.sl-chip{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:99px;background:var(--sl-chip);color:var(--sl-chipink);font-size:.72em;font-weight:800;letter-spacing:.01em;vertical-align:.12em;white-space:nowrap;line-height:1.5}
+.sl-chip{display:inline-block;margin-left:0;padding:1px 7px;border-radius:99px;background:var(--sl-chip);color:var(--sl-chipink);font-size:.72em;font-weight:800;letter-spacing:.01em;vertical-align:.12em;white-space:nowrap;line-height:1.5}
 .ed .ed-row.ed-grade{grid-template-columns:minmax(0,1fr) minmax(0,.8fr) minmax(0,1.2fr)}
 .ed .ed-row.ed-grade[hidden]{display:none}
 @media(max-width:350px){.ed .ed-g-when .ed-row.ed-grade{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.ed .ed-grade .ed-f:last-child{grid-column:1/-1}}
@@ -2009,4 +2009,4 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 /* open rows: the name runs full width and the chip follows it inline */
 .ct-demo .ct-row.expanded .ct-row-name.ct-rn-g{display:block!important}
 .ct-demo .ct-row.expanded .ct-rn-g .ct-rn{display:inline}
-.ct-demo .ct-row.expanded .ct-rn-g .sl-chip{margin:0 0 0 8px;vertical-align:.14em}
+.ct-demo .ct-row.expanded .ct-rn-g .sl-chip{margin:0;vertical-align:.14em}
