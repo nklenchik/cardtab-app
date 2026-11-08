@@ -215,6 +215,29 @@
     l._pinEnd = Math.max(l._pinEnd || 0, now + ms); clearTimeout(l._pinT);
     l._pinT = setTimeout(() => { l.style.height = ''; l.style.overflow = ''; l._pinEnd = 0; }, l._pinEnd - now);
   }
+  // v50.57: an entry that opens stays put. While the one above it closes, the page (phones) or the list (computers) scrolls
+  // along so the opening entry keeps its place on screen; once open, it scrolls just enough to show the whole entry, but its
+  // top never goes above the top of the visible area (under the header)
+  function scrollerOf() { const l = $('ct-rows'); return !phone.matches && l.scrollHeight > l.clientHeight + 1 ? l : null; }
+  function viewBox(sc) {
+    if (sc) { const r = sc.getBoundingClientRect(); return { top: r.top + 6, bottom: r.bottom - 10 }; }
+    const hd = document.querySelector('.sh-in'), tb = document.getElementById('ct-tbar');
+    const top = Math.max(0, hd ? hd.getBoundingClientRect().bottom : 0) + 8;
+    const tbt = tb && tb.offsetParent ? tb.getBoundingClientRect().top : innerHeight; return { top, bottom: Math.min(innerHeight, tbt) - 12 };
+  }
+  const scrollBy2 = (sc, dy, smooth) => { if (!dy) return; const o = { top: dy, behavior: smooth && !calm.matches ? 'smooth' : 'auto' }; if (sc) sc.scrollBy(o); else window.scrollBy(o); };
+  function holdRow(row, ms) {
+    const sc = scrollerOf(), vb = viewBox(sc), y0 = Math.max(vb.top, row.getBoundingClientRect().top), end = performance.now() + ms;
+    const l = $('ct-rows'); l.style.overflowAnchor = 'none'; document.documentElement.style.overflowAnchor = 'none';
+    const step = () => { if (!row.isConnected) return done(); const dy = row.getBoundingClientRect().top - y0; if (Math.abs(dy) > .5) scrollBy2(sc, dy);
+      if (performance.now() < end) requestAnimationFrame(step); else done(); };
+    const done = () => { l.style.overflowAnchor = ''; document.documentElement.style.overflowAnchor = '';
+      if (!row.isConnected || !row.classList.contains('expanded')) return; const v = viewBox(scrollerOf()), r = row.getBoundingClientRect();
+      if (r.top < v.top) scrollBy2(scrollerOf(), r.top - v.top, true);
+      else if (r.bottom > v.bottom) scrollBy2(scrollerOf(), Math.min(r.bottom - v.bottom, r.top - v.top), true);
+      fadeSync(); };
+    requestAnimationFrame(step);
+  }
   function toggle(id) {
     const list = $('ct-rows'), prevId = expanded; expanded = expanded === id ? null : id;
     let pinDelta = 0;
@@ -225,7 +248,7 @@
       row.insertAdjacentHTML('beforeend', detailsHtml(t));
       { const er = row.querySelector('.ct-expanded-right'), om = er.querySelector('.ct-money'); if (om) om.remove(); er.insertAdjacentHTML('beforeend', moneyHtml(t)); }
       pinDelta += flip(row, () => row.classList.add('expanded')) || 0; setBtn(btn, true); fullArt(btn.querySelector('img.ct-card-art,.ct-slab-art img'));
-      setTimeout(() => { if (phone.matches) { fadeSync(); return; } const l = $('ct-rows'); if (l.scrollHeight <= l.clientHeight + 1) { fadeSync(); return; } const rb = row.getBoundingClientRect(), lb = l.getBoundingClientRect(); if (rb.bottom > lb.bottom) l.scrollBy({ top: Math.min(rb.bottom - lb.bottom + 10, rb.top - lb.top - 4), behavior: calm.matches ? 'auto' : 'smooth' }); fadeSync(); }, 360);
+      holdRow(row, calm.matches ? 0 : 360);
     }
     pinList(pinDelta, 360);
   }
