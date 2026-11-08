@@ -190,7 +190,26 @@
     if (p === 'board') { const c = document.querySelector('.cbx'); return c ? [c.scrollHeight, c.clientHeight] : [0, 0]; }
     const d = frameDoc(); return d && d.documentElement ? [d.documentElement.scrollHeight, d.defaultView.innerHeight] : [0, 0]; };
   let tbY = 0, tbPage = null, tbHidden = false;
-  function tbSet(hide) { if (hide === tbHidden) return; tbHidden = hide; document.documentElement.classList.toggle('tb-away', hide); }
+  // v50.18: in a browser tab (not the installed app) the bar shrinks to icons instead of hiding, since the browser's own
+  // toolbar hides at the same moment. Installed = standalone, fullscreen or minimal-ui (Home Screen apps on iPhone and Android).
+  const installedQ = ['standalone', 'fullscreen', 'minimal-ui'].map(m => matchMedia('(display-mode: ' + m + ')'));
+  const inBrowser = () => !(navigator.standalone === true || installedQ.some(q => q.matches));
+  const HTML = document.documentElement;
+  const webMode = () => { const w = inBrowser(); HTML.classList.toggle('tb-web', w); if (!w) HTML.classList.remove('tb-mini'); return w; };
+  installedQ.forEach(q => q.addEventListener && q.addEventListener('change', () => { webMode(); tbHidden = false; HTML.classList.remove('tb-away', 'tb-mini'); }));
+  webMode();
+  // the small bar: each tab slides left and narrows to about 52px, its icon kept its own shape, all inside a 46px pill
+  if (tbar) tbar.querySelectorAll('button').forEach(b => { [...b.childNodes].forEach(n => { if (n.nodeType === 3 && n.textContent.trim()) { const l = document.createElement('b'); l.className = 'tbl'; l.style.fontWeight = 'inherit'; l.textContent = n.textContent; n.replaceWith(l); } }); });
+  function miniGeo() {
+    if (!tbar) return; const H0 = tbar.offsetHeight; if (!H0) return; const bs = [...tbar.querySelectorAll('button')], cy = H0 + 1 - 23;
+    bs.forEach((b, i) => { const sp = b.querySelector('span'); if (!sp) return; const bw = b.offsetWidth, ms = 52 / bw;
+      const scx = b.offsetLeft + sp.offsetLeft + sp.offsetWidth / 2, scy = b.offsetTop + sp.offsetTop + sp.offsetHeight / 2, bcx = b.offsetLeft + bw / 2;
+      const tx = 5 + 26 + 52 * i, dx = tx - (bcx + (scx - bcx) * ms);
+      b.style.setProperty('--mx', dx.toFixed(1) + 'px'); b.style.setProperty('--my', (cy - scy).toFixed(1) + 'px'); b.style.setProperty('--ms', ms.toFixed(4)); b.style.setProperty('--mi', (1 / ms).toFixed(4)); });
+  }
+  addEventListener('resize', () => requestAnimationFrame(miniGeo));
+  function tbSet(hide) { if (hide === tbHidden) return; tbHidden = hide;
+    if (webMode()) { if (hide) miniGeo(); HTML.classList.toggle('tb-mini', hide); } else HTML.classList.toggle('tb-away', hide); }
   function tbScroll() {
     if (!PH() || document.querySelector('dialog[open]')) { tbY = scrollOf(cur); return; }
     const y = scrollOf(cur), [sh2, vh] = extentOf(cur);
