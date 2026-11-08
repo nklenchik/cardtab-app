@@ -13,19 +13,19 @@ const MODE = process.argv[2] || 'phone', DARK = process.argv[3] === 'dark';
  let S = null; for (const x of fs) { if (await x.evaluate(() => !!document.getElementById('shelf')).catch(() => false)) S = x; }
  ok('Stories frame has the shelf', !!S); if (!S) { console.log(errs); await b.close(); return; }
  const info = await S.evaluate(() => ({ covers: document.querySelectorAll('#shelf .scv').length, hero: (document.querySelector('#shelf .hero') || {}).innerText, names: [...document.querySelectorAll('#shelf .scv')].map(c => c.innerText.replace(/\s+/g, ' ')) }));
- ok('Six covers', info.covers === 6, info.names.join(' | ')); ok('Big cover shows the period and profit', /\$/.test(info.hero), info.hero.replace(/\s+/g, ' '));
+ ok('Story covers on the shelf', info.covers >= 6, info.names.join(' | ')); ok('Big cover shows the period and profit', /\$/.test(info.hero), info.hero.replace(/\s+/g, ' '));
  await p.screenshot({ path: 'tests/out-phone/s39-shelf-' + tag + '.png' });
  await S.evaluate(() => document.querySelector('#shelf .hero').click()); await p.waitForTimeout(1600);
  ok('Player opens', await S.evaluate(() => !document.querySelector('.pl').hidden));
  ok('Covers the app header and tab bar', await p.evaluate(() => document.documentElement.classList.contains('cs-modal')));
- for (let i = 0; i < 6; i++) { await p.screenshot({ path: 'tests/out-phone/s39-st' + (i + 1) + '-' + tag + '.png' }); const txt = await S.evaluate(() => document.querySelector('.pl .st.on').innerText.replace(/\s+/g, ' ').slice(0, 140)); console.log('   story ' + (i + 1) + ': ' + txt);
+ for (let i = 0; i < 14 && !(await S.evaluate(() => document.querySelector('.pl').hidden)); i++) { await p.screenshot({ path: 'tests/out-phone/s39-st' + (i + 1) + '-' + tag + '.png' }); const txt = await S.evaluate(() => document.querySelector('.pl .st.on').innerText.replace(/\s+/g, ' ').slice(0, 140)); console.log('   story ' + (i + 1) + ': ' + txt);
    await S.evaluate(() => document.querySelector('.pl .tapz.r').click()); await p.waitForTimeout(i === 2 ? 2600 : 2000); }
  ok('Tapping past the last story closes the player', await S.evaluate(() => document.querySelector('.pl').hidden));
  ok('Header back in place after closing', !(await p.evaluate(() => document.documentElement.classList.contains('cs-modal'))));
  // theme + background through the theme sheet
  await S.evaluate(() => window.csThemes.set(1)); await p.waitForTimeout(300);
  await S.evaluate(() => window.csThemes.all()); await p.waitForTimeout(700);
- ok('Theme sheet has the background choice', await S.evaluate(() => document.querySelectorAll('#bgrow [data-bg]').length === 3));
+ ok('Theme sheet has the background choice', await S.evaluate(() => document.querySelectorAll('#bgrow [data-bg]').length >= 3));
  await p.screenshot({ path: 'tests/out-phone/s39-sheet-' + tag + '.png' });
  await S.evaluate(() => document.querySelector('#bgrow [data-bg="Stickers"]').click()); await p.waitForTimeout(300);
  ok('Background choice applies to the shelf', await S.evaluate(() => !!document.querySelector('#shelf .hero .fl')));

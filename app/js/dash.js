@@ -242,7 +242,8 @@
   let gal = false; try { const v0 = localStorage.getItem('ct.view'); gal = v0 ? v0 === 'gallery' : !matchMedia('(max-width:760px)').matches; } catch (e) {}
   // v50.28: three grid sizes (small, medium, large), kept separately for phones and computers like list or grid
   let gsz = 'm'; try { const g0 = localStorage.getItem('ct.gsize'); if (g0 === 's' || g0 === 'l') gsz = g0; } catch (e) {}
-  const shortName = n => String(n || '').split(' - ')[0];
+  // v50.51: the short caption is the card itself (same picker as the slab label), so "Set - Card - 199/165" names don't show the set
+  const shortName = n => { const s = window.CTGrade ? CTGrade.cardName({ name: n }) : ''; return s || String(n || '').split(' - ')[0]; };
   function tileHtml(t) {
     const src = t.art && (t.art.detail || t.art.list);
     return '<button type="button" class="ct-tile' + (t.id === justAdded ? ' ct-new' : '') + '" data-tile="' + t.id + '" aria-label="' + esc(t.name) + ', ' + badgeOf(t) + ', ' + amtText(t) + '">' +

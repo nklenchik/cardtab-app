@@ -53,21 +53,26 @@
   const RAR = /\(?\b(SPR|SCR|SLR|SEC|TPR|UR|SR|HR|AR|SAR|SIR|CHR|CSR|IR|ACE)\b\)?/;
   const NUM = /#?\b(?:[A-Z]{0,4}\d{1,4}\/[A-Z]{0,4}\d{1,4}|[A-Z]{1,4}\d{1,3}-\d{2,3}|P-\d{2,4})\b/gi;
   const hasNum = x => { NUM.lastIndex = 0; const r = NUM.test(x); NUM.lastIndex = 0; return r; };
-  const SETY = /:|\b(set|series|pack|box|deck|vol(?:ume)?|collection|expansion|booster|promos?|celebration|edition)\b|^(?:SV|SWSH|SM|XY|BW|ME|OP|EB|ST|FB|BT)\d/i;
+  const SETY = /\S:|\b(set|series|pack|box|deck|vol(?:ume)?|collection|expansion|booster|promos?|celebration|edition)\b|^(?:SV|SWSH|SM|XY|BW|ME|OP|EB|ST|FB|BT)\d/i;
   function cardName(e) {
-    let n = title(e).replace(/\s*[×x]\d+$/, ''), rar = '';
+    let n = title(e).replace(/\s*[×x]\d+$/, '').replace(/^(?:19|20)\d\d\s+/, ''), rar = '';   // v50.51: a leading year ("2023 Pokemon …")
     const hadGame = GAME.test(n); n = n.replace(GAME, '');
     const rm = RAR.exec(n); if (rm) { rar = rm[1]; n = n.replace(rm[0], ' '); }
     let segs = n.split(/\s+[-–|]\s+|\s*\/\s+|\s+\/\s*/).map(x => x.trim()).filter(Boolean);
-    segs = segs.filter(x => x.replace(NUM, '').replace(/[\s#.,]/g, '') !== '');   // drop bare numbers
+    // v50.51: the part right before a bare card number is the card ("Name - 199/165 - Set" and "Set - Name - 199/165 - Rarity")
+    const bare = x => x.replace(NUM, '').replace(/[\s#.,]/g, '') === '';
+    const k = segs.findIndex(bare), beforeNum = k > 0 && !bare(segs[k - 1]) && !SETY.test(segs[k - 1]) ? segs[k - 1] : '';
+    segs = segs.filter(x => !bare(x));   // drop bare numbers
     let pick = segs[0] || '';
-    if (segs.length > 1) {
+    if (beforeNum) pick = beforeNum;
+    else if (segs.length > 1) {
       const card = segs.filter(x => !SETY.test(x)), withNum = segs.find(x => hasNum(x) && !SETY.test(x));
       pick = withNum || card[0] || segs[0];
     }
     // "Set Name: Card Name" after a game ("Pokemon Surging Sparks: Pikachu ex")
-    if (/:/.test(pick) && (hadGame || segs.length === 1)) { const after = pick.slice(pick.lastIndexOf(':') + 1).trim(); if (after) pick = after; }
-    pick = pick.replace(NUM, ' ').replace(/\s{2,}/g, ' ').replace(/[\s,-]+$/, '').trim();
+    const cm = /\S:(?!.*\S:)/.exec(pick);   // v50.51: only "Set: Card"; "Son Gohan : Youth" keeps its colon
+    if (cm && (hadGame || segs.length === 1)) { const after = pick.slice(cm.index + 2).trim(); if (after) pick = after; }
+    pick = pick.replace(NUM, ' ').replace(/\s#\d{1,4}\b/g, ' ').replace(/\s{2,}/g, ' ').replace(/[\s,-]+$/, '').trim();
     return (pick || title(e)) + (rar ? ' ' + rar : '');
   }
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -77,7 +82,8 @@
   function slab(e, art, cls) {
     const gr = of(e); if (!gr) return '';
     const meta = [numOf(e.name) || (e.no && /\d/.test(e.no) && e.no.length < 14 ? e.no : ''), gr.cert ? '#' + gr.cert : ''].filter(Boolean).join(' · ');
-    return '<span class="slab' + (cls ? ' ' + cls : '') + '" aria-label="' + esc(label(gr) + (gr.w ? ' ' + gr.w : '')) + ' graded">' +
+    const nm = cardName(e), long = nm.length > 20 ? (nm.length > 34 ? ' sl-long sl-xlong' : ' sl-long') : '';   // v50.51: long names get a smaller third line instead of "…"
+    return '<span class="slab' + long + (cls ? ' ' + cls : '') + '" aria-label="' + esc(label(gr) + (gr.w ? ' ' + gr.w : '')) + ' graded">' +
       '<span class="sl-in"><span class="sl-lbl">' +
         '<span class="sl-co">' + esc(gr.co) + '</span><span class="sl-nm">' + esc(cardName(e)) + '</span>' + (meta ? '<span class="sl-meta">' + esc(meta) + '</span>' : '') +
         '<span class="sl-gr"><b>' + esc(gr.g) + '</b><small>' + esc(gr.w || word(gr.co, gr.g)) + '</small></span>' +

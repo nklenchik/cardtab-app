@@ -5,3 +5,4 @@ node_modules/
 tests/out-desktop/
 tests/out-phone/
 tests/tests/
+tests/out-qa/

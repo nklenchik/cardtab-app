@@ -2078,3 +2078,18 @@ dialog.au::backdrop{background:rgba(8,7,6,.6)}
 .au-ghost{all:unset;text-align:center;font-weight:700;font-size:14px;color:var(--ct-muted);cursor:pointer;padding:4px}
 /* v50.49: card art can't be saved from the app: no long-press menu (iPhone/iPad), no dragging pictures out, no text-select highlight */
 img,.slab,.sl-well,.zm-slab{-webkit-touch-callout:none;-webkit-user-drag:none;user-drag:none;-webkit-user-select:none;user-select:none}
+
+/* v50.51: narrow computer windows (761-1060px): the tabs show their icons only (labels stay for screen readers) and Add New
+   becomes a round +, so the search box no longer slides under the tabs */
+@media(min-width:761px) and (max-width:1060px){
+ .sh-tabs .ct-tabs button{width:56px!important;padding:0!important;font-size:0!important;gap:0!important}
+ .sha[data-p="entries"] .ct-add{width:44px!important;min-width:44px!important;height:44px!important;padding:0!important;justify-content:center;border-radius:999px!important}
+ .sha[data-p="entries"] .ct-add .ct-add-label{display:none}
+}
+@media(min-width:761px) and (max-width:900px){
+ .sh-acts .sh-pillbtn:not(.sh-done){font-size:0!important;gap:0!important;width:44px;min-width:44px;padding:0!important;justify-content:center}
+}
+/* v50.51: long card names on big slabs (zoom, large grid, Board): slightly smaller type and up to 3 lines, like a real label */
+.slab.sl-long .sl-nm{font-size:5.9cqw;-webkit-line-clamp:3}
+.slab.sl-xlong .sl-nm{font-size:5.3cqw}
+@container slab (max-width:175px){.slab.sl-long .sl-nm{-webkit-line-clamp:2;font-size:7.6cqw}}
