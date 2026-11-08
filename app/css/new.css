@@ -1860,7 +1860,10 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
    The pill is drawn in pieces (two round ends and a middle) inside one layer: the layer scales evenly (so the ends stay
    round) while the middle narrows and the right end slides in. The icons only slide; nothing is stretched or re-blurred. ===== */
 @media(max-width:760px){
- html.tb-web{--tbe:cubic-bezier(.32,.72,0,1);--tbd:.42s}
+ /* v50.20: the same motion as the cardtab.app header: .8s each way, growing back unhurried to a soft stop, shrinking
+    slightly brisker. Labels fade out early on the way down and fade in late on the way back, so they never squeeze. */
+ html.tb-web{--tbe:cubic-bezier(.22,.61,.36,1);--tbd:.8s}
+ html.tb-web.tb-mini{--tbe:cubic-bezier(.4,0,.2,1)}
  html.tb-web .ct-dock .ct-tbar{background:none!important;border-color:transparent!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
  html.tb-web .ct-tbar .tbg{position:absolute;inset:-1px;pointer-events:none;transform-origin:0 100%;will-change:transform;transition:transform var(--tbd) var(--tbe)}
  html.tb-web .ct-tbar .tbg i{position:absolute;top:0;bottom:0;display:block;will-change:transform;transition:transform var(--tbd) var(--tbe)}
@@ -1876,9 +1879,12 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
  html.tb-mini .ct-tbar .tbg .r{transform:translate3d(var(--trx,0px),0,0)}
  html.tb-web .ct-tbar button{will-change:transform;transition:transform var(--tbd) var(--tbe),color .3s ease}
  html.tb-web .ct-tbar button span{position:relative;isolation:isolate}
- html.tb-web .ct-tbar button span::before{content:"";position:absolute;z-index:-1;inset:-7px -14px;border-radius:999px;background:var(--tab-onbg);opacity:0;transition:opacity .28s ease}
- html.tb-web .ct-tbar .tbl{transition:opacity .16s ease}
- html.tb-web .ct-tbar .tb-pill{transition:transform .46s cubic-bezier(.4,0,.2,1),width .46s cubic-bezier(.4,0,.2,1),opacity .2s ease}
+ html.tb-web .ct-tbar button span::before{content:"";position:absolute;z-index:-1;inset:-7px -14px;border-radius:999px;background:var(--tab-onbg);opacity:0;transition:opacity .45s ease}
+ html.tb-mini .ct-tbar button span::before{transition:opacity .45s ease .05s}
+ html.tb-web .ct-tbar .tbl{transition:opacity .4s ease .38s}
+ html.tb-mini .ct-tbar .tbl{transition:opacity .22s ease}
+ html.tb-web .ct-tbar .tb-pill{transition:transform .46s cubic-bezier(.4,0,.2,1),width .46s cubic-bezier(.4,0,.2,1),opacity .45s ease .2s}
+ html.tb-mini .ct-tbar .tb-pill{transition:transform .46s cubic-bezier(.4,0,.2,1),width .46s cubic-bezier(.4,0,.2,1),opacity .25s ease}
  html.tb-mini .ct-tbar{pointer-events:none}
  html.tb-mini .ct-tbar button{pointer-events:none;transform:translate3d(var(--mx,0px),var(--my,0px),0)}
  html.tb-mini .ct-tbar button span{pointer-events:auto}
