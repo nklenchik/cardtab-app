@@ -607,8 +607,11 @@ const _bs48=buildStories;buildStories=function(){const S=_bs48().concat(moreStor
 // v49.4 every story's picture fits its 9:16 frame: it sits centered in the space under the words, and if it's taller
 // than that space it scales down (from its top) so it never runs into cardtab.app or the buttons
 function fitSt(st){const sin=st.querySelector('.sin'),sv=st.querySelector('.svis'),w=sv&&sv.querySelector('.svw');if(!w)return;
+  const wall=w.querySelector('.wall');if(wall)wall.style.height='';
   w.style.transform='';sv.style.height='';const cs=getComputedStyle(sin),prev=sv.previousElementSibling;if(!sin.clientHeight)return;
   const top=prev?prev.offsetTop+prev.offsetHeight:parseFloat(cs.paddingTop),pm=sin.querySelector('.pmark'),limit=Math.min(sin.clientHeight-parseFloat(cs.paddingBottom),pm&&pm.offsetHeight?pm.offsetTop-8:1e9),avail=limit-top-22,h=w.offsetHeight;
+  // v50.25: the card wall keeps its full width (edge to edge) and just gets shorter; only other pictures scale down
+  if(wall&&h>avail&&avail>40){wall.style.height=Math.max(80,Math.floor(wall.offsetHeight-(h-avail)))+'px';return}
   if(h>avail&&avail>40){const k=avail/h;w.style.transform='scale('+k.toFixed(3)+')';sv.style.height=Math.floor(h*k)+'px'}}
 const fitAllSt=root=>{if(!root)return;root.querySelectorAll('.st').forEach(fitSt);
   root.querySelectorAll('.st img').forEach(im=>{if(!im.complete&&!im._fit){im._fit=1;im.addEventListener('load',()=>fitSt(im.closest('.st')),{once:true})}});
