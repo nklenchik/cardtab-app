@@ -41,3 +41,9 @@
     .observe(document.documentElement, { childList: true, subtree: true });
   window.CTArtRot = { turn, check };
 })();
+/* v50.49: no "Save image" from right-click or long-press on any picture in the app, and pictures can't be dragged out */
+(function () {
+  const pic = t => t && t.closest && (t.tagName === 'IMG' || t.closest('.slab,.zm-slab,.fw,.ct-tile-art,.gp-art,.ct-card-art,.au-stage'));
+  document.addEventListener('contextmenu', e => { if (pic(e.target)) e.preventDefault(); }, true);
+  document.addEventListener('dragstart', e => { if (e.target && e.target.tagName === 'IMG') e.preventDefault(); }, true);
+})();

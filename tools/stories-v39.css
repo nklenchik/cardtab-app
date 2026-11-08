@@ -684,3 +684,5 @@ html .stall{background:var(--win-veil,rgba(8,8,8,.5))}
 .st .cd.xslab .sl-in{box-shadow:var(--sl-rim),0 18px 40px rgba(0,0,0,.35)}
 /* the sticker sits below a slab's label, so it never covers the grade */
 .st .cd.xslab~.stick{top:34%}
+/* v50.49: card art can't be saved from Stories either */
+img,.slab{-webkit-touch-callout:none;-webkit-user-drag:none;-webkit-user-select:none;user-select:none}

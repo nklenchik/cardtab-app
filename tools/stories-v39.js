@@ -822,3 +822,5 @@ function saveReady(files,share){
 {const _lr=loadReal;loadReal=function(){GRM=null;return _lr.apply(this,arguments)}}
 // v50.40: on phones, Stories' sheets follow your finger like the app's (the app's js/sheetdrag.js does the work)
 try{if(parent!==window&&parent.CTSheetDrag)parent.CTSheetDrag.attach({zone:document,on:()=>matchMedia('(max-width:600px)').matches,sheetOf:t=>t.closest&&t.closest('.sheetw:not([hidden])>.sheet'),dismiss:sh=>closeSheet(sh.parentElement.id)})}catch(e){}
+document.addEventListener('contextmenu',e=>{const t=e.target;if(t&&t.closest&&(t.tagName==='IMG'||t.closest('.slab,.cd,.sfull,.st')))e.preventDefault()},true);
+document.addEventListener('dragstart',e=>{if(e.target&&e.target.tagName==='IMG')e.preventDefault()},true);

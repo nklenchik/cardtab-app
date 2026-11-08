@@ -2076,3 +2076,5 @@ dialog.au::backdrop{background:rgba(8,7,6,.6)}
 .au-err{margin:0;color:#b42318;font-weight:700;font-size:13px}
 .au-save .au-go{margin:2px 0 0}
 .au-ghost{all:unset;text-align:center;font-weight:700;font-size:14px;color:var(--ct-muted);cursor:pointer;padding:4px}
+/* v50.49: card art can't be saved from the app: no long-press menu (iPhone/iPad), no dragging pictures out, no text-select highlight */
+img,.slab,.sl-well,.zm-slab{-webkit-touch-callout:none;-webkit-user-drag:none;user-drag:none;-webkit-user-select:none;user-select:none}
