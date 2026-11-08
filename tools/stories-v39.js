@@ -94,7 +94,7 @@ function buildStories(){const b=D,x=b.x,t=x.t,M=x.M,S=[];const H=hideAmt;
   const buys=x.L.filter(e=>e.type==='purchase'),g={};let all=0;buys.forEach(e=>{const q=e.qty||1;all+=q;const k=gameOf(e)||'other';g[k]=(g[k]||0)+q});
   const top=Object.keys(g).filter(k=>k!=='other').sort((a,b)=>g[b]-g[a])[0],gp=top?Math.round(g[top]/Math.max(1,all)*100):0;
   const arts=[...new Set(x.L.map(e=>e.name).filter(artOf))].slice(0,9);
-  const col=(list,cls)=>'<div class="col'+(cls||'')+'">'+list.concat(list).map(cardEl).join('')+'</div>';
+  const col=(list,cls)=>'<div class="col'+(cls||'')+'">'+list.concat(list,list,list).map(cardEl).join('')+'</div>';
   if(all&&top)S.push({k:'The game',cover:top,h:gp>=60?'A <u style="text-decoration-color:{acc}">lot</u> of '+esc(top)+'.':gp>50?'Mostly '+esc(top)+'.':gp===50?'Half '+esc(top)+', half everything else.':'A bit of everything, led by '+esc(top)+'.',big:cntSpan(gp,'','%'),line:'of purchases were '+esc(top)+'. '+(g[top]===all?(all===1?'1 card.':'All '+all+' cards.'):g[top]+' of '+cnt(all,'card','cards')+'.'),
     vis:()=>arts.length>=3?'<div class="wall">'+col(arts.filter((_,i)=>i%3===0))+col(arts.filter((_,i)=>i%3===1),' dn')+col(arts.filter((_,i)=>i%3===2))+'</div>':'<div class="sfan">'+[...new Set(buys.map(e=>e.name))].slice(0,3).map(cardEl).join('')+'</div>'});
   else S.push({k:'The cards',cover:all?cnt(all,'card','cards'):'Cards',h:all?cnt(all,'card','cards')+' collected.':'No cards yet.',line:all?'Across every game.':'Log a purchase to start this story.',vis:()=>arts.length?'<div class="sfan">'+arts.slice(0,3).map(cardEl).join('')+'</div>':''});
@@ -223,7 +223,7 @@ paintShelf();
 // while the phone records it. Nothing is uploaded.
 const VMIME=(()=>{try{if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream)return '';return ['video/mp4;codecs=avc1.42E01E','video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9','video/webm'].find(t=>MediaRecorder.isTypeSupported(t))||''}catch(e){return ''}})();
 let FONTF=null;function canvasFont(){if(FONTF)return FONTF;FONTF=(async()=>{try{const u=new URL('fonts/manrope-latin.woff2',parent.document.baseURI).href,f=new FontFace('CTManrope','url('+u+')',{weight:'500 800'});await f.load();document.fonts.add(f);return 'CTManrope'}catch(e){return 'Manrope'}})();return FONTF}
-async function storyVideo(n,onTick){const h=await lib(),host=$('xhost');host.innerHTML='';const el=document.createElement('div');el.className='xst';el.innerHTML=stHTML(SS[n],n,true);host.appendChild(el);await inlineImgs(el);
+async function storyVideoSimple(n,onTick){const h=await lib(),host=$('xhost');host.innerHTML='';const el=document.createElement('div');el.className='xst';el.innerHTML=stHTML(SS[n],n,true);host.appendChild(el);await inlineImgs(el);
   const imgs=[...el.querySelectorAll('img')];await Promise.all(imgs.map(i=>i.complete?0:new Promise(r=>{i.onload=i.onerror=r})));try{await document.fonts.ready}catch(e){}
   const fam=await canvasFont(),fc=await fontCSS(),R=3,W=1080,H=1920,box=el.getBoundingClientRect(),rel=q=>{const r=q.getBoundingClientRect();return {x:(r.left-box.left)*R,y:(r.top-box.top)*R,w:r.width*R,h:r.height*R}};
   const big=el.querySelector('.sbig [data-count]'),bigBox=big&&rel(big.parentElement),bigCS=big&&(()=>{const cs=getComputedStyle(big.parentElement);return {color:cs.color,fontSize:cs.fontSize}})(),vis=el.querySelector('.svis'),visBox=vis&&rel(vis),stk=el.querySelector('.stick'),stkBox=stk&&rel(stk);
@@ -248,6 +248,163 @@ async function storyVideo(n,onTick){const h=await lib(),host=$('xhost');host.inn
 async function shareVideo(n,share){if(!VMIME){pl.toast('This browser can’t make videos. Try Save image.');return}
   try{const b=await storyVideo(n,k=>pl.toast('Making your video… '+Math.max(1,Math.ceil(8.2*(1-Math.min(1,k))))+'s'));const ext=/mp4/.test(b.type)?'mp4':'webm',name='Card Stories '+(n+1)+' - '+SS[n].k+'.'+ext,f=new File([b],name,{type:b.type});
     saveReady([{name,blob:b}],share)}catch(e){console.error(e);pl.toast('Couldn’t make the video. Try again.')}finally{$('xhost').innerHTML=''}}
+// ---------- v50.26 videos with each story's own motion ----------
+// A web page can't screen-record itself, so the video is rebuilt on a canvas. Before, the whole picture moved as one
+// piece with the same simple motion on every story. Now every part that moves in the app (each wall column, each card,
+// dot, bar, page, background shape and the counting numbers) is cut out on its own, and the story's real animation is
+// replayed on a hidden copy to read, frame by frame, where each part is, how it's turned and how faded. The canvas then
+// redraws the parts in those places while the phone records, so the video moves the way the story does in the app.
+const VPAD=24,VFPS=30;
+const vM=(a,b,c,d,e,f)=>({a,b,c,d,e,f});
+const vMul=(m,n)=>vM(m.a*n.a+m.c*n.b,m.b*n.a+m.d*n.b,m.a*n.c+m.c*n.d,m.b*n.c+m.d*n.d,m.a*n.e+m.c*n.f+m.e,m.b*n.e+m.d*n.f+m.f);
+const vInv=m=>{const det=m.a*m.d-m.b*m.c||1e-9;return vM(m.d/det,-m.b/det,-m.c/det,m.a/det,(m.c*m.f-m.d*m.e)/det,(m.b*m.e-m.a*m.f)/det)};
+const vDom=x=>vM(x.a,x.b,x.c,x.d,x.e,x.f);
+// where an SVG shape's own CSS transform puts it, in the drawing's units
+function vSvgU(S){const cs=getComputedStyle(S),tf=cs.transform,m=tf&&tf!=='none'?vDom(new DOMMatrix(tf)):vM(1,0,0,1,0,0);
+  const o=String(cs.transformOrigin||'0 0').split(/\s+/).map(parseFloat);let ox=o[0]||0,oy=o[1]||0;if(cs.transformBox==='fill-box'){try{const b=S.getBBox();ox+=b.x;oy+=b.y}catch(e){}}
+  return vMul(vMul(vM(1,0,0,1,ox,oy),m),vM(1,0,0,1,-ox,-oy))}
+// how an SVG's drawing units map onto the story (its viewBox, fit and position), worked out from its attributes
+function vViewM(svg,sr){const r=svg.getBoundingClientRect(),bx=r.left-sr.left,by=r.top-sr.top,bw=r.width,bh=r.height,vb=svg.viewBox&&svg.viewBox.baseVal;
+  if(!vb||!vb.width||!vb.height)return vM(1,0,0,1,bx,by);const par=(svg.getAttribute('preserveAspectRatio')||'xMidYMid meet').trim().split(/\s+/),al=par[0],sl=par[1]==='slice';
+  if(al==='none')return vM(bw/vb.width,0,0,bh/vb.height,bx-vb.x*bw/vb.width,by-vb.y*bh/vb.height);
+  const sc=sl?Math.max(bw/vb.width,bh/vb.height):Math.min(bw/vb.width,bh/vb.height),ax=/xMin/.test(al)?0:/xMax/.test(al)?1:.5,ay=/YMin/.test(al)?0:/YMax/.test(al)?1:.5;
+  return vM(sc,0,0,sc,bx+(bw-vb.width*sc)*ax-vb.x*sc,by+(bh-vb.height*sc)*ay-vb.y*sc)}
+async function storyVideoLive(n,onTick){const h=await lib(),host=$('xhost');host.innerHTML='';
+  const mk=live=>{const d=document.createElement('div');d.className='xst'+(live?' xlive':'');d.innerHTML=stHTML(SS[n],n,true);host.appendChild(d);return d};
+  const el=mk(false),tw=mk(true);await inlineImgs(el);
+  const imgs=[...el.querySelectorAll('img')];await Promise.all(imgs.map(i=>i.complete?0:new Promise(r=>{i.onload=i.onerror=r})));try{await document.fonts.ready}catch(e){}
+  // pictures can't hold the invisible corner points, so on the hidden copy each one becomes a plain box of the same size
+  // (it keeps the picture's place, size, still styling and its animation)
+  {const ei=[...el.querySelectorAll('img')];[...tw.querySelectorAll('img')].forEach((im,i)=>{const e=ei[i],d=document.createElement('div'),cs=getComputedStyle(im);[...im.attributes].forEach(at=>{if(at.name!=='src'&&at.name!=='srcset')d.setAttribute(at.name,at.value)});
+    ['position','top','left','right','bottom','marginTop','marginLeft','marginRight','marginBottom','transform','transformOrigin','opacity','zIndex','display','boxSizing','backfaceVisibility','translate','rotate','scale'].forEach(k=>{try{d.style[k]=cs[k]}catch(x){}});
+    if(e){d.style.width=e.offsetWidth+'px';d.style.height=e.offsetHeight+'px'}const an=im.getAnimations().map(a=>({k:a.effect.getKeyframes(),t:a.effect.getTiming()}));im.replaceWith(d);an.forEach(a=>{try{d.animate(a.k,a.t)}catch(x){}})})}
+  await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));fitSt(el.querySelector('.st'));fitSt(tw.querySelector('.st'));
+  const fam=await canvasFont(),fc=await fontCSS(),R=3,W=1080,H=1920,T=8.2;
+  const stE=el.querySelector('.st'),stT=tw.querySelector('.st'),allE=[...el.querySelectorAll('*')],allT=[...tw.querySelectorAll('*')],ix=new Map();allT.forEach((x,i)=>ix.set(x,i));
+  const E_=t=>allE[ix.get(t)];
+  const anims=tw.getAnimations({subtree:true}).filter(a=>a.effect&&a.effect.target&&!a.effect.pseudoElement&&stT.contains(a.effect.target));
+  anims.forEach(a=>{try{a.pause()}catch(e){}});const seek=t=>{for(const a of anims){try{a.currentTime=t*1000}catch(e){}}};seek(0);
+  const targets=[...new Set(anims.map(a=>a.effect.target))].filter(x=>ix.has(x));
+  const isSvgKid=x=>x instanceof SVGElement&&x.tagName.toLowerCase()!=='svg';
+  const bgKids=targets.filter(x=>isSvgKid(x)&&x.closest('.bgl')),svgKids=targets.filter(x=>isSvgKid(x)&&!x.closest('.bgl'));
+  const full=targets.find(x=>x.parentElement&&x.parentElement.classList.contains('sfull'));
+  const htmlT=targets.filter(x=>!(x instanceof SVGElement)&&x!==full);
+  // parts that sit over a moving part (a later sibling, or one placed above it) are cut out too, so they stay on top
+  const statics=new Set();htmlT.forEach(t=>{if(!t.closest('.svis')||t.classList.contains('svis'))return;const z=x=>parseInt(getComputedStyle(x).zIndex)||0,zt=z(t);let after=false;
+    for(const s of t.parentElement.children){if(s===t){after=true;continue}if(targets.includes(s)||s.tagName.startsWith('X-')||targets.some(x=>s.contains(x)))continue;if(after||z(s)>zt)statics.add(s)}});
+  const pm=stT.querySelector('.pmark');
+  const counts=[...stT.querySelectorAll('[data-count]')];
+  // ---- probes: three invisible points inside a part tell where its corners are on the hidden copy, frame by frame
+  const probed=new Map();
+  function probe(t){if(probed.has(t))return probed.get(t);const cs=getComputedStyle(t);if(cs.display==='none'||!t.offsetParent&&cs.position!=='fixed'){probed.set(t,null);return null}
+    if(cs.display==='inline'&&!(t.matches('[data-count]')))t.style.display='inline-block';
+    let expl=cs.position!=='static';if(!expl&&![...t.querySelectorAll('*')].some(d=>/absolute|fixed/.test(getComputedStyle(d).position))){t.style.position='relative';expl=true}
+    const w=t.offsetWidth,hh=t.offsetHeight,bl=t.clientLeft,bt=t.clientTop,pl=parseFloat(cs.paddingLeft)||0,pt=parseFloat(cs.paddingTop)||0;
+    const mp=(x,y)=>{const i=document.createElement('x-pb');i.style.cssText='position:absolute;width:0;height:0;margin:0;padding:0;border:0;display:block;'+(expl?'left:'+(x-bl)+'px;top:'+(y-bt)+'px':'margin-left:'+(x-bl-pl)+'px;margin-top:'+(y-bt-pt)+'px');expl?t.appendChild(i):t.insertBefore(i,t.firstChild);return i};
+    const o={w,h:hh,p:[mp(0,0),mp(w,0),mp(0,hh)]};probed.set(t,o);return o}
+  const quad=o=>{const sr=stT.getBoundingClientRect(),q=o.p.map(p=>{const r=p.getBoundingClientRect();return [r.left-sr.left,r.top-sr.top]});return vM((q[1][0]-q[0][0])/o.w,(q[1][1]-q[0][1])/o.w,(q[2][0]-q[0][0])/o.h,(q[2][1]-q[0][1])/o.h,q[0][0],q[0][1])};
+  const alphaOf=t=>{let a=1;for(let x=t;x&&x!==tw;x=x.parentElement){a*=parseFloat(getComputedStyle(x).opacity);if(!a)return 0}return a};
+  const clipAncs=t=>{const L=[];for(let x=t.parentElement;x&&x!==stT;x=x.parentElement){const cs=getComputedStyle(x);if(cs.overflowX!=='visible'||cs.overflowY!=='visible')L.push(x)}return L};
+  const maskAnc=t=>{for(let x=t.parentElement;x&&x!==stT;x=x.parentElement){const m=getComputedStyle(x).maskImage||getComputedStyle(x).webkitMaskImage;if(m&&m!=='none'&&/linear-gradient/.test(m))return x}return null};
+  // ---- layers, in paint order
+  const L=[];
+  const order=x=>ix.get(x);
+  [...htmlT.map(t=>({k:'html',t})),...[...statics].map(t=>({k:'html',t,st:1})),...counts.map(t=>({k:'count',t})),...svgKids.map(t=>({k:'svg',t}))].forEach(o=>L.push(o));
+  L.sort((x,y)=>order(x.t)-order(y.t));
+  // siblings: a higher z-index paints later
+  const zi=x=>{const cs=getComputedStyle(x);return cs.position!=='static'?parseInt(cs.zIndex)||0:0};
+  L.sort((x,y)=>{if(x.t.parentElement===y.t.parentElement){const d=zi(x.t)-zi(y.t);if(d)return d}return order(x.t)-order(y.t)});
+  if(pm)L.push({k:'html',t:pm,st:1,top:1});
+  // hide what each layer will draw from the base picture, and the numbers that count up
+  const layerSet=new Set(L.map(o=>o.t));
+  counts.forEach(t=>{const e=E_(t);e.style.color='transparent';e.style.webkitTextFillColor='transparent'});
+  const hideE=new Set(L.filter(o=>o.k!=='count').map(o=>E_(o.t)));svgKids.forEach(t=>hideE.add(E_(t)));
+  // ---- snapshots
+  const visOff=(nodes,fn)=>{const keep=nodes.map(x=>[x,x.style.visibility]);nodes.forEach(x=>x.style.visibility='hidden');return Promise.resolve(fn()).finally(()=>keep.forEach(([x,v])=>x.style.visibility=v))};
+  // background (still parts), then each moving background shape on its own
+  const bgSvg=el.querySelector('svg.bgl'),bgUnder=document.createElement('canvas');bgUnder.width=W;bgUnder.height=H;{const c=bgUnder.getContext('2d');c.scale(R,R);const bgl=el.querySelector('.bgl');if(bgl)cssGrad(c,bgl.style.background||getComputedStyle(bgl).backgroundColor,360,640);}
+  const svgImg=async(svg,keep)=>{const x=svg.cloneNode(true),A=[...svg.querySelectorAll('*')],B=[...x.querySelectorAll('*')];
+    A.forEach((e,i)=>{const b=B[i];if(!b)return;if(keep&&!keep(e)&&!e.closest('defs')&&!A.some(k=>keep(k)&&(k.contains(e)||e.contains(k)))){b.remove();return}const cs=getComputedStyle(e);let st='';if(cs.transform&&cs.transform!=='none')st+='transform-box:'+cs.transformBox+';transform-origin:'+cs.transformOrigin+';transform:'+cs.transform+';';if(cs.opacity!=='1'&&!(keep&&keep(e)))st+='opacity:'+cs.opacity+';';if(st)b.setAttribute('style',(b.getAttribute('style')||'')+';'+st)});
+    x.removeAttribute('style');x.removeAttribute('class');x.setAttribute('xmlns','http://www.w3.org/2000/svg');const r=svg.getBoundingClientRect();x.setAttribute('width',r.width);x.setAttribute('height',r.height);
+    const im=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(x)));const cv=document.createElement('canvas');cv.width=Math.round(r.width*R);cv.height=Math.round(r.height*R);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);return cv};
+  const bgL=[];
+  if(bgSvg){const animE=new Set(bgKids.map(E_));const still=await svgImg(bgSvg,e=>!animE.has(e)&&![...animE].some(a=>a.contains(e)||e.contains(a)));bgUnder.getContext('2d').drawImage(still,0,0,W,H);
+    for(const t of bgKids){const e=E_(t);bgL.push({t,cv:await svgImg(bgSvg,x=>x===e),U0:vSvgU(e)})}}
+  const sfE=el.querySelector('.sfull');let fullL=null,fullAfter=null,sfColor=null;
+  if(sfE){sfColor=getComputedStyle(sfE).backgroundColor||'#0d0c0b';const img=sfE.querySelector('img');
+    if(img&&img.naturalWidth){const cs=getComputedStyle(img),bw=img.offsetWidth,bh=img.offsetHeight,cv=document.createElement('canvas');cv.width=Math.round(bw*R);cv.height=Math.round(bh*R);const c=cv.getContext('2d');c.scale(R,R);
+      const iw=img.naturalWidth,ih=img.naturalHeight,k=Math.max(bw/iw,bh/ih),dw=iw*k,dh=ih*k,op=(cs.objectPosition||'50% 20%').split(/\s+/).map(v=>parseFloat(v)/100);c.drawImage(img,(bw-dw)*(isNaN(op[0])?.5:op[0]),(bh-dh)*(isNaN(op[1])?.2:op[1]),dw,dh);
+      fullL={t:full||stT.querySelector('.sfull > *'),cv,w:bw,h:bh}}
+    const af=getComputedStyle(sfE,'::after').backgroundImage;if(af&&af!=='none'){fullAfter=document.createElement('canvas');fullAfter.width=W;fullAfter.height=H;const c=fullAfter.getContext('2d');c.scale(R,R);cssGrad(c,af,360,640)}}
+  // the still words and pictures, with every moving part left out
+  el.classList.add('fg-only');
+  const baseOpt={pixelRatio:R,width:360,height:640,cacheBust:false,fontEmbedCSS:fc};let base=await visOff([...hideE],()=>h.toCanvas(el,baseOpt));if(isSafari)base=await visOff([...hideE],()=>h.toCanvas(el,baseOpt));// Safari can leave pictures out of the first pass
+  // each moving part on its own (parts inside it that move separately are left out of its picture)
+  for(const o of L){if(o.k==='count'){o.e=E_(o.t);o.pb=probe(o.t);continue}
+    if(o.k==='svg'){const root=o.t.ownerSVGElement,rootE=E_(root),me=E_(o.t),others=[...rootE.querySelectorAll('*')].filter(x=>x!==me&&!x.contains(me)&&!me.contains(x)&&!x.closest('defs')&&x.tagName.toLowerCase()!=='defs');
+      o.root=root;o.U0=vSvgU(E_(o.t));const r=rootE.getBoundingClientRect();o.rw=r.width;o.rh=r.height;
+      const eo=E_(o.t),ko=eo.style.opacity;eo.style.opacity='1';const sopt=()=>h.toCanvas(rootE,{pixelRatio:R,width:r.width+2*VPAD,height:r.height+2*VPAD,cacheBust:false,fontEmbedCSS:fc,style:{margin:VPAD+'px',transform:'none',opacity:'1',visibility:'visible',position:'relative',left:'0',top:'0',width:r.width+'px',height:r.height+'px'}});o.cv=await visOff(others,sopt);if(isSafari)o.cv=await visOff(others,sopt);eo.style.opacity=ko;
+      const ds=getComputedStyle(o.t).strokeDasharray;o.dash=ds&&ds!=='none';try{const b=o.t.getBBox(),sw=parseFloat(getComputedStyle(o.t).strokeWidth)||0;o.bb={x:b.x-sw,y:b.y-sw,w:b.width+2*sw,h:b.height+2*sw}}catch(e){}
+      continue}
+    const e=E_(o.t);o.pb=probe(o.t);if(!o.pb){o.skip=1;continue}o.clips=clipAncs(o.t).map(c=>({c,pb:probe(c)})).filter(x=>x.pb);o.mask=maskAnc(o.t);if(o.mask){o.mpb=probe(o.mask);const mc=getComputedStyle(o.mask);o.mi=mc.maskImage||mc.webkitMaskImage}
+    o.back=getComputedStyle(o.t).backfaceVisibility==='hidden';
+    const inner=[...hideE].filter(x=>x!==e&&e.contains(x)),w=o.pb.w,hh=o.pb.h;
+    if(!w||!hh){o.skip=1;continue}
+    // content that runs past the part's box (a wall column's cards) is kept in its picture
+    const sw=o.sw=Math.max(w,e.scrollWidth||0),sh=o.sh=Math.max(hh,e.scrollHeight||0);
+    o.cv=await visOff(inner,()=>h.toCanvas(e,{pixelRatio:R,width:sw+2*VPAD,height:sh+2*VPAD,cacheBust:false,fontEmbedCSS:fc,style:{margin:VPAD+'px',transform:'none',translate:'none',rotate:'none',scale:'none',opacity:'1',visibility:'visible',position:'relative',left:'0',top:'0',right:'auto',bottom:'auto',width:w+'px',height:hh+'px',boxSizing:'border-box',display:getComputedStyle(e).display==='inline'?'inline-block':getComputedStyle(e).display,animation:'none',flex:'none'}}));
+    if(isSafari)o.cv=await visOff(inner,()=>h.toCanvas(e,{pixelRatio:R,width:sw+2*VPAD,height:sh+2*VPAD,cacheBust:false,fontEmbedCSS:fc,style:{margin:VPAD+'px',transform:'none',translate:'none',rotate:'none',scale:'none',opacity:'1',visibility:'visible',position:'relative',left:'0',top:'0',right:'auto',bottom:'auto',width:w+'px',height:hh+'px',boxSizing:'border-box',animation:'none',flex:'none'}}))}
+  if(fullL)fullL.pb=probe(fullL.t);
+  // counting numbers: how each is drawn
+  for(const o of L.filter(o=>o.k==='count')){const cs=getComputedStyle(o.e),pc=getComputedStyle(o.e.parentElement);o.font=cs.fontStyle+' '+cs.fontWeight+' '+parseFloat(cs.fontSize)*R+'px '+fam+','+cs.fontFamily;o.col=cs.webkitTextFillColor&&cs.webkitTextFillColor!=='transparent'&&!/rgba\(0, 0, 0, 0\)/.test(cs.webkitTextFillColor)?cs.webkitTextFillColor:getComputedStyle(o.t).color;o.ls=parseFloat(cs.letterSpacing)||0;o.align=/right|end/.test(pc.textAlign)?'right':pc.textAlign==='center'?'center':'left';
+    o.to=+o.t.dataset.count;o.pre=o.t.dataset.pre||'';o.suf=o.t.dataset.suf||'';o.d=+(o.t.dataset.d||0);o.dur=+(o.t.dataset.dur||1300)}
+  // ---- read every frame from the hidden copy
+  const N=Math.ceil(T*VFPS)+1,FR=[];
+  for(let f=0;f<N;f++){const t=f/VFPS;seek(t);const fr={L:[],bg:[],full:null};
+    for(const o of L){if(o.skip||!o.cv&&o.k!=='count'){fr.L.push(null);continue}
+      if(o.k==='svg'){const root=o.root,sr=stT.getBoundingClientRect(),rr=root.getBoundingClientRect();
+        const Mu=vViewM(root,sr),V=vMul(vM(1,0,0,1,-(rr.left-sr.left),-(rr.top-sr.top)),Mu);const Ud=vMul(vSvgU(o.t),vInv(o.U0));
+        fr.L.push({m:vMul(vMul(Mu,Ud),vInv(V)),mu:vMul(Mu,Ud),a:alphaOf(o.t),dash:o.dash?Math.max(0,Math.min(1,1-(parseFloat(getComputedStyle(o.t).strokeDashoffset)||0))):1});continue}
+      const m=quad(o.pb),a=alphaOf(o.t);
+      fr.L.push({m,a:o.back&&(m.a*m.d-m.b*m.c)<0?0:a,clips:o.clips?o.clips.map(c=>quad(c.pb)):[],mk:o.mpb?quad(o.mpb):null})}
+    if(bgSvg){const sr=stT.getBoundingClientRect(),bgT=stT.querySelector('svg.bgl'),V=bgT?vViewM(bgT,sr):vM(1,0,0,1,0,0);
+      bgL.forEach(b=>{const Ud=vMul(vSvgU(b.t),vInv(b.U0));fr.bg.push({m:vMul(vMul(V,Ud),vInv(V)),a:alphaOf(b.t)})})}
+    if(fullL&&fullL.pb)fr.full={m:quad(fullL.pb),a:alphaOf(fullL.t)};
+    FR.push(fr)}
+  host.innerHTML='';
+  // ---- play it back on a canvas while recording
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');
+  const grp=document.createElement('canvas');grp.width=W;grp.height=H;const g=grp.getContext('2d');
+  const poly=(cx,m,w,hh)=>{cx.beginPath();const P=[[0,0],[w,0],[w,hh],[0,hh]].map(([x,y])=>[(m.a*x+m.c*y+m.e)*R,(m.b*x+m.d*y+m.f)*R]);cx.moveTo(P[0][0],P[0][1]);P.slice(1).forEach(p=>cx.lineTo(p[0],p[1]));cx.closePath()};
+  function drawLayer(cx,o,s,t){if(!s||!s.a)return;cx.save();cx.globalAlpha=Math.min(1,s.a);
+    if(o.k==='svg'){cx.setTransform(1,0,0,1,0,0);if(s.dash<1&&o.bb){const m=s.mu;cx.setTransform(m.a*R,m.b*R,m.c*R,m.d*R,m.e*R,m.f*R);cx.beginPath();cx.rect(o.bb.x,o.bb.y-50,o.bb.w*s.dash,o.bb.h+100);cx.clip()}
+      const m=s.m;cx.setTransform(m.a*R,m.b*R,m.c*R,m.d*R,m.e*R,m.f*R);cx.drawImage(o.cv,-VPAD,-VPAD,o.rw+2*VPAD,o.rh+2*VPAD);cx.restore();return}
+    (s.clips||[]).forEach((q,i)=>{const pb=o.clips[i].pb;cx.setTransform(1,0,0,1,0,0);poly(cx,q,pb.w,pb.h);cx.clip()});
+    const m=s.m;cx.setTransform(m.a*R,m.b*R,m.c*R,m.d*R,m.e*R,m.f*R);
+    if(o.k==='count'){const k=Math.max(0,Math.min(1,(t*1000-o.d)/o.dur)),v=o.to*(1-Math.pow(1-k,2)),txt=o.pre+NFR.format(Math.round(v))+o.suf;cx.setTransform(m.a,m.b,m.c,m.d,m.e*R,m.f*R);cx.font=o.font;cx.fillStyle=o.col;try{cx.letterSpacing=o.ls*R+'px'}catch(e){}
+      const met=cx.measureText(txt),asc=met.fontBoundingBoxAscent!=null?met.fontBoundingBoxAscent:parseFloat(o.font.split(' ')[2])*.8;cx.textBaseline='alphabetic';cx.textAlign=o.align;cx.fillText(txt,o.align==='right'?o.pb.w*R:o.align==='center'?o.pb.w*R/2:0,asc);cx.restore();return}
+    cx.drawImage(o.cv,-VPAD,-VPAD,(o.sw||o.pb.w)+2*VPAD,(o.sh||o.pb.h)+2*VPAD);cx.restore()}
+  function frame(t){const fr=FR[Math.min(FR.length-1,Math.round(t*VFPS))];c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;c.clearRect(0,0,W,H);c.drawImage(bgUnder,0,0);
+    bgL.forEach((b,i)=>{const s=fr.bg[i];if(!s||!s.a)return;c.save();c.globalAlpha=s.a;const m=s.m;c.setTransform(m.a*R,m.b*R,m.c*R,m.d*R,m.e*R,m.f*R);c.drawImage(b.cv,0,0,360,640);c.restore()});
+    if(sfColor){c.fillStyle=sfColor;c.fillRect(0,0,W,H)}
+    if(fullL&&fr.full&&fr.full.a){c.save();c.globalAlpha=fr.full.a;const m=fr.full.m;c.setTransform(m.a*R,m.b*R,m.c*R,m.d*R,m.e*R,m.f*R);c.drawImage(fullL.cv,0,0,fullL.w,fullL.h);c.restore()}
+    if(fullAfter)c.drawImage(fullAfter,0,0);
+    c.drawImage(base,0,0,W,H);
+    for(let i=0;i<L.length;){const o=L[i];
+      if(o.mask){const mkA=o.mask;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,W,H);let j=i,ms=null;while(j<L.length&&L[j].mask===mkA){const s=fr.L[j];if(s&&s.mk)ms=s.mk;drawLayer(g,L[j],s,t);j++}
+        if(ms){const pb=o.mpb,mi=o.mi;g.save();g.globalCompositeOperation='destination-in';g.setTransform(ms.a*R,ms.b*R,ms.c*R,ms.d*R,ms.e*R,ms.f*R);cssGradMask(g,mi,pb.w,pb.h);g.restore();
+          g.save();g.globalCompositeOperation='destination-in';g.setTransform(1,0,0,1,0,0);poly(g,ms,pb.w,pb.h);g.fillStyle='#000';g.fill();g.restore()}
+        c.setTransform(1,0,0,1,0,0);c.drawImage(grp,0,0);i=j;continue}
+      drawLayer(c,o,fr.L[i],t);i++}}
+  frame(0);const stream=cv.captureStream(30),rec=new MediaRecorder(stream,{mimeType:VMIME,videoBitsPerSecond:6e6}),chunks=[];rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+  const done=new Promise(r=>{rec.onstop=r});rec.start(250);const t0=performance.now();
+  await new Promise(res=>{(function step(){const t=(performance.now()-t0)/1000;frame(Math.min(T,t));onTick&&onTick(t/T);if(t<T+.15)requestAnimationFrame(step);else res()})()});
+  rec.stop();await done;stream.getTracks().forEach(tr=>tr.stop());return new Blob(chunks,{type:VMIME.split(';')[0]})}
+// a CSS mask gradient (clear to solid) painted as a canvas mask over a part's box
+function cssGradMask(c,css,w,hh){const s=String(css||'').replace(/rgba?\(0, 0, 0(, 1)?\)|#000\b|black/g,'rgba(0,0,0,1)');cssGrad(c,s,w,hh)}
+
+// the video: each story's own motion; if anything goes wrong, the simpler one-piece version
+async function storyVideo(n,onTick){try{return await storyVideoLive(n,onTick)}catch(e){console.warn('story video (pieces)',e);return storyVideoSimple(n,onTick)}}
 window.csVideo=storyVideo;
 // ================= v39.1 Free users: a taste of Stories =================
 // Free: Last month only (longer ranges show a Premium note), two themes (Jewel + a theme of the month matched to the color
@@ -606,10 +763,12 @@ const _bs48=buildStories;buildStories=function(){const S=_bs48().concat(moreStor
 
 // v49.4 every story's picture fits its 9:16 frame: it sits centered in the space under the words, and if it's taller
 // than that space it scales down (from its top) so it never runs into cardtab.app or the buttons
-function fitSt(st){const sin=st.querySelector('.sin'),sv=st.querySelector('.svis'),w=sv&&sv.querySelector('.svw');if(!w)return;
+function fitSt(st){if(!st)return;const sin=st.querySelector('.sin'),sv=st.querySelector('.svis'),w=sv&&sv.querySelector('.svw');if(!w)return;
   const wall=w.querySelector('.wall');if(wall)wall.style.height='';
   w.style.transform='';sv.style.height='';const cs=getComputedStyle(sin),prev=sv.previousElementSibling;if(!sin.clientHeight)return;
   const top=prev?prev.offsetTop+prev.offsetHeight:parseFloat(cs.paddingTop),pm=sin.querySelector('.pmark'),limit=Math.min(sin.clientHeight-parseFloat(cs.paddingBottom),pm&&pm.offsetHeight?pm.offsetTop-8:1e9),avail=limit-top-22,h=w.offsetHeight;
+  // v50.26: on saved pictures and videos the card wall runs down behind cardtab.app, nearly to the bottom, fading out
+  if(wall&&st.closest('#xhost')){const av2=sin.clientHeight-28-top-22;if(av2>80){wall.style.height=Math.floor(wall.offsetHeight+(av2-h))+'px';return}}
   // v50.25: the card wall keeps its full width (edge to edge) and just gets shorter; only other pictures scale down
   if(wall&&h>avail&&avail>40){wall.style.height=Math.max(80,Math.floor(wall.offsetHeight-(h-avail)))+'px';return}
   if(h>avail&&avail>40){const k=avail/h;w.style.transform='scale('+k.toFixed(3)+')';sv.style.height=Math.floor(h*k)+'px'}}

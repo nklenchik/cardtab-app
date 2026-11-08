@@ -2190,6 +2190,13 @@ dialog.lyd .lyt.chg .lydt{padding-right:66px}
 @media (max-width:600px){.cbx #cb .bd .lr .r,.cbx #cb .tied .r{padding:5px 8px}.cbx #cb .bd .lr .ch{width:30px;height:30px;border-radius:9px;font-size:13px}.cbx #cb .bd .bdp{margin-bottom:6px}}
 .cbx #cb .iobar{display:flex;flex-direction:column;gap:4px;margin-top:10px}
 .cbx #cb .iobar i{display:block;height:6px;border-radius:3px;min-width:3px}
+/* v50.26 entries sheet: a long card name or summary never pushes the close button off the edge; it stays top right */
+dialog.sheet .entp .awh{display:flex;align-items:flex-start;gap:12px}
+dialog.sheet .entp .awh>div{min-width:0;flex:1}
+dialog.sheet .entp .awh .x{flex:none}
+dialog.sheet .entp #ent-sub{white-space:normal;overflow-wrap:anywhere}
+/* the month heading's cover (for rows scrolling under it) no longer clips the bottom of the row above it */
+dialog .entlist .emh:not(:first-child){margin-top:14px}
 .tip{position:fixed;z-index:60;pointer-events:none;background:var(--text);color:var(--bg);border-radius:10px;padding:8px 11px;font-size:12.5px;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;text-align:left}
 .tip.on{opacity:1}
 .note{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--text);color:var(--bg);border-radius:999px;padding:8px 14px;font-size:12px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}

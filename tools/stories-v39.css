@@ -129,9 +129,10 @@
 /* the image that gets saved: the story as it ends */
 #xhost .xst{position:relative;width:360px;height:640px;overflow:hidden}
 #xhost .xst .st{opacity:1;transform:none;transition:none}
-#xhost .xst *{animation:none!important;transition:none!important}
+#xhost .xst:not(.xlive) *{animation:none!important;transition:none!important}
+#xhost .xst.xlive{visibility:hidden}#xhost .xst.xlive *{transition:none!important}
 #xhost .xst .sin{padding:54px 24px 40px}
-#xhost .xst .ln{stroke-dasharray:none}
+#xhost .xst:not(.xlive) .ln{stroke-dasharray:none}
 /* the theme sheet's background choice */
 .bgw{margin:14px 0 4px}
 .bgl2{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted,#8a857e);margin:0 2px 8px}
@@ -652,3 +653,7 @@ html .stall{background:var(--win-veil,rgba(8,8,8,.5))}
 /* v50.9 Sunrise: rises once in about 5 seconds and stays up for the rest of the story (was an 18-second loop) */
 .st.on .bgl .sunr,.hero .bgl .sunr,.dpl .st.on .bgl .sunr,.bgpv .sunr{animation:bgSun 5s cubic-bezier(.22,.7,.2,1) both!important}
 .bgl .sunr{transform:scaleY(.6)}
+
+/* v50.26 saved pictures/videos: the card wall runs behind cardtab.app and fades out toward the bottom; the mark stays on top */
+#xhost .xst .st:has(.wall) .pmark{z-index:3;text-shadow:0 1px 10px rgba(0,0,0,.5)}
+#xhost .xst .wall{-webkit-mask:linear-gradient(transparent,#000 10%,#000 52%,transparent 94%);mask:linear-gradient(transparent,#000 10%,#000 52%,transparent 94%)}
