@@ -203,7 +203,12 @@
     qIn.value = ''; search(); qIn.blur();
     if (!o.page) { o.el.click(); return; }
     openPage(o.page);
-    setTimeout(() => { o.el.scrollIntoView({ block: 'center', behavior: calm.matches ? 'auto' : 'smooth' }); o.el.classList.remove('am-flash'); void o.el.offsetWidth; o.el.classList.add('am-flash'); setTimeout(() => o.el.classList.remove('am-flash'), 1700); }, calm.matches ? 0 : 340);
+    setTimeout(() => { // v50.42: only the settings page scrolls, and only as far as it takes to show the match whole (scrollIntoView also
+      // scrolled the sheet itself, which slid the page off its frame and showed the main list behind it)
+      { const pg = o.el.closest('.amp'), m = document.getElementById('app-menu'); if (m) m.scrollTop = 0;
+        if (pg) { const er = o.el.getBoundingClientRect(), pr = pg.getBoundingClientRect(), pad = 16;
+          let top = pg.scrollTop; if (er.bottom > pr.bottom - pad) top += er.bottom - pr.bottom + pad + 40; if (er.top - (top - pg.scrollTop) < pr.top + pad) top = pg.scrollTop + er.top - pr.top - pad - 40;
+          top = Math.max(0, Math.min(top, pg.scrollHeight - pg.clientHeight)); if (top !== pg.scrollTop) pg.scrollTo({ top, behavior: calm.matches ? 'auto' : 'smooth' }); } } o.el.classList.remove('am-flash'); void o.el.offsetWidth; o.el.classList.add('am-flash'); setTimeout(() => o.el.classList.remove('am-flash'), 1700); }, calm.matches ? 0 : 340);
   }
   qIn.addEventListener('input', search);
   qIn.addEventListener('keydown', e => { if (e.key === 'Enter') { const f = qRes.querySelector('[data-hit]'); if (f) { e.preventDefault(); go(IDX[+f.dataset.hit]); } } if (e.key === 'Escape' && qIn.value) { e.stopPropagation(); qIn.value = ''; search(); } });
