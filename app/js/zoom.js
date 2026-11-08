@@ -152,7 +152,29 @@
       else if (onImg && graded && s <= 1.01) setTimeout(() => { if (lastTap === now && open) setMode(mode === 'slab' ? 'card' : 'slab', true); }, 300);
     };
     el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
-    el.addEventListener('wheel', e => { if (!open) return; e.preventDefault(); zoomAt(s * (e.deltaY < 0 ? 1.15 : 1 / 1.15), e.clientX, e.clientY, 120); }, { passive: false });
+    // v50.48: desktop zooming that follows your fingers.
+    // - Trackpad pinch (the browser sends it as wheel events with ctrlKey): zoom smoothly, in step with the pinch, around the
+    //   point under your fingers; a little give past the limits, then it settles back when you stop.
+    // - Two-finger scroll on a trackpad: moves the picture around when zoomed in.
+    // - A mouse wheel's notches: zoom in or out a step at a time, smoothly.
+    // - Safari sends trackpad pinches as gesture events instead; same result.
+    // Every change is drawn once per frame, with no animation lag behind the fingers.
+    let raf = 0, settleT = 0, gest = null;
+    const draw = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; apply(0); }); };
+    const scaleAt = (ns, cx, cy, soft) => { const lo = soft ? .85 : 1, hi = soft ? maxS * 1.15 : maxS; ns = Math.max(lo, Math.min(hi, ns));
+      const ox = cx - innerWidth / 2 - tx, oy = cy - innerHeight / 2 - ty, k = ns / s; tx -= ox * (k - 1); ty -= oy * (k - 1); s = ns; };
+    const settle = () => { clearTimeout(settleT); settleT = setTimeout(() => { if (s < 1.01) { s = 1; tx = 0; ty = 0; } else if (s > maxS) s = maxS; clamp(); apply(220); }, 140); };
+    el.addEventListener('wheel', e => {
+      if (!open) return; e.preventDefault();
+      const px = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1, dx = e.deltaX * px, dy = e.deltaY * px;
+      if (e.ctrlKey) { scaleAt(s * Math.exp(-dy * .0105), e.clientX, e.clientY, true); draw(); settle(); return; }   // pinch
+      const notch = e.deltaMode === 1 || (Math.abs(dy) >= 50 && Math.abs(dx) < 1 && Number.isInteger(e.deltaY));
+      if (notch) { zoomAt(s * (dy < 0 ? 1.2 : 1 / 1.2), e.clientX, e.clientY, 160); return; }                        // mouse wheel
+      if (s > 1.01) { tx -= dx; ty -= dy; clamp(); draw(); }                                                          // trackpad scroll: look around
+    }, { passive: false });
+    el.addEventListener('gesturestart', e => { if (!open) return; e.preventDefault(); gest = { s0: s }; });
+    el.addEventListener('gesturechange', e => { if (!open || !gest) return; e.preventDefault(); scaleAt(gest.s0 * e.scale, e.clientX, e.clientY, true); draw(); });
+    el.addEventListener('gestureend', e => { if (!gest) return; e.preventDefault(); gest = null; settle(); });
     document.addEventListener('keydown', e => { if (open && e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } }, true);
     addEventListener('resize', () => { if (open) { el.style.setProperty('--zy', centerY() + 'px'); size(); s = Math.min(s, maxS); clamp(); apply(0); } });
   }
