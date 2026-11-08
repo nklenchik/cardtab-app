@@ -237,6 +237,9 @@
       // v42.10: a small dead zone, so the last few pixels of a scroll (or iPhone's bounce) never leave a faint icon behind
       const k = Math.max(0, Math.min(1, (raw - .15) / .8)); qBtn.style.setProperty('--k', k.toFixed(3)); qBtn.style.pointerEvents = k > .6 ? 'auto' : 'none'; qBtn.style.visibility = k > 0 ? '' : 'hidden'; }
     else if (qBtn.style.visibility !== 'hidden') { qBtn.style.setProperty('--k', '0'); qBtn.style.visibility = 'hidden'; qBtn.style.pointerEvents = 'none'; }
+    // v50.52: once the big search bar is mostly back in view, the header search hands over to it (same text, one bar at a time)
+    if (sh.classList.contains('q-on') && PH() && search && cur === 'entries' && +qBtn.style.getPropertyValue('--k') < .35) {
+      const had = document.activeElement === fq; sh.classList.remove('q-on'); fq.blur(); if (had) $('ct-search').focus({ preventScroll: true }); }
   }
   let fEnd = 0;
   // ...and once more after scrolling settles, since iPhone can stop a fling without a final scroll event

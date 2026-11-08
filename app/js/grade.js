@@ -51,7 +51,7 @@
   // Future of Despair SLR PSA 10" -> "SS Rose Goku Black, Future of Despair SLR")
   const GAME = /^(?:pok[eé]mon(?:\s+(?:tcg|trading card game|cards?))?|dragon ball(?:\s+super)?(?:\s+(?:fusion world|masters|card game|ccg|tcg))?|fusion world|one piece(?:\s+(?:card game|tcg|ccg))?|magic(?::)?(?:\s+the gathering)?|mtg|yu-?gi-?oh!?|disney lorcana|lorcana|digimon(?:\s+card game)?|union arena|weiss schwarz|flesh and blood|star wars unlimited)\b[\s:,-]*/i;
   const RAR = /\(?\b(SPR|SCR|SLR|SEC|TPR|UR|SR|HR|AR|SAR|SIR|CHR|CSR|IR|ACE)\b\)?/;
-  const NUM = /#?\b(?:[A-Z]{0,4}\d{1,4}\/[A-Z]{0,4}\d{1,4}|[A-Z]{1,4}\d{1,3}-\d{2,3}|P-\d{2,4})\b/gi;
+  const NUM = /#?\b(?:[A-Z]{0,4}\d{1,4}\/[A-Z]{0,4}\d{1,4}|[A-Z]{1,4}\d{1,3}-\d{2,3}|P-\d{2,4}|(?:SWSH|SVP|SV|SM|XY|BW|HGSS|DP|MEP)\s?\d{2,3})\b/gi;   // v50.52: black star promo numbers (SWSH052, SVP 085)
   const hasNum = x => { NUM.lastIndex = 0; const r = NUM.test(x); NUM.lastIndex = 0; return r; };
   const SETY = /\S:|\b(set|series|pack|box|deck|vol(?:ume)?|collection|expansion|booster|promos?|celebration|edition)\b|^(?:SV|SWSH|SM|XY|BW|ME|OP|EB|ST|FB|BT)\d/i;
   function cardName(e) {
@@ -76,7 +76,7 @@
     return (pick || title(e)) + (rar ? ' ' + rar : '');
   }
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const numOf = n => { const m = /(?:^|[\s#(-])([A-Z]{0,4}\d{1,4}\/[A-Z]{0,4}\d{1,4}|[A-Z]{1,4}\d{1,3}-\d{2,3}|P-\d{2,4})\b/i.exec(n || ''); return m ? m[1].toUpperCase() : ''; };
+  const numOf = n => { const m = /(?:^|[\s#(-])([A-Z]{0,4}\d{1,4}\/[A-Z]{0,4}\d{1,4}|[A-Z]{1,4}\d{1,3}-\d{2,3}|P-\d{2,4}|(?:SWSH|SVP|SV|SM|XY|BW|HGSS|DP|MEP)\s?\d{2,3})\b/i.exec(n || ''); return m ? m[1].toUpperCase().replace(/\s/, '') : ''; };
 
   // the slab. `art` is the image markup (or a placeholder) that sits in the well
   function slab(e, art, cls) {

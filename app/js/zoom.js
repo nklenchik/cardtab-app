@@ -56,6 +56,12 @@
     }
     img.style.borderRadius = (img.offsetWidth || base.w) * CARD_R + 'px';
     if (graded) sw.style.top = 'calc(50% + ' + (base.h / 2 + 14 + centerY()) + 'px)';
+    // v50.52: the tip sits right under the Slab | Card switch (not pinned to the screen bottom, where a browser toolbar or
+    // bigger text could push it over the switch); if there's no room below, it stays hidden
+    const tp = el.querySelector('.zm-tip');
+    if (graded) { const y = innerHeight / 2 + base.h / 2 + 14 + centerY() + (sw.offsetHeight || 40) + 8;
+      tp.style.top = y + 'px'; tp.style.bottom = 'auto'; tp.style.display = y + 20 > innerHeight ? 'none' : ''; }
+    else { tp.style.top = ''; tp.style.bottom = ''; tp.style.display = ''; }
   }
   // graded: room above for the close button and below for the Slab | Card switch and the tip
   const reserve = () => { const ph = innerWidth < 761; return { top: ph ? 76 : 56, bottom: ph ? 16 + 56 + 36 : 56 + 56 }; };
