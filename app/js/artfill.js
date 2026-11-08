@@ -30,7 +30,7 @@
     const lead = /^#?(\d{1,4})\s+(.+)$/.exec(q.set || ''); if (lead && !q.number) { q.number = lead[1]; q.set = lead[2].replace(/,\s*pokemon\b.*$/i, '').trim(); }
     return q;
   }
-  const isPick = e => e.artFrom === 'pick' || e.artFrom === 'none';
+  const isPick = e => e.artFrom === 'pick' || e.artFrom === 'none' || e.artFrom === 'upload'; // v50.47: your own photo counts as your pick (auto-fill never replaces it)
   function needs(e) {
     if (e.deleted || !e.name || isPick(e)) return false;
     if (e.artFrom === 'lookup' && !e.artV2) return true;                 // filled in by the old rules: re-check once
