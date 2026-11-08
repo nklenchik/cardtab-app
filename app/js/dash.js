@@ -253,7 +253,10 @@
       '<small class="ct-tile-ln"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span><span class="ct-tile-meta">' + badgeOf(t) + ' · ' + niceDate(t.date) + '</span><span class="ct-tile-pl">' + esc(t.platform || badgeOf(t)) + '</span></small>' +
       '<strong class="ct-tile-amt ' + t.type + '">' + amtText(t) + '</strong></button>';
   }
-  const paintView = () => fbar.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === 'list' ? !gal : gal && b.dataset.gs === gsz)));
+  const paintView = () => { fbar.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === 'list' ? !gal : gal && b.dataset.gs === gsz)));
+    // v50.56: phones show one button with the current view's icon; it opens the four choices
+    const t = fbar.querySelector('.fb-vbtn'), on = fbar.querySelector('.fb-vopts [aria-pressed="true"]');
+    if (t && on) { t.querySelector('.fb-vi').innerHTML = on.querySelector('svg').outerHTML; t.setAttribute('aria-label', 'View: ' + on.getAttribute('aria-label') + '. Change view'); } };
   function setView(v, gs) {
     gal = v === 'gallery'; try { localStorage.setItem('ct.view', v); } catch (e) {}
     if (gal && gs && gs !== gsz) { gsz = gs; try { localStorage.setItem('ct.gsize', gs); } catch (e) {} }
@@ -410,7 +413,15 @@
       '<button type="button" data-view="gallery" data-gs="s" aria-label="Small grid" aria-pressed="false">' + I('<rect x="3.5" y="3.5" width="4.5" height="4.5" rx="1"/><rect x="9.75" y="3.5" width="4.5" height="4.5" rx="1"/><rect x="16" y="3.5" width="4.5" height="4.5" rx="1"/><rect x="3.5" y="9.75" width="4.5" height="4.5" rx="1"/><rect x="9.75" y="9.75" width="4.5" height="4.5" rx="1"/><rect x="16" y="9.75" width="4.5" height="4.5" rx="1"/><rect x="3.5" y="16" width="4.5" height="4.5" rx="1"/><rect x="9.75" y="16" width="4.5" height="4.5" rx="1"/><rect x="16" y="16" width="4.5" height="4.5" rx="1"/>') + '</button>' +
       '<button type="button" data-view="gallery" data-gs="m" aria-label="Grid" aria-pressed="false">' + I('<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>') + '</button>' +
       '<button type="button" data-view="gallery" data-gs="l" aria-label="Large grid" aria-pressed="false">' + I('<rect x="5.5" y="3.5" width="13" height="17" rx="2.2"/>') + '</button>';
-    v.addEventListener('click', e => { const b = e.target.closest('[data-view]'); if (!b) return; const gs = b.dataset.gs; if (b.dataset.view === 'list' ? gal : (!gal || gs !== gsz)) setView(b.dataset.view, gs); });
+    // v50.56: labels for the phone menu, the four choices in one group, and the phone's single button in front
+    v.querySelectorAll('button').forEach(b => b.insertAdjacentHTML('beforeend', '<span class="fb-vl">' + b.getAttribute('aria-label') + '</span><i class="fb-vck" aria-hidden="true"></i>'));
+    v.innerHTML = '<button type="button" class="fb-vbtn" aria-haspopup="true" aria-expanded="false"><span class="fb-vi"></span><i class="fb-vch" aria-hidden="true"></i></button><div class="fb-vopts">' + v.innerHTML + '</div>';
+    const vOpen = on => { v.classList.toggle('open', on); v.querySelector('.fb-vbtn').setAttribute('aria-expanded', String(on)); };
+    v.querySelector('.fb-vbtn').addEventListener('click', e => { e.stopPropagation(); vOpen(!v.classList.contains('open')); });
+    document.addEventListener('click', e => { if (v.classList.contains('open') && !v.contains(e.target)) vOpen(false); }, true);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && v.classList.contains('open')) { vOpen(false); v.querySelector('.fb-vbtn').focus(); } });
+    addEventListener('scroll', () => { if (v.classList.contains('open')) vOpen(false); }, { passive: true });
+    v.addEventListener('click', e => { const b = e.target.closest('[data-view]'); if (!b) return; vOpen(false); const gs = b.dataset.gs; if (b.dataset.view === 'list' ? gal : (!gal || gs !== gsz)) setView(b.dataset.view, gs); });
     fbar.appendChild(v); paintView(); }
   // phones: pinch the grid to change its size, like Photos (spread for bigger cards, pinch for more of them)
   { const rows = $('ct-rows'), SZ = ['s', 'm', 'l']; let d0 = 0, k = 1;

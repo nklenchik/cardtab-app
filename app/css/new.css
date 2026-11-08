@@ -2101,3 +2101,31 @@ img,.slab,.sl-well,.zm-slab{-webkit-touch-callout:none;-webkit-user-drag:none;us
 .ct-hideamt :is(.ct-row-amt strong,.ct-tile-amt,.ct-stats strong,.ct-stats .ct-line,.ct-money b,.ct-mtot b,.glv b,.glv span,.qm-v strong,.qm-v span,.lr .v,.lr .d,.msum b,.cbx .num,.cbx .bn,.xbig,.x2 b,.wtl .dl,.r .n small,#ct-rows .gp-amt,.gp-in .num){filter:blur(.36em);-webkit-user-select:none;user-select:none}
 .ct-hideamt dialog.ed :is(b,strong,span){filter:none}
 .app-menu.am .seg.am-seg5{grid-template-columns:repeat(5,minmax(0,1fr))}.app-menu.am .amr .am-seg5 button{padding-left:4px;padding-right:4px}
+
+/* v50.56: view switcher. Computers: the four buttons, a little bigger. Phones: one button showing the current view, which opens
+   a small menu (List, Small grid, Grid, Large grid), so it sits on the same row as Platform and sort */
+.fb-view .fb-vbtn,.fb-vl,.fb-vck{display:none}
+.fb-vopts{display:contents}
+@media(min-width:761px){
+ .fb-view{padding:3px!important}
+ .fb-view .fb-vopts button{width:38px!important;height:34px!important}
+ .fb-view .fb-vopts button svg{width:18px;height:18px}
+}
+@media(max-width:760px){
+ .fb-view{position:relative;padding:0!important;background:none!important;gap:0!important}
+ .fb-view .fb-vbtn{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:7px;height:40px;padding:0 13px 0 14px;border-radius:999px;background:var(--s-card);border:1px solid var(--s-hair);color:var(--ct-text);cursor:pointer;-webkit-tap-highlight-color:transparent}
+ .fb-view .fb-vbtn:focus-visible{outline:2px solid var(--tab-on,#b0123d);outline-offset:2px}
+ .fb-vi{display:flex}.fb-vi svg{width:19px;height:19px}
+ .fb-vch{width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg);opacity:.6;transition:transform .2s ease}
+ .fb-view.open .fb-vch{transform:translateY(1px) rotate(225deg)}
+ .fb-view .fb-vopts{display:block;position:absolute;z-index:30;right:0;top:calc(100% + 8px);width:212px;padding:6px;border-radius:18px;background:var(--s-card);border:1px solid var(--s-hair);box-shadow:0 18px 44px -14px rgba(0,0,0,.45);opacity:0;visibility:hidden;transform:translate3d(0,-6px,0) scale(.97);transform-origin:top right;transition:opacity .16s ease,transform .2s cubic-bezier(.2,.8,.2,1),visibility 0s .2s}
+ .fb-view.open .fb-vopts{opacity:1;visibility:visible;transform:none;transition:opacity .16s ease,transform .2s cubic-bezier(.2,.8,.2,1)}
+ .fb-view .fb-vopts button{width:100%!important;height:46px!important;display:flex!important;align-items:center;gap:13px;padding:0 12px!important;border-radius:12px!important;color:var(--ct-text)!important;font:700 15px Manrope,system-ui,sans-serif;box-shadow:none!important;outline:0!important;background:none!important}
+ .fb-view .fb-vopts button::after{display:none}
+ .fb-view .fb-vopts button svg{width:19px;height:19px;flex:none;opacity:.85}
+ .fb-view .fb-vopts button[aria-pressed="true"]{background:var(--s-track)!important}
+ .fb-view .fb-vl{display:inline}
+ .fb-view .fb-vck{display:none;margin-left:auto;width:6px;height:11px;border-right:2.2px solid var(--tab-on,#b0123d);border-bottom:2.2px solid var(--tab-on,#b0123d);transform:translateY(-2px) rotate(45deg)}
+ .fb-view .fb-vopts button[aria-pressed="true"] .fb-vck{display:block}
+ @media(prefers-reduced-motion:reduce){.fb-view .fb-vopts{transition:none!important}}
+}
