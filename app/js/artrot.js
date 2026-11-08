@@ -41,9 +41,15 @@
     .observe(document.documentElement, { childList: true, subtree: true });
   window.CTArtRot = { turn, check };
 })();
-/* v50.49: no "Save image" from right-click or long-press on any picture in the app, and pictures can't be dragged out */
+/* v50.49 (v50.50: also the zoom viewer, which holds the pointer so the click lands on the viewer, not the picture): no "Save image" from right-click or long-press on any picture in the app, and pictures can't be dragged out */
 (function () {
-  const pic = t => t && t.closest && (t.tagName === 'IMG' || t.closest('.slab,.zm-slab,.fw,.ct-tile-art,.gp-art,.ct-card-art,.au-stage'));
-  document.addEventListener('contextmenu', e => { if (pic(e.target)) e.preventDefault(); }, true);
+  // anything with a picture under the pointer counts (a viewer holding the pointer, or a layer over the art, can hide which one was clicked)
+  const pic = e => { const t = e.target; if (t && t.closest && (t.tagName === 'IMG' || t.closest('.zm,.slab,.zm-slab,.fw,.ct-tile-art,.gp-art,.ct-card-art,.au-stage'))) return true;
+    if (t && t.closest && t.closest('input,textarea,[contenteditable]')) return false;
+    // pictures that let clicks pass through (pointer-events:none) don't show up as the target: look for one under the pointer nearby
+    const hit = el => { const r = el.getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; };
+    for (let el = t, n = 0; el && el.querySelectorAll && n < 4; el = el.parentElement, n++) if ([...el.querySelectorAll('img,canvas')].some(hit)) return true;
+    return false; };
+  window.addEventListener('contextmenu', e => { if (pic(e)) e.preventDefault(); }, true);
   document.addEventListener('dragstart', e => { if (e.target && e.target.tagName === 'IMG') e.preventDefault(); }, true);
 })();
