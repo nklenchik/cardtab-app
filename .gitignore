@@ -2,3 +2,6 @@
 node_modules/
 .wrangler/
 .dev.vars
+tests/out-desktop/
+tests/out-phone/
+tests/tests/
