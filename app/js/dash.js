@@ -571,18 +571,28 @@
     if (ks.includes('ct.view')) { let v = 'list'; try { v = localStorage.getItem('ct.view') || (matchMedia('(max-width:760px)').matches ? 'list' : 'gallery'); } catch (er) {} if ((v === 'gallery') !== gal) setView(v); }
     if (ks.includes('ct.f.ct-sort')) { $('ct-sort').value = pref.get('ct-sort', 'new'); render(); }
     if (ks.includes('ct.filter')) showFirst(); });
-  let off = null;
+  let off = null, periodPicked = false, applyingStart = false;
+  // v50.41: the account's plan and Start on can arrive a moment after the app opens (sign-in, a new device, the first sync),
+  // so the start range is applied again when they do, until you pick a range yourself
+  function applyStart() {
+    if (periodPicked) return;
+    const so = premium() ? (S.meta('startOn') || 'month') : 'month';
+    const first = so === 'year' ? 'y:' + D.monthPrefix.slice(0, 4) : so === 'all' ? 'all' : 'm:' + D.monthPrefix;
+    if ($('ct-period').value === first) return;
+    applyingStart = true; try { if (window.CTMonth) window.CTMonth.set(first, true); else $('ct-period').value = first; } finally { applyingStart = false; }
+    return true;
+  }
+  $('ct-period').addEventListener('change', () => { if (!applyingStart) periodPicked = true; });
   function mount() {
     dates();
     // opens on the range picked in Settings → Start on (Premium: This year or All time); otherwise the month you're in
-    const so = premium() ? (S.meta('startOn') || 'month') : 'month';
-    const first = so === 'year' ? 'y:' + D.monthPrefix.slice(0, 4) : so === 'all' ? 'all' : 'm:' + D.monthPrefix;
-    if (window.CTMonth) window.CTMonth.set(first, true); else $('ct-period').value = 'all';
+    periodPicked = false; applyStart();
     $('ct-sort').value = pref.get('ct-sort', 'new');
     showFirst();
     if (off) off();
     off = S.on(reason => {
       if (reason === 'plan') { selected = null; }
+      if (reason === 'open' || reason === 'sync' || reason === 'plan' || reason === 'remote' || reason === 'meta') applyStart();
       if (reason === 'clear' || reason === 'sample' || reason === 'remote') { expanded = null; showEarlier = false; }
       render();
     });
