@@ -292,14 +292,7 @@
   });
   gp.addEventListener('cancel', e => { e.preventDefault(); closeGP(); });
   gp.addEventListener('keydown', e => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); stepGP(e.key === 'ArrowLeft' ? -1 : 1); } });
-  // phones: drag the sheet down to close it
-  gp.addEventListener('pointerdown', e => {
-    if (!phone.matches || !e.target.closest('.gp-grab,.gp-art,.gp-line,.gp-nm')) return;
-    const y0 = e.clientY, inn = gp.querySelector('.gp-in'); let dy = 0; inn.style.transition = 'none';
-    const mv = ev => { dy = Math.max(0, ev.clientY - y0); inn.style.transform = 'translate3d(0,' + dy + 'px,0)'; };
-    const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); inn.style.transition = ''; if (dy > 90) { inn.style.transform = ''; gp.style.setProperty('--dy', dy + 'px'); closeGP(); } else inn.style.transform = ''; };
-    addEventListener('pointermove', mv, { passive: true }); addEventListener('pointerup', up); addEventListener('pointercancel', up);
-  });
+  // phones: dragging the sheet down is handled for every sheet in js/sheetdrag.js
   S.on(() => { if (gp.open) paintGP(); });
 
   // Older months behind "Show ..." aren't built until you open them, so the page stays light (sheets open faster, filters redraw faster)

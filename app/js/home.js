@@ -312,13 +312,9 @@
   document.addEventListener('click', e => { const h = e.target.closest('#app-menu .am-who'); if (!h || e.target.closest('.am-x')) return; e.stopPropagation(); if (window.CTMenu) window.CTMenu.close();
     if (window.CTBoardLoader) window.CTBoardLoader.load().then(() => setTimeout(() => window.CTProfileOpen && window.CTProfileOpen(), 180)).catch(() => {}); });
 
-  // phones: swipe the profile sheet down to close it (only when it's scrolled to the top)
-  (function () { const m = $('app-menu'); if (!m) return; let y0 = null, dy = 0, t0 = 0;
-    m.addEventListener('touchstart', e => { if (!matchMedia('(max-width:760px)').matches || m.scrollTop > 0) { y0 = null; return; } y0 = e.touches[0].clientY; dy = 0; t0 = performance.now(); }, { passive: true });
-    m.addEventListener('touchmove', e => { if (y0 == null) return; dy = e.touches[0].clientY - y0; if (dy > 0) { m.style.animation = 'none'; m.style.transform = 'translateY(' + dy + 'px)'; if (e.cancelable) e.preventDefault(); } }, { passive: false });
-    m.addEventListener('touchend', () => { if (y0 == null) return; const v = dy / Math.max(1, performance.now() - t0); y0 = null;
-      if (dy > 90 || v > .6) { if (window.CTMenu) window.CTMenu.close(); return; }
-      if (dy > 0) { const a = m.animate([{ transform: 'translateY(' + dy + 'px)' }, { transform: 'none' }], { duration: 260, easing: 'cubic-bezier(.2,.9,.25,1)' }); m.style.transform = ''; a.onfinish = () => { m.style.animation = ''; }; } }, { passive: true });
+  // phones: the profile sheet follows your finger (js/sheetdrag.js); its own close slides it down from wherever you let go
+  (function () { const m = $('app-menu'); if (!m || !window.CTSheetDrag) return;
+    window.CTSheetDrag.attach({ zone: m, sheet: m, backdrop: $('am-bd'), on: () => matchMedia('(max-width:760px)').matches, ownClose: () => { if (window.CTMenu) window.CTMenu.close(); } });
   })();
 
   // ---------- your avatar rides along in each slim bar, so settings are one tap away at any scroll ----------

@@ -820,3 +820,5 @@ function saveReady(files,share){
     for(const f of files){download(f.blob,f.name);if(files.length>1)await new Promise(r=>setTimeout(r,450))}pl.toast(files.length>1?'Saved '+files.length+' videos.':'Saved to Downloads.');close()};
   w.hidden=false;modalSync();setTimeout(()=>{const b=w.querySelector('.vrs');b&&b.focus()},50)}
 {const _lr=loadReal;loadReal=function(){GRM=null;return _lr.apply(this,arguments)}}
+// v50.40: on phones, Stories' sheets follow your finger like the app's (the app's js/sheetdrag.js does the work)
+try{if(parent!==window&&parent.CTSheetDrag)parent.CTSheetDrag.attach({zone:document,on:()=>matchMedia('(max-width:600px)').matches,sheetOf:t=>t.closest&&t.closest('.sheetw:not([hidden])>.sheet'),dismiss:sh=>closeSheet(sh.parentElement.id)})}catch(e){}

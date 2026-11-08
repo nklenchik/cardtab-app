@@ -2012,3 +2012,10 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 .ct-demo .ct-row.expanded .ct-rn-g .ct-rn{display:inline}
 .ct-demo .ct-row.expanded .ct-rn-g .sl-chip{margin:0;vertical-align:.14em}
 .sl-chip.sl-raw{background:none;box-shadow:inset 0 0 0 1.25px rgba(130,125,116,.5);color:var(--sl-chipink)}
+/* v50.40: Games you collect: the chips and the line under them sit inside the card with the same padding as every row */
+#app-menu.app-menu.am .amp>.amg.am-chipsg{padding:12px 14px 2px!important}
+@media(max-width:760px){#app-menu.app-menu.am .amp>.amg.am-chipsg{padding:14px 16px 4px!important}}
+#app-menu.app-menu.am .am-chipsg .amp-n{margin:12px 0 8px}
+/* the tax-year row fits its card: the year picker gives way, Download keeps its size */
+.app-menu.am .am-taxr{min-width:0}.app-menu.am .am-taxr .am-sel{min-width:0;width:auto}
+.app-menu.am .amg .am-taxr button.am-btn{flex:none;width:auto;padding:7px 14px;gap:0}

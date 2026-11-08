@@ -135,17 +135,7 @@
     if (!editing) return; const id = editing.id; close(); if (onDone) onDone('delete', id); else await S.remove(id);
   });
   form.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', close));
-  // phones: drag the sheet down by its top to close it
-  form.querySelector('.ed-head').addEventListener('pointerdown', e => {
-    if (!PHONE.matches || e.target.closest('button')) return;
-    const y0 = e.clientY; let dy = 0; form.style.transition = 'none';
-    const mv = ev => { dy = Math.max(0, ev.clientY - y0); form.style.transform = 'translate3d(0,' + dy + 'px,0)'; };
-    const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up);
-      form.style.transition = 'transform .22s cubic-bezier(.2,.8,.2,1)';
-      if (dy > 90) { form.style.transform = 'translate3d(0,100%,0)'; setTimeout(() => { close(); form.style.transform = ''; form.style.transition = ''; }, 200); }
-      else { form.style.transform = ''; setTimeout(() => { form.style.transition = ''; }, 230); } };
-    addEventListener('pointermove', mv, { passive: true }); addEventListener('pointerup', up); addEventListener('pointercancel', up);
-  });
+  // phones: dragging the sheet down is handled for every sheet in js/sheetdrag.js
   dlg.addEventListener('click', e => { if (e.target === dlg) close(); }); // tap outside the sheet
   // Tidy money as you leave the field: "12.5" becomes "12.50"
   ['amount', 'fees', 'ship'].forEach(n => f(n).addEventListener('blur', () => { const c = S.toCents(f(n).value); if (c != null && c >= 0) f(n).value = S.fromCents(c); }));
