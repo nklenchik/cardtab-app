@@ -66,7 +66,7 @@ jobs:
             sqlite3 "$RUNNER_TEMP/test.db" "SELECT COUNT(*) FROM $t" >/dev/null || { echo "::error::table $t missing from the backup"; exit 1; }
           done
           U=$(sqlite3 "$RUNNER_TEMP/test.db" 'SELECT COUNT(*) FROM users'); E=$(sqlite3 "$RUNNER_TEMP/test.db" 'SELECT COUNT(*) FROM entries')
-          echo "users and entries counted"   # counts stay out of the public log; they show in the admin daily check
+          echo "users and entries counted"
           { echo "USERS=$U"; echo "ENTRIES=$E"; } >> "$GITHUB_ENV"
           gzip -9 -c "$RUNNER_TEMP/db.sql" > "$RUNNER_TEMP/db-$DAY.sql.gz"
       - name: Copy 2 - Cloudflare backup bucket
