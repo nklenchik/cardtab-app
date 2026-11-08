@@ -22,7 +22,8 @@
     el.innerHTML = '<div class="zm-bg"></div><img class="zm-img" alt="" draggable="false"><div class="zm-slab" hidden></div>' +
       '<div class="zm-sw" role="group" aria-label="Show" hidden><button type="button" data-m="slab">Slab</button><button type="button" data-m="card">Card</button></div>' +
       '<button type="button" class="zm-x" aria-label="Close">' + X + '</button><p class="zm-tip"></p>';
-    document.body.appendChild(el); img = el.querySelector('.zm-img'); slabEl = el.querySelector('.zm-slab'); sw = el.querySelector('.zm-sw');
+    document.body.appendChild(el); img = el.querySelector('.zm-img');
+    img.addEventListener('load', () => { if (open && el.classList.contains('on')) { size(); apply(0); } }); // a sideways picture turned upright (js/artrot.js) has new proportions slabEl = el.querySelector('.zm-slab'); sw = el.querySelector('.zm-sw');
     el.addEventListener('cancel', e => { e.preventDefault(); close(); });
     el.querySelector('.zm-x').addEventListener('click', e => { e.stopPropagation(); close(); });
     sw.addEventListener('pointerdown', e => e.stopPropagation());
