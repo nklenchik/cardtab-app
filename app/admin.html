@@ -95,6 +95,7 @@ td.n,th.n{text-align:right}
 .hch{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}.hch .sub{margin-bottom:0}
 .hcsum{font-weight:800;font-size:16px;margin-bottom:10px}.hcsum.up{color:var(--good)}.hcsum.dn{color:var(--bad)}.hcsum.fl{color:#b07a00}.hcsum small{color:var(--muted);font-weight:600;font-size:12.5px}
 .hclist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:2px 18px}
+.aql{display:flex;flex-direction:column}.aqr{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--hair)}.aqr img{width:52px;height:73px;object-fit:cover;border-radius:4px;display:block}.aqt b{display:block;font-size:13.5px}.aqt em{display:block;font-style:normal;font-weight:800;font-size:12px;color:#a50e37;margin-top:2px}.aqt small{display:block;font-size:11.5px;opacity:.65;margin-top:2px}.aqb{display:flex;gap:6px}.aqok{background:var(--text,#1d1d1b);color:var(--bg,#fff);border-color:transparent}@media(max-width:560px){.aqr{grid-template-columns:44px minmax(0,1fr)}.aqb{grid-column:1/-1}}
 .hcr{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:start;padding:8px 0;border-bottom:1px solid var(--hair);font-size:13px}
 .hct{display:grid;min-width:0}.hct small{color:var(--muted);font-size:12px;overflow-wrap:anywhere}.hct em{font-style:normal;color:var(--bad);font-size:12px;margin-top:3px}
 .hcm{color:var(--muted);font-size:11.5px;font-variant-numeric:tabular-nums}
@@ -217,7 +218,7 @@ function views(){const E=D.events,P=st.cmp?D.eventsPrev:null,PP=D.eventsPrev,L=d
   card('c12','Questions','Each day',line([{n:'Questions',v:dailyOf('ask'),c:'var(--s4)'}],L,'Questions'))+'</div>'};
  S[6]=()=>'<div class="kpis">'+kpi('Entries added',tot(E,'entry_add'),tot(PP,'entry_add'))+kpi('Purchases',byDim(E,'entry_add').purchase||0,byDim(PP,'entry_add').purchase||0)+kpi('Sales',byDim(E,'entry_add').sale||0,byDim(PP,'entry_add').sale||0)+'</div><div class="grid">'+
   card('c6','Games collected','Entries by game',list(byDim(E,'entry_game'),P&&byDim(P,'entry_game'),'var(--s1)'))+card('c6','Where entries come from','Platforms on entries (others grouped)',list(byDim(E,'entry_platform'),P&&byDim(P,'entry_platform'),'var(--s2)'))+'</div>';
- S[7]=()=>healthCard()+S7();const S7=()=>{const l=byDim(E,'load_ms',1),ln=byDim(E,'load_ms'),lt={};Object.keys(l).forEach(k=>lt[k]=+(l[k]/Math.max(1,ln[k])/1000).toFixed(2));const all=Object.keys(l).reduce((t,k)=>t+l[k],0)/Math.max(1,tot(E,'load_ms'))/1000,allp=totV(PP,'load_ms')/Math.max(1,tot(PP,'load_ms'))/1000;
+ S[7]=()=>healthCard()+artCard()+S7();const S7=()=>{const l=byDim(E,'load_ms',1),ln=byDim(E,'load_ms'),lt={};Object.keys(l).forEach(k=>lt[k]=+(l[k]/Math.max(1,ln[k])/1000).toFixed(2));const all=Object.keys(l).reduce((t,k)=>t+l[k],0)/Math.max(1,tot(E,'load_ms'))/1000,allp=totV(PP,'load_ms')/Math.max(1,tot(PP,'load_ms'))/1000;
   return '<div class="kpis">'+kpi('App errors',tot(E,'error'),tot(PP,'error'))+kpi('Load time (avg)',all,allp||null,v=>v.toFixed(2)+' s')+kpi('Counts recorded today',D.eventsToday)+'</div><div class="grid">'+
   card('c6','Most common errors','By kind and file (never the message)',list(byDim(E,'error'),P&&byDim(P,'error'),'var(--s3)'))+card('c6','Load time by device','Seconds until the app is ready',list(lt,null,'var(--s4)',' s'))+
   card('c12','Errors','Each day',line([{n:'Errors',v:dailyOf('error'),c:'var(--s3)'}],L,'Errors'))+'</div>'};
@@ -324,6 +325,19 @@ function hcPaint(){const el=document.getElementById('hc');if(!el)return;const L=
       (H.length?'<div class="hchist" title="Last 30 days, newest on the right">'+H.slice().reverse().map(h=>'<i class="'+(!h.ok?'b':h.warn?'w':'g')+'" title="'+esc(h.day||'')+'"></i>').join('')+'</div>':'')}
   el.innerHTML='<div class="hch"><div><h3>Daily check</h3><div class="sub">Every morning the server checks the basics and emails you the result</div></div><button type="button" class="chip" id="hcrun"'+(hcBusy?' disabled':'')+'>Run check now</button></div>'+body;
   const b=document.getElementById('hcrun');if(b)b.onclick=()=>hcLoad(true)}
+// v50.46: shared card photos the automatic check flagged (or couldn't check) wait here
+let AQ=null,aqBusy=false;
+async function aqLoad(){if(aqBusy)return;if(st.smp||!REAL){AQ={items:[{id:'s1',name:'Blastoise · 009/165 · 151',reason:'Doesn’t look like this card',seen:'Wartortle',email:'fan@example.com',created:Date.now()/1000-120,art:{list:'assets/card-art/blastoise-sm.webp',detail:'assets/card-art/blastoise.webp'},sample:1}]};aqPaint();return}
+  aqBusy=true;try{const r=await fetch(API+'/api/admin/art',{credentials:'include'});AQ=await r.json()}catch(e){AQ={error:1}}aqBusy=false;aqPaint()}
+async function aqAct(id,action){if(st.smp||!REAL){AQ.items=AQ.items.filter(x=>x.id!==id);aqPaint();return}
+  try{await fetch(API+'/api/admin/art',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:JSON.stringify({id,action})})}catch(e){}AQ.items=(AQ.items||[]).filter(x=>x.id!==id);aqPaint()}
+function artCard(){setTimeout(()=>{if(!AQ)aqLoad();else aqPaint()},0);return '<div class="grid" style="margin-bottom:14px"><div class="card c12" id="aq"><h3>Card art to review</h3><div class="empty">Loading…</div></div></div>'}
+function aqPaint(){const el=document.getElementById('aq');if(!el)return;const L=(AQ&&AQ.items)||[],src=u=>/^https?:/.test(u)||!REAL||(AQ&&L[0]&&L[0].sample)?u:API+u;
+  const ago=t=>{const m=Math.round((Date.now()/1000-t)/60);return m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago'};
+  el.innerHTML='<div class="hch"><div><h3>Card art to review</h3><div class="sub">Shared card photos the automatic check flagged, or couldn’t check. Approve makes it the card’s default art.</div></div><button type="button" class="chip" id="aqr">Refresh</button></div>'+
+    (!AQ||aqBusy?'<div class="empty">Loading…</div>':AQ.error?'<div class="empty">Couldn’t load the queue</div>':!L.length?'<div class="empty">Nothing waiting</div>':
+    '<div class="aql">'+L.map(x=>'<div class="aqr"><a href="'+esc(src(x.art.detail))+'" target="_blank" rel="noopener"><img src="'+esc(src(x.art.list))+'" alt=""></a><div class="aqt"><b>'+esc(x.name||x.card_id||'')+'</b><em>'+esc(x.reason||'')+(x.seen?' · reads “'+esc(x.seen)+'”':'')+'</em><small>'+esc(x.email||'')+' · '+ago(x.created)+'</small></div><div class="aqb"><button type="button" class="chip" data-aq="reject" data-id="'+esc(x.id)+'">Reject</button><button type="button" class="chip aqok" data-aq="approve" data-id="'+esc(x.id)+'">Approve</button></div></div>').join('')+'</div>');
+  const r=document.getElementById('aqr');if(r)r.onclick=()=>aqLoad();el.querySelectorAll('[data-aq]').forEach(b=>b.onclick=()=>aqAct(b.dataset.id,b.dataset.aq))}
 // phones: keep the chosen tab in view, and fade the right edge only while more tabs sit off to the side
 {const c0=chrome;chrome=function(){c0.apply(this,arguments);const t=document.getElementById('tabs'),on=t&&t.querySelector('[aria-selected=true]');if(!t)return;
   if(on){const l=on.offsetLeft-t.offsetLeft,r=l+on.offsetWidth;if(l<t.scrollLeft+8||r>t.scrollLeft+t.clientWidth-40)t.scrollTo({left:Math.max(0,l-24),behavior:'smooth'})}

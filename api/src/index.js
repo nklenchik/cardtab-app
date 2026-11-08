@@ -9,6 +9,7 @@ import { handlePublicShare, cleanupShares } from './share.js';
 import { cleanupAnalytics, handleSiteEvent } from './analytics.js';
 import { handleAuth, currentUser, isAdmin } from './auth.js';
 import { gate, count } from './budget.js';
+import { handleArt, communityArt } from './artup.js';
 const JT = 'https://api.justtcg.com';
 const CDN = 'https://tcgplayer-cdn.tcgplayer.com/product/';
 const DAY = 86400;
@@ -138,6 +139,8 @@ export default {
     if (u.pathname.startsWith('/auth/')) { try { return await handleAuth(env, req, u.pathname); } catch (e) { return new Response(JSON.stringify({ error: e.status === 503 ? 'Sign-in emails aren’t set up yet.' : 'Something went wrong. Try again.' }), { status: e.status || 500, headers: { 'content-type': 'application/json', 'access-control-allow-origin': env.APP_URL || 'https://app.cardtab.app', 'access-control-allow-credentials': 'true' } }); } }
     if (req.method === 'OPTIONS') return new Response(null, { headers: { ...cors(env), 'access-control-allow-methods': 'GET,POST', 'access-control-allow-headers': 'content-type' } });
     try {
+      // v50.46: your own card photos, shared default art and its review queue
+      if (u.pathname.startsWith('/up/') || u.pathname === '/api/art/upload' || u.pathname === '/api/admin/art') { const r = await handleArt(env, req, u.pathname, cors, ctx); if (r) return r; }
       if (u.pathname === '/api/lookup') {
         const q = { name: u.searchParams.get('name') || '', number: u.searchParams.get('number') || '', set: u.searchParams.get('set') || '', game: u.searchParams.get('game') || '' };
         if (!q.name && !q.number) return json(env, { error: 'name or number required' }, 400);
@@ -158,7 +161,7 @@ export default {
         return json(env, { cards: cards.map(c => ({ ...c, art: { list: `/art/${c.id}/list`, detail: `/art/${c.id}/detail` } })) });
       }
       const m = u.pathname.match(/^\/art\/([^/]+)\/(list|detail)$/);
-      if (m) return art(env, ctx, decodeURIComponent(m[1]), m[2]);
+      if (m) { const id = decodeURIComponent(m[1]), r = await art(env, ctx, id, m[2]); if (r.status === 404 && /^[\w-]{3,240}$/.test(id)) { const c = await communityArt(env, id, m[2], cors); if (c) return c; } return r; }
       return new Response('not found', { status: 404, headers: cors(env) });
     } catch (e) {
       return json(env, { error: e.status === 429 ? 'busy, try again in a moment' : 'lookup failed', upstream: e.upstream || null, detail: e.why || String(e.message || '') }, e.status || 500, e.status === 429 ? { 'retry-after': '20' } : {});

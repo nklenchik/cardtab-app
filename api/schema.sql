@@ -64,3 +64,9 @@ CREATE TABLE IF NOT EXISTS shares ( id TEXT PRIMARY KEY, uid TEXT NOT NULL UNIQU
 CREATE TABLE IF NOT EXISTS share_open ( id TEXT PRIMARY KEY, last INTEGER NOT NULL );
 -- v50.12 daily check: one row per day with each check's result (kept 90 days)
 CREATE TABLE IF NOT EXISTS health ( day TEXT PRIMARY KEY, at INTEGER NOT NULL, ok INTEGER NOT NULL, n_bad INTEGER NOT NULL DEFAULT 0, n_warn INTEGER NOT NULL DEFAULT 0, checks TEXT );
+
+-- v50.46: card photos people upload (their own entries), and shared default art waiting for review
+-- status: private (only on the uploader's entry) | pending (shared, waiting for an admin) | approved (the card's default) | rejected
+CREATE TABLE IF NOT EXISTS art_uploads ( id TEXT PRIMARY KEY, user_id TEXT NOT NULL, card_id TEXT, name TEXT, w INTEGER, h INTEGER, status TEXT NOT NULL, reason TEXT, seen TEXT, created INTEGER NOT NULL );
+CREATE INDEX IF NOT EXISTS art_uploads_user ON art_uploads (user_id, created);
+CREATE INDEX IF NOT EXISTS art_uploads_status ON art_uploads (status, created);

@@ -169,7 +169,7 @@
   const fix = (function () {
     const d = document.createElement('dialog'); d.className = 'ed ntf'; d.id = 'fix'; d.setAttribute('aria-labelledby', 'fix-h');
     d.innerHTML = '<div class="ed-form ntf-form"><div class="ed-head"><h2 id="fix-h">Match your card</h2><button type="button" class="ed-x" data-fix-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
-      '<p class="ntf-lede" id="fix-lede"></p><label class="ntf-search">' + svg('search', 17) + '<input id="fix-q" type="search" autocomplete="off" enterkeyhint="search" aria-label="Search for the card"></label><div id="fix-res" class="ntf-res"></div><button type="button" class="fix-none" id="fix-none" hidden>No card art for this one</button></div>';
+      '<p class="ntf-lede" id="fix-lede"></p><label class="ntf-search">' + svg('search', 17) + '<input id="fix-q" type="search" autocomplete="off" enterkeyhint="search" aria-label="Search for the card"></label><div id="fix-res" class="ntf-res"></div><button type="button" class="fix-up" id="fix-up"><i aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></i><span><b>Upload your own photo</b><small>Snap or pick a photo of your card</small></span></button><button type="button" class="fix-none" id="fix-none" hidden>No card art for this one</button></div>';
     document.body.appendChild(d);
     let entry = null, list = [], mode = 'fix', qt = 0, tok = 0;
     const listName = c => [c.n, c.num, c.s].filter(Boolean).join(' - ');
@@ -205,6 +205,8 @@
       await save(s => { s.items = (s.items || []).concat([{ id: 'fx:' + entry.id + ':' + now(), kind: 'fixed', cat: 'cards', ts: now(), card: [c.n, c.num].filter(Boolean).join(' · ') }]).slice(-40); s.read = Object.assign({}, s.read); });
       d.close(); toast('Fixed: ' + c.n + '. The amount didn’t change.', true);
     });
+    // v50.46: no picture, or the wrong one: use your own photo of the card
+    $('fix-up').addEventListener('click', () => { if (!entry || !window.CTArtUpload) return; window.CTArtUpload.open(entry, () => { if (d.open) d.close(); }); });
     $('fix-none').addEventListener('click', async () => { if (!entry) return; await S._artPatch(entry.id, { art: null, artFrom: 'none', artV2: 1 }); if (window.CTArtFill) window.CTArtFill.learn(entry); d.close(); toast('No card art for this entry.', true); });
     return {
       open(e) { mode = 'fix'; entry = e; $('fix-h').textContent = 'Match your card'; $('fix-none').hidden = true; $('fix-lede').innerHTML = 'You typed <b>“' + esc(e.name) + '”</b>. Pick the right card and we’ll add its name and art. Amounts stay the same.'; $('fix-q').value = e.name; search(); d.showModal(); calmFocus(d); },

@@ -15,6 +15,10 @@ database_id = "339e10fc-7114-47c3-8c9f-9de4e74d4372"
 binding = "ART"
 bucket_name = "card-tab-art"
 
+# v50.46: Workers AI (the automatic check on shared card photos). Free daily allowance.
+[ai]
+binding = "AI"
+
 [vars]
 ALLOWED_ORIGIN = "https://app.cardtab.app"
 APP_URL = "https://app.cardtab.app"
