@@ -108,8 +108,10 @@ const SHADE=new Map(); // each picture's brightness is measured once, then remem
 function settleWalls(root){root=root||$('simple');if(root.closest&&root.closest('#aw'))return; // gallery previews keep the default shade
   root.querySelectorAll('img.fwi:not([data-ok])').forEach(img=>{img.dataset.ok=1;
     const ready=()=>{const fw=img.closest('.fw');if(!fw||!fw.isConnected)return;
-      const r=fw.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1),z=parseFloat(img.style.getPropertyValue('--fz'))||1,useW=img.naturalWidth/(img.dataset.wall==='1'?1:z);
-      if(img.naturalWidth&&r.width&&useW<r.width*dpr*.5){const sec=fw.closest('.w[data-id]');if(sec&&!LOWRES.has(fw.dataset.lk)){LOWRES.add(fw.dataset.lk);rebuild(sec.dataset.id);return}}
+      /* v50.15: use the widget's laid-out width (a widget gliding into place is drawn scaled, which used to read as much
+         wider, call the picture too small, and switch the widget to the plain card for good); never judge mid-move */
+      const r={width:fw.offsetWidth},dpr=Math.min(2,devicePixelRatio||1),z=parseFloat(img.style.getPropertyValue('--fz'))||1,useW=img.naturalWidth/(img.dataset.wall==='1'?1:z),moving=rz||drag||(fw.closest('.w')&&fw.closest('.w').matches('.floating,.rz-src,.rz-in'))||(fw.closest('.w')&&fw.closest('.w').getAnimations&&fw.closest('.w').getAnimations().some(a=>a.playState==='running'));
+      if(img.naturalWidth&&r.width&&!moving&&useW<r.width*dpr*.5){const sec=fw.closest('.w[data-id]');if(sec&&!LOWRES.has(fw.dataset.lk)){LOWRES.add(fw.dataset.lk);rebuild(sec.dataset.id);return}}
       let sh=SHADE.get(img.src);
       if(sh==null){sh=.86;try{const cv=document.createElement('canvas');cv.width=24;cv.height=24;const g=cv.getContext('2d');g.drawImage(img,0,0,24,24);const d=g.getImageData(0,12,24,12).data;let t=0;for(let i=0;i<d.length;i+=4)t+=.2126*d[i]+.7152*d[i+1]+.0722*d[i+2];sh=+(.72+Math.max(0,t/(d.length/4)/255-.35)*.45).toFixed(2)}catch(e){}SHADE.set(img.src,sh)}
       fw.style.setProperty('--shade',sh);fw.classList.add('in')};
