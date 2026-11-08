@@ -10,7 +10,7 @@
     return S.all().map(t => {
       const parts = String(t.name || '').split(' - ');
       return { id: t.id, date: t.date, type: t.type, platform: t.platform || 'Other', name: parts[0] || t.name, no: parts[1] || '', set: parts.slice(2).join(' - '),
-        amount: t.amount, net: t.type === 'sale' ? (t.net != null ? t.net : t.amount) : null, qty: t.qty || 1, art: t.art || null, game: t.game || '', condition: t.condition || '' };
+        amount: t.amount, net: t.type === 'sale' ? (t.net != null ? t.net : t.amount) : null, qty: t.qty || 1, art: t.art || null, game: t.game || '', condition: t.condition || '', grade: window.CTGrade ? window.CTGrade.of(t) : null }; // v50.37: graded cards show as slabs on the board
     });
   };
   // The board asks which plan you're on, and where Get Premium goes (checkout once payments exist; until then it switches plans here)
@@ -26,7 +26,7 @@
   function load() {
     if (window.CTBoard) return Promise.resolve();
     if (loading) return loading;
-    const V = '50.36'; // bump when board files change, so phones don't keep an old copy
+    const V = '50.37'; // bump when board files change, so phones don't keep an old copy
     const css = new Promise((res, rej) => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'board/board.css?v=' + V; l.onload = res; l.onerror = rej; document.head.appendChild(l); });
     const js = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'board/board.js?v=' + V; s.async = true; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
     loading = Promise.all([css, js]).then(() => { sync(); if (window.CTBoard.prewarm) window.CTBoard.prewarm(); }).catch(e => { loading = null; throw e; });

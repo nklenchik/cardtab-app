@@ -1,6 +1,6 @@
 // ---------- free plan (stage 2): 4 widgets, last 3 months, a lock on everything else ----------
 const cbFree=()=>!!(window.CTBoardPlan&&window.CTBoardPlan()==='free');
-const FREE_K=['profit','sales','spent','month'],FREE_P=['d7','d30','l3'];
+const FREE_K=['profit','sales','after','spent','month'],FREE_P=['d7','d30','l3'];
 let PM_OPEN=null;function cbPremium(c){if(PM_OPEN)PM_OPEN(c)}
 const LOCK_I='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 
@@ -42,7 +42,10 @@ const FEAT_ORDER=['win','roi','pricey','seller','loss','flip','held','money'];
 let PVMODE=false; // Add widgets previews are tiny: they always use the small thumbnail
 const artSrc=(c,mode)=>!c||!c.art?'':PVMODE?(c.art.list||c.art.detail):mode==='wall'?(c.art.wall||c.art.detail||c.art.list):mode==='card'?(c.art.detail||c.art.list):(c.art.list||c.art.detail);
 const letter=c=>esc(((c&&c.e.name)||'?').match(/[A-Za-z0-9]/)?(c.e.name.match(/[A-Za-z0-9]/)[0].toUpperCase()):'?');
-function cardImg(c,cls,mode){const src=maskNames()?'':artSrc(c,mode);return src?'<img class="'+cls+'" src="'+esc(src)+'" alt="" decoding="async" loading="lazy" draggable="false">':'<span class="'+cls+' ph" aria-hidden="true"><i>'+(maskNames()?'':letter(c))+'</i></span>'}
+// v50.37: a graded card shows in its slab (the same one Entries draws); full-art widgets (Featured) keep just the art
+function cardImg(c,cls,mode){const src=maskNames()?'':artSrc(c,mode),G=window.CTGrade;
+  if(G&&c&&c.e&&cls!=='pimg'&&!maskNames()&&G.of(c.e))return '<span class="'+cls+' xslab">'+G.slab(c.e,src?'<img src="'+esc(src)+'" alt="" decoding="async" loading="lazy" draggable="false">':'<i class="sl-ph"></i>')+'</span>';
+  return src?'<img class="'+cls+'" src="'+esc(src)+'" alt="" decoding="async" loading="lazy" draggable="false">':'<span class="'+cls+' ph" aria-hidden="true"><i>'+(maskNames()?'':letter(c))+'</i></span>'}
 const nameOf=c=>maskNames()?'A card from your collection':c.e.name;
 // the card-and-details layout: big card, name as a heading, labeled numbers, one hero number
 function cardHero(c,F,ctx,L,w,s){const show=(w&&w.show)||'both',nm=nameOf(c);
@@ -62,7 +65,7 @@ function featBody(ctx,s,w){const m=FEAT[w.metric]?w.metric:'win',F=FEAT[m],L=car
   const big=show==='%'?'':'<div class="fbig num'+(F.good?' g':F.bad?' r':'')+'">'+F.num(c,ctx,L)+(show==='both'&&s!=='S'?'<span class="fpc">'+esc(F.pc(c,ctx,L))+'</span>':'')+'</div>';
   const onlyPc=show==='%'?'<div class="fbig num'+(F.good?' g':F.bad?' r':'')+'">'+esc(F.pc(c,ctx,L))+'</div>':'';
   return '<div class="fw drill'+(PVMODE?' in':'')+'"'+dd({t:c.e.name,sub:'Every entry for this card',card:c.k})+' role="button" tabindex="0" data-fw data-lk="'+esc(lk)+'">'+
-    '<img class="fwi" src="'+esc(src)+'" alt="" decoding="async" draggable="false" style="--fx:'+f[0]+'%;--fy:'+f[1]+'%;--fz:'+z+'" data-wall="'+(c.art.wall?1:0)+'">'+
+    '<img class="fwi" src="'+esc(src)+'" alt="" decoding="async" draggable="false" style="--fx:'+f[0]+'%;--fy:'+f[1]+'%;--fz:'+z+'" data-wall="'+(c.art.wall?1:0)+'" data-focus="'+(c.art.focus?1:0)+'" data-meta="'+esc([c.e.cardId,c.e.cardName,c.e.name].filter(Boolean).join(' '))+'">'+
     '<div class="fwt"><h4 class="fn">'+esc(nameOf(c))+'</h4>'+(s==='S'?'':'<p class="fl">'+esc(F.line(c,ctx,L))+'</p>')+big+onlyPc+'</div></div>'}
 // ---- Best sellers: a podium of the top three, shown as the top halves of the cards ----
 function bestBody(ctx,s,w){const L=cardStats(ctx).filter(c=>c.sold&&c.b>0&&c.g>0).sort((a,b)=>b.g-a.g),n=s==='S'?1:s==='M'||s==='B'?2:3,top=L.slice(0,n);
@@ -87,8 +90,10 @@ const SHADE=new Map(); // each picture's brightness is measured once, then remem
 function settleWalls(root){root=root||$('simple');if(root.closest&&root.closest('#aw'))return; // gallery previews keep the default shade
   root.querySelectorAll('img.fwi:not([data-ok])').forEach(img=>{img.dataset.ok=1;
     const ready=()=>{const fw=img.closest('.fw');if(!fw||!fw.isConnected)return;
-      const r=fw.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1),z=parseFloat(img.style.getPropertyValue('--fz'))||1,useW=img.naturalWidth/(img.dataset.wall==='1'?1:z);
-      if(img.naturalWidth&&r.width&&useW<r.width*dpr*.5){const sec=fw.closest('.w[data-id]');if(sec&&!LOWRES.has(fw.dataset.lk)){LOWRES.add(fw.dataset.lk);rebuild(sec.dataset.id);return}}
+      /* v50.15: use the widget's laid-out width (a widget gliding into place is drawn scaled, which used to read as much
+         wider, call the picture too small, and switch the widget to the plain card for good); never judge mid-move */
+      const r={width:fw.offsetWidth},dpr=1/* v50.16: judged at normal (not Retina) sharpness, so a slightly soft picture still shows in full; only tiny thumbnails fall back to the plain card */,z=parseFloat(img.style.getPropertyValue('--fz'))||1,useW=img.naturalWidth/(img.dataset.wall==='1'?1:z),moving=rz||drag||(fw.closest('.w')&&fw.closest('.w').matches('.floating,.rz-src,.rz-in'))||(fw.closest('.w')&&fw.closest('.w').getAnimations&&fw.closest('.w').getAnimations().some(a=>a.playState==='running'));
+      if(img.naturalWidth&&r.width&&!moving&&useW<r.width*dpr*.5){const sec=fw.closest('.w[data-id]');if(sec&&!LOWRES.has(fw.dataset.lk)){LOWRES.add(fw.dataset.lk);rebuild(sec.dataset.id);return}}
       let sh=SHADE.get(img.src);
       if(sh==null){sh=.86;try{const cv=document.createElement('canvas');cv.width=24;cv.height=24;const g=cv.getContext('2d');g.drawImage(img,0,0,24,24);const d=g.getImageData(0,12,24,12).data;let t=0;for(let i=0;i<d.length;i+=4)t+=.2126*d[i]+.7152*d[i+1]+.0722*d[i+2];sh=+(.72+Math.max(0,t/(d.length/4)/255-.35)*.45).toFixed(2)}catch(e){}SHADE.set(img.src,sh)}
       fw.style.setProperty('--shade',sh);fw.classList.add('in')};

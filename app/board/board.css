@@ -1687,6 +1687,19 @@ dialog.sheet .awp{background:var(--cb-alt)}
 .cbx #cb .fw.fwph .fwi{opacity:1;transform:none}
 .cbx #cb .fw.fwph .fwi::before{width:26%;height:auto;aspect-ratio:5/7;left:72%;top:42%;border-width:2px;border-radius:8px;opacity:.55}
 .cbx #cb .k-feat.eS .fw.fwph .fwi::before{left:76%;top:34%;width:30%}
+/* v50.37: graded cards sit in their slab, inside the same box the card used */
+.cbx #cb .xslab{display:grid!important;place-items:center;background:none!important;box-shadow:none!important;overflow:visible!important;border-radius:0!important;object-fit:initial}
+.cbx #cb .xslab .slab{width:82.5%}
+.cbx #cb .pcrop:has(.xslab){overflow:hidden;box-shadow:none;background:none}
+.cbx #cb .pimg.xslab{place-items:start center}
+.cbx #cb .pimg.xslab .slab{width:100%}
+.cbx #cb .xart.xslab{aspect-ratio:3.1/5.25}
+.cbx #cb .xart.xslab .slab{width:100%}
+/* phones: widget bodies are short and crop the card; a slab is sized to the height instead, so it always shows whole */
+.cbx #cb .fsq .xslab{height:100%!important;max-height:100%!important;width:auto!important;max-width:none!important;aspect-ratio:3.1/5.25!important;flex:none;margin:0!important;align-self:center}
+.cbx #cb .fsq .xslab .slab{width:100%}
+.cbx #cb .fsq .wb:has(>.xs>.xslab)>.xs,.cbx #cb .fsq .wb:has(>.xhero>.xslab)>.xhero{height:100%;min-height:0}
+.cbx #cb .fsq .xcol:has(>.xhero>.xslab)>.xhero{flex:1;height:100%;min-height:0;grid-template-rows:minmax(0,1fr)}
 
 /* ---------- v16 free plan ---------- */
 /* Premium sheet: the art leads, fading into the sheet; the price sits in a pill */

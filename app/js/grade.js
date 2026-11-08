@@ -76,7 +76,7 @@
   // the slab. `art` is the image markup (or a placeholder) that sits in the well
   function slab(e, art, cls) {
     const gr = of(e); if (!gr) return '';
-    const meta = [numOf(e.name), gr.cert ? '#' + gr.cert : ''].filter(Boolean).join(' · ');
+    const meta = [numOf(e.name) || (e.no && /\d/.test(e.no) && e.no.length < 14 ? e.no : ''), gr.cert ? '#' + gr.cert : ''].filter(Boolean).join(' · ');
     return '<span class="slab' + (cls ? ' ' + cls : '') + '" aria-label="' + esc(label(gr) + (gr.w ? ' ' + gr.w : '')) + ' graded">' +
       '<span class="sl-in"><span class="sl-lbl">' +
         '<span class="sl-co">' + esc(gr.co) + '</span><span class="sl-nm">' + esc(cardName(e)) + '</span>' + (meta ? '<span class="sl-meta">' + esc(meta) + '</span>' : '') +

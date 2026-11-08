@@ -63,7 +63,10 @@ const FEAT_ORDER=['win','roi','pricey','seller','loss','flip','held','money'];
 let PVMODE=false; // Add widgets previews are tiny: they always use the small thumbnail
 const artSrc=(c,mode)=>!c||!c.art?'':PVMODE?(c.art.list||c.art.detail):mode==='wall'?(c.art.wall||c.art.detail||c.art.list):mode==='card'?(c.art.detail||c.art.list):(c.art.list||c.art.detail);
 const letter=c=>esc(((c&&c.e.name)||'?').match(/[A-Za-z0-9]/)?(c.e.name.match(/[A-Za-z0-9]/)[0].toUpperCase()):'?');
-function cardImg(c,cls,mode){const src=maskNames()?'':artSrc(c,mode);return src?'<img class="'+cls+'" src="'+esc(src)+'" alt="" decoding="async" loading="lazy" draggable="false">':'<span class="'+cls+' ph" aria-hidden="true"><i>'+(maskNames()?'':letter(c))+'</i></span>'}
+// v50.37: a graded card shows in its slab (the same one Entries draws); full-art widgets (Featured) keep just the art
+function cardImg(c,cls,mode){const src=maskNames()?'':artSrc(c,mode),G=window.CTGrade;
+  if(G&&c&&c.e&&cls!=='pimg'&&!maskNames()&&G.of(c.e))return '<span class="'+cls+' xslab">'+G.slab(c.e,src?'<img src="'+esc(src)+'" alt="" decoding="async" loading="lazy" draggable="false">':'<i class="sl-ph"></i>')+'</span>';
+  return src?'<img class="'+cls+'" src="'+esc(src)+'" alt="" decoding="async" loading="lazy" draggable="false">':'<span class="'+cls+' ph" aria-hidden="true"><i>'+(maskNames()?'':letter(c))+'</i></span>'}
 const nameOf=c=>maskNames()?'A card from your collection':c.e.name;
 // the card-and-details layout: big card, name as a heading, labeled numbers, one hero number
 function cardHero(c,F,ctx,L,w,s){const show=(w&&w.show)||'both',nm=nameOf(c);

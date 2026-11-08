@@ -103,7 +103,7 @@
 .cbx #cb.editing .wq .grip{width:36px!important;height:36px!important;right:0!important;bottom:0!important;left:auto!important;top:auto!important;border-radius:0 0 20px 0!important;background:transparent!important;box-shadow:none!important;color:var(--text);z-index:4;padding:0}
 .cbx #cb.editing .wq .grip svg{display:none}
 .cbx #cb.editing .wq .grip::after{content:"";position:absolute;right:6px;bottom:6px;width:16px;height:16px;border:solid currentColor;border-width:0 4px 4px 0;border-bottom-right-radius:14px;opacity:.55;transition:opacity .15s}
-.cbx #cb.editing .wq .grip:hover::after,.cbx #cb.editing .wq .grip:focus-visible::after{opacity:.9}
+.cbx #cb.editing .wq .grip:focus-visible::after{opacity:.9}@media(hover:hover){.cbx #cb.editing .wq .grip:hover::after{opacity:.9}}
 .cbx #cb.editing .wq .grip::before{inset:-8px!important;border-radius:0!important}
 .cbx #cb.editing .wq.edgeR .grip{left:0!important;right:auto!important;border-radius:0 0 0 20px!important}
 .cbx #cb.editing .wq.edgeR .grip::after{right:auto;left:6px;border-width:0 0 4px 4px;border-bottom-right-radius:0;border-bottom-left-radius:14px}
@@ -116,3 +116,16 @@
 .cbx #cb .fw.fwph .fwi{opacity:1;transform:none}
 .cbx #cb .fw.fwph .fwi::before{width:26%;height:auto;aspect-ratio:5/7;left:72%;top:42%;border-width:2px;border-radius:8px;opacity:.55}
 .cbx #cb .k-feat.eS .fw.fwph .fwi::before{left:76%;top:34%;width:30%}
+/* v50.37: graded cards sit in their slab, inside the same box the card used */
+.cbx #cb .xslab{display:grid!important;place-items:center;background:none!important;box-shadow:none!important;overflow:visible!important;border-radius:0!important;object-fit:initial}
+.cbx #cb .xslab .slab{width:82.5%}
+.cbx #cb .pcrop:has(.xslab){overflow:hidden;box-shadow:none;background:none}
+.cbx #cb .pimg.xslab{place-items:start center}
+.cbx #cb .pimg.xslab .slab{width:100%}
+.cbx #cb .xart.xslab{aspect-ratio:3.1/5.25}
+.cbx #cb .xart.xslab .slab{width:100%}
+/* phones: widget bodies are short and crop the card; a slab is sized to the height instead, so it always shows whole */
+.cbx #cb .fsq .xslab{height:100%!important;max-height:100%!important;width:auto!important;max-width:none!important;aspect-ratio:3.1/5.25!important;flex:none;margin:0!important;align-self:center}
+.cbx #cb .fsq .xslab .slab{width:100%}
+.cbx #cb .fsq .wb:has(>.xs>.xslab)>.xs,.cbx #cb .fsq .wb:has(>.xhero>.xslab)>.xhero{height:100%;min-height:0}
+.cbx #cb .fsq .xcol:has(>.xhero>.xslab)>.xhero{flex:1;height:100%;min-height:0;grid-template-rows:minmax(0,1fr)}
