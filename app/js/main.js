@@ -178,12 +178,13 @@
   const touchDev = matchMedia('(hover:none)').matches;
   function applyTheme(th, save) { if (th === 'auto') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = th; if (save) { try { localStorage.setItem('cb.theme', th); } catch (e) {} } $('am-theme').querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', b.dataset.th === th)); }
   let th0 = 'auto'; try { th0 = localStorage.getItem('cb.theme') || 'auto'; } catch (e) {} applyTheme(th0, false);
+  window.CTApplyTheme = applyTheme;   // v50.27: appearance follows the account (prefs.js)
   // v43.3: no haptics (iPhones don't allow web pages to vibrate, so the setting did nothing for most people). Kept as a no-op
   // so the places that call it don't need to change.
   window.ctBuzz = () => {}; try { localStorage.removeItem('cb.haptics'); } catch (e) {}
   // Sales show: what you kept after fees (the default) or the full sale price, in the list and the gallery
   const paintAmt = () => { let v = 'kept'; try { v = localStorage.getItem('ct.amt') || 'kept'; } catch (e) {} $('am-amt').querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.amt === v))); };
-  paintAmt();
+  paintAmt(); addEventListener('ct-amt', paintAmt);
   $('am-amt').addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('button'); if (!b) return; try { localStorage.setItem('ct.amt', b.dataset.amt); } catch (er) {} paintAmt(); window.ctBuzz(); dispatchEvent(new Event('ct-amt')); });
   // Start on: which range Entries, Board and Stories open on. Follows the account to every device. Year and All time are Premium.
   const soPrem = () => window.CTStore && CTStore.plan() === 'premium';

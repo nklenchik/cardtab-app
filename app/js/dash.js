@@ -227,7 +227,8 @@
   }
 
   // ---------- gallery view (v37): the card art, big. Same range, filters, platform and sort as the list ----------
-  let gal = false; try { gal = localStorage.getItem('ct.view') === 'gallery'; } catch (e) {}
+  // v50.27: computers start on grid, phones on list, until someone picks (their pick follows the account, per kind of device)
+  let gal = false; try { const v0 = localStorage.getItem('ct.view'); gal = v0 ? v0 === 'gallery' : !matchMedia('(max-width:760px)').matches; } catch (e) {}
   const shortName = n => String(n || '').split(' - ')[0];
   function tileHtml(t) {
     const src = t.art && (t.art.detail || t.art.list);
@@ -543,6 +544,12 @@
   });
 
   // ---------- mount ----------
+  // v50.27: which entries show first (Settings → Display), and choices arriving from the account
+  function showFirst() { let f = 'all'; try { f = localStorage.getItem('ct.filter') || 'all'; } catch (e) {} const b = root.querySelector('.ct-filters [data-ct-type="' + f + '"]'); if (b && type !== f) b.click(); }
+  addEventListener('ct-prefs', e => { const ks = (e.detail && e.detail.keys) || [];
+    if (ks.includes('ct.view')) { let v = 'list'; try { v = localStorage.getItem('ct.view') || (matchMedia('(max-width:760px)').matches ? 'list' : 'gallery'); } catch (er) {} if ((v === 'gallery') !== gal) setView(v); }
+    if (ks.includes('ct.f.ct-sort')) { $('ct-sort').value = pref.get('ct-sort', 'new'); render(); }
+    if (ks.includes('ct.filter')) showFirst(); });
   let off = null;
   function mount() {
     dates();
@@ -551,6 +558,7 @@
     const first = so === 'year' ? 'y:' + D.monthPrefix.slice(0, 4) : so === 'all' ? 'all' : 'm:' + D.monthPrefix;
     if (window.CTMonth) window.CTMonth.set(first, true); else $('ct-period').value = 'all';
     $('ct-sort').value = pref.get('ct-sort', 'new');
+    showFirst();
     if (off) off();
     off = S.on(reason => {
       if (reason === 'plan') { selected = null; }

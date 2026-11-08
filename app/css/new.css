@@ -1688,6 +1688,9 @@ dialog:focus-visible,dialog [tabindex="-1"]:focus-visible,.ed-form:focus-visible
 .app-menu.am #am-start button.solk{opacity:.5}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #am-start{background:var(--s-ctl)!important}:root:not([data-theme="light"]) #am-start [aria-checked=true]{background:var(--s-raise)!important}}
 :root[data-theme="dark"] #am-start{background:var(--s-ctl)!important}:root[data-theme="dark"] #am-start [aria-checked=true]{background:var(--s-raise)!important}
+/* v50.27: the phone/computer rows match Start on */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) :is(#am-pdev,#am-open,#am-view){background:var(--s-ctl)!important}:root:not([data-theme="light"]) :is(#am-pdev,#am-open,#am-view) [aria-checked=true]{background:var(--s-raise)!important}}
+:root[data-theme="dark"] :is(#am-pdev,#am-open,#am-view){background:var(--s-ctl)!important}:root[data-theme="dark"] :is(#am-pdev,#am-open,#am-view) [aria-checked=true]{background:var(--s-raise)!important}
 
 /* v43.2 notifications: dismiss with the X (desktop: shows on hover or keyboard focus), swipe sideways on touch, or Clear all */
 .ntf-it{touch-action:pan-y;will-change:transform}
@@ -1915,3 +1918,5 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
  html.tb-web .ct-tbar button span::before{inset:-6px -13px}
 }
 @media(min-width:761px){.sh-tabs .ct-tabs button svg{width:22px;height:22px;flex:none}.sh-tabs .ct-tabs button{gap:8px!important}}
+.app-menu.am .amr.amth .seg:is(#am-pdev,#am-view){grid-template-columns:1fr 1fr!important}.app-menu.am .amr.amth .seg:is(#am-pdev,#am-view) button{flex:1 1 0}
+.app-menu.am .amr:has(#am-filter,#am-sort) .amgt{white-space:nowrap}

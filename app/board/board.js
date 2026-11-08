@@ -1783,6 +1783,8 @@ function ppcBody(ctx,s){const P=ctx.inP.filter(e=>e.type==='purchase');if(!P.len
 
 Object.assign(NEWW,{bd:bdBody,tied:tiedBody,hit:hitBody,tts:ttsBody,inout:inoutBody,ppc:ppcBody});
 })();
+// v50.27: a board arranged on another device (synced by prefs.js) shows here without a reload
+window.cbReloadLayout=function(){try{if(editing)return;layoutD=loadL(LKEY)||clone(defL());layoutP=loadL(LKEYP);layout=onPhone?(layoutP=phoneL(layoutP||clone(layoutD))):layoutD;if(window.CTBoard&&CTBoard.shown)render(true)}catch(e){}};
 
 // ---- the app's side: one back-gesture history shared with the app, live data, open/refresh ----
 if(window.CTNav){navPush=(k,fn)=>window.CTNav.push('cb:'+k,fn);navDone=k=>{if(!navPopping)window.CTNav.done('cb:'+k)}}

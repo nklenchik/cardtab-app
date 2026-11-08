@@ -47,7 +47,7 @@ async function sheetAdd({ query, type, price, fees, ship, plat }) {
   await page.goto(BASE + '?signup'); await settle(800);
   await page.fill('#auth-email', 'journey@cardtab.test'); await page.locator('#auth-go').click(); await settle(1500);
   ok('Sign up lands in the app', await page.locator('#view-app').isVisible());
-  await page.evaluate(() => { try { localStorage.setItem('ct.tips', '0'); } catch (e) {} });
+  await page.evaluate(() => { try { localStorage.setItem('ct.tips', '0'); } catch (e) {} const lv = document.querySelector('[data-view="list"]'); if (lv && lv.getAttribute('aria-pressed') !== 'true') lv.click(); }); await settle(400);
   await expectTiles('New account starts at zero', { sales: '$0.00', spent: '$0.00', profit: '$0.00' });
   const u0 = await page.evaluate(() => CTStore.usage().used);
 

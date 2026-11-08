@@ -95,8 +95,17 @@
       const pick = ys.includes(String(+now - 1)) && new Date().getMonth() < 4 ? String(+now - 1) : ys[0];
       $('am-taxy').innerHTML = ys.map(y => '<option' + (y === pick ? ' selected' : '') + '>' + y + '</option>').join('');
     }
+    if (id === 'display') { pdev = window.CTPrefs ? window.CTPrefs.kind() : 'desk'; paintDev(); }
     if (id === 'display') { const r = $('am-rboard'); r.classList.remove('confirm'); $('am-rboard-s').textContent = 'Back to the starting widgets for your plan'; }
     if (id === 'account') { const o = $('am-outall'); o.classList.remove('confirm'); $('am-outall-s').textContent = 'Your phone, computer and anywhere else'; }
+  }
+  // ---------- phones and computers each keep their own: opens to, list or grid, show first ----------
+  let pdev = 'desk';
+  function paintDev() {
+    const P = window.CTPrefs; if (!P) return;
+    const chk = (id, attr, v) => $(id).querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(b.dataset[attr] === v)));
+    chk('am-pdev', 'pd', pdev); chk('am-open', 'op', P.get('ct.open', pdev) || 'entries'); chk('am-view', 'vw', P.get('ct.view', pdev) || (pdev === 'phone' ? 'list' : 'gallery'));
+    $('am-filter').value = P.get('ct.filter', pdev) || 'all'; $('am-sort').value = get('ct.f.ct-sort', 'new');
   }
   async function saveMeta(k, patch) { await S.setMeta(k, Object.assign({}, S.meta(k) || {}, patch)); }
 
@@ -104,6 +113,9 @@
     const t = e.target;
     const go = t.closest('[data-amp]'); if (go) { e.stopPropagation(); openPage(go.dataset.amp, e.detail === 0); return; }
     if (t.closest('.amp-back')) { e.stopPropagation(); closePage(); return; }
+    const pd = t.closest('#am-pdev button'); if (pd) { e.stopPropagation(); pdev = pd.dataset.pd; paintDev(); return; }
+    const op = t.closest('#am-open button'); if (op && window.CTPrefs) { e.stopPropagation(); await window.CTPrefs.set('ct.open', op.dataset.op === 'entries' ? null : op.dataset.op, pdev); paintDev(); return; }
+    const vw = t.closest('#am-view button'); if (vw && window.CTPrefs) { e.stopPropagation(); await window.CTPrefs.set('ct.view', vw.dataset.vw, pdev); paintDev(); return; }
     const c = t.closest('#am-dcond button'); if (c) { $('am-dcond').querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(b === c))); await saveMeta('addDefaults', { cond: c.dataset.c }); return; }
     const g = t.closest('.am-chip'); if (g) { const on = g.getAttribute('aria-pressed') !== 'true'; g.setAttribute('aria-pressed', String(on)); const list = myGames().filter(x => x !== g.dataset.g); if (on) list.push(g.dataset.g); await S.setMeta('games', list); return; }
     const us = t.closest('#am-usage'); if (us) { const on = us.getAttribute('aria-checked') !== 'true'; us.setAttribute('aria-checked', String(on)); await S.setMeta('shareUsage', on); return; }
@@ -127,6 +139,8 @@
       setTimeout(() => { b.textContent = 'Copy'; }, 1600); return; }
   });
   $('am-dplat').addEventListener('change', e => saveMeta('addDefaults', { plat: e.target.value }));
+  $('am-filter').addEventListener('change', e => { if (window.CTPrefs) window.CTPrefs.set('ct.filter', e.target.value === 'all' ? null : e.target.value, pdev); });
+  $('am-sort').addEventListener('change', e => { put('ct.f.ct-sort', e.target.value); dispatchEvent(new CustomEvent('ct-prefs', { detail: { keys: ['ct.f.ct-sort'] } })); });
 
   // ---------- one year, for taxes ----------
   function taxExport(y) {
