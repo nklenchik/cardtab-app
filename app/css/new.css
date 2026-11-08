@@ -2010,3 +2010,4 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 .ct-demo .ct-row.expanded .ct-row-name.ct-rn-g{display:block!important}
 .ct-demo .ct-row.expanded .ct-rn-g .ct-rn{display:inline}
 .ct-demo .ct-row.expanded .ct-rn-g .sl-chip{margin:0;vertical-align:.14em}
+.sl-chip.sl-raw{background:none;box-shadow:inset 0 0 0 1.25px rgba(130,125,116,.5);color:var(--sl-chipink)}
