@@ -1903,3 +1903,15 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 @media(max-width:760px){
  html:not(.tb-web) .ct-tbar,html:not(.tb-web) .ct-fab{bottom:max(10px,calc(env(safe-area-inset-bottom,0px) - 10px))!important}
 }
+
+/* ===== v50.23 tab icons sized like Apple's (Health): phones 27px icons over 11px labels; the small browser bar eases
+   them to ~23px; desktop tabs 22px beside 14px text. Entries is now a receipt, the same height as Board and Stories. ===== */
+@media(max-width:760px){
+ .ct-tbar button svg{width:27px;height:27px;flex:none}
+ .ct-tbar button span{height:30px!important}
+ .ct-tbar button{font-size:11px!important;gap:1px!important}
+ html.tb-web .ct-tbar button span svg{transition:transform var(--tbd,.8s) var(--tbe,ease)}
+ html.tb-mini .ct-tbar button span svg{transform:scale(.85)}
+ html.tb-web .ct-tbar button span::before{inset:-6px -13px}
+}
+@media(min-width:761px){.sh-tabs .ct-tabs button svg{width:22px;height:22px;flex:none}.sh-tabs .ct-tabs button{gap:8px!important}}
