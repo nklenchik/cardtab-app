@@ -1424,7 +1424,7 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 .zm-bg{position:absolute;inset:0;background:rgba(8,7,6,.86);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);opacity:var(--bg,1);animation:zmFade .3s ease-out both}
 .zm.out .zm-bg{animation:zmFadeOut .26s ease-in both}
 .zm-img{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,.55);cursor:zoom-in;will-change:transform;background:#222}
-.zm.zoomed .zm-img{cursor:grab;border-radius:6px}.zm.drag .zm-img{cursor:grabbing}
+.zm.zoomed .zm-img{cursor:grab}.zm.drag .zm-img{cursor:grabbing}
 .zm-x{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:calc(14px + env(safe-area-inset-right,0px));width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.12);color:#fff;display:grid;place-items:center;cursor:pointer;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);animation:zmFade .3s ease-out both}
 .zm-tip{position:absolute;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom,0px));margin:0;text-align:center;color:rgba(255,255,255,.7);font:700 12.5px Manrope,system-ui,sans-serif;pointer-events:none;animation:zmTip 3.2s ease both}
 .zm.zoomed .zm-tip,.zm.out .zm-tip,.zm.out .zm-x{opacity:0;transition:opacity .2s}
@@ -2019,3 +2019,18 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 /* the tax-year row fits its card: the year picker gives way, Download keeps its size */
 .app-menu.am .am-taxr{min-width:0}.app-menu.am .am-taxr .am-sel{min-width:0;width:auto}
 .app-menu.am .amg .am-taxr button.am-btn{flex:none;width:auto;padding:7px 14px;gap:0}
+
+/* v50.43: zoom keeps the card's own corner shape at every size (radius set from its width); graded cards open on the slab */
+.zm-img,.zm-slab{top:calc(50% + var(--zy,0px))}
+.zm-slab{position:absolute;left:50%;transform:translate(-50%,-50%);will-change:transform;cursor:zoom-in}
+.zm-slab[hidden]{display:none}
+.zm-slab>.slab{width:100%!important;height:100%;margin:0}
+.zm-slab .sl-in{background-color:rgba(236,239,243,.9);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:var(--sl-rim),0 30px 80px rgba(0,0,0,.55)}
+:root[data-theme="dark"] .zm-slab .sl-in{background-color:rgba(40,40,44,.88)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .zm-slab .sl-in{background-color:rgba(40,40,44,.88)}}
+.zm.zoomed .zm-slab{cursor:grab}
+.zm-sw{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:2px;padding:3px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);z-index:2;transition:opacity .2s}
+.zm-sw[hidden]{display:none}
+.zm-sw button{all:unset;cursor:pointer;padding:7px 16px;border-radius:999px;font:800 13px Manrope,system-ui,sans-serif;color:rgba(255,255,255,.78)}
+.zm-sw button[aria-pressed="true"]{background:#fff;color:#1d1d1b}
+.zm.zoomed .zm-sw,.zm.out .zm-sw{opacity:0;pointer-events:none}

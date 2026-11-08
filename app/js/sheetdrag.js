@@ -76,7 +76,7 @@
   const PANEL = [':scope>.phone>.sheet', ':scope>.ed-form', ':scope>form', ':scope>.gp-in', ':scope>.bu-p', ':scope>div'];
   attach({
     zone: document, on: PHONE,
-    sheetOf: t => { const d = t.closest && t.closest('dialog[open]'); if (!d) return null; for (const q of PANEL) { const el = d.querySelector(q); if (el) return el; } return null; },
+    sheetOf: t => { const d = t.closest && t.closest('dialog[open]:not(.zm)'); if (!d) return null; for (const q of PANEL) { const el = d.querySelector(q); if (el) return el; } return null; },
     dismiss: sheet => { const d = sheet.closest('dialog'); if (!d) return; const x = d.querySelector('[data-close],.ed-x,[data-gx],[data-ntf-close],[data-fix-close],[data-imp-close],.bu-x,[data-bu-close],.as-x,[data-as-close]'); if (x) x.click(); else d.close(); }
   });
   window.CTSheetDrag = { attach };
