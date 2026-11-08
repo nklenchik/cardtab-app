@@ -229,6 +229,8 @@
   // ---------- gallery view (v37): the card art, big. Same range, filters, platform and sort as the list ----------
   // v50.27: computers start on grid, phones on list, until someone picks (their pick follows the account, per kind of device)
   let gal = false; try { const v0 = localStorage.getItem('ct.view'); gal = v0 ? v0 === 'gallery' : !matchMedia('(max-width:760px)').matches; } catch (e) {}
+  // v50.28: three grid sizes (small, medium, large), kept separately for phones and computers like list or grid
+  let gsz = 'm'; try { const g0 = localStorage.getItem('ct.gsize'); if (g0 === 's' || g0 === 'l') gsz = g0; } catch (e) {}
   const shortName = n => String(n || '').split(' - ')[0];
   function tileHtml(t) {
     const src = t.art && (t.art.detail || t.art.list);
@@ -238,9 +240,11 @@
       '<small class="ct-tile-ln"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span><span class="ct-tile-meta">' + badgeOf(t) + ' · ' + niceDate(t.date) + '</span><span class="ct-tile-pl">' + esc(t.platform || badgeOf(t)) + '</span></small>' +
       '<strong class="ct-tile-amt ' + t.type + '">' + amtText(t) + '</strong></button>';
   }
-  function setView(v) {
+  const paintView = () => fbar.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === 'list' ? !gal : gal && b.dataset.gs === gsz)));
+  function setView(v, gs) {
     gal = v === 'gallery'; try { localStorage.setItem('ct.view', v); } catch (e) {}
-    fbar.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === v)));
+    if (gal && gs && gs !== gsz) { gsz = gs; try { localStorage.setItem('ct.gsize', gs); } catch (e) {} }
+    paintView();
     expanded = null; const l = $('ct-rows');
     if (calm.matches) { render(); return; }
     l.classList.add('ct-swap'); setTimeout(() => { render(); requestAnimationFrame(() => l.classList.remove('ct-swap')); }, 140);
@@ -305,7 +309,7 @@
     const nw = x => '<span class="ct-nw">' + x + '</span>';
     const oneMonth = !q && !!monthOf(period) && sort !== 'high';
     $('ct-rows').classList.toggle('ct-onemonth', oneMonth);
-    $('ct-rows').classList.toggle('ct-gal', gal);
+    $('ct-rows').classList.toggle('ct-gal', gal); $('ct-rows').classList.toggle('gs-s', gal && gsz === 's'); $('ct-rows').classList.toggle('gs-l', gal && gsz === 'l');
     $('ct-count').innerHTML = esc(q ? 'All months' : periodLabel(period)) + ' · ' + nw(rows.length + (rows.length === 1 ? ' entry' : ' entries')) + (listFiltered ? ' · ' + nw('Spent ' + money(ft.spent)) + ' · ' + nw('Profit ' + money(ft.profit)) : '');
     // Phones: newest entries stay visible (this month's, never fewer than three); older months tuck behind a "Show ..." button
     const cur = t => t.date.startsWith(D.monthPrefix);
@@ -394,9 +398,19 @@
   fbar.querySelector('.fb-dds').append($('ct-platform'), $('ct-sort'));
   { const v = document.createElement('div'); v.className = 'fb-view'; v.setAttribute('role', 'group'); v.setAttribute('aria-label', 'View');
     const I = p => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
-    v.innerHTML = '<button type="button" data-view="list" aria-label="List" aria-pressed="' + !gal + '">' + I('<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>') + '</button><button type="button" data-view="gallery" aria-label="Gallery" aria-pressed="' + gal + '">' + I('<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>') + '</button>';
-    v.addEventListener('click', e => { const b = e.target.closest('[data-view]'); if (b && (b.dataset.view === 'gallery') !== gal) setView(b.dataset.view); });
-    fbar.appendChild(v); }
+    // v50.28: one control for list and the three grid sizes
+    v.innerHTML = '<button type="button" data-view="list" aria-label="List" aria-pressed="' + !gal + '">' + I('<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>') + '</button>' +
+      '<button type="button" data-view="gallery" data-gs="s" aria-label="Small grid" aria-pressed="false">' + I('<rect x="3.5" y="3.5" width="4.5" height="4.5" rx="1"/><rect x="9.75" y="3.5" width="4.5" height="4.5" rx="1"/><rect x="16" y="3.5" width="4.5" height="4.5" rx="1"/><rect x="3.5" y="9.75" width="4.5" height="4.5" rx="1"/><rect x="9.75" y="9.75" width="4.5" height="4.5" rx="1"/><rect x="16" y="9.75" width="4.5" height="4.5" rx="1"/><rect x="3.5" y="16" width="4.5" height="4.5" rx="1"/><rect x="9.75" y="16" width="4.5" height="4.5" rx="1"/><rect x="16" y="16" width="4.5" height="4.5" rx="1"/>') + '</button>' +
+      '<button type="button" data-view="gallery" data-gs="m" aria-label="Grid" aria-pressed="false">' + I('<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>') + '</button>' +
+      '<button type="button" data-view="gallery" data-gs="l" aria-label="Large grid" aria-pressed="false">' + I('<rect x="5.5" y="3.5" width="13" height="17" rx="2.2"/>') + '</button>';
+    v.addEventListener('click', e => { const b = e.target.closest('[data-view]'); if (!b) return; const gs = b.dataset.gs; if (b.dataset.view === 'list' ? gal : (!gal || gs !== gsz)) setView(b.dataset.view, gs); });
+    fbar.appendChild(v); paintView(); }
+  // phones: pinch the grid to change its size, like Photos (spread for bigger cards, pinch for more of them)
+  { const rows = $('ct-rows'), SZ = ['s', 'm', 'l']; let d0 = 0, k = 1;
+    const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    rows.addEventListener('touchstart', e => { if (gal && e.touches.length === 2) { d0 = dist(e.touches); k = 1; } }, { passive: true });
+    rows.addEventListener('touchmove', e => { if (d0 && e.touches.length === 2) k = dist(e.touches) / d0; }, { passive: true });
+    rows.addEventListener('touchend', () => { if (!d0) return; const i = SZ.indexOf(gsz), n = k > 1.25 ? i + 1 : k < .8 ? i - 1 : i; d0 = 0; if (n !== i && SZ[n]) setView('gallery', SZ[n]); }); }
   fbar.addEventListener('click', e => { const c = e.target.closest('[data-fb]'); if (!c) return; const b = root.querySelector('.ct-filters [data-ct-type="' + c.dataset.fb + '"]'); if (b) b.click(); });
 
   // ---------- filters ----------
@@ -547,6 +561,7 @@
   // v50.27: which entries show first (Settings → Display), and choices arriving from the account
   function showFirst() { let f = 'all'; try { f = localStorage.getItem('ct.filter') || 'all'; } catch (e) {} const b = root.querySelector('.ct-filters [data-ct-type="' + f + '"]'); if (b && type !== f) b.click(); }
   addEventListener('ct-prefs', e => { const ks = (e.detail && e.detail.keys) || [];
+    if (ks.includes('ct.gsize')) { let g = 'm'; try { g = localStorage.getItem('ct.gsize') || 'm'; } catch (er) {} if (g !== gsz) { gsz = g; paintView(); render(); } }
     if (ks.includes('ct.view')) { let v = 'list'; try { v = localStorage.getItem('ct.view') || (matchMedia('(max-width:760px)').matches ? 'list' : 'gallery'); } catch (er) {} if ((v === 'gallery') !== gal) setView(v); }
     if (ks.includes('ct.f.ct-sort')) { $('ct-sort').value = pref.get('ct-sort', 'new'); render(); }
     if (ks.includes('ct.filter')) showFirst(); });

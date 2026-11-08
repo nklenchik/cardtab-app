@@ -14,7 +14,7 @@
   const WIDE = ['cb.theme', 'ct.amt', 'ct.qm', 'cb.compare', 'cs.theme', 'cs.bg', 'ct.f.ct-sort',
     'cb.layout.v4', 'cb.layout.phone.v2', 'cb.layout.v4.free', 'cb.layout.phone.v2.free', 'cb.custom', 'cb.ly.cur.desk', 'cb.ly.cur.phone'];
   // one for phones, one for computers
-  const PER = ['ct.view', 'ct.open', 'ct.filter'];
+  const PER = ['ct.view', 'ct.open', 'ct.filter', 'ct.gsize'];
   const DEFAULTS = { desk: { 'ct.view': 'gallery' }, phone: { 'ct.view': 'list' } };
   const tracked = k => WIDE.includes(k) || PER.includes(k);
   const ST = Storage.prototype, rawSet = ST.setItem, rawDel = ST.removeItem, rawGet = ST.getItem;

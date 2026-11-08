@@ -1918,5 +1918,46 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
  html.tb-web .ct-tbar button span::before{inset:-6px -13px}
 }
 @media(min-width:761px){.sh-tabs .ct-tabs button svg{width:22px;height:22px;flex:none}.sh-tabs .ct-tabs button{gap:8px!important}}
-.app-menu.am .amr.amth .seg:is(#am-pdev,#am-view){grid-template-columns:1fr 1fr!important}.app-menu.am .amr.amth .seg:is(#am-pdev,#am-view) button{flex:1 1 0}
+.app-menu.am .amr.amth .seg#am-pdev{grid-template-columns:1fr 1fr!important}.app-menu.am .amr.amth .seg#am-view{grid-template-columns:repeat(4,minmax(0,1fr))!important}.app-menu.am .amr.amth .seg:is(#am-pdev,#am-view) button{flex:1 1 0}
 .app-menu.am .amr:has(#am-filter,#am-sort) .amgt{white-space:nowrap}
+
+/* ===== v50.28 grid sizes: small (more cards, art and amount only), medium (as before), large (bigger art, full name, platform) ===== */
+.ct-demo #ct-rows.ct-gal.gs-s{grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+@media(min-width:1100px){.ct-demo #ct-rows.ct-gal.gs-s{grid-template-columns:repeat(7,minmax(0,1fr))}}
+#ct-rows.gs-s .ct-tile{padding:7px;border-radius:12px;gap:5px}
+#ct-rows.gs-s .ct-tile-nm,#ct-rows.gs-s .ct-tile-ln{display:none}
+#ct-rows.gs-s .ct-tile-amt{font-size:13.5px;text-align:center}
+.ct-demo #ct-rows.ct-gal.gs-l{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+#ct-rows.gs-l .ct-tile{padding:14px;border-radius:20px;gap:8px}
+#ct-rows.gs-l .ct-tile-art{border-radius:12px}
+#ct-rows.gs-l .ct-tile-nm{font-size:15.5px}
+#ct-rows.gs-l .ct-tile-full{-webkit-line-clamp:3;min-height:0}
+#ct-rows.gs-l .ct-tile-pl{display:inline;margin-left:auto}
+#ct-rows.gs-l .ct-tile-amt{font-size:21px}
+@media(max-width:760px){
+ .ct-demo #ct-rows.ct-gal{touch-action:pan-y}
+ .ct-demo #ct-rows.ct-gal.gs-s{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 8px}
+ #ct-rows.gs-s .ct-tile{padding:0;grid-template-areas:"art art" "amt amt"}
+ #ct-rows.gs-s .ct-tile-amt{padding:0;margin-top:6px;font-size:12.5px;justify-self:center}
+ .ct-demo #ct-rows.ct-gal.gs-l{grid-template-columns:minmax(0,1fr);gap:26px}
+ #ct-rows.gs-l .ct-tile{padding:0}
+ #ct-rows.gs-l .ct-tile-art{width:78%;justify-self:center;border-radius:14px}
+ #ct-rows.gs-l .ct-tile-nm{margin-top:14px;font-size:16px;padding:0 11%}
+ #ct-rows.gs-l .ct-tile-ln{padding-left:11%;font-size:13px}
+ #ct-rows.gs-l .ct-tile-amt{padding-right:11%;font-size:16px}
+ .fb-view{padding:2px}.fb-view button{width:30px}
+ #ct-rows.gs-l .ct-tile-meta{display:inline}#ct-rows.gs-l .ct-tile-pl{margin-left:0}#ct-rows.gs-l .ct-tile-pl::before{content:"· "}
+}
+/* ===== v50.28 settings search ===== */
+.app-menu.am .am-q{display:flex;align-items:center;gap:8px;margin:2px 12px 8px;padding:0 12px;height:38px;border-radius:999px;background:var(--s-track);color:var(--ct-muted)}
+.app-menu.am .am-q input{all:unset;flex:1;min-width:0;font:inherit;font-size:14px;font-weight:600;color:var(--ct-text)}
+.app-menu.am .am-q input::placeholder{color:var(--ct-muted);opacity:1}
+.app-menu.am .am-q input::-webkit-search-cancel-button{display:none}
+.app-menu.am .am-qx{all:unset;cursor:pointer;font-size:12px;padding:6px;color:var(--ct-muted)}
+.app-menu.am.am-searching .am-sres~:not(section){display:none}
+.app-menu.am .amr.amth #am-view button{font-size:12.5px;padding:0 2px}
+.app-menu.am .am-snone{margin:6px 16px 12px;font-size:13px;color:var(--ct-muted)}
+.app-menu.am .am-flash{position:relative}
+.app-menu.am .am-flash::after{content:"";position:absolute;inset:0;border-radius:12px;background:var(--tab-onbg,rgba(176,18,61,.12));pointer-events:none;animation:amFlash 1.6s ease both}
+@keyframes amFlash{0%,35%{opacity:1}100%{opacity:0}}
+@media(max-width:760px){.app-menu.am .am-q{height:42px;margin:2px 14px 10px}.app-menu.am .am-q input{font-size:16px}}

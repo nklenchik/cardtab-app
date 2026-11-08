@@ -104,7 +104,7 @@
   function paintDev() {
     const P = window.CTPrefs; if (!P) return;
     const chk = (id, attr, v) => $(id).querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(b.dataset[attr] === v)));
-    chk('am-pdev', 'pd', pdev); chk('am-open', 'op', P.get('ct.open', pdev) || 'entries'); chk('am-view', 'vw', P.get('ct.view', pdev) || (pdev === 'phone' ? 'list' : 'gallery'));
+    chk('am-pdev', 'pd', pdev); chk('am-open', 'op', P.get('ct.open', pdev) || 'entries'); { const vv = P.get('ct.view', pdev) || (pdev === 'phone' ? 'list' : 'gallery'); chk('am-view', 'vw', vv === 'list' ? 'list' : (P.get('ct.gsize', pdev) || 'm')); }
     $('am-filter').value = P.get('ct.filter', pdev) || 'all'; $('am-sort').value = get('ct.f.ct-sort', 'new');
   }
   async function saveMeta(k, patch) { await S.setMeta(k, Object.assign({}, S.meta(k) || {}, patch)); }
@@ -115,7 +115,7 @@
     if (t.closest('.amp-back')) { e.stopPropagation(); closePage(); return; }
     const pd = t.closest('#am-pdev button'); if (pd) { e.stopPropagation(); pdev = pd.dataset.pd; paintDev(); return; }
     const op = t.closest('#am-open button'); if (op && window.CTPrefs) { e.stopPropagation(); await window.CTPrefs.set('ct.open', op.dataset.op === 'entries' ? null : op.dataset.op, pdev); paintDev(); return; }
-    const vw = t.closest('#am-view button'); if (vw && window.CTPrefs) { e.stopPropagation(); await window.CTPrefs.set('ct.view', vw.dataset.vw, pdev); paintDev(); return; }
+    const vw = t.closest('#am-view button'); if (vw && window.CTPrefs) { e.stopPropagation(); const x = vw.dataset.vw; if (x !== 'list') await window.CTPrefs.set('ct.gsize', x === 'm' ? null : x, pdev); await window.CTPrefs.set('ct.view', x === 'list' ? 'list' : 'gallery', pdev); paintDev(); return; }
     const c = t.closest('#am-dcond button'); if (c) { $('am-dcond').querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(b === c))); await saveMeta('addDefaults', { cond: c.dataset.c }); return; }
     const g = t.closest('.am-chip'); if (g) { const on = g.getAttribute('aria-pressed') !== 'true'; g.setAttribute('aria-pressed', String(on)); const list = myGames().filter(x => x !== g.dataset.g); if (on) list.push(g.dataset.g); await S.setMeta('games', list); return; }
     const us = t.closest('#am-usage'); if (us) { const on = us.getAttribute('aria-checked') !== 'true'; us.setAttribute('aria-checked', String(on)); await S.setMeta('shareUsage', on); return; }
@@ -158,6 +158,58 @@
     document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
     toast('Downloaded ' + y + ': ' + sales.length + ' sales, ' + buys.length + ' purchases');
   }
+
+  // ---------- search (v50.28): every setting, including the ones inside each page, by its name or the words people use ----------
+  const SYN = {
+    'Appearance': 'dark mode light theme night colors', 'Start on': 'default range period month year all time opens', 'Set for': 'phone computer desktop mobile device',
+    'Opens to': 'start page home landing first page launch', 'Entries view': 'grid list gallery cards layout size small medium large thumbnails', 'Show first': 'filter default sales purchases refunds',
+    'Sort': 'order newest oldest highest amount', 'Reset Card Board layout': 'widgets default board start over', 'Platform': 'default platform ebay tcgplayer marketplace add new',
+    'Condition': 'nm mint near mint grade default', 'Your platforms': 'custom platforms add my own stores', 'Games you collect': 'pokemon magic yugioh one piece lorcana tcg games',
+    'Monthly budget': 'budget limit spending allowance alert', 'Sales show': 'after fees kept gross sold price fees net amount', 'Hide amounts': 'privacy dollars money share stories percent',
+    'Hide card names': 'privacy share names', 'Share anonymous usage': 'analytics tracking privacy data opt out', 'Import a spreadsheet': 'import csv excel upload sheet google',
+    'Export everything': 'export download backup csv', 'One year of sales and purchases': 'taxes tax irs csv export year 1099', 'Profile': 'name photo picture avatar edit profile',
+    'Signed in with': 'google email login account', 'Sign out of all devices': 'log out logout sign out password security devices', 'Delete account': 'remove close delete account erase',
+    'Help and feedback': 'help support feedback bug', 'Contact support': 'email contact help support hello', 'Notifications': 'alerts reminders email notify', 'Plan and billing': 'premium subscription cancel upgrade payment price billing plan'
+  };
+  const qIn = $('am-q'), qRes = $('am-sres'), qX = $('am-qx');
+  let IDX = null;
+  function index() {
+    const out = [];
+    menu.querySelectorAll('section.amp').forEach(pg => {
+      const id = pg.dataset.p, title = (pg.querySelector('.amp-h b') || {}).textContent || '';
+      const add = (el, lab) => { lab = (lab || '').trim(); if (!lab || out.some(o => o.el === el)) return; out.push({ el, lab, page: id, title, words: (SYN[lab] || '') + ' ' + title }); };
+      pg.querySelectorAll('.amr, button[role=menuitem]').forEach(r => { const g = r.querySelector('.amgt, span'); add(r, g ? ((g.childNodes[0] || {}).textContent || '') : ''); });
+      const games = pg.querySelector('#am-games'); if (games) add(games, 'Games you collect');
+    });
+    ['#am-ntf', '[data-soon="Plan and billing"]'].forEach(sel => { const b = menu.querySelector(sel); if (b) out.push({ el: b, lab: b.id === 'am-ntf' ? 'Notifications' : 'Plan and billing', page: null, title: '', words: SYN[b.id === 'am-ntf' ? 'Notifications' : 'Plan and billing'] }); });
+    return out;
+  }
+  const near = (a, b) => { if (Math.abs(a.length - b.length) > 1) return false; let i = 0, j = 0, e = 0; while (i < a.length && j < b.length) { if (a[i] === b[j]) { i++; j++; continue; } if (++e > 1) return false; if (a.length > b.length) i++; else if (b.length > a.length) j++; else { i++; j++; } } return e + (a.length - i) + (b.length - j) <= 1; };
+  function score(o, q) {
+    const L = o.lab.toLowerCase(), W = o.words.toLowerCase(), terms = q.split(/\s+/).filter(Boolean); let s = 0;
+    for (const t of terms) { if (L.startsWith(t)) s += 6; else if (L.includes(t)) s += 4; else if (W.split(/\s+/).some(w => w.startsWith(t))) s += 3; else if (W.includes(t)) s += 2;
+      else if (t.length >= 5 && (L + ' ' + W).split(/\s+/).some(w => near(w, t))) s += 1; else return 0; }
+    return s;
+  }
+  function search() {
+    const q = qIn.value.trim().toLowerCase(); qX.hidden = !q;
+    menu.classList.toggle('am-searching', !!q); qRes.hidden = !q; if (!q) { qRes.innerHTML = ''; return; }
+    if (!IDX) IDX = index();
+    const hits = IDX.map(o => ({ o, s: score(o, q) })).filter(x => x.s).sort((a, b) => b.s - a.s).slice(0, 8);
+    qRes.innerHTML = hits.length ? hits.map((h, i) => '<button type="button" role="option" data-hit="' + IDX.indexOf(h.o) + '"><span class="amgt">' + esc(h.o.lab) + '<small class="am-sv">' + esc(h.o.title || 'Menu') + '</small></span></button>').join('')
+      : '<p class="am-snone">No setting matches “' + esc(qIn.value.trim()) + '”. Try a word like budget, dark mode or export.</p>';
+  }
+  function go(o) {
+    qIn.value = ''; search(); qIn.blur();
+    if (!o.page) { o.el.click(); return; }
+    openPage(o.page);
+    setTimeout(() => { o.el.scrollIntoView({ block: 'center', behavior: calm.matches ? 'auto' : 'smooth' }); o.el.classList.remove('am-flash'); void o.el.offsetWidth; o.el.classList.add('am-flash'); setTimeout(() => o.el.classList.remove('am-flash'), 1700); }, calm.matches ? 0 : 340);
+  }
+  qIn.addEventListener('input', search);
+  qIn.addEventListener('keydown', e => { if (e.key === 'Enter') { const f = qRes.querySelector('[data-hit]'); if (f) { e.preventDefault(); go(IDX[+f.dataset.hit]); } } if (e.key === 'Escape' && qIn.value) { e.stopPropagation(); qIn.value = ''; search(); } });
+  qX.addEventListener('click', e => { e.stopPropagation(); qIn.value = ''; search(); qIn.focus(); });
+  qRes.addEventListener('click', e => { const b = e.target.closest('[data-hit]'); if (!b) return; e.stopPropagation(); go(IDX[+b.dataset.hit]); });
+  new MutationObserver(() => { if (menu.hidden && qIn.value) { qIn.value = ''; search(); } }).observe(menu, { attributes: true, attributeFilter: ['hidden'] });
 
   applySharing();
   S.on(r => { if (r === 'remote' || r === 'meta') { if (r === 'remote') applySharing(); if (!menu.hidden) paint(); } });
