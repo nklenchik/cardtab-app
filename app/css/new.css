@@ -1852,30 +1852,40 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 /* v50.10: the account menu's picture lines up with the name at the top on computers too (as on phones) */
 .app-menu.am .amh{align-items:flex-start}.app-menu.am .amh>.av{margin-top:2px}
 
-/* ===== v50.18 phones, in a browser tab (Chrome, Safari, Samsung Internet, Opera…): the browser's own toolbar hides
+/* ===== v50.18/19 phones, in a browser tab (Chrome, Safari, Samsung Internet, Opera…): the browser's own toolbar hides
    while scrolling down, so instead of hiding too, the tab bar shrinks to icons and the round button gets smaller.
    Scrolling up, the top of a page or another page brings the full bar back. The installed app (Home Screen) keeps
-   hiding the bar as before. Only transform and opacity move: the two backgrounds cross-fade, the tabs slide together. ===== */
+   hiding the bar as before.
+   v50.19, for 60fps: everything that moves is its own layer and only transform/opacity change, all on one curve.
+   The pill is drawn in pieces (two round ends and a middle) inside one layer: the layer scales evenly (so the ends stay
+   round) while the middle narrows and the right end slides in. The icons only slide; nothing is stretched or re-blurred. ===== */
 @media(max-width:760px){
+ html.tb-web{--tbe:cubic-bezier(.32,.72,0,1);--tbd:.42s}
  html.tb-web .ct-dock .ct-tbar{background:none!important;border-color:transparent!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
- html.tb-web .ct-tbar::before,html.tb-web .ct-tbar::after{content:"";position:absolute;left:-1px;bottom:-1px;border-radius:999px;border:1px solid var(--win-edge);background:color-mix(in srgb,var(--s-card,#fff) 82%,transparent);-webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3);box-shadow:0 10px 30px -12px rgba(0,0,0,.35),0 2px 6px rgba(0,0,0,.06);pointer-events:none;transition:opacity .3s ease;box-sizing:border-box}
- html.tb-web .ct-tbar::before{right:-1px;top:-1px}
- html.tb-web .ct-tbar::after{width:168px;height:46px;opacity:0}
- html.tb-mini .ct-tbar::before{opacity:0}
- html.tb-mini .ct-tbar::after{opacity:1}
- html.tb-web .ct-tbar button{transition:transform .36s cubic-bezier(.2,.8,.2,1),color .3s ease}
- html.tb-web .ct-tbar button span{position:relative;isolation:isolate;transition:transform .36s cubic-bezier(.2,.8,.2,1)!important}
- html.tb-web .ct-tbar button span::before{content:"";position:absolute;z-index:-1;inset:-7px -14px;border-radius:999px;background:var(--tab-onbg);opacity:0;transition:opacity .25s ease}
- html.tb-web .ct-tbar .tbl{transition:opacity .2s ease}
+ html.tb-web .ct-tbar .tbg{position:absolute;inset:-1px;pointer-events:none;transform-origin:0 100%;will-change:transform;transition:transform var(--tbd) var(--tbe)}
+ html.tb-web .ct-tbar .tbg i{position:absolute;top:0;bottom:0;display:block;will-change:transform;transition:transform var(--tbd) var(--tbe)}
+ html.tb-web .ct-tbar .tbg .c{width:var(--th,62px);border-radius:50%}
+ html.tb-web .ct-tbar .tbg .l{left:0}
+ html.tb-web .ct-tbar .tbg .r{right:0}
+ html.tb-web .ct-tbar .tbg .m{left:calc(var(--th,62px) / 2);right:calc(var(--th,62px) / 2);transform-origin:0 50%}
+ html.tb-web .ct-tbar .tbg .s{box-shadow:0 10px 30px -12px rgba(0,0,0,.35),0 2px 6px rgba(0,0,0,.06)}
+ html.tb-web .ct-tbar .tbg .b{background:var(--s-card,#fff);border:1px solid var(--win-edge)}
+ html.tb-web .ct-tbar .tbg .b.m{border-left:0;border-right:0}
+ html.tb-mini .ct-tbar .tbg{transform:scale(var(--tk,.742))}
+ html.tb-mini .ct-tbar .tbg .m{transform:scaleX(var(--tsx,.6))}
+ html.tb-mini .ct-tbar .tbg .r{transform:translate3d(var(--trx,0px),0,0)}
+ html.tb-web .ct-tbar button{will-change:transform;transition:transform var(--tbd) var(--tbe),color .3s ease}
+ html.tb-web .ct-tbar button span{position:relative;isolation:isolate}
+ html.tb-web .ct-tbar button span::before{content:"";position:absolute;z-index:-1;inset:-7px -14px;border-radius:999px;background:var(--tab-onbg);opacity:0;transition:opacity .28s ease}
+ html.tb-web .ct-tbar .tbl{transition:opacity .16s ease}
  html.tb-web .ct-tbar .tb-pill{transition:transform .46s cubic-bezier(.4,0,.2,1),width .46s cubic-bezier(.4,0,.2,1),opacity .2s ease}
  html.tb-mini .ct-tbar{pointer-events:none}
- html.tb-mini .ct-tbar button{pointer-events:auto;transform:translate3d(var(--mx,0px),var(--my,0px),0) scaleX(var(--ms,1))}
- html.tb-mini .ct-tbar button span{transform:scaleX(var(--mi,1))!important}
+ html.tb-mini .ct-tbar button{pointer-events:none;transform:translate3d(var(--mx,0px),var(--my,0px),0)}
+ html.tb-mini .ct-tbar button span{pointer-events:auto}
  html.tb-mini .ct-tbar button[aria-current] span::before{opacity:1}
  html.tb-mini .ct-tbar .tbl,html.tb-mini .ct-tbar .tb-pill{opacity:0}
- html.tb-web .ct-dock .ct-fab{transform-origin:100% 100%;transition:transform .36s cubic-bezier(.2,.8,.2,1),opacity .2s!important}
+ html.tb-web .ct-dock .ct-fab{transform-origin:100% 100%;will-change:transform;transition:transform var(--tbd) var(--tbe),opacity .2s!important}
  html.tb-mini.tb-web .ct-dock .ct-fab{transform:scale(.742)!important}
- html.tb-mini.tb-web .ct-dock .ct-fab:active{transform:scale(.69)!important}
- html.pg-moving.tb-web .ct-tbar::before,html.pg-moving.tb-web .ct-tbar::after,html.sheet-up.tb-web .ct-tbar::before,html.sheet-up.tb-web .ct-tbar::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+ html.tb-mini.tb-web .ct-dock .ct-fab:active{transform:scale(.69)!important;transition-duration:.18s!important}
 }
-@media(prefers-reduced-motion:reduce){html.tb-web .ct-tbar button,html.tb-web .ct-tbar button span,html.tb-web .ct-dock .ct-fab{transition-duration:.01s!important}}
+@media(prefers-reduced-motion:reduce){html.tb-web .ct-tbar button,html.tb-web .ct-tbar .tbg,html.tb-web .ct-tbar .tbg i,html.tb-web .ct-dock .ct-fab{transition-duration:.01s!important}}

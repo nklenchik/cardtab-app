@@ -200,13 +200,21 @@
   webMode();
   // the small bar: each tab slides left and narrows to about 52px, its icon kept its own shape, all inside a 46px pill
   if (tbar) tbar.querySelectorAll('button').forEach(b => { [...b.childNodes].forEach(n => { if (n.nodeType === 3 && n.textContent.trim()) { const l = document.createElement('b'); l.className = 'tbl'; l.style.fontWeight = 'inherit'; l.textContent = n.textContent; n.replaceWith(l); } }); });
+  // v50.19: the pill as pieces (shadows underneath, then the round ends and the middle), so it can change shape smoothly
+  let tbg = null;
+  if (tbar) { tbg = document.createElement('div'); tbg.className = 'tbg'; tbg.setAttribute('aria-hidden', 'true'); tbg.innerHTML = '<i class="s c l"></i><i class="s m"></i><i class="s c r"></i><i class="b c l"></i><i class="b c r"></i><i class="b m"></i>'; tbar.prepend(tbg); }
   function miniGeo() {
-    if (!tbar) return; const H0 = tbar.offsetHeight; if (!H0) return; const bs = [...tbar.querySelectorAll('button')], cy = H0 + 1 - 23;
-    bs.forEach((b, i) => { const sp = b.querySelector('span'); if (!sp) return; const bw = b.offsetWidth, ms = 52 / bw;
-      const scx = b.offsetLeft + sp.offsetLeft + sp.offsetWidth / 2, scy = b.offsetTop + sp.offsetTop + sp.offsetHeight / 2, bcx = b.offsetLeft + bw / 2;
-      const tx = 5 + 26 + 52 * i, dx = tx - (bcx + (scx - bcx) * ms);
-      b.style.setProperty('--mx', dx.toFixed(1) + 'px'); b.style.setProperty('--my', (cy - scy).toFixed(1) + 'px'); b.style.setProperty('--ms', ms.toFixed(4)); b.style.setProperty('--mi', (1 / ms).toFixed(4)); });
+    if (!tbar || !tbg) return; const H0 = tbar.offsetHeight, W0 = tbar.offsetWidth; if (!H0) return;
+    // the small pill: 168 × 46 (three 52px tabs), sitting on the same bottom-left corner
+    const k = 46 / H0, Wm = 168 / k;
+    tbar.style.setProperty('--th', H0 + 'px'); tbar.style.setProperty('--tk', k.toFixed(4));
+    tbar.style.setProperty('--tsx', ((Wm - H0) / Math.max(1, W0 - H0)).toFixed(4)); tbar.style.setProperty('--trx', (Wm - W0).toFixed(1) + 'px');
+    const cy = H0 - 23 - 1;
+    [...tbar.querySelectorAll('button')].forEach((b, i) => { const sp = b.querySelector('span'); if (!sp) return;
+      const scx = b.offsetLeft + sp.offsetLeft + sp.offsetWidth / 2, scy = b.offsetTop + sp.offsetTop + sp.offsetHeight / 2;
+      b.style.setProperty('--mx', (31 + 52 * i - scx).toFixed(1) + 'px'); b.style.setProperty('--my', (cy - scy).toFixed(1) + 'px'); });
   }
+  requestAnimationFrame(miniGeo);
   addEventListener('resize', () => requestAnimationFrame(miniGeo));
   function tbSet(hide) { if (hide === tbHidden) return; tbHidden = hide;
     if (webMode()) { if (hide) miniGeo(); HTML.classList.toggle('tb-mini', hide); } else HTML.classList.toggle('tb-away', hide); }
