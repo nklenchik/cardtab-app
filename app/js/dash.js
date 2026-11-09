@@ -225,7 +225,8 @@
     const top = Math.max(0, hd ? hd.getBoundingClientRect().bottom : 0) + 8;
     const tbt = tb && tb.offsetParent ? tb.getBoundingClientRect().top : innerHeight; return { top, bottom: Math.min(innerHeight, tbt) - 12 };
   }
-  const scrollBy2 = (sc, dy, smooth) => { if (!dy) return; const o = { top: dy, behavior: smooth && !calm.matches ? 'smooth' : 'auto' }; if (sc) sc.scrollBy(o); else window.scrollBy(o); };
+  const quiet = ms => { window.CTQuietScroll = Math.max(window.CTQuietScroll || 0, performance.now() + ms); };
+  const scrollBy2 = (sc, dy, smooth) => { if (!dy) return; quiet(smooth ? 900 : 200); const o = { top: dy, behavior: smooth && !calm.matches ? 'smooth' : 'auto' }; if (sc) sc.scrollBy(o); else window.scrollBy(o); };
   // v50.59: show the whole entry in the same motion as it opens: its final size is known as soon as it starts opening, so the
   // page (or list) starts one native smooth scroll right away instead of a second scroll after the opening finishes
   function fitRow(row) {
@@ -264,7 +265,7 @@
           // the closed entry settles to its real height once its transitions come back; correct by whatever is left, before that frame paints
           prow.classList.remove('ct-snap'); const d2 = nrow.getBoundingClientRect().top - y0; if (Math.abs(d2) > .5) { if (sc) sc.scrollTop += d2; else window.scrollTo(0, window.scrollY + d2); }
           if (nrow.classList.contains('expanded')) fitRow(nrow); }));   // then show the whole entry (starting it earlier would be cut off by the correction)
-        const dy = nrow.getBoundingClientRect().top - y0; if (dy) { if (sc) sc.scrollTop += dy; else window.scrollTo(0, window.scrollY + dy); }
+        quiet(500); const dy = nrow.getBoundingClientRect().top - y0; if (dy) { if (sc) sc.scrollTop += dy; else window.scrollTo(0, window.scrollY + dy); }
         prevIdDone = true; } }
     if (prevId != null && !prevIdDone) { const btn = list.querySelector('[data-tx="' + prevId + '"]'); if (btn) { const row = btn.parentElement; const box0 = row.querySelector('.ct-open-actions'); pinDelta += flip(row, () => row.classList.remove('expanded'), box0) || 0; setBtn(btn, false); const box = row.querySelector('.ct-open-actions'); if (box) setTimeout(() => { if (!row.classList.contains('expanded')) { box.remove(); const m = row.querySelector('.ct-money'); if (m) m.remove(); } fadeSync(); }, 360); } }
     if (expanded != null) {

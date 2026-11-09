@@ -220,6 +220,8 @@
     if (webMode()) { if (hide) miniGeo(); HTML.classList.toggle('tb-mini', hide); } else HTML.classList.toggle('tb-away', hide); }
   function tbScroll() {
     if (!PH() || document.querySelector('dialog[open]')) { tbY = scrollOf(cur); return; }
+    // v50.60: scrolling the app does by itself (keeping an opening entry in place, showing all of it) doesn't show or hide the bar
+    if ((window.CTQuietScroll || 0) > performance.now()) { tbY = scrollOf(cur); return; }
     const y = scrollOf(cur), [sh2, vh] = extentOf(cur);
     if (tbPage !== cur) { tbPage = cur; tbY = y; tbSet(false); return; }
     // v47.2: iPhone's bounce at either end and the last flick of a fling scroll back a few pixels on their own; only a
