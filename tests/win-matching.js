@@ -15,6 +15,10 @@ const { chromium } = require('playwright');
    // Supreme Kai: many small sales across the year
    await add({ type: 'purchase', name: 'Supreme Kai of Time - BT13-135', amount: 1000, qty: 10, date: '2024-12-01' });
    for (const d of ['2025-02-05', '2025-05-05', '2025-09-05']) await add({ type: 'sale', name: 'Supreme Kai of Time - BT13-135', amount: 1700, net: 1700, date: d });
+   // the same card in two grades: a BGS 9.5 bought and sold, then a CGC 10 Pristine bought later for more
+   await add({ type: 'purchase', name: "Son Gohan, Beyond the Ultimate - Fighter's Ambition", amount: 10500, date: '2025-06-01', grade: { co: 'BGS', g: '9.5' }, condition: 'Graded' });
+   await add({ type: 'sale', name: "Son Gohan, Beyond the Ultimate - Fighter's Ambition", amount: 25537, net: 22206, date: '2025-10-11', grade: { co: 'BGS', g: '9.5' }, condition: 'Graded' });
+   await add({ type: 'purchase', name: "Son Gohan, Beyond the Ultimate - Fighter's Ambition", amount: 32690, date: '2025-09-28', grade: { co: 'CGC', g: '10', w: 'PRISTINE' }, condition: 'Graded' });
    // Jul-Dec 2025: a different winner
    await add({ type: 'purchase', name: 'Mew ex - 151/165', amount: 2000, date: '2025-07-01' });
    await add({ type: 'sale', name: 'Mew ex', amount: 6000, net: 5200, date: '2025-08-01' });
@@ -28,6 +32,13 @@ const { chromium } = require('playwright');
  if (hasSetter) {
   const h1 = await winFor('2025-01-01', '2025-06-30'), h2 = await winFor('2025-07-01', '2025-12-31');
   ok('Jan–Jun 2025: Wartortle (sold under a shorter name)', /Wartortle/.test(h1) && /135/.test(h1), h1);
-  ok('Jul–Dec 2025: Mew ex, a different card', /Mew/.test(h2), h2);
+  ok('Jul–Dec 2025: a different card (the BGS 9.5 Gohan sale)', /Gohan/.test(h2) && !/Wartortle/.test(h2), h2);
+ }
+ if (hasSetter) {
+  await p.evaluate(() => { localStorage.setItem('cb.layout.v4', JSON.stringify([{ id: 'pz', k: 'pricey', size: 'L' }, { id: 'wz', k: 'win', size: 'L' }])); cbReloadLayout(); cbLinkRange('2025-09-01', '2025-10-31', 'Sep – Oct 2025'); }); await p.waitForTimeout(1200);
+  const pr = await p.evaluate(() => { const all = [...document.querySelectorAll('*')].filter(e => e.children.length < 60 && /Priciest card/.test(e.textContent) && /\$/.test(e.textContent)); const w = all.sort((a, z) => a.textContent.length - z.textContent.length)[0]; return w ? { t: w.innerText.replace(/\s+/g, ' ').slice(0, 220), slab: (w.querySelector('.slab') || {}).textContent || '' } : null; });
+  ok('Priciest card shows the CGC 10 Pristine it priced, not the BGS 9.5', pr && /326\.90/.test(pr.t) && /CGC/.test(pr.slab) && !/BGS/.test(pr.slab) && /Still yours/.test(pr.t), JSON.stringify(pr));
+  const w2 = await winFor('2025-10-01', '2025-10-31');
+  ok('the BGS 9.5 sale is matched to the BGS 9.5 purchase', /\+\$117\.06|117/.test(w2), w2);
  }
  ok('no errors', !errs.length, errs.join(' | ')); await b.close(); })();

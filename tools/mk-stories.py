@@ -16,8 +16,8 @@ s=s.replace(a,"  const flips=[];Object.keys(sells).filter(k=>buys[k]).forEach(k=
 # v50.67: a sale finds its purchase by the matched catalog card, then exact name+number, then the name alone (one bought card)
 a="const key=e=>e.name.toLowerCase().replace(/[^a-z0-9]/g,'')+'|'+e.no;"
 assert a in s
-s=s.replace(a,"const exactKey=e=>e.name.toLowerCase().replace(/[^a-z0-9]/g,'')+'|'+e.no,looseKey=e=>e.name.toLowerCase().replace(/[^a-z0-9]/g,'');let KC=null;const key=e=>{if(!KC||KC.E!==E){const idOf={},bought={};E.forEach(x=>{if(x.cardId)idOf[exactKey(x)]=idOf[exactKey(x)]||'id:'+x.cardId});const kO=x=>(x.cardId?'id:'+x.cardId:idOf[exactKey(x)])||exactKey(x);E.forEach(x=>{if(x.type==='purchase'){const l=looseKey(x);(bought[l]=bought[l]||new Set()).add(kO(x))}});KC={E,kO,bought}}const k=KC.kO(e);if(e.type!=='sale')return k;const l=KC.bought[looseKey(e)];return l&&!l.has(k)&&l.size===1?[...l][0]:k};")
+s=s.replace(a,"const exactKey=e=>e.name.toLowerCase().replace(/[^a-z0-9]/g,'')+'|'+e.no,looseKey=e=>e.name.toLowerCase().replace(/[^a-z0-9]/g,'');let KC=null;const key=e=>{if(!KC||KC.E!==E){const idOf={},bought={};E.forEach(x=>{if(x.cardId)idOf[exactKey(x)]=idOf[exactKey(x)]||'id:'+x.cardId});const kO=x=>((x.cardId?'id:'+x.cardId:idOf[exactKey(x)])||exactKey(x))+(x.grade&&x.grade.co?'#'+x.grade.co+x.grade.g+(x.grade.w||''):'');E.forEach(x=>{if(x.type==='purchase'){const l=looseKey(x);(bought[l]=bought[l]||new Set()).add(kO(x))}});KC={E,kO,bought}}const k=KC.kO(e);if(e.type!=='sale')return k;const l=KC.bought[looseKey(e)];return l&&!l.has(k)&&l.size===1?[...l][0]:k};")
 a="no:r.no||'',set:r.set||'',art:r.art||null}));"
 assert a in s
-s=s.replace(a,"no:r.no||'',set:r.set||'',art:r.art||null,cardId:r.cardId||''}));")
+s=s.replace(a,"no:r.no||'',set:r.set||'',art:r.art||null,cardId:r.cardId||'',grade:r.grade||null}));")
 open('stories2.tpl.html','w').write(s)

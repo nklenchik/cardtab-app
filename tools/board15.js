@@ -16,7 +16,9 @@ const KEYERS=new WeakMap();
 function keyer(ctx){let f=KEYERS.get(ctx);if(f)return f;
   const rows=ctx.p.filter(e=>e.date<=ctx.b),idOf={};
   rows.forEach(e=>{if(e.cardId)idOf[cardKey(e)]=idOf[cardKey(e)]||'id:'+e.cardId});
-  const keyOf=e=>(e.cardId?'id:'+e.cardId:idOf[cardKey(e)])||cardKey(e);
+  // v50.68: different grades of the same card are different items (a BGS 9.5 and a CGC 10 Pristine don't share a cost)
+  const gTag=e=>e.grade&&e.grade.co?'#'+e.grade.co+e.grade.g+(e.grade.w||''):'';
+  const keyOf=e=>((e.cardId?'id:'+e.cardId:idOf[cardKey(e)])||cardKey(e))+gTag(e);
   const bought={};rows.forEach(e=>{if(e.type==='purchase'){const l=looseKey(e);(bought[l]=bought[l]||new Set()).add(keyOf(e))}});
   f=e=>{const k=keyOf(e);if(e.type!=='sale')return k;const l=bought[looseKey(e)];return l&&!l.has(k)&&l.size===1?[...l][0]:k};
   KEYERS.set(ctx,f);return f}
@@ -42,7 +44,7 @@ const FEAT={
     num:c=>ksigned(c.g),pc:c=>pctTxt(c.roi)+' return',line:c=>'Bought '+kshort(c.b)+' · Sold '+kshort(c.s),good:1,none:'No card bought and sold in this period yet'},
   roi:{t:'Best return',pick:L=>saleWins(L).filter(c=>c.b>=100&&c.g>0).sort((a,b)=>b.roi-a.roi)[0],
     num:c=>ksigned(c.g),pc:c=>pctTxt(c.roi),line:c=>'Bought '+kshort(c.b)+' · Sold '+kshort(c.s),good:1,none:'No card bought and sold in this period yet'},
-  pricey:{t:'Priciest card',pick:(L,ctx)=>{let best=null;ctx.inP.filter(e=>e.type==='purchase').forEach(e=>{const u=Math.round(e.amount/e.qty);if(!best||u>best.u)best={u,e}});if(!best)return null;const c=L.find(x=>x.k===cardKey(best.e));return c&&Object.assign({},c,{unit:best.u,buy:best.e})},
+  pricey:{t:'Priciest card',pick:(L,ctx)=>{let best=null;ctx.inP.filter(e=>e.type==='purchase').forEach(e=>{const u=Math.round(e.amount/e.qty);if(!best||u>best.u)best={u,e}});if(!best)return null;const k=keyer(ctx)(best.e),c=L.find(x=>x.k===k);return c&&Object.assign({},c,{e:best.e,art:best.e.art||c.art,unit:best.u,buy:best.e})},   // v50.68: shows the purchase itself (its grade, art and name), not another entry for the same card
     num:c=>money(c.unit),pc:(c,ctx)=>shareOf(c.unit,totals(ctx.inP).spent)+' of your spending',line:c=>(c.left>0?'Still yours':'Sold')+' · '+c.buy.platform+' · '+shortD(c.buy.date),none:'No purchases in this period yet'},
   seller:{t:'Best seller',pick:L=>L.filter(c=>c.sold).sort((a,b)=>b.sold-a.sold||b.s-a.s)[0],
     num:c=>money(c.s),pc:(c,ctx)=>shareOf(c.s,totals(ctx.inP).after)+' of your sales',line:c=>'Sold '+cnt(c.sold,'copy','copies')+(c.meta?' · '+c.meta:''),none:'No sales in this period yet'},
