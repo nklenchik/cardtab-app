@@ -34,7 +34,7 @@ GOOGLE_CLIENT_ID = "402189262163-0kb6qq7l9igfmvgiqp81plvjk5572to8.apps.googleuse
 
 # v50.63 Premium billing (Stripe). Secrets, set with wrangler secret put: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET.
 # The publishable key is public by design. STRIPE_TAX turns on sales tax at checkout once Stripe Tax and the NY registration are set up.
-STRIPE_PUBLISHABLE_KEY = ""
+STRIPE_PUBLISHABLE_KEY = "pk_test_51UZQhqAs7GNZKele0ycVJmDzt7boB8zZe2zINnUoRZfknC3juGVIkjULVuAg19QlzsO47xknyBogXXztzJrQFGtC00VonSEri1"
 STRIPE_TAX = "off"
 
 # v50: nightly analytics tidy-up (keeps two years of daily rows). Times are UTC.
