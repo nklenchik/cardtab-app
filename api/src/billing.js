@@ -154,8 +154,8 @@ export async function syncSubscription(env, sub, uidHint) {
 async function payMail(env, uid, r, kind) {
   try {
     const u = await env.DB.prepare('SELECT email FROM users WHERE id=?').bind(uid).first(); if (!u || !u.email) return false;
-    const card = r.card_last4 ? (r.card_brand ? r.card_brand[0].toUpperCase() + r.card_brand.slice(1) : 'card') + ' ending ' + r.card_last4 : '';
-    await sendMail(env, { to: u.email, replyTo: 'hello@cardtab.app', ...paymentEmail({ kind, graceUntil: r.grace_until, appUrl: env.APP_URL || 'https://app.cardtab.app', card }) });
+    const card = r.card_last4 ? (r.card_brand ? r.card_brand[0].toUpperCase() + r.card_brand.slice(1) : 'Card') + ' •••• ' + r.card_last4 : '';
+    await sendMail(env, { to: u.email, replyTo: 'hello@cardtab.app', ...paymentEmail({ kind, graceUntil: r.grace_until, appUrl: env.APP_URL || 'https://app.cardtab.app', card, amount: r.amount, interval: r.interval }) });
     return true;
   } catch (e) { return false; }
 }

@@ -115,17 +115,25 @@ export function welcomeEmail({ name, appUrl, open, opens, joinedAt, t }) {
 
 // A renewal didn't go through: the first email when it happens, one reminder near the end of the 7 days
 const day = s => new Date(s * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'America/New_York' });
-export function paymentEmail({ kind, graceUntil, appUrl, card }) {
-  const link = appUrl + '/?billing=fix', when = day(graceUntil), cardTxt = card || 'card';
-  const reminder = kind === 'reminder';
+export function paymentEmail({ kind, graceUntil, appUrl, card, amount, interval }) {
+  const link = appUrl + '/?billing=fix', when = day(graceUntil), reminder = kind === 'reminder';
   const subject = reminder ? 'Your Card Tab Premium ends ' + when : 'Your Card Tab payment didn\'t go through';
   const title = reminder ? 'Premium ends ' + esc(when) : 'Your payment didn\'t go through';
-  const msg = reminder
-    ? `We still couldn't charge your ${esc(cardTxt)} for Premium. Update it by ${esc(when)} to keep Premium. After that your account goes back to Free, and your entries stay just as they are.`
-    : `We couldn't charge your ${esc(cardTxt)} for your Card Tab Premium renewal. It happens: a card expires or a bank says no. Update your card by ${esc(when)} to keep Premium. We'll try the card again in the meantime.`;
-  const html = shell({ title: subject, preheader: reminder ? 'Update your card to keep Premium.' : 'Update your card by ' + when + ' to keep Premium.',
-    body: h1(title) + lead(msg) + button(link, 'Update my card', 0),
-    foot: 'Already fixed it? Then you can ignore this email. Questions? Just reply.' });
-  const text = `${reminder ? 'Premium ends ' + when : 'Your payment didn\'t go through'}\n\n${msg.replace(/<[^>]+>/g, '')}\n\nUpdate your card: ${link}\n\nAlready fixed it? Then you can ignore this email.\n\nCard Tab · cardtab.app`;
+  const intro = reminder ? 'We still couldn\'t charge your card for Card Tab Premium.' : 'We couldn\'t charge your card for your Card Tab Premium renewal.';
+  const price = amount ? '$' + (amount / 100).toFixed(2) + (interval === 'year' ? ' a year' : interval === 'month' ? ' a month' : '') : '';
+  // v50.73: the card on its own line, in a small receipt-style box, so it's clear which card to fix
+  const row = (k, v, last) => `<tr><td style="padding:${last ? '10px 0 0' : '0 0 10px'};font-size:13px;color:#77736d;${last ? 'border-top:1px dashed #e2ded5;' : ''}">${k}</td><td align="right" style="padding:${last ? '10px 0 0' : '0 0 10px'};font-size:15px;font-weight:800;color:#1a1918;${last ? 'border-top:1px dashed #e2ded5;' : ''}">${v}</td></tr>`;
+  const box = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 22px;background:#f6f5f0;border-radius:14px"><tr><td style="padding:14px 16px">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${row('Card', esc(card || 'Your saved card'), !price)}${price ? row('Premium', esc(price), true) : ''}</table></td></tr></table>`;
+  const p = (t, last) => `<p style="margin:0 0 ${last ? 22 : 14}px;font-size:15px;line-height:1.5;color:#55524c">${t}</p>`;
+  const body = h1(title) + p(intro) + box +
+    p(`<b style="color:#1a1918">Update your card by ${esc(when)}</b> to keep Premium.`) +
+    p(reminder ? 'After that, your account goes back to Free. Your entries stay just as they are.' : 'It happens: a card expires or a bank says no. We\'ll try the card again in the meantime.', true) +
+    button(link, 'Update my card', 0);
+  const html = shell({ title: subject, preheader: 'Update your card by ' + when + ' to keep Premium.', body,
+    foot: 'Already fixed it? Then you can ignore this email.<br>Questions? Just reply.' });
+  const text = `${reminder ? 'Premium ends ' + when : 'Your payment didn\'t go through'}\n\n${intro}\n\nCard: ${card || 'your saved card'}${price ? '\nPremium: ' + price : ''}\n\n` +
+    `Update your card by ${when} to keep Premium.\n${reminder ? 'After that, your account goes back to Free. Your entries stay just as they are.' : 'It happens: a card expires or a bank says no. We\'ll try the card again in the meantime.'}\n\n` +
+    `Update your card: ${link}\n\nAlready fixed it? Then you can ignore this email.\n\nCard Tab · cardtab.app`;
   return { subject, html, text };
 }
