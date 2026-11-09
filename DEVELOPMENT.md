@@ -586,3 +586,7 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 - App: real sign-in only on *.cardtab.app; pages.dev redirects to app.cardtab.app; everywhere else stays in test mode.
 - Tests: api/test-auth.mjs (offline, SQLite), tests/auth-e2e.mjs (browser against the real auth code).
 - Legal: cardtab-site branch `legal` has the app section in privacy.html and a new terms.html (not published yet).
+
+## v50.75: Share Card Board is a phone bottom sheet (2026-11-09)
+- On phones the Share window was a full-height floating card with 16px side gaps. It's now the same bottom sheet as Ask (full width, grab handle, rises from the bottom, blurred backdrop, 90% height, title and "See what they'll see" pinned). Desktop is unchanged.
+- CSS only, appended to board/board.css under `#shd` (max-width 760px). Version bumped to 50.75 (index.html, share.html, board-loader.js).
