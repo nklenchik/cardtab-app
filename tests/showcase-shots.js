@@ -16,7 +16,7 @@ const SHOW = () => { const now = new Date(), Y = now.getFullYear(), M = now.getM
   return [
    sale(0, 9, 'pik', 255, 33.8, 6.7), sale(0, 6, 'art', 230, 29.9, 1.27, { condition: 'Lightly Played' }), e(0, 3, 'purchase', 'cha', 389, { platform: 'PWCC', grade: { co: 'PSA', g: '10' }, condition: 'Graded' }),
    sale(0, 2, 'chi', 186, 24.2, 2.2, { platform: 'TCGplayer', qty: 2 }), e(0, 1, 'purchase', 'gen', 64.8),
-   sale(1, 24, 'gre', 349, 45.4, 4.2, { platform: 'TCGplayer' }), sale(1, 14, 'mgg', 421.5, 27.83, 1.27), e(1, 9, 'purchase', 'mag', 48.99, { platform: 'TCGplayer' }), tiny(1, 5, 'sale', LAT, 88, { fees: '11.4', ship: '1.27' }),
+   sale(1, 24, 'gre', 349, 45.4, 4.2, { platform: 'TCGplayer' }), e(1, 20, 'purchase', 'cha', 260, { platform: 'eBay' }), sale(1, 14, 'mgg', 421.5, 27.83, 1.27), e(1, 9, 'purchase', 'mag', 48.99, { platform: 'TCGplayer' }), tiny(1, 5, 'sale', LAT, 88, { fees: '11.4', ship: '1.27' }),
    e(2, 25, 'purchase', 'mgg', 312, { grade: { co: 'CGC', g: '10', w: 'PRISTINE' }, condition: 'Graded' }), sale(2, 18, 'bla', 210, 0, 0, { platform: 'Card Show', condition: 'Lightly Played' }), sale(2, 11, 'gen', 172, 22.4, 4.5),
    e(2, 6, 'purchase', 'art', 40, { platform: 'Card Show', condition: 'Lightly Played' }), tiny(2, 3, 'purchase', LUD, 12, { platform: 'Whatnot' }),
    sale(3, 22, 'mag', 159, 20.7, 1.27, { platform: 'TCGplayer' }), e(3, 15, 'purchase', 'pik', 118, { platform: 'TCGplayer' }), e(3, 9, 'purchase', 'chi', 62, { platform: 'TCGplayer', qty: 2 }), tiny(3, 4, 'purchase', LAT, 35, { platform: 'Card Show' }),
