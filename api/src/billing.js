@@ -181,6 +181,19 @@ export async function handleWebhook(env, req) {
 }
 
 // ---------- the daily job: 7 days after a failed payment, Premium turns off ----------
+// v50.72: deleting an account ends its Premium right away. Deleting the Stripe customer cancels every subscription it has
+// (no more charges) and removes the saved card; past invoices stay in Stripe for the tax records. A customer Stripe no longer
+// has is fine. Any other Stripe error stops the account delete, so nobody is left being charged for an account that's gone.
+export async function cancelForDelete(env, uid) {
+  await ensureTable(env);
+  const r = await rowOf(env, uid);
+  if (r && r.customer && env.STRIPE_SECRET_KEY) {
+    try { await stripe(env, 'DELETE', '/customers/' + encodeURIComponent(r.customer)); }
+    catch (e) { if (!(e.stripe && e.stripe.code === 'resource_missing')) throw Object.assign(new Error('We couldn’t cancel your Premium just now, so your account wasn’t deleted. Please try again in a minute.'), { status: 502 }); }
+  }
+  await env.DB.prepare('DELETE FROM billing WHERE user_id=?').bind(uid).run();
+}
+
 export async function graceSweep(env) {
   try { await ensureTable(env); } catch (e) { return; }
   const rows = (await env.DB.prepare("SELECT * FROM billing WHERE status='past_due' AND grace_until IS NOT NULL AND grace_until<? AND COALESCE(gift,0)=0").bind(now()).all()).results || [];

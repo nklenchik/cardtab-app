@@ -32,6 +32,7 @@ globalThis.fetch = async (url, init = {}) => {
   if (path === '/products/search') return ok({ data: S.products });
   if (m === 'POST' && path === '/products') { const p = { id: id('prod'), metadata: { ct: f.get('metadata[ct]') } }; S.products.push(p); return ok(p); }
   if (m === 'POST' && path === '/prices') { const p = { id: id('price'), lookup_key: f.get('lookup_key'), unit_amount: +f.get('unit_amount'), recurring: { interval: f.get('recurring[interval]') }, metadata: { ct: f.get('metadata[ct]') } }; S.prices.push(p); return ok(p); }
+  if (m === 'DELETE' && path.startsWith('/customers/')) { if (S.failDelete) return new Response(JSON.stringify({ error: { message: 'down' } }), { status: 500 }); S.deleted = (S.deleted || []).concat(path.slice(11)); return ok({ deleted: true }); }
   if (m === 'POST' && path === '/customers') { const c = { id: id('cus'), email: f.get('email') }; S.customers.push(c); return ok(c); }
   if (m === 'POST' && path === '/checkout/sessions' && S.gone && f.get('customer') === S.gone) return new Response(JSON.stringify({ error: { code: 'resource_missing', param: 'customer', message: 'No such customer' } }), { status: 400 });
   if (m === 'POST' && path === '/checkout/sessions') { const s = { id: id('cs_test'), client_secret: 'secret_' + S.n, price: f.get('line_items[0][price]'), customer: f.get('customer'), client_reference_id: f.get('client_reference_id'), tax: f.get('automatic_tax[enabled]'), mode: 'subscription' }; S.sessions[s.id] = s; return ok(s); }
@@ -118,6 +119,12 @@ assert.equal(planOf('friend@x.com'), 'premium');
 j = await (await call('/auth/billing', { cookie: cf })).json(); assert.equal(j.gift, true);
 j = await (await call('/auth/admin/people', { cookie: ca })).json(); assert.equal(j.people.length, 1, 'empty search lists gifts'); assert.equal(j.people[0].gift, true);
 j = await (await call('/auth/admin/people/gift', { method: 'POST', cookie: ca, body: { id: uid, on: false } })).json(); assert.equal(j.plan, 'free');
+// deleting the account cancels Premium (the Stripe customer goes, so no more charges); if Stripe is down, nothing is deleted
+const cus = sq.prepare('SELECT customer FROM billing WHERE user_id=?').get(uid).customer; assert.ok(cus);
+S.failDelete = true; r = await call('/auth/delete', { method: 'POST', cookie: cf }); assert.equal(r.status, 502, 'Stripe down: account kept');
+assert.ok(sq.prepare('SELECT 1 FROM users WHERE id=?').get(uid), 'user still there'); S.failDelete = false;
+r = await call('/auth/delete', { method: 'POST', cookie: cf }); assert.equal(r.status, 200);
+assert.deepEqual(S.deleted, [cus], 'Stripe customer deleted'); assert.equal(sq.prepare('SELECT COUNT(*) n FROM billing WHERE user_id=?').get(uid).n, 0, 'billing row gone');
 // signature check alone
 assert.equal(await verifyStripe('s', 't=1,v1=00', 'x', 1), false);
 console.log('billing tests ok:', S.calls.length, 'Stripe calls');
