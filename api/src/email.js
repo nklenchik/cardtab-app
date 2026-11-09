@@ -120,7 +120,8 @@ export function paymentEmail({ kind, graceUntil, appUrl, card, amount, interval 
   const subject = reminder ? 'Your Card Tab Premium ends ' + when : 'Your Card Tab payment didn\'t go through';
   const title = reminder ? 'Premium ends ' + esc(when) : 'Your payment didn\'t go through';
   const intro = reminder ? 'We still couldn\'t charge your card for Card Tab Premium.' : 'We couldn\'t charge your card for your Card Tab Premium renewal.';
-  const price = amount ? '$' + (amount / 100).toFixed(2) + (interval === 'year' ? ' a year' : interval === 'month' ? ' a month' : '') : '';
+  const dollars = amount % 100 ? (amount / 100).toFixed(2) : String(amount / 100);
+  const price = amount ? '$' + dollars + (interval === 'year' ? '/year' : interval === 'month' ? '/month' : '') : '';
   // v50.73: the card on its own line, in a small receipt-style box, so it's clear which card to fix
   const row = (k, v, last) => `<tr><td style="padding:${last ? '10px 0 0' : '0 0 10px'};font-size:13px;color:#77736d;${last ? 'border-top:1px dashed #e2ded5;' : ''}">${k}</td><td align="right" style="padding:${last ? '10px 0 0' : '0 0 10px'};font-size:15px;font-weight:800;color:#1a1918;${last ? 'border-top:1px dashed #e2ded5;' : ''}">${v}</td></tr>`;
   const box = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 22px;background:#f6f5f0;border-radius:14px"><tr><td style="padding:14px 16px">
