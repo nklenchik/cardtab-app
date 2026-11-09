@@ -44,7 +44,7 @@ const SHOW = () => { const now = new Date(), Y = now.getFullYear(), M = now.getM
  await p.evaluate(() => { const f = document.querySelector('.ct-fbar'); scrollTo(0, f.getBoundingClientRect().top + scrollY - 110); }); await p.waitForTimeout(700); await shot(p, 'p-list');
  for (const scheme of ['light', 'dark']) { const q = await b.newPage({ ...devices['iPhone 13'], viewport: { width: 390, height: 844 }, colorScheme: scheme }); await setup(q);
   await q.evaluate(() => document.querySelector('.sh-tabs [data-tab="board"]').click()); await q.waitForTimeout(2500);
-  await q.evaluate(() => { localStorage.setItem('cb.layout.v4', JSON.stringify([{ id: 'a', k: 'profit', size: 'S' }, { id: 'b', k: 'sales', size: 'S' }, { id: 'f', k: 'feat', metric: 'win', size: 'L' }, { id: 'c', k: 'spent', size: 'S' }, { id: 'd', k: 'fees', size: 'S' }, { id: 'g', k: 'month', size: 'L' }])); cbReloadLayout(); window.CTMonth && CTMonth.set('all'); });
+  await q.evaluate(() => { localStorage.setItem('cb.layout.v4', JSON.stringify([{ id: 'a', k: 'profit', size: 'S' }, { id: 'b', k: 'sales', size: 'S' }, { id: 'f', k: 'feat', metric: 'win', size: 'L' }, { id: 'g', k: 'glance', size: 'L' }])); cbReloadLayout(); window.CTMonth && CTMonth.set('all'); });
   await q.waitForTimeout(2500); await q.evaluate(() => scrollTo(0, 0)); await q.waitForTimeout(400); await shot(q, 'hero-board-' + scheme); await q.close() }
  await p.evaluate(() => document.querySelector('.sh-tabs [data-tab="stories"]').click()); await p.waitForTimeout(3500); await p.evaluate(() => scrollTo(0, 0)); await shot(p, 'p-stories');
  await p.close(); await b.close() })();
