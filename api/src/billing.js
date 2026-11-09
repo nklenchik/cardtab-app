@@ -201,7 +201,10 @@ export async function graceSweep(env) {
 }
 
 // ---------- signed-in routes ----------
-const statusOut = (env, user, r) => ({
+// v50.72: until launch (BILLING_OPEN = "on"), only admins can check out; everyone else sees when Premium opens (BILLING_OPENS)
+const billingOpen = (env, admin) => env.BILLING_OPEN === 'on' || !!admin;
+const statusOut = (env, user, r, admin) => ({
+  open: billingOpen(env, admin), opens: env.BILLING_OPENS || '',
   plan: user.plan || 'free', gift: !!(r && r.gift), publishableKey: env.STRIPE_PUBLISHABLE_KEY || '', ready: !!env.STRIPE_SECRET_KEY,
   founders: founderOffer(user, r),
   sub: r && r.sub ? { status: r.status, interval: r.interval, amount: r.amount, founder: !!r.founder, periodEnd: r.period_end, cancelAtEnd: !!r.cancel_at_end, graceUntil: r.status === 'past_due' ? r.grace_until : null,
@@ -209,8 +212,9 @@ const statusOut = (env, user, r) => ({
 });
 export async function handleBilling(env, req, me, path, out, admin) {
   await ensureTable(env);
-  if (path === '/auth/billing' && req.method === 'GET') return out(statusOut(env, me, await rowOf(env, me.id)));
+  if (path === '/auth/billing' && req.method === 'GET') return out(statusOut(env, me, await rowOf(env, me.id), admin));
   if (path === '/auth/billing/checkout' && req.method === 'POST') {
+    if (!billingOpen(env, admin)) return out({ error: 'Premium opens ' + (env.BILLING_OPENS || 'soon') + '.', closed: true }, 403);
     const b = await req.json().catch(() => ({})), interval = b.plan === 'yearly' ? 'year' : 'month';
     let r = await rowOf(env, me.id);
     if (r && r.sub && ACTIVE(r.status)) return out({ error: 'You already have Premium.', have: true }, 409);
@@ -239,7 +243,7 @@ export async function handleBilling(env, req, me, path, out, admin) {
     const s = /^cs_[\w]+$/.test(b.session || '') ? await stripe(env, 'GET', '/checkout/sessions/' + b.session) : null;
     if (s && s.client_reference_id === me.id && s.subscription) await syncSubscription(env, await getSub(env, s.subscription), me.id);
     const u = await env.DB.prepare('SELECT * FROM users WHERE id=?').bind(me.id).first();
-    return out(statusOut(env, u || me, await rowOf(env, me.id)));
+    return out(statusOut(env, u || me, await rowOf(env, me.id), admin));
   }
   if (path === '/auth/billing/portal' && req.method === 'POST') {
     const r = await rowOf(env, me.id); if (!r || !r.customer) return out({ error: 'No billing account yet.' }, 404);
@@ -253,7 +257,7 @@ export async function handleBilling(env, req, me, path, out, admin) {
     const schedId = typeof sub.schedule === 'string' ? sub.schedule : sub.schedule && sub.schedule.id;
     if (want === r.price_key) {   // back to what they have: drop any change waiting for the renewal
       if (schedId) await stripe(env, 'POST', '/subscription_schedules/' + schedId + '/release');
-      return out(statusOut(env, me, await syncSubscription(env, await getSub(env, r.sub), me.id)));
+      return out(statusOut(env, me, await syncSubscription(env, await getSub(env, r.sub), me.id), admin));
     }
     const sched = schedId ? await stripe(env, 'GET', '/subscription_schedules/' + schedId) : await stripe(env, 'POST', '/subscription_schedules', { from_subscription: r.sub });
     const ph = sched.phases[0];
@@ -261,7 +265,7 @@ export async function handleBilling(env, req, me, path, out, admin) {
       phases: { 0: { items: { 0: { price: item.price.id, quantity: 1 } }, start_date: ph.start_date, end_date: (item.current_period_end || sub.current_period_end), proration_behavior: 'none' },
                 1: { items: { 0: { price: prices[want], quantity: 1 } }, duration: { interval: to, interval_count: 1 }, proration_behavior: 'none' } } });
     await saveRow(env, me.id, { pending_key: want, schedule: sched.id });
-    return out(statusOut(env, me, await rowOf(env, me.id)));
+    return out(statusOut(env, me, await rowOf(env, me.id), admin));
   }
   // ---- admins: find people, give Premium ----
   if (path === '/auth/admin/people' && req.method === 'GET') {

@@ -52,11 +52,16 @@
     box.querySelector('[data-iv="year"] small').textContent = '$' + (y / 1200).toFixed(2) + ' a month, billed yearly';
     pill.replaceWith(box);
     // the small print goes under the button
-    const go = $('pm-go'); if (go && !pms.querySelector('.pmfine')) go.insertAdjacentHTML('afterend', '<p class="pmfine">Renews automatically. Cancel anytime in Settings.</p>');
+    const go = $('pm-go'); if (go && !pms.querySelector('.pmfine')) go.insertAdjacentHTML('afterend', '<p class="pmfine"></p>');
     box.addEventListener('click', e => { const b = e.target.closest('[data-iv]'); if (!b) return; pick = b.dataset.iv; box.querySelectorAll('[data-iv]').forEach(x => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-checked', String(on)); }); cta(); });
     cta();
   }
-  function cta() { const g = $('pm-go'); if (g) g.textContent = 'Continue · ' + dollars(priceOf(pick)) + (pick === 'year' ? ' a year' : ' a month'); }
+  // v50.72: before launch the button says when Premium opens and can't be pressed (admins can still check out)
+  const closed = () => !!(status && status.open === false);
+  function cta() { const g = $('pm-go'), pms = $('pms'), fine = pms && pms.querySelector('.pmfine'); if (!g) return;
+    g.disabled = closed(); g.classList.toggle('pm-soon', closed());
+    g.textContent = closed() ? 'Premium opens ' + (status.opens || 'soon') : 'Continue · ' + dollars(priceOf(pick)) + (pick === 'year' ? ' a year' : ' a month');
+    if (fine) fine.textContent = closed() ? 'Sign up before Jan 1 to lock in founders pricing.' : 'Renews automatically. Cancel anytime in Settings.'; }
   // the sheet lives in the Card Board files, which load later: paint the picker whenever it opens
   new MutationObserver(() => { const pms = $('pms'); if (pms && pms.open && !pms._ctPlans) { pms._ctPlans = true; pick = 'year'; planPicker(); if (!status) load().then(planPicker); }
     if (pms && !pms.open) pms._ctPlans = false; }).observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ['open'] });
@@ -81,6 +86,7 @@
   let stripeJs = null;
   const loadStripe = () => stripeJs || (stripeJs = new Promise((res, rej) => { if (window.Stripe) return res(window.Stripe); const s = document.createElement('script'); s.src = 'https://js.stripe.com/v3/'; s.onload = () => res(window.Stripe); s.onerror = () => { stripeJs = null; rej(new Error('Couldn’t reach Stripe. Check your connection.')); }; document.head.appendChild(s); }));
   async function checkout(iv) {
+    if (closed()) { cta(); return; }
     iv = iv === 'month' ? 'month' : 'year';
     const d = ckDialog(); $('ck-sub').textContent = (iv === 'year' ? 'Yearly' : 'Monthly') + ' · ' + dollars(priceOf(iv)) + (iv === 'year' ? ' a year' : ' a month') + (offer() ? ' · founding member' : '');
     const w = $('ck-wait'); w.hidden = false; w.textContent = 'Opening secure checkout…'; w.classList.remove('err');

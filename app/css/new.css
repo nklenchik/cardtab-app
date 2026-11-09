@@ -2231,3 +2231,4 @@ dialog.wlc::backdrop{background:rgba(0,0,0,.2)}
 html :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdrop,html :is(.am-bd,.as-bd,.mbd){-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgba(10,8,6,.36)!important}
 @media (prefers-color-scheme:dark){html:not([data-theme="light"]) :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdrop,html:not([data-theme="light"]) :is(.am-bd,.as-bd,.mbd){background:rgba(0,0,0,.5)!important}}
 html[data-theme="dark"] :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdrop,html[data-theme="dark"] :is(.am-bd,.as-bd,.mbd){background:rgba(0,0,0,.5)!important}
+#pm-go.pm-soon,#pm-go.pm-soon:hover{opacity:.5;cursor:default;transform:none}   /* v50.72: before launch */

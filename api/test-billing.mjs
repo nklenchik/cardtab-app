@@ -65,7 +65,13 @@ const cf = await signIn('friend@x.com'), ca = await signIn('nklenchik@gmail.com'
 let j = await (await call('/auth/billing', { cookie: cf })).json();
 assert.equal(j.plan, 'free'); assert.equal(j.founders.eligible, true); assert.equal(j.sub, null); assert.equal(j.publishableKey, 'pk_test_x');
 // checkout (founders, monthly): prices are made once
-let r = await call('/auth/billing/checkout', { method: 'POST', cookie: cf, body: { plan: 'monthly' } }); j = await r.json();
+// before launch (BILLING_OPEN off): people see when Premium opens and can't check out; admins still can
+env.BILLING_OPEN = 'off'; env.BILLING_OPENS = 'Dec 1';
+j = await (await call('/auth/billing', { cookie: cf })).json(); assert.equal(j.open, false); assert.equal(j.opens, 'Dec 1');
+let r = await call('/auth/billing/checkout', { method: 'POST', cookie: cf, body: { plan: 'monthly' } }); assert.equal(r.status, 403); assert.equal((await r.json()).closed, true);
+j = await (await call('/auth/billing', { cookie: ca })).json(); assert.equal(j.open, true, 'admins can still test');
+env.BILLING_OPEN = 'on';
+r = await call('/auth/billing/checkout', { method: 'POST', cookie: cf, body: { plan: 'monthly' } }); j = await r.json();
 assert.equal(r.status, 200, JSON.stringify(j)); assert.ok(j.clientSecret); assert.equal(j.plan, 'fm4'); assert.equal(j.amount, 400);
 assert.equal(S.prices.length, 4); assert.equal(S.products.length, 1); assert.equal(S.customers.length, 1);
 const sess = Object.values(S.sessions)[0]; assert.equal(sess.price, priceBy('ct_fm4').id); assert.equal(sess.tax, null, 'no tax until it is switched on');
