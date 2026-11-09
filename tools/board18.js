@@ -6,7 +6,7 @@
 NEWW.best=function(ctx,s,w){
   if(s!=='M'&&s!=='B')return bestBody(ctx,s,w);
   // Wide: the top sellers as a short ranked list (a row of tall cards doesn't fit one row high)
-  const L=cardStats(ctx).filter(c=>c.sold&&c.b>0&&c.g>0).sort((a,b)=>b.g-a.g).slice(0,s==='B'?4:3);
+  const L=cardWins(cardStats(ctx)).filter(c=>c.g>0).sort((a,b)=>b.g-a.g).slice(0,s==='B'?4:3);
   if(!L.length)return '<p class="eg">No card bought and sold in this period yet.</p>';
   return '<div class="xalso bestl'+(s==='B'?' wide':'')+'">'+L.map((c,i)=>'<div class="xar drill"'+dd({t:c.e.name,sub:'Every entry for this card',card:c.k})+' role="button" tabindex="0"><small class="brk">#'+(i+1)+'</small>'+cardImg(c,'xai','thumb')+'<span>'+esc(nameOf(c))+'</span><b class="num">'+ksigned(c.g)+'</b></div>').join('')+'</div>'};
 // phones: a card widget can be Wide (2×1); it uses the compact card-and-number layout, stretched across

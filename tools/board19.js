@@ -28,10 +28,10 @@ const unitOf=e=>Math.round(e.amount/Math.max(1,e.qty||1));
 const BANDS=[['Under $10',0,1000],['$10–50',1000,5000],['$50–100',5000,10000],['$100 and up',10000,Infinity]];
 const bandOf=c=>(BANDS.find(b=>c>=b[1]&&c<b[2])||BANDS[0])[0];
 // each card's average cost, from every purchase up to the end of the period
-function costs(ctx){const m={},K=keyer(ctx);ctx.p.forEach(e=>{if(e.type!=='purchase'||e.date>ctx.b)return;const k=K(e),o=m[k]||(m[k]={c:0,q:0,first:e.date,dates:[]});o.c+=e.amount;o.q+=e.qty||1;if(e.date<o.first)o.first=e.date;o.dates.push(e.date)});return m}
+function costs(ctx){const m={},K=keyer(ctx);ctx.p.forEach(e=>{if(e.type!=='purchase'||e.date>ctx.b)return;const k=K(e),o=m[k]||(m[k]={c:0,q:0,first:e.date,dates:[],buys:[]});o.c+=e.amount;o.q+=e.qty||1;if(e.date<o.first)o.first=e.date;o.dates.push(e.date);o.buys.push(e)});return m}
 // each sale in the period with what it made, when the card's cost is known
-function saleResults(ctx){const C=costs(ctx),K=keyer(ctx);return ctx.inP.filter(e=>e.type==='sale').map(e=>{const o=C[K(e)];if(!o||!o.q)return null;const cost=Math.round(o.c/o.q)*(e.qty||1),got=e.net==null?e.amount:e.net;
-  const before=o.dates.filter(d=>d<=e.date).sort();const bought=before.length?before[before.length-1]:o.first;return {e,cost,got,made:got-cost,days:Math.max(0,dayN(bought,e.date))}}).filter(Boolean)}
+function saleResults(ctx){const C=costs(ctx),K=keyer(ctx);return ctx.inP.filter(e=>e.type==='sale').map(e=>{const o=C[K(e)];if(!o||!o.q)return null;const r=CM.saleCost(o.buys,e);if(!r)return null;const cost=r.cost,got=e.net==null?e.amount:e.net;
+  return {e,cost,got,made:got-cost,days:Math.max(0,dayN(r.bought,e.date))}}).filter(Boolean)}   // v50.69: only purchases on or before the sale
 
 // ---------- Breakdown ----------
 const BD_M=[['spent','Spending'],['sales','Sales'],['profit','Profit'],['nb','Cards bought'],['ns','Cards sold']];

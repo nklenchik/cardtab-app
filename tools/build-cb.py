@@ -153,7 +153,7 @@ function totals(list){let sales=0,after=0,spent=0,ref=0,fees=0;list.forEach(e=>{
 const calm=matchMedia('(prefers-reduced-motion: reduce)');
 const STORIES_HTML=__STORIES__;
 '''.replace('__DATA__',data).replace('__STORIES__',stories_js)
-page=P['css']+board_css+tipcss+'</style>\n\n'+P['html']+markup+head_js+P['js']+open('board15.js').read()+open('board5.js').read()+(open('board13.js').read() if VAR else '')+open('board16.js').read()+open('board18.js').read()+open('board19.js').read()+'\n})();\n</script>\n'
+page=P['css']+board_css+tipcss+'</style>\n\n'+P['html']+markup+head_js+P['js']+open('cardmatch.js').read()+open('board15.js').read()+open('board5.js').read()+(open('board13.js').read() if VAR else '')+open('board16.js').read()+open('board18.js').read()+open('board19.js').read()+'\n})();\n</script>\n'
 logo='data:image/webp;base64,'+base64.b64encode(open('/home/claude/cardtab-app/app/assets/logo-128.webp','rb').read()).decode()
 out=page.replace('__LOGO__',logo)
 if not MAIN:out=out.replace('<title>Card Board Preview</title>','<title>Card Board Phone '+VAR+'</title>',1)
@@ -175,7 +175,7 @@ if APP:
     hj=re.sub(r"const RAW=.*?\n","",hj,count=1)
     hj=re.sub(r"const E=RAW\.map\(.*?\n","let E=(window.CTBoardData?window.CTBoardData():[]);\n",hj,count=1)
     hj=re.sub(r"const TODAY='[\d-]+';","let TODAY=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')})();",hj,count=1)
-    b5=open('board15.js').read()+open('board5.js').read();b13=open('board13.js').read()
+    b5=open('cardmatch.js').read()+open('board15.js').read()+open('board5.js').read();b13=open('board13.js').read()
     b5=b5.replace("const cbx=$('cbx'),ins=$('ins'),xb=$('expand')","const cbx=$('cbx'),ins=document.querySelector('.ct-insight')||$('ins'),xb=$('expand')||document.createElement('button')")
     b5=b5.replace("$('note').hidden=true;","($('note')||{}).hidden=true;").replace("$('expand').addEventListener('click',()=>setTimeout(quiet,3000))","xb.addEventListener('click',()=>setTimeout(quiet,3000))")
     b5=b5.replace("document.body.appendChild(mhost)","CBROOT.appendChild(mhost)")

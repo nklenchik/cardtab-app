@@ -8,20 +8,10 @@ const LOCK_I='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke
 // Every card's numbers come from the same matching: purchases up to the end of the period are its cost, sales inside
 // the period are what came back (after fees and shipping), all in cents.
 const cardKey=e=>e.name.toLowerCase().replace(/[^a-z0-9]/g,'')+'|'+(e.no||'');
-// v50.67: a sale finds its purchase even when the two were written differently ("Wartortle" vs "Wartortle - 008/165 - 151"):
-// the matched catalog card first, then the exact name and number, then the name alone when only one bought card has it
+// v50.69: matching lives in cardmatch.js (CM), shared with Stories
 const CK=new Map();   // entry id -> its card group, so "Every entry for this card" finds the same entries
-const looseKey=e=>e.name.toLowerCase().replace(/[^a-z0-9]/g,'');
 const KEYERS=new WeakMap();
-function keyer(ctx){let f=KEYERS.get(ctx);if(f)return f;
-  const rows=ctx.p.filter(e=>e.date<=ctx.b),idOf={};
-  rows.forEach(e=>{if(e.cardId)idOf[cardKey(e)]=idOf[cardKey(e)]||'id:'+e.cardId});
-  // v50.68: different grades of the same card are different items (a BGS 9.5 and a CGC 10 Pristine don't share a cost)
-  const gTag=e=>e.grade&&e.grade.co?'#'+e.grade.co+e.grade.g+(e.grade.w||''):'';
-  const keyOf=e=>((e.cardId?'id:'+e.cardId:idOf[cardKey(e)])||cardKey(e))+gTag(e);
-  const bought={};rows.forEach(e=>{if(e.type==='purchase'){const l=looseKey(e);(bought[l]=bought[l]||new Set()).add(keyOf(e))}});
-  f=e=>{const k=keyOf(e);if(e.type!=='sale')return k;const l=bought[looseKey(e)];return l&&!l.has(k)&&l.size===1?[...l][0]:k};
-  KEYERS.set(ctx,f);return f}
+function keyer(ctx){let f=KEYERS.get(ctx);if(f)return f;f=CM.make(ctx.p.filter(e=>e.date<=ctx.b));KEYERS.set(ctx,f);return f}
 function cardStats(ctx){
   const rows=ctx.p.filter(e=>e.date<=ctx.b),kOf=keyer(ctx);
   const by={},get=e=>{const k=kOf(e);return by[k]||(by[k]={k,e,art:null,b:0,bq:0,s:0,sq:0,sold:0,firstBuy:null,lastSale:null,buys:[],sells:[]})};
@@ -32,9 +22,13 @@ function cardStats(ctx){
 }
 // v50.53: one row per sale, priced against what those copies cost (the card's average cost per copy), so a card sold many
 // times doesn't add up into one big "win". Same shape as a card, with b/s/g/roi for just that sale.
-function saleWins(L){const out=[];L.forEach(c=>{if(!(c.bq>0&&c.b>0))return;const per=c.b/c.bq;
-  c.sells.forEach(e=>{const q=e.qty||1,b=Math.round(per*q),s=e.net==null?e.amount:e.net;out.push(Object.assign({},c,{b,s,g:s-b,roi:b>0?(s-b)/b:null,sold:q,sells:[e],sale:e}))})});
+// v50.69: priced only against purchases made on or before the sale (CM.saleCost); a sale from before the buy is left out
+function saleWins(L){const out=[];L.forEach(c=>{c.sells.forEach(e=>{const r=CM.saleCost(c.buys,e);if(!r)return;const q=e.qty||1,b=r.cost,s=e.net==null?e.amount:e.net;
+    out.push(Object.assign({},c,{b,s,g:s-b,roi:b>0?(s-b)/b:null,sold:q,sells:[e],sale:e,firstBuy:r.bought,lastSale:e.date,d:Math.max(0,days(r.bought,e.date)-1)}))})});
   return out}
+// a card's total from its sales with a known cost (the same per-sale results added up), for the Top cards podium
+function cardWins(L){const by=new Map();saleWins(L).forEach(w=>{const o=by.get(w.k);if(o){o.b+=w.b;o.s+=w.s;o.g+=w.g;o.sold+=w.sold}else by.set(w.k,Object.assign({},w,{sells:L.find(c=>c.k===w.k).sells}))});
+  return [...by.values()].map(c=>Object.assign(c,{roi:c.b>0?c.g/c.b:null}))}
 const pctTxt=v=>(v>=0?'▲ ':'▼ ')+Math.abs(Math.round(v*100))+'%';
 const shareOf=(v,t)=>t>0?Math.round(v/t*100)+'%':'';
 const shortD=d=>dFmt(d,{month:'short',day:'numeric'});
@@ -50,7 +44,7 @@ const FEAT={
     num:c=>money(c.s),pc:(c,ctx)=>shareOf(c.s,totals(ctx.inP).after)+' of your sales',line:c=>'Sold '+cnt(c.sold,'copy','copies')+(c.meta?' · '+c.meta:''),none:'No sales in this period yet'},
   loss:{t:'Biggest loss',pick:L=>saleWins(L).filter(c=>c.g<0).sort((a,b)=>a.g-b.g)[0],
     num:c=>ksigned(c.g),pc:c=>pctTxt(c.roi),line:c=>'Bought '+kshort(c.b)+' · Sold '+kshort(c.s),bad:1,none:'No losses in this period. Nice.'},
-  flip:{t:'Fastest flip',pick:L=>L.filter(c=>c.sold&&c.b>0&&c.g>0&&c.firstBuy&&c.lastSale).map(c=>Object.assign({},c,{d:Math.max(0,days(c.firstBuy,c.lastSale)-1)})).sort((a,b)=>a.d-b.d||b.g-a.g)[0],
+  flip:{t:'Fastest flip',pick:L=>saleWins(L).filter(c=>c.g>0).sort((a,b)=>a.d-b.d||b.g-a.g)[0],   // v50.69: one sale, from its latest purchase
     num:c=>ksigned(c.g),pc:c=>pctTxt(c.roi)+' in '+cnt(c.d,'day','days'),line:c=>'Bought '+shortD(c.firstBuy)+' · Sold '+shortD(c.lastSale),good:1,none:'No quick flips in this period yet'},
   held:{t:'Held the longest',pick:L=>L.filter(c=>c.left>0&&c.firstBuy).sort((a,b)=>a.firstBuy.localeCompare(b.firstBuy))[0],
     num:c=>money(c.b),pc:c=>cnt(days(c.firstBuy,TODAY)-1,'day','days'),line:c=>'Bought '+dFmt(c.firstBuy,{month:'short',day:'numeric',year:'numeric'})+' · Still unsold',none:'Nothing waiting to sell'},
@@ -88,7 +82,7 @@ function featBody(ctx,s,w){const m=FEAT[w.metric]?w.metric:'win',F=FEAT[m],L=car
     '<img class="fwi" src="'+esc(src)+'" alt="" decoding="async" draggable="false" style="--fx:'+f[0]+'%;--fy:'+f[1]+'%;--fz:'+z+'" data-wall="'+(c.art.wall?1:0)+'" data-focus="'+(c.art.focus?1:0)+'" data-meta="'+esc([c.e.cardId,c.e.cardName,c.e.name].filter(Boolean).join(' '))+'">'+
     '<div class="fwt"><h4 class="fn">'+esc(nameOf(c))+'</h4>'+(s==='S'?'':'<p class="fl">'+esc(F.line(c,ctx,L))+'</p>')+big+onlyPc+'</div></div>'}
 // ---- Best sellers: a podium of the top three, shown as the top halves of the cards ----
-function bestBody(ctx,s,w){const L=cardStats(ctx).filter(c=>c.sold&&c.b>0&&c.g>0).sort((a,b)=>b.g-a.g),n=s==='S'?1:s==='M'||s==='B'?2:3,top=L.slice(0,n);
+function bestBody(ctx,s,w){const L=cardWins(cardStats(ctx)).filter(c=>c.g>0).sort((a,b)=>b.g-a.g),n=s==='S'?1:s==='M'||s==='B'?2:3,top=L.slice(0,n);
   if(!top.length)return '<p class="eg">No card bought and sold in this period yet.</p>';
   const order=top.length===3?[top[1],top[0],top[2]]:top;
   return '<div class="pod n'+top.length+'">'+order.map(c=>{const r=top.indexOf(c)+1;return '<div class="pc r'+r+' drill"'+dd({t:c.e.name,sub:'Every entry for this card',card:c.k})+' role="button" tabindex="0"><div class="pcrop">'+cardImg(c,'pimg','card')+'</div><small class="prk">#'+r+'</small><b class="pnm">'+esc(nameOf(c))+'</b><span class="pv num">'+ksigned(c.g)+'</span></div>'}).join('')+'</div>'}

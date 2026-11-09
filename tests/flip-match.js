@@ -1,0 +1,27 @@
+// v50.69: Fastest flip is one sale from its latest purchase; a Flygon 15/97 sale never borrows the Flygon 088/080 buy
+const { chromium } = require('playwright');
+(async () => { const b = await chromium.launch(); const ok = (n, v, d) => console.log((v ? 'PASS ' : 'FAIL ') + n + (d ? ' — ' + d : ''));
+ const p = await b.newPage({ viewport: { width: 1280, height: 900 } }); const errs = []; p.on('pageerror', e => errs.push(e.message));
+ await p.goto('http://localhost:8765/index.html'); await p.evaluate(() => localStorage.setItem('ct.session', JSON.stringify({ email: 'fm' + Date.now() + '@x.test', via: 'email', at: Date.now(), exp: Date.now() + 864e5 })));
+ await p.reload(); await p.waitForTimeout(1200);
+ await p.evaluate(async () => { await CTStore.setPlan('premium');
+   const add = o => CTStore.add(Object.assign({ platform: 'TCGplayer', qty: 1 }, o));
+   await add({ type: 'sale', name: 'Flygon - 15/97 - Dragon Frontiers', amount: 7287, net: 6499, date: '2025-01-16', platform: 'Mercari' });
+   await add({ type: 'purchase', name: 'Flygon - 088/080 - Battle Partners', amount: 810, qty: 3, date: '2026-06-28' });
+   await add({ type: 'sale', name: 'Flygon - 15/97 - Dragon Frontiers', amount: 5400, net: 3809, date: '2026-08-25' });
+   await add({ type: 'purchase', name: 'Pikachu - 25/102 - Base Set', amount: 1000, date: '2026-06-01' });
+   await add({ type: 'sale', name: 'Pikachu - 25/102 - Base Set', amount: 3000, net: 2600, date: '2026-06-09' });
+ });
+ await p.waitForTimeout(600); await p.evaluate(() => document.querySelector('.sh-tabs [data-tab="board"]').click()); await p.waitForTimeout(2500);
+ await p.evaluate(() => { localStorage.setItem('cb.layout.v4', JSON.stringify([{ id: 'fz', k: 'feat', metric: 'flip', size: 'L' }, { id: 'hz', k: 'feat', metric: 'held', size: 'L' }])); cbReloadLayout(); cbLinkRange('2025-01-01', '2026-12-31', 'All'); });
+ await p.waitForTimeout(1500);
+ const card = re => p.evaluate(src => { const re = new RegExp(src); const all = [...document.querySelectorAll('*')].filter(e => e.children.length < 60 && re.test(e.textContent) && /\$/.test(e.textContent)); const w = all.sort((a, z) => a.textContent.length - z.textContent.length)[0]; return w ? w.innerText.replace(/\s+/g, ' ').slice(0, 200) : 'not found'; }, re.source);
+ const f = await card(/Fastest flip/);
+ ok('Fastest flip is the Pikachu sale, not Flygon', /Pikachu/.test(f) && !/Flygon/.test(f) && /\+\$16/.test(f) && /Jun 1/.test(f) && /Jun 9/.test(f), f);
+ const h = await card(/Held the longest/);
+ ok('the Flygon 088/080 buy shows as still unsold', /Flygon/.test(h) && /Still unsold/.test(h), h);
+ await p.evaluate(() => { const all = [...document.querySelectorAll('.drill')].filter(e => /Held the longest|Flygon/.test(e.closest('[class]').textContent) && /Flygon/.test(e.textContent)); all[0].click(); });
+ await p.waitForTimeout(700);
+ const sub = await p.evaluate(() => (document.getElementById('ent-sub') || {}).textContent || '');
+ ok('Every entry for the 088/080 Flygon lists only its own buy', /1 entry/.test(sub) && /-\$8\.10|net -?\$?8\.10|8\.10/.test(sub), sub);
+ ok('no errors', !errs.length, errs.join(' | ')); await b.close(); })();

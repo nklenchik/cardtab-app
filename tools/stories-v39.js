@@ -556,7 +556,8 @@ function moreStories(){const x=D.x,L=x.L,t=x.t,H=hideAmt,M=x.M,out=[];
   const B={},Sx={};E.forEach(e=>{if(e.type==='purchase')(B[key(e)]=B[key(e)]||[]).push(e)});sales.forEach(e=>{(Sx[key(e)]=Sx[key(e)]||[]).push(e)});
   // v50.53: one flip per sale, priced at the card's average cost per copy (not every sale of a card added up)
   const flips=[];Object.keys(Sx).filter(k=>B[k]).forEach(k=>{const b=B[k].slice().sort((p,q)=>p.date<q.date?-1:1)[0],bq=B[k].reduce((a,e)=>a+(e.qty||1),0),per=B[k].reduce((a,e)=>a+e.amount,0)/Math.max(1,bq);
-    Sx[k].forEach(s1=>{const cost=Math.round(per*(s1.qty||1)),kept=s1.net,gross=s1.amount;flips.push({name:b.name,b,s:s1,cost,kept,gross,gain:kept-cost,held:Math.max(0,days(b.date,s1.date)),roi:cost?(kept-cost)/cost:0})})});
+    // v50.69: priced against the purchases made on or before the sale, held from the latest of them (CM.saleCost)
+    Sx[k].forEach(s1=>{const r=CM.saleCost(B[k],s1);if(!r)return;const cost=r.cost,kept=s1.net,gross=s1.amount;flips.push({name:b.name,b,s:s1,cost,kept,gross,gain:kept-cost,held:Math.max(0,days(r.bought,s1.date)),roi:cost?(kept-cost)/cost:0})})});
   for(let i=flips.length-1;i>=0;i--)if(flips[i].s.date<flips[i].b.date)flips.splice(i,1);
   // 7 · the splurge: the priciest single card bought — it drops in and lands
   const top=buysL.slice().sort((a,b)=>b.amount/(b.qty||1)-a.amount/(a.qty||1))[0];
