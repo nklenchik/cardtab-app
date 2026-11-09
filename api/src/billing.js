@@ -204,13 +204,20 @@ export async function handleBilling(env, req, me, path, out, admin) {
     const offer = founderOffer(me, r), key = keyFor(offer.eligible, interval), prices = await ensurePrices(env);
     let customer = r && r.customer;
     if (!customer) { customer = (await stripe(env, 'POST', '/customers', { email: me.email, name: me.name || undefined, metadata: { uid: me.id } })).id; r = await saveRow(env, me.id, { customer }); }
-    const s = await stripe(env, 'POST', '/checkout/sessions', {
-      mode: 'subscription', ui_mode: 'embedded', customer, client_reference_id: me.id, line_items: { 0: { price: prices[key], quantity: 1 } },
+    const mk = cus => stripe(env, 'POST', '/checkout/sessions', {
+      mode: 'subscription', ui_mode: 'embedded', customer: cus, client_reference_id: me.id, line_items: { 0: { price: prices[key], quantity: 1 } },
       subscription_data: { metadata: { uid: me.id, founder: PRICES[key].founder } }, metadata: { uid: me.id, plan: key },
       return_url: appUrl(env) + '/?checkout={CHECKOUT_SESSION_ID}', redirect_on_completion: 'if_required',
       automatic_tax: env.STRIPE_TAX === 'on' ? { enabled: true } : undefined, customer_update: env.STRIPE_TAX === 'on' ? { address: 'auto', name: 'auto' } : undefined,
       billing_address_collection: env.STRIPE_TAX === 'on' ? 'auto' : undefined
     });
+    let s;
+    try { s = await mk(customer); }
+    catch (e) {   // the customer was deleted in Stripe (e.g. clearing a test card): start a fresh one
+      if (!(e.stripe && e.stripe.code === 'resource_missing' && e.stripe.param === 'customer')) throw e;
+      customer = (await stripe(env, 'POST', '/customers', { email: me.email, name: me.name || undefined, metadata: { uid: me.id } })).id;
+      await saveRow(env, me.id, { customer, card_brand: null, card_last4: null }); s = await mk(customer);
+    }
     return out({ clientSecret: s.client_secret, publishableKey: env.STRIPE_PUBLISHABLE_KEY || '', plan: key, amount: PRICES[key].amount, interval });
   }
   if (path === '/auth/billing/confirm' && req.method === 'POST') {

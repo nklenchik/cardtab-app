@@ -2209,7 +2209,7 @@ dialog.wlc::backdrop{background:rgba(0,0,0,.2)}
 /* v50.64: computers — an open entry's Sold and Fees sit together on the right, above You kept, like the bottom of a receipt;
    the name keeps the left side (phones keep the full-width lines) */
 @media(min-width:761px){
- .ct-demo .ct-row.expanded .ct-expanded-right .ct-money{align-self:flex-end;width:min(250px,100%);max-width:250px;margin-top:10px}
+ .ct-demo .ct-row.expanded .ct-expanded-right .ct-money{align-self:flex-end;width:min(250px,100%);max-width:250px;margin-top:10px;margin-right:4px}
  .ct-demo .ct-row.expanded .ct-expanded-right .ct-money .ct-mr{gap:24px}
  .ct-demo .ct-row.expanded .ct-dtrow .ct-mr{min-width:min(250px,100%);justify-content:space-between;flex:none}
  .ct-demo .ct-row.expanded .ct-dtrow{min-width:0}

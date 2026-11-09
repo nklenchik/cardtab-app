@@ -33,6 +33,7 @@ globalThis.fetch = async (url, init = {}) => {
   if (m === 'POST' && path === '/products') { const p = { id: id('prod'), metadata: { ct: f.get('metadata[ct]') } }; S.products.push(p); return ok(p); }
   if (m === 'POST' && path === '/prices') { const p = { id: id('price'), lookup_key: f.get('lookup_key'), unit_amount: +f.get('unit_amount'), recurring: { interval: f.get('recurring[interval]') }, metadata: { ct: f.get('metadata[ct]') } }; S.prices.push(p); return ok(p); }
   if (m === 'POST' && path === '/customers') { const c = { id: id('cus'), email: f.get('email') }; S.customers.push(c); return ok(c); }
+  if (m === 'POST' && path === '/checkout/sessions' && S.gone && f.get('customer') === S.gone) return new Response(JSON.stringify({ error: { code: 'resource_missing', param: 'customer', message: 'No such customer' } }), { status: 400 });
   if (m === 'POST' && path === '/checkout/sessions') { const s = { id: id('cs_test'), client_secret: 'secret_' + S.n, price: f.get('line_items[0][price]'), customer: f.get('customer'), client_reference_id: f.get('client_reference_id'), tax: f.get('automatic_tax[enabled]'), mode: 'subscription' }; S.sessions[s.id] = s; return ok(s); }
   let mm;
   if (m === 'GET' && (mm = path.match(/^\/checkout\/sessions\/(.+)$/))) return ok(S.sessions[mm[1]]);
@@ -106,6 +107,9 @@ assert.equal(planOf('friend@x.com'), 'free'); j = await (await call('/auth/billi
 // joined after New Year: regular price
 sq.prepare('UPDATE users SET created_at=? WHERE id=?').run(FOUNDER_JOIN_BEFORE + 100, uid);
 j = await (await call('/auth/billing/checkout', { method: 'POST', cookie: cf, body: { plan: 'monthly' } })).json(); assert.equal(j.plan, 'm6'); assert.equal(j.amount, 600);
+// a customer deleted in Stripe (clearing a test card): checkout starts a fresh one
+S.gone = sq.prepare('SELECT customer FROM billing WHERE user_id=?').get(uid).customer; const nC = S.customers.length;
+r = await call('/auth/billing/checkout', { method: 'POST', cookie: cf, body: { plan: 'monthly' } }); assert.equal(r.status, 200); assert.equal(S.customers.length, nC + 1); assert.notEqual(sq.prepare('SELECT customer FROM billing WHERE user_id=?').get(uid).customer, S.gone);
 // admins: find people and give Premium
 assert.equal((await call('/auth/admin/people?q=friend', { cookie: cf })).status, 403, 'admins only');
 j = await (await call('/auth/admin/people?q=frie', { cookie: ca })).json(); assert.equal(j.people.length, 1); assert.equal(j.people[0].email, 'friend@x.com'); assert.equal(j.people[0].plan, 'free');
