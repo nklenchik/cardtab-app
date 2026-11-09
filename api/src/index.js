@@ -10,6 +10,7 @@ import { cleanupAnalytics, handleSiteEvent } from './analytics.js';
 import { handleAuth, currentUser, isAdmin } from './auth.js';
 import { gate, count } from './budget.js';
 import { handleArt, communityArt } from './artup.js';
+import { handleWebhook, graceSweep } from './billing.js';
 const JT = 'https://api.justtcg.com';
 const CDN = 'https://tcgplayer-cdn.tcgplayer.com/product/';
 const DAY = 86400;
@@ -131,11 +132,12 @@ async function art(env, ctx, id, size) {
 }
 
 export default {
-  async scheduled(evt, env, ctx) { if (evt && evt.cron === HEALTH_CRON) { ctx.waitUntil(runHealth(env)); return; } ctx.waitUntil(cleanupAnalytics(env)); ctx.waitUntil(cleanupShares(env)); },
+  async scheduled(evt, env, ctx) { if (evt && evt.cron === HEALTH_CRON) { ctx.waitUntil(runHealth(env)); return; } ctx.waitUntil(cleanupAnalytics(env)); ctx.waitUntil(cleanupShares(env)); ctx.waitUntil(graceSweep(env)); },
   async fetch(req, env, ctx) {
     const u = new URL(req.url);
     { const m = u.pathname.match(/^\/s\/b\/([a-z0-9]{1,32})$/); if (m && req.method === 'GET') { try { return await handlePublicShare(env, req, m[1]); } catch (e) { return new Response(JSON.stringify({ error: 'gone' }), { status: 404, headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' } }); } } }
     if (u.pathname === '/s/ev') { try { return await handleSiteEvent(env, req); } catch (e) { return new Response(null, { status: 204 }); } }
+    if (u.pathname === '/stripe/webhook' && req.method === 'POST') return handleWebhook(env, req);   // v50.63
     if (u.pathname.startsWith('/auth/')) { try { return await handleAuth(env, req, u.pathname); } catch (e) { return new Response(JSON.stringify({ error: e.status === 503 ? 'Sign-in emails aren’t set up yet.' : 'Something went wrong. Try again.' }), { status: e.status || 500, headers: { 'content-type': 'application/json', 'access-control-allow-origin': env.APP_URL || 'https://app.cardtab.app', 'access-control-allow-credentials': 'true' } }); } }
     if (req.method === 'OPTIONS') return new Response(null, { headers: { ...cors(env), 'access-control-allow-methods': 'GET,POST', 'access-control-allow-headers': 'content-type' } });
     try {

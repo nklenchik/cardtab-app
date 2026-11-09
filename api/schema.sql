@@ -70,3 +70,7 @@ CREATE TABLE IF NOT EXISTS health ( day TEXT PRIMARY KEY, at INTEGER NOT NULL, o
 CREATE TABLE IF NOT EXISTS art_uploads ( id TEXT PRIMARY KEY, user_id TEXT NOT NULL, card_id TEXT, name TEXT, w INTEGER, h INTEGER, status TEXT NOT NULL, reason TEXT, seen TEXT, created INTEGER NOT NULL );
 CREATE INDEX IF NOT EXISTS art_uploads_user ON art_uploads (user_id, created);
 CREATE INDEX IF NOT EXISTS art_uploads_status ON art_uploads (status, created);
+
+-- v50.63 Premium billing (also made automatically on first use)
+CREATE TABLE IF NOT EXISTS billing ( user_id TEXT PRIMARY KEY, customer TEXT, sub TEXT, status TEXT, price_key TEXT, interval TEXT, amount INTEGER, founder INTEGER DEFAULT 0, period_end INTEGER, cancel_at_end INTEGER DEFAULT 0, grace_until INTEGER, card_brand TEXT, card_last4 TEXT, pending_key TEXT, schedule TEXT, gift INTEGER DEFAULT 0, updated INTEGER );
+CREATE INDEX IF NOT EXISTS billing_customer ON billing (customer);

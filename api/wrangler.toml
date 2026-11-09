@@ -32,6 +32,11 @@ GOOGLE_CLIENT_ID = "402189262163-0kb6qq7l9igfmvgiqp81plvjk5572to8.apps.googleuse
 
 # Secret (never put it in this file):  wrangler secret put JUSTTCG_API_KEY
 
+# v50.63 Premium billing (Stripe). Secrets, set with wrangler secret put: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET.
+# The publishable key is public by design. STRIPE_TAX turns on sales tax at checkout once Stripe Tax and the NY registration are set up.
+STRIPE_PUBLISHABLE_KEY = ""
+STRIPE_TAX = "off"
+
 # v50: nightly analytics tidy-up (keeps two years of daily rows). Times are UTC.
 [triggers]
 crons = ["17 8 * * *", "7 12 * * *"]   # nightly tidy-up; daily check (v50.12)

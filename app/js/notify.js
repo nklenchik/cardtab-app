@@ -159,7 +159,7 @@
     if (act === 'found' && it) { const e2 = S.get(it.entryId); if (e2) { await S.matchCard(e2.id, { name: it.card }); } await save(s => { s.items = (s.items || []).filter(x => x.id !== id); }); toast('Entry updated. The amount didn’t change.', true); paint(); return; }
     if (act === 'notnow') { await save(s => { s.items = (s.items || []).filter(x => x.id !== id); s.tips = Object.assign({}, s.tips, { dismissed: now() }); }); paint(); return; }
     if (act === 'premium') { close(); window.CTDash && window.CTDash.upgradeNote(); return; }
-    if (act === 'billing') { close(); window.CTDash && window.CTDash.toast('Plan and billing arrives with payments.'); return; }
+    if (act === 'billing') { close(); if (window.CTBilling) window.CTBilling.portal(); return; }
   });
   dlg.addEventListener('submit', async e => { if (e.target.id !== 'ntf-addp') return; e.preventDefault(); const v = $('ntf-pin').value.trim(); if (!v) return;
     const n = await S.addPlatform(v); paint(); const i = $('ntf-pin'); if (i) i.focus(); if (n && n !== v && window.CTDash) window.CTDash.toast(n + ' is already in the list'); });

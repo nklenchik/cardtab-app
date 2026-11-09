@@ -99,6 +99,7 @@
       const pick = ys.includes(String(+now - 1)) && new Date().getMonth() < 4 ? String(+now - 1) : ys[0];
       $('am-taxy').innerHTML = ys.map(y => '<option' + (y === pick ? ' selected' : '') + '>' + y + '</option>').join('');
     }
+    if (id === 'billing' && window.CTBilling) { window.CTBilling.paint(); window.CTBilling.load(true).then(() => window.CTBilling.paint()); }   // v50.63
     if (id === 'display') { pdev = window.CTPrefs ? window.CTPrefs.kind() : 'desk'; paintDev(); }
     if (id === 'display') { $('am-slabs').setAttribute('aria-checked', String(S.meta('slabs') !== false)); $('am-hideamt').setAttribute('aria-checked', String(get('ct.hideamt', '0') === '1')); }
     if (id === 'display') { const r = $('am-rboard'); r.classList.remove('confirm'); $('am-rboard-s').textContent = 'Back to the starting widgets for your plan'; }
@@ -189,7 +190,7 @@
       pg.querySelectorAll('.amr, button[role=menuitem]').forEach(r => { const g = r.querySelector('.amgt, span'); add(r, g ? ((g.childNodes[0] || {}).textContent || '') : ''); });
       const games = pg.querySelector('#am-games'); if (games) add(games, 'Games you collect');
     });
-    ['#am-ntf', '[data-soon="Plan and billing"]'].forEach(sel => { const b = menu.querySelector(sel); if (b) out.push({ el: b, lab: b.id === 'am-ntf' ? 'Notifications' : 'Plan and billing', page: null, title: '', words: SYN[b.id === 'am-ntf' ? 'Notifications' : 'Plan and billing'] }); });
+    ['#am-ntf', '[data-amp="billing"]'].forEach(sel => { const b = menu.querySelector(sel); if (b) out.push({ el: b, lab: b.id === 'am-ntf' ? 'Notifications' : 'Plan and billing', page: null, title: '', words: SYN[b.id === 'am-ntf' ? 'Notifications' : 'Plan and billing'] }); });
     return out;
   }
   const near = (a, b) => { if (Math.abs(a.length - b.length) > 1) return false; let i = 0, j = 0, e = 0; while (i < a.length && j < b.length) { if (a[i] === b[j]) { i++; j++; continue; } if (++e > 1) return false; if (a.length > b.length) i++; else if (b.length > a.length) j++; else { i++; j++; } } return e + (a.length - i) + (b.length - j) <= 1; };
