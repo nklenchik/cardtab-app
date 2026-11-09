@@ -381,7 +381,7 @@ function body(k,ctx,s,w){
     const ch=o=>cv(ctx,Object.assign({data,tip:tipf,aria:'Profit by '+unit,unit:'profit',bestLabel:'best '+unit,ent:i=>({t:'Profit',sub:mt[i].l,a:mt[i].from,b:mt[i].to})},o));
     if(!act.length)return '<p class="eg">No entries in this period.</p>';
     if(s==='S')return '<div class="mS"><div class="cq">'+bn((bestM.v>=0?'+':'')+kshort(bestM.v),bestM.v>=0?'g':'r',30)+'</div><small class="cap">'+bestM.m+'</small>'+ch({labels:false,maxW:14,r:3})+'</div>';
-    const sum='<div class="msum"><span><small>Total</small><b class="num">'+kshort(tot)+'</b></span><span><small>Average '+unit+'</small><b class="num">'+kshort(Math.round(tot/Math.max(1,data.length)))+'</b></span><span><small>Best '+unit+'</small><b class="num">'+bestM.m+'</b></span></div>';
+    const sum='<div class="msum"><span><small>Total</small><b class="num">'+kshort(tot)+'</b></span><span><small data-short="Avg '+unit+'">Average '+unit+'</small><b class="num">'+kshort(Math.round(tot/Math.max(1,data.length)))+'</b></span><span><small>Best '+unit+'</small><b class="num">'+bestM.m+'</b></span></div>';
     if(s==='M')return '<div class="fill">'+ch({labels:true,best:true,maxW:30,r:6})+'</div>';
     if(s==='B')return '<div class="split banner">'+ch({labels:true,best:false,maxW:38,r:7})+sum.replace('class="msum"','class="msum v"')+'</div>';
     return '<div class="fill">'+ch({labels:true,best:true,maxW:s==='X'?46:34,r:8})+sum+'</div>'}
@@ -458,7 +458,7 @@ function kpiBody(k,ctx,s,t,w){const T=!(w&&w.trend===false);
   if(s==='S')return '<div class="kS'+(T?'':' notr')+'"><div class="cq drill"'+drill+' role="button" tabindex="0" title="See the entries">'+bn(money(v),cls,T?34:40)+'</div>'+kdv+''+(T?spk:'<small class="cap kfoot">'+sub+'</small>')+'</div>';
   if(s==='M'){const hz='<div class="hz"><div class="cq drill"'+drill+' role="button" tabindex="0" title="See the entries">'+bn(money(v),cls,T?40:48)+'</div>'+'<small class="cap">'+sub+'</small></div>';return T?'<div class="split">'+hz+spk+'</div>':hz}
   if(s==='B'){const hz='<div class="hz"><div class="cq drill"'+drill+' role="button" tabindex="0" title="See the entries">'+bn(money(v),cls,44)+'</div>'+'<small class="cap">'+sub+'</small></div>';return T?'<div class="split wide">'+hz+bars({labels:true,maxW:30,r:6})+'</div>':hz}
-  const facts='<div class="facts"><span><small>Average '+unit+'</small><b class="num">'+avg+'</b></span><span><small>Best '+unit+'</small><b class="num">'+mt[bi].m+'</b></span>'+(s==='X'?'<span><small>'+(k==='fees'?'Share of sales':'Count')+'</small><b class="num">'+(k==='fees'?sub.replace(' of sales',''):sub)+'</b></span>':'')+'</div>';
+  const facts='<div class="facts"><span><small data-short="Avg '+unit+'">Average '+unit+'</small><b class="num">'+avg+'</b></span><span><small>Best '+unit+'</small><b class="num">'+mt[bi].m+'</b></span>'+(s==='X'?'<span><small>'+(k==='fees'?'Share of sales':'Count')+'</small><b class="num">'+(k==='fees'?sub.replace(' of sales',''):sub)+'</b></span>':'')+'</div>';
   if(s==='L')return '<div class="col'+(T?'':' notrend')+'"><div class="cq drill"'+drill+' role="button" tabindex="0" title="See the entries">'+bn(money(v),cls,T?48:60)+'</div>'+kdv+''+(T?bars({labels:true,maxW:26,r:6}):'')+facts+'</div>';
   const hz='<div class="hz"><div class="cq drill"'+drill+' role="button" tabindex="0" title="See the entries">'+bn(money(v),cls,56)+'</div>'+kdv+''+facts+'</div>';return T?'<div class="split wide">'+hz+bars({labels:true,maxW:40,r:8})+'</div>':hz}
 
@@ -1499,7 +1499,19 @@ function spills(wb){const R=wb.getBoundingClientRect();if(!R.height)return false
     if(txt&&el.scrollHeight>el.clientHeight+6){const cs=getComputedStyle(el);/* v50.3: text clamped to a line or two ends in … on purpose — that isn't cut off */if(cs.overflowY!=='visible'&&(cs.webkitLineClamp||'none')==='none')return true}
     if(!r.height)continue;/* v50.5: only words can be cut off — a zoomed card picture or a bar running past the edge is clipped on purpose */if((r.top<R.top-4||r.bottom>R.bottom+3)&&el.tagName!=='IMG'&&(el.textContent||'').trim())return true;
     if(over&&txt&&r.top<H.bottom-1&&r.bottom>H.top&&r.left<H.right&&r.right>H.left)return true}return false}
-function fitW(w){const wb=w.querySelector(':scope>.wb');if(!wb)return;
+// v50.70: when something would be cut off, it shortens instead: a label with a short form (data-short, "Average month" →
+// "Avg month"), and an amount drops its cents ($2,298.23 → $2,298), then shortens to thousands or millions ($2.3K, $123K, $1.2M)
+const MONEY=/^([+−-]?)\$([\d,]+)(\.\d\d)?$/;
+const kmb=(sg,d)=>{const v=Number(d.replace(/,/g,''));return v<1000?null:sg+'$'+(v>=1e6?(v/1e6).toFixed(v<1e7?1:0).replace(/\.0$/,'')+'M':(v/1e3).toFixed(v<1e4?1:0).replace(/\.0$/,'')+'K')};
+const cut=n=>n.scrollWidth>n.clientWidth+1;
+function fitShort(root){root.querySelectorAll('[data-short]').forEach(n=>{if(n.dataset.full==null)n.dataset.full=n.innerHTML;n.innerHTML=n.dataset.full;if(cut(n))n.innerHTML=n.dataset.short});
+  root.querySelectorAll('.num,.bn,b,strong').forEach(n=>{if(n.children.length)return;if(n.dataset.amt==null){if(!MONEY.test(n.textContent.trim()))return;n.dataset.amt=n.textContent.trim()}
+    const full=n.dataset.amt,m=full.match(MONEY),isBn=n.classList.contains('bn'),mx=isBn?parseFloat(getComputedStyle(n).getPropertyValue('--mx'))||34:0;
+    // a big number shrinks its type to fit; past about a tenth smaller it shortens instead, so big numbers stay big
+    const set=t=>{n.textContent=t;if(isBn)n.style.setProperty('--len',Math.max(4,t.length))},bad=()=>isBn?parseFloat(getComputedStyle(n).fontSize)<mx*.9:cut(n);
+    set(full);n.removeAttribute('title');if(!bad())return;
+    if(m[3]){set(m[1]+'$'+m[2]);n.title=full;if(!bad())return}const k=kmb(m[1],m[2]);if(k){set(k);n.title=full}})}
+function fitW(w){const wb=w.querySelector(':scope>.wb');if(!wb)return;fitShort(wb);
   /* v50.4: never measure while the widget or its rows are still sliding or growing in — a row caught mid-animation looks
      cut off, and the widget would hide it for good. Measure again once those animations end. */
   if(w.getAnimations){const run=w.getAnimations({subtree:true}).filter(a=>a.playState==='running'&&a.effect&&a.effect.getTiming().iterations!==Infinity);
@@ -1784,7 +1796,7 @@ function tiedBody(ctx,s){const C=costs(ctx),K=keyer(ctx),soldQ={};ctx.p.forEach(
   if(!held.length)return '<p class="eg">Every card you bought has sold.</p>';
   const tot=held.reduce((a,h)=>a+h.cost,0),nCards=held.reduce((a,h)=>a+h.left,0);
   const B=[['under 30 days',0,30,'var(--cb-pos)'],['30–90 days',30,90,'var(--cb-y)'],['over 90 days',90,Infinity,'var(--cb-neg)']].map(([l,lo,hi,c])=>{const L=held.filter(h=>h.age>=lo&&h.age<hi);return {l,c,v:L.reduce((a,h)=>a+h.cost,0),n:L.reduce((a,h)=>a+h.left,0)}});
-  const hero='<div class="cq">'+bn(kshort(tot),'',s==='S'?30:s==='M'?40:48)+'</div><small class="cap">in '+cnt(nCards,'card','cards')+' still held</small>';
+  const hero='<div class="cq">'+bn(kshort(tot),'',s==='S'?30:s==='M'?40:48)+'</div><small class="cap" data-short="in '+cnt(nCards,'card','cards')+'">in '+cnt(nCards,'card','cards')+' still held</small>';
   if(s==='S')return '<div class="kS">'+hero+'</div>';
   const age='<div class="sstack"><div class="sbar">'+B.filter(b=>b.v>0).map(b=>'<i style="width:'+(b.v/tot*100).toFixed(2)+'%;background:'+b.c+'"></i>').join('')+'</div><div class="skey">'+B.map(b=>'<span class="sk" data-tipd="'+esc(cnt(b.n,'card','cards')+' held '+b.l+' · '+kshort(b.v))+'"><i style="background:'+b.c+'"></i>'+kshort(b.v)+' '+b.l+'</span>').join('')+'</div></div>';
   if(s==='M')return '<div class="split"><div class="hz">'+hero+'</div>'+age+'</div>';
@@ -1795,9 +1807,9 @@ function tiedBody(ctx,s){const C=costs(ctx),K=keyer(ctx),soldQ={};ctx.p.forEach(
 function hitBody(ctx,s){const R=saleResults(ctx);if(!R.length)return '<p class="eg">No sales with a known cost in these dates.</p>';
   const won=R.filter(r=>r.made>0).length,pc=Math.round(won/R.length*100),worst=R.reduce((a,r)=>r.made<a.made?r:a),best=R.reduce((a,r)=>r.made>a.made?r:a);
   const hero='<div class="cq">'+bn(pc+'%',pc>=50?'g':'r',s==='S'?30:s==='M'?40:48)+'</div>';
-  if(s==='S')return '<div class="kS">'+hero+'<div class="cap tsl">'+won+' of '+R.length+' sales made money</div></div>';
+  if(s==='S')return '<div class="kS">'+hero+'<div class="cap tsl" data-short="'+won+' of '+R.length+' won">'+won+' of '+R.length+' sales made money</div></div>';
   const line=(l,r)=>'<div class="r" data-tipd="'+esc(r.e.name+' · bought for '+kshort(r.cost)+', sold for '+kshort(r.got))+'"><span class="n">'+l+'<small>'+esc(r.e.name)+'</small></span><span class="v '+(r.made>=0?'up':'dn')+'">'+ksh(r.made)+'</span></div>';
-  return '<div class="split"><div class="hz">'+hero+'<small class="cap">'+won+' of '+R.length+' sales made money</small></div><div class="lr hitl">'+line('Best',best)+(R.length>1?line('Worst',worst):'')+'</div></div>'}
+  return '<div class="split"><div class="hz">'+hero+'<small class="cap" data-short="'+won+' of '+R.length+' won">'+won+' of '+R.length+' sales made money</small></div><div class="lr hitl">'+line('Best',best)+(R.length>1?line('Worst',worst):'')+'</div></div>'}
 
 // ---------- Time to sell ----------
 function ttsBody(ctx,s){const R=saleResults(ctx);if(!R.length)return '<p class="eg">No sales with a known buy date in these dates.</p>';
@@ -1805,7 +1817,7 @@ function ttsBody(ctx,s){const R=saleResults(ctx);if(!R.length)return '<p class="
   const games=Object.keys(G).map(g=>({g,d:Math.round(median(G[g])),n:G[g].length})).sort((a,b)=>b.n-a.n);
   const short=g=>({'Dragon Ball Super':'DBS','One Piece':'One Piece','Pokémon':'Pokémon','Pokemon':'Pokémon','Magic':'Magic','Yu-Gi-Oh!':'Yu-Gi-Oh'}[g]||g);
   const hero='<div class="cq">'+bn(cnt(md,'day','days'),'',s==='S'?30:s==='M'?40:48)+'</div>';
-  if(s==='S')return '<div class="kS">'+hero+'<div class="cap tsl">'+(games.length>1?games.slice(0,3).map(x=>esc(short(x.g))+' <b>'+x.d+'</b>').join(' · '):'typical time from buying to selling')+'</div></div>';
+  if(s==='S')return '<div class="kS">'+hero+'<div class="cap tsl"'+(games.length>1?' data-short="'+esc(esc(short(games[0].g)))+' &lt;b&gt;'+games[0].d+'&lt;/b&gt;"':'')+'>'+(games.length>1?games.slice(0,3).map(x=>esc(short(x.g))+' <b>'+x.d+'</b>').join(' · '):'typical time from buying to selling')+'</div></div>';
   const mx=Math.max(...games.map(x=>x.d),1);
   return '<div class="split"><div class="hz">'+hero+'<small class="cap">typical time to sell · '+cnt(R.length,'sale','sales')+'</small></div><div class="lr kl tts">'+games.slice(0,3).map((x,i)=>'<div class="r" data-tipd="'+esc(x.g+': usually '+cnt(x.d,'day','days')+' · '+cnt(x.n,'sale','sales'))+'"><span class="n">'+esc(short(x.g))+'<small><i class="kb2"><b style="width:'+Math.max(4,x.d/mx*100).toFixed(1)+'%;background:'+colN(x.g,i)+'"></b></i></small></span><span class="v">'+x.d+'d</span></div>').join('')+'</div></div>'}
 

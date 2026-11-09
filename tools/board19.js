@@ -76,7 +76,7 @@ function tiedBody(ctx,s){const C=costs(ctx),K=keyer(ctx),soldQ={};ctx.p.forEach(
   if(!held.length)return '<p class="eg">Every card you bought has sold.</p>';
   const tot=held.reduce((a,h)=>a+h.cost,0),nCards=held.reduce((a,h)=>a+h.left,0);
   const B=[['under 30 days',0,30,'var(--cb-pos)'],['30–90 days',30,90,'var(--cb-y)'],['over 90 days',90,Infinity,'var(--cb-neg)']].map(([l,lo,hi,c])=>{const L=held.filter(h=>h.age>=lo&&h.age<hi);return {l,c,v:L.reduce((a,h)=>a+h.cost,0),n:L.reduce((a,h)=>a+h.left,0)}});
-  const hero='<div class="cq">'+bn(kshort(tot),'',s==='S'?30:s==='M'?40:48)+'</div><small class="cap">in '+cnt(nCards,'card','cards')+' still held</small>';
+  const hero='<div class="cq">'+bn(kshort(tot),'',s==='S'?30:s==='M'?40:48)+'</div><small class="cap" data-short="in '+cnt(nCards,'card','cards')+'">in '+cnt(nCards,'card','cards')+' still held</small>';
   if(s==='S')return '<div class="kS">'+hero+'</div>';
   const age='<div class="sstack"><div class="sbar">'+B.filter(b=>b.v>0).map(b=>'<i style="width:'+(b.v/tot*100).toFixed(2)+'%;background:'+b.c+'"></i>').join('')+'</div><div class="skey">'+B.map(b=>'<span class="sk" data-tipd="'+esc(cnt(b.n,'card','cards')+' held '+b.l+' · '+kshort(b.v))+'"><i style="background:'+b.c+'"></i>'+kshort(b.v)+' '+b.l+'</span>').join('')+'</div></div>';
   if(s==='M')return '<div class="split"><div class="hz">'+hero+'</div>'+age+'</div>';
@@ -87,9 +87,9 @@ function tiedBody(ctx,s){const C=costs(ctx),K=keyer(ctx),soldQ={};ctx.p.forEach(
 function hitBody(ctx,s){const R=saleResults(ctx);if(!R.length)return '<p class="eg">No sales with a known cost in these dates.</p>';
   const won=R.filter(r=>r.made>0).length,pc=Math.round(won/R.length*100),worst=R.reduce((a,r)=>r.made<a.made?r:a),best=R.reduce((a,r)=>r.made>a.made?r:a);
   const hero='<div class="cq">'+bn(pc+'%',pc>=50?'g':'r',s==='S'?30:s==='M'?40:48)+'</div>';
-  if(s==='S')return '<div class="kS">'+hero+'<div class="cap tsl">'+won+' of '+R.length+' sales made money</div></div>';
+  if(s==='S')return '<div class="kS">'+hero+'<div class="cap tsl" data-short="'+won+' of '+R.length+' won">'+won+' of '+R.length+' sales made money</div></div>';
   const line=(l,r)=>'<div class="r" data-tipd="'+esc(r.e.name+' · bought for '+kshort(r.cost)+', sold for '+kshort(r.got))+'"><span class="n">'+l+'<small>'+esc(r.e.name)+'</small></span><span class="v '+(r.made>=0?'up':'dn')+'">'+ksh(r.made)+'</span></div>';
-  return '<div class="split"><div class="hz">'+hero+'<small class="cap">'+won+' of '+R.length+' sales made money</small></div><div class="lr hitl">'+line('Best',best)+(R.length>1?line('Worst',worst):'')+'</div></div>'}
+  return '<div class="split"><div class="hz">'+hero+'<small class="cap" data-short="'+won+' of '+R.length+' won">'+won+' of '+R.length+' sales made money</small></div><div class="lr hitl">'+line('Best',best)+(R.length>1?line('Worst',worst):'')+'</div></div>'}
 
 // ---------- Time to sell ----------
 function ttsBody(ctx,s){const R=saleResults(ctx);if(!R.length)return '<p class="eg">No sales with a known buy date in these dates.</p>';
@@ -97,7 +97,7 @@ function ttsBody(ctx,s){const R=saleResults(ctx);if(!R.length)return '<p class="
   const games=Object.keys(G).map(g=>({g,d:Math.round(median(G[g])),n:G[g].length})).sort((a,b)=>b.n-a.n);
   const short=g=>({'Dragon Ball Super':'DBS','One Piece':'One Piece','Pokémon':'Pokémon','Pokemon':'Pokémon','Magic':'Magic','Yu-Gi-Oh!':'Yu-Gi-Oh'}[g]||g);
   const hero='<div class="cq">'+bn(cnt(md,'day','days'),'',s==='S'?30:s==='M'?40:48)+'</div>';
-  if(s==='S')return '<div class="kS">'+hero+'<div class="cap tsl">'+(games.length>1?games.slice(0,3).map(x=>esc(short(x.g))+' <b>'+x.d+'</b>').join(' · '):'typical time from buying to selling')+'</div></div>';
+  if(s==='S')return '<div class="kS">'+hero+'<div class="cap tsl"'+(games.length>1?' data-short="'+esc(esc(short(games[0].g)))+' &lt;b&gt;'+games[0].d+'&lt;/b&gt;"':'')+'>'+(games.length>1?games.slice(0,3).map(x=>esc(short(x.g))+' <b>'+x.d+'</b>').join(' · '):'typical time from buying to selling')+'</div></div>';
   const mx=Math.max(...games.map(x=>x.d),1);
   return '<div class="split"><div class="hz">'+hero+'<small class="cap">typical time to sell · '+cnt(R.length,'sale','sales')+'</small></div><div class="lr kl tts">'+games.slice(0,3).map((x,i)=>'<div class="r" data-tipd="'+esc(x.g+': usually '+cnt(x.d,'day','days')+' · '+cnt(x.n,'sale','sales'))+'"><span class="n">'+esc(short(x.g))+'<small><i class="kb2"><b style="width:'+Math.max(4,x.d/mx*100).toFixed(1)+'%;background:'+colN(x.g,i)+'"></b></i></small></span><span class="v">'+x.d+'d</span></div>').join('')+'</div></div>'}
 

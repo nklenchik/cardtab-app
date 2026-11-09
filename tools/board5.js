@@ -207,7 +207,7 @@ function body(k,ctx,s,w){
     const ch=o=>cv(ctx,Object.assign({data,tip:tipf,aria:'Profit by '+unit,unit:'profit',bestLabel:'best '+unit,ent:i=>({t:'Profit',sub:mt[i].l,a:mt[i].from,b:mt[i].to})},o));
     if(!act.length)return '<p class="eg">No entries in this period.</p>';
     if(s==='S')return '<div class="mS"><div class="cq">'+bn((bestM.v>=0?'+':'')+kshort(bestM.v),bestM.v>=0?'g':'r',30)+'</div><small class="cap">'+bestM.m+'</small>'+ch({labels:false,maxW:14,r:3})+'</div>';
-    const sum='<div class="msum"><span><small>Total</small><b class="num">'+kshort(tot)+'</b></span><span><small>Average '+unit+'</small><b class="num">'+kshort(Math.round(tot/Math.max(1,data.length)))+'</b></span><span><small>Best '+unit+'</small><b class="num">'+bestM.m+'</b></span></div>';
+    const sum='<div class="msum"><span><small>Total</small><b class="num">'+kshort(tot)+'</b></span><span><small data-short="Avg '+unit+'">Average '+unit+'</small><b class="num">'+kshort(Math.round(tot/Math.max(1,data.length)))+'</b></span><span><small>Best '+unit+'</small><b class="num">'+bestM.m+'</b></span></div>';
     if(s==='M')return '<div class="fill">'+ch({labels:true,best:true,maxW:30,r:6})+'</div>';
     if(s==='B')return '<div class="split banner">'+ch({labels:true,best:false,maxW:38,r:7})+sum.replace('class="msum"','class="msum v"')+'</div>';
     return '<div class="fill">'+ch({labels:true,best:true,maxW:s==='X'?46:34,r:8})+sum+'</div>'}
@@ -284,7 +284,7 @@ function kpiBody(k,ctx,s,t,w){const T=!(w&&w.trend===false);
   if(s==='S')return '<div class="kS'+(T?'':' notr')+'"><div class="cq drill"'+drill+' role="button" tabindex="0" title="See the entries">'+bn(money(v),cls,T?34:40)+'</div>'+kdv+''+(T?spk:'<small class="cap kfoot">'+sub+'</small>')+'</div>';
   if(s==='M'){const hz='<div class="hz"><div class="cq drill"'+drill+' role="button" tabindex="0" title="See the entries">'+bn(money(v),cls,T?40:48)+'</div>'+'<small class="cap">'+sub+'</small></div>';return T?'<div class="split">'+hz+spk+'</div>':hz}
   if(s==='B'){const hz='<div class="hz"><div class="cq drill"'+drill+' role="button" tabindex="0" title="See the entries">'+bn(money(v),cls,44)+'</div>'+'<small class="cap">'+sub+'</small></div>';return T?'<div class="split wide">'+hz+bars({labels:true,maxW:30,r:6})+'</div>':hz}
-  const facts='<div class="facts"><span><small>Average '+unit+'</small><b class="num">'+avg+'</b></span><span><small>Best '+unit+'</small><b class="num">'+mt[bi].m+'</b></span>'+(s==='X'?'<span><small>'+(k==='fees'?'Share of sales':'Count')+'</small><b class="num">'+(k==='fees'?sub.replace(' of sales',''):sub)+'</b></span>':'')+'</div>';
+  const facts='<div class="facts"><span><small data-short="Avg '+unit+'">Average '+unit+'</small><b class="num">'+avg+'</b></span><span><small>Best '+unit+'</small><b class="num">'+mt[bi].m+'</b></span>'+(s==='X'?'<span><small>'+(k==='fees'?'Share of sales':'Count')+'</small><b class="num">'+(k==='fees'?sub.replace(' of sales',''):sub)+'</b></span>':'')+'</div>';
   if(s==='L')return '<div class="col'+(T?'':' notrend')+'"><div class="cq drill"'+drill+' role="button" tabindex="0" title="See the entries">'+bn(money(v),cls,T?48:60)+'</div>'+kdv+''+(T?bars({labels:true,maxW:26,r:6}):'')+facts+'</div>';
   const hz='<div class="hz"><div class="cq drill"'+drill+' role="button" tabindex="0" title="See the entries">'+bn(money(v),cls,56)+'</div>'+kdv+''+facts+'</div>';return T?'<div class="split wide">'+hz+bars({labels:true,maxW:40,r:8})+'</div>':hz}
 

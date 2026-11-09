@@ -23,7 +23,19 @@ function spills(wb){const R=wb.getBoundingClientRect();if(!R.height)return false
     if(txt&&el.scrollHeight>el.clientHeight+6){const cs=getComputedStyle(el);/* v50.3: text clamped to a line or two ends in … on purpose — that isn't cut off */if(cs.overflowY!=='visible'&&(cs.webkitLineClamp||'none')==='none')return true}
     if(!r.height)continue;/* v50.5: only words can be cut off — a zoomed card picture or a bar running past the edge is clipped on purpose */if((r.top<R.top-4||r.bottom>R.bottom+3)&&el.tagName!=='IMG'&&(el.textContent||'').trim())return true;
     if(over&&txt&&r.top<H.bottom-1&&r.bottom>H.top&&r.left<H.right&&r.right>H.left)return true}return false}
-function fitW(w){const wb=w.querySelector(':scope>.wb');if(!wb)return;
+// v50.70: when something would be cut off, it shortens instead: a label with a short form (data-short, "Average month" →
+// "Avg month"), and an amount drops its cents ($2,298.23 → $2,298), then shortens to thousands or millions ($2.3K, $123K, $1.2M)
+const MONEY=/^([+−-]?)\$([\d,]+)(\.\d\d)?$/;
+const kmb=(sg,d)=>{const v=Number(d.replace(/,/g,''));return v<1000?null:sg+'$'+(v>=1e6?(v/1e6).toFixed(v<1e7?1:0).replace(/\.0$/,'')+'M':(v/1e3).toFixed(v<1e4?1:0).replace(/\.0$/,'')+'K')};
+const cut=n=>n.scrollWidth>n.clientWidth+1;
+function fitShort(root){root.querySelectorAll('[data-short]').forEach(n=>{if(n.dataset.full==null)n.dataset.full=n.innerHTML;n.innerHTML=n.dataset.full;if(cut(n))n.innerHTML=n.dataset.short});
+  root.querySelectorAll('.num,.bn,b,strong').forEach(n=>{if(n.children.length)return;if(n.dataset.amt==null){if(!MONEY.test(n.textContent.trim()))return;n.dataset.amt=n.textContent.trim()}
+    const full=n.dataset.amt,m=full.match(MONEY),isBn=n.classList.contains('bn'),mx=isBn?parseFloat(getComputedStyle(n).getPropertyValue('--mx'))||34:0;
+    // a big number shrinks its type to fit; past about a tenth smaller it shortens instead, so big numbers stay big
+    const set=t=>{n.textContent=t;if(isBn)n.style.setProperty('--len',Math.max(4,t.length))},bad=()=>isBn?parseFloat(getComputedStyle(n).fontSize)<mx*.9:cut(n);
+    set(full);n.removeAttribute('title');if(!bad())return;
+    if(m[3]){set(m[1]+'$'+m[2]);n.title=full;if(!bad())return}const k=kmb(m[1],m[2]);if(k){set(k);n.title=full}})}
+function fitW(w){const wb=w.querySelector(':scope>.wb');if(!wb)return;fitShort(wb);
   /* v50.4: never measure while the widget or its rows are still sliding or growing in — a row caught mid-animation looks
      cut off, and the widget would hide it for good. Measure again once those animations end. */
   if(w.getAnimations){const run=w.getAnimations({subtree:true}).filter(a=>a.playState==='running'&&a.effect&&a.effect.getTiming().iterations!==Infinity);
