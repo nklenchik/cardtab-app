@@ -123,7 +123,7 @@ dialog.sheet.pms .awp.pmp{border:1px solid var(--win-edge)!important}
 @media(min-width:761px){
  .cb-tabs{display:flex;gap:4px;padding:4px;margin-left:16px;border-radius:999px;background:var(--s-track,rgba(0,0,0,.05));align-self:center}
  .cb-tabs button{display:flex;align-items:center;gap:7px;height:32px;padding:0 13px;border:0;border-radius:999px;background:none;color:var(--muted);font:inherit;font-size:13px;font-weight:750;white-space:nowrap;cursor:pointer}
- .cb-tabs button:hover{color:var(--text)}
+ @media(hover:hover){.cb-tabs button:hover{color:var(--text)}}
  .cb-tabs button[aria-current]{background:var(--tab-onbg,rgba(176,18,61,.14));color:var(--tab-on,#b0123d)}
 }
 
@@ -317,3 +317,6 @@ html.pg-moving .cbx #cb .wq.k-feat .ttl,html.pg-moving .cbx #cb .fpc,html.pg-mov
 .avp .avdel{display:block;margin:14px auto 2px;min-height:44px;padding:0 14px;border:0;background:none;color:#c62828;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
 :root[data-theme=dark] .avp .avdel{color:#ff6b6b}@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .avp .avdel{color:#ff6b6b}}
 .avp .avdel[hidden]{display:none}
+
+/* v50.70: summary rows under charts: labels stay on one line so every number starts on the same line; amounts are whole dollars */
+.msum small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
