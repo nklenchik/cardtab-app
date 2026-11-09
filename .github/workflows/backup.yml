@@ -2,8 +2,8 @@
 #
 # Three copies, in three places:
 #   1. live data, plus Cloudflare D1's own 7-day rollback (already on)
-#   2. every night, a copy in the separate R2 bucket "card-tab-backup": the database (last 30 nights + the 1st of every
-#      month for a year) and every card picture (auto-fill art, shared default art, uploaded photos)
+#   2. every night, a copy in the separate R2 bucket "card-tab-backup": the database (last 30 nights) and every card
+#      picture: auto-fill art, shared default art and people's own photos (these mirror the live ones; a deleted photo is kept 30 days)
 #   3. every night, an ENCRYPTED copy in Google Drive ("Card Tab backups"): the database (same keeping rules) and uploaded
 #      photos + shared default art. Only the passphrase opens it.
 # Each night the database copy is opened and checked (a restore test) before anything is kept; if it fails, the run fails
@@ -74,20 +74,22 @@ jobs:
           rclone copyto "$RUNNER_TEMP/db-$DAY.sql.gz" "r2:card-tab-backup/db/db-$DAY.sql.gz"
           rclone copyto "$RUNNER_TEMP/db-$DAY.sql.gz" "r2:card-tab-art/_backup/latest.sql.gz"   # for the admin Download button
           rclone copy r2:card-tab-art/art r2:card-tab-backup/art --fast-list --transfers 16
-          rclone copy r2:card-tab-art/up  r2:card-tab-backup/up  --fast-list --transfers 16
+          # people's own photos mirror the live bucket; a photo deleted there (or with its account) moves aside and is gone after 30 days
+          rclone sync r2:card-tab-art/up r2:card-tab-backup/up --backup-dir "r2:card-tab-backup/up-removed/$DAY" --fast-list --transfers 16
       - name: Copy 3 - Google Drive (encrypted)
         run: |
           rclone copyto "$RUNNER_TEMP/db-$DAY.sql.gz" "safe:db/db-$DAY.sql.gz"
-          rclone copy r2:card-tab-art/up    safe:photos     --fast-list --transfers 8
+          rclone sync r2:card-tab-art/up safe:photos --backup-dir "safe:photos-removed/$DAY" --fast-list --transfers 8
           rclone copy r2:card-tab-art/art/c safe:shared-art --fast-list --transfers 8
-      - name: Keep 30 nights + the 1st of each month for a year
+      - name: Keep 30 days (the privacy page promises deleted accounts leave the backups within 30 days)
         run: |
-          prune() { rclone lsf "$1" --files-only | while read -r f; do
-              d=${f#db-}; d=${d%.sql.gz}; age=$(( ( $(date -u +%s) - $(date -u -d "$d" +%s) ) / 86400 ))
-              if [ "$age" -gt 30 ] && { [ "${d:8:2}" != "01" ] || [ "$age" -gt 366 ]; }; then rclone deletefile "$1/$f"; fi
-            done; }
+          old() { local d="$1"; [ $(( ( $(date -u +%s) - $(date -u -d "$d" +%s) ) / 86400 )) -gt 30 ]; }
+          prune() { rclone lsf "$1" --files-only 2>/dev/null | while read -r f; do d=${f#db-}; d=${d%.sql.gz}; if old "$d"; then rclone deletefile "$1/$f"; fi; done; }
+          prunedirs() { rclone lsf "$1" --dirs-only 2>/dev/null | while read -r f; do d=${f%/}; if old "$d"; then rclone purge "$1/$d"; fi; done; }
           prune r2:card-tab-backup/db
           prune safe:db
+          prunedirs r2:card-tab-backup/up-removed
+          prunedirs safe:photos-removed
       - name: Record the result (shown in the daily check)
         if: always()
         run: |

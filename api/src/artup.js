@@ -167,3 +167,12 @@ export async function communityArt(env, cardId, size, cors) {
   const o = await env.ART.get(`art/c/${cardId}/${size}`).catch(() => null); if (!o) return null;
   return new Response(o.body, { headers: { 'content-type': (o.httpMetadata && o.httpMetadata.contentType) || 'image/webp', 'cache-control': 'public, max-age=86400', 'x-art-why': 'shared', ...cors(env) } });
 }
+
+// Deleting an account removes that person's own card photos (stored under up/<user>/) and their upload records. A photo that was
+// already approved as a card's shared picture lives on under art/c/ as community art, with no link back to the person.
+export async function deleteUserPhotos(env, uid) {
+  if (!uid) return;
+  if (env.ART && env.ART.list) { let cursor;
+    do { const l = await env.ART.list({ prefix: 'up/' + uid + '/', cursor, limit: 1000 }); const keys = l.objects.map(o => o.key); if (keys.length) await env.ART.delete(keys); cursor = l.truncated ? l.cursor : undefined; } while (cursor); }
+  try { await env.DB.batch([env.DB.prepare("DELETE FROM art_uploads WHERE user_id=? AND status!='approved'").bind(uid), env.DB.prepare("UPDATE art_uploads SET user_id='deleted' WHERE user_id=?").bind(uid)]); } catch (e) {}
+}

@@ -1,3 +1,4 @@
+import { deleteUserPhotos } from './artup.js';
 import { handleHealth } from './health.js';
 import { handleShare } from './share.js';
 import { handleEvents, handleStats, handleSiteStats } from './analytics.js';
@@ -155,6 +156,7 @@ export async function handleAuth(env, req, path) {
   }
   if (!me) return out(env, req, { error: 'Sign in first.' }, 401);
   if (path === '/auth/delete' && req.method === 'POST') {
+    await deleteUserPhotos(env, me.id);   // their own card photos and upload records (v50.61)
     await env.DB.batch([...(await deleteSynced(env, me.id)), env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(me.id), env.DB.prepare('DELETE FROM an_active WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM an_feat WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM shares WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM an_user WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM login_tokens WHERE email=?').bind(me.email), env.DB.prepare('DELETE FROM users WHERE id=?').bind(me.id)]);
     return out(env, req, { ok: true }, 200, { 'set-cookie': setCookie(env, 'ct_s', '', 0) });
   }

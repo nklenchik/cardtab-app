@@ -539,7 +539,7 @@
     const prem = premium(), sec = $('af-secondary');
     $('af-ic').textContent = prem ? '↥' : '+';
     $('af-h').textContent = prem ? 'Bring in what you’ve got' : 'Add your first card';
-    $('af-p').innerHTML = prem ? 'Upload a CSV or Excel file and Card Tab matches your dates, cards and platforms for you.' : 'Log what you bought or sold, like <em>Charizard ex - 199/165</em>, and Card Tab keeps your totals to the cent.';
+    $('af-p').innerHTML = prem ? 'Upload a CSV or Excel file and Card Tab matches your dates, cards and platforms for you.' : 'Log what you bought or sold, like <em>Charizard ex - 199/165</em>, and Card Tab keeps your totals for you.';
     $('af-primary').textContent = prem ? 'Import a spreadsheet' : '+ Add New';
     $('af-primary').disabled = !prem && S.usage().blocked;
     sec.hidden = !prem && !S.showImport();

@@ -10,7 +10,7 @@ const stmt = (sql) => { const o = { sql, args: [], bind(...a) { o.args = a; retu
 const DB = { prepare: stmt, async batch(list) { for (const s of list) await s.run(); return []; } };
 const mails = [];
 const env = { DB, APP_URL: 'https://app.cardtab.app', API_URL: 'https://api.cardtab.app', ADMIN_EMAILS: 'nklenchik@gmail.com, second@x.com', GOOGLE_CLIENT_ID: 'gid', GOOGLE_CLIENT_SECRET: 'gsec',
-  EMAIL: { async send(m) { mails.push(m); } }, ART: { async get() { return null; } } };
+  EMAIL: { async send(m) { mails.push(m); } }, ART: { async get() { return null; }, objs: new Set(), async list({ prefix }) { return { objects: [...this.objs].filter(k => k.startsWith(prefix)).map(key => ({ key })), truncated: false }; }, async delete(keys) { [].concat(keys).forEach(k => this.objs.delete(k)); } } };
 const O = 'https://app.cardtab.app';
 const call = (path, { method = 'GET', body, cookie, ip = '1.1.1.1' } = {}) => worker.fetch(new Request('https://api.cardtab.app' + path, { method, headers: { origin: O, 'content-type': 'application/json', 'cf-connecting-ip': ip, ...(cookie ? { cookie } : {}) }, body: body ? JSON.stringify(body) : undefined, redirect: 'manual' }), env, {});
 const cookieOf = r => (r.headers.get('set-cookie') || '').split(';')[0];
@@ -77,8 +77,15 @@ const gc = (r.headers.get('set-cookie') || '').match(/ct_s=[\w-]+/)[0];
 j = await (await call('/auth/me', { cookie: gc })).json(); assert.equal(j.user.email, 'nklenchik@gmail.com'); assert.equal(j.user.name, 'Nick'); assert.equal(j.user.plan, 'premium', 'same account as the email sign-in');
 // card data readout: admins only
 r = await call('/auth/usage', { cookie: gc }); assert.equal(r.status, 200); j = await r.json(); assert.equal(j.limit, 10000); assert.ok(j.resets);
-// delete account
+// delete account (also removes their own card photos; an approved shared picture stays, with no link back to them)
+const uidDel = sq.prepare('SELECT id FROM users WHERE email=?').get('nklenchik@gmail.com').id;
+['up/' + uidDel + '/p1/detail', 'up/' + uidDel + '/p1/list', 'up/someone-else/p2/detail'].forEach(k => env.ART.objs.add(k));
+sq.prepare("INSERT INTO art_uploads (id,user_id,status,created) VALUES ('p1',?,'private',1),('p3',?,'approved',1),('p2','someone-else','private',1)").run(uidDel, uidDel);
 assert.equal((await call('/auth/delete', { method: 'POST', cookie: gc })).status, 200);
+assert.deepEqual([...env.ART.objs], ['up/someone-else/p2/detail'], 'their photos are gone, nobody else is touched');
+assert.equal(sq.prepare("SELECT COUNT(*) n FROM art_uploads WHERE user_id=?").get(uidDel).n, 0);
+assert.equal(sq.prepare("SELECT user_id FROM art_uploads WHERE id='p3'").get().user_id, 'deleted');
+assert.equal(sq.prepare("SELECT COUNT(*) n FROM art_uploads WHERE id='p2'").get().n, 1);
 assert.equal((await call('/auth/me', { cookie: c1 })).status, 401, 'every session ends');
 assert.equal(sq.prepare('SELECT COUNT(*) n FROM users WHERE email=?').get('nklenchik@gmail.com').n, 0);
 // card lookups still work alongside
