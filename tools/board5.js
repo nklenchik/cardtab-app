@@ -915,8 +915,8 @@ document.querySelectorAll('dialog.sheet .awp').forEach(p=>{if(p.closest('#askd')
 // the entries sheet: what makes up a number, newest first, grouped by month
 const ent=$('ent');
 function openEntries(o){hideTip();const key=e=>e.name.toLowerCase().replace(/[^a-z0-9]/g,'')+'|'+e.no;
-  let list=pool().filter(e=>e.date>=(o.a||'0000')&&e.date<=(o.b||'9999')&&(!o.types||o.types.includes(e.type))&&(!o.plat||e.platform===o.plat)&&(!o.card||key(e)===o.card)&&(!o.fees||e.amount-e.net>0));
-  if(o.card)list=E.filter(e=>key(e)===o.card);
+  let list=pool().filter(e=>e.date>=(o.a||'0000')&&e.date<=(o.b||'9999')&&(!o.types||o.types.includes(e.type))&&(!o.plat||e.platform===o.plat)&&(!o.card||(typeof CK!=='undefined'&&CK.get(e.id)||key(e))===o.card)&&(!o.fees||e.amount-e.net>0));
+  if(o.card)list=E.filter(e=>(typeof CK!=='undefined'&&CK.get(e.id)||key(e))===o.card);
   list=list.slice().sort((a,b)=>a.date<b.date?1:-1);
   const sum=list.reduce((t,e)=>t+(e.type==='sale'?(o.fees?e.amount-e.net:e.net):-e.amount),0),scope=o.sub||(o.card?'':$('cb-perl').textContent+(plat==='all'?'':' · '+plat));
   $('ent-h').textContent=o.t;$('ent-sub').textContent=[scope,cnt(list.length,'entry','entries')+(list.length?' · '+(o.fees?'fees and shipping '+money(sum):(sum>=0?'net +':'net ')+money(sum)):'')].filter(Boolean).join(' · ');

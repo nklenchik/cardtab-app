@@ -8,9 +8,22 @@ const LOCK_I='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke
 // Every card's numbers come from the same matching: purchases up to the end of the period are its cost, sales inside
 // the period are what came back (after fees and shipping), all in cents.
 const cardKey=e=>e.name.toLowerCase().replace(/[^a-z0-9]/g,'')+'|'+(e.no||'');
+// v50.67: a sale finds its purchase even when the two were written differently ("Wartortle" vs "Wartortle - 008/165 - 151"):
+// the matched catalog card first, then the exact name and number, then the name alone when only one bought card has it
+const CK=new Map();   // entry id -> its card group, so "Every entry for this card" finds the same entries
+const looseKey=e=>e.name.toLowerCase().replace(/[^a-z0-9]/g,'');
+const KEYERS=new WeakMap();
+function keyer(ctx){let f=KEYERS.get(ctx);if(f)return f;
+  const rows=ctx.p.filter(e=>e.date<=ctx.b),idOf={};
+  rows.forEach(e=>{if(e.cardId)idOf[cardKey(e)]=idOf[cardKey(e)]||'id:'+e.cardId});
+  const keyOf=e=>(e.cardId?'id:'+e.cardId:idOf[cardKey(e)])||cardKey(e);
+  const bought={};rows.forEach(e=>{if(e.type==='purchase'){const l=looseKey(e);(bought[l]=bought[l]||new Set()).add(keyOf(e))}});
+  f=e=>{const k=keyOf(e);if(e.type!=='sale')return k;const l=bought[looseKey(e)];return l&&!l.has(k)&&l.size===1?[...l][0]:k};
+  KEYERS.set(ctx,f);return f}
 function cardStats(ctx){
-  const by={},get=e=>by[cardKey(e)]||(by[cardKey(e)]={k:cardKey(e),e,art:null,b:0,bq:0,s:0,sq:0,sold:0,firstBuy:null,lastSale:null,buys:[],sells:[]});
-  ctx.p.filter(e=>e.date<=ctx.b).forEach(e=>{const c=get(e);if(e.art&&!c.art)c.art=e.art;
+  const rows=ctx.p.filter(e=>e.date<=ctx.b),kOf=keyer(ctx);
+  const by={},get=e=>{const k=kOf(e);return by[k]||(by[k]={k,e,art:null,b:0,bq:0,s:0,sq:0,sold:0,firstBuy:null,lastSale:null,buys:[],sells:[]})};
+  rows.forEach(e=>{const c=get(e);CK.set(e.id,c.k);if(e.art&&!c.art)c.art=e.art;if(e.type==='purchase'&&c.e.type!=='purchase')c.e=e;
     if(e.type==='purchase'){c.b+=e.amount;c.bq+=e.qty;c.buys.push(e);if(!c.firstBuy||e.date<c.firstBuy)c.firstBuy=e.date}
     else if(e.type==='sale'){c.sq+=e.qty;if(e.date>=ctx.a){c.s+=e.net==null?e.amount:e.net;c.sold+=e.qty;c.sells.push(e);if(!c.lastSale||e.date>c.lastSale)c.lastSale=e.date}}});
   return Object.values(by).map(c=>Object.assign(c,{g:c.s-c.b,roi:c.b>0?(c.s-c.b)/c.b:null,left:c.bq-c.sq,meta:[c.e.no,c.e.set].filter(Boolean).join(' · ')}));

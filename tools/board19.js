@@ -28,9 +28,9 @@ const unitOf=e=>Math.round(e.amount/Math.max(1,e.qty||1));
 const BANDS=[['Under $10',0,1000],['$10–50',1000,5000],['$50–100',5000,10000],['$100 and up',10000,Infinity]];
 const bandOf=c=>(BANDS.find(b=>c>=b[1]&&c<b[2])||BANDS[0])[0];
 // each card's average cost, from every purchase up to the end of the period
-function costs(ctx){const m={};ctx.p.forEach(e=>{if(e.type!=='purchase'||e.date>ctx.b)return;const k=cardKey(e),o=m[k]||(m[k]={c:0,q:0,first:e.date,dates:[]});o.c+=e.amount;o.q+=e.qty||1;if(e.date<o.first)o.first=e.date;o.dates.push(e.date)});return m}
+function costs(ctx){const m={},K=keyer(ctx);ctx.p.forEach(e=>{if(e.type!=='purchase'||e.date>ctx.b)return;const k=K(e),o=m[k]||(m[k]={c:0,q:0,first:e.date,dates:[]});o.c+=e.amount;o.q+=e.qty||1;if(e.date<o.first)o.first=e.date;o.dates.push(e.date)});return m}
 // each sale in the period with what it made, when the card's cost is known
-function saleResults(ctx){const C=costs(ctx);return ctx.inP.filter(e=>e.type==='sale').map(e=>{const o=C[cardKey(e)];if(!o||!o.q)return null;const cost=Math.round(o.c/o.q)*(e.qty||1),got=e.net==null?e.amount:e.net;
+function saleResults(ctx){const C=costs(ctx),K=keyer(ctx);return ctx.inP.filter(e=>e.type==='sale').map(e=>{const o=C[K(e)];if(!o||!o.q)return null;const cost=Math.round(o.c/o.q)*(e.qty||1),got=e.net==null?e.amount:e.net;
   const before=o.dates.filter(d=>d<=e.date).sort();const bought=before.length?before[before.length-1]:o.first;return {e,cost,got,made:got-cost,days:Math.max(0,dayN(bought,e.date))}}).filter(Boolean)}
 
 // ---------- Breakdown ----------
@@ -70,8 +70,8 @@ function bdBody(ctx,s,w){const {L,m,by}=bdGroups(ctx,w),cnt0=m==='nb'||m==='ns';
   return '<div class="col bd">'+(s!=='S'?'<div class="bdp"><button type="button" class="bdpick" data-bdp="m">'+esc(BD_M.find(x=>x[0]===m)[1])+' <i>▾</i></button><button type="button" class="bdpick" data-bdp="by">by '+esc(BD_BY.find(x=>x[0]===by)[1])+' <i>▾</i></button></div>':'')+bar+'<div class="lr">'+rows+'</div></div>'}
 
 // ---------- Money tied up in cards ----------
-function tiedBody(ctx,s){const C=costs(ctx),soldQ={};ctx.p.forEach(e=>{if(e.type==='sale'&&e.date<=ctx.b){const k=cardKey(e);soldQ[k]=(soldQ[k]||0)+(e.qty||1)}});
-  const names={};ctx.p.forEach(e=>{if(e.type==='purchase')names[cardKey(e)]=e.name});
+function tiedBody(ctx,s){const C=costs(ctx),K=keyer(ctx),soldQ={};ctx.p.forEach(e=>{if(e.type==='sale'&&e.date<=ctx.b){const k=K(e);soldQ[k]=(soldQ[k]||0)+(e.qty||1)}});
+  const names={};ctx.p.forEach(e=>{if(e.type==='purchase')names[K(e)]=e.name});
   const held=Object.keys(C).map(k=>{const o=C[k],left=o.q-(soldQ[k]||0);if(left<=0)return null;const unit=o.c/o.q,last=o.dates.sort()[o.dates.length-1];return {k,name:names[k]||'Card',left,cost:Math.round(unit*left),age:Math.max(0,dayN(last,ctx.b))}}).filter(Boolean);
   if(!held.length)return '<p class="eg">Every card you bought has sold.</p>';
   const tot=held.reduce((a,h)=>a+h.cost,0),nCards=held.reduce((a,h)=>a+h.left,0);

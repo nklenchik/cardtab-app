@@ -2211,7 +2211,7 @@ dialog.wlc::backdrop{background:rgba(0,0,0,.2)}
 @media(min-width:761px){
  .ct-demo .ct-row.expanded .ct-expanded-right .ct-money{align-self:flex-end;width:min(250px,100%);max-width:250px;margin-top:10px;margin-right:4px}
  .ct-demo .ct-row.expanded .ct-expanded-right .ct-money .ct-mr{gap:24px}
- .ct-demo .ct-row.expanded:has(.ct-money:not(.ct-money-solo)) .ct-dtrow .ct-mr{min-width:min(250px,100%);justify-content:space-between;flex:none}   /* only when there are lines above to line up with; a lone Paid stays next to its amount */
+ .ct-demo .ct-row.expanded .ct-dtrow .ct-mr{min-width:min(250px,100%);justify-content:space-between;flex:none}   /* every total uses the same width, so Paid and You kept always start in the same place */
  .ct-demo .ct-row.expanded .ct-dtrow{min-width:0;flex-wrap:wrap;row-gap:10px}   /* not enough room beside the buttons: the total moves under them, still on the right */
  @media(max-width:1060px){.ct-demo .ct-row.expanded .ct-dtrow .ct-mr.kept b{font-size:23px}}
 }
