@@ -465,8 +465,8 @@ dialog::backdrop,.bu-sheet::backdrop{background:var(--win-veil)!important;-webki
 @media (hover:hover) and (pointer:fine){.app-menu.am .am-who:hover{background:var(--am-hl)}}
 @media(max-width:760px){
  :root{--sheet-bg:#efede8}
- @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sheet-bg:#141311}}
- :root[data-theme="dark"]{--sheet-bg:#141311}
+ @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sheet-bg:#1c1a18}}
+ :root[data-theme="dark"]{--sheet-bg:#1c1a18}   /* v50.70: the dark color most windows already used (the editor's header and footer were darker than its body) */
  .app-menu.am,.app-menu.am:not([hidden]){transform:none;top:auto!important;left:0!important;right:0!important;bottom:0!important;width:100%!important;min-width:0!important;max-width:none!important;max-height:min(88dvh,calc(100dvh - 40px - env(safe-area-inset-top,0px)))!important;border-radius:26px 26px 0 0!important;border:0!important;border-top:1px solid var(--win-edge)!important;background:var(--sheet-bg)!important;padding:22px 12px calc(14px + env(safe-area-inset-bottom,0px))!important;box-shadow:0 -12px 40px -16px rgba(0,0,0,.35)!important;transform-origin:bottom center!important;animation:amSheet .42s cubic-bezier(.2,.9,.25,1) both!important;will-change:transform}
  .app-menu.am::before{content:"";position:absolute;top:8px;left:50%;width:38px;height:5px;margin-left:-19px;border-radius:999px;background:color-mix(in srgb,var(--ct-text) 22%,transparent)}
  .app-menu.am .am-x{display:none!important}
@@ -2215,3 +2215,19 @@ dialog.wlc::backdrop{background:rgba(0,0,0,.2)}
  .ct-demo .ct-row.expanded .ct-dtrow{min-width:0;flex-wrap:wrap;row-gap:10px}   /* not enough room beside the buttons: the total moves under them, still on the right */
  @media(max-width:1060px){.ct-demo .ct-row.expanded .ct-dtrow .ct-mr.kept b{font-size:23px}}
 }
+/* v50.70: phones: every window uses the same sheet color as Edit, Add New and Notifications, not the board's page color.
+   Board windows draw with --cb-alt (their panel and sticky headers), so it's pointed at the sheet color inside them. */
+@media(max-width:760px){
+ dialog.sheet .awp,dialog.drawer .awp{--cb-alt:var(--sheet-bg)!important;background:var(--sheet-bg)!important}
+ .bu-p,.hs-p,#as .sheet{background:var(--sheet-bg)!important}
+}
+/* v50.70: windows dim what's behind them without blurring it: a full-screen blur is redrawn every frame a sheet slides,
+   the slowest part of opening one on a phone. The dim is a touch deeper so the window still stands apart. */
+:root:root{--win-blur:none;--win-veil:rgba(10,8,6,.36)}
+@media (prefers-color-scheme:dark){:root:root:not([data-theme="light"]){--win-veil:rgba(0,0,0,.5)}}
+:root:root[data-theme="dark"]{--win-veil:rgba(0,0,0,.5)}
+.zm-bg{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}   /* v50.70: the zoom's dim is nearly solid already */
+/* the window dims, spelled out (a ::backdrop doesn't always pick up the variables, and the board's sheets set their own) */
+html :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdrop,html :is(.am-bd,.as-bd,.mbd){-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgba(10,8,6,.36)!important}
+@media (prefers-color-scheme:dark){html:not([data-theme="light"]) :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdrop,html:not([data-theme="light"]) :is(.am-bd,.as-bd,.mbd){background:rgba(0,0,0,.5)!important}}
+html[data-theme="dark"] :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdrop,html[data-theme="dark"] :is(.am-bd,.as-bd,.mbd){background:rgba(0,0,0,.5)!important}
