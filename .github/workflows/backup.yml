@@ -90,11 +90,26 @@ jobs:
           prune safe:db
           prunedirs r2:card-tab-backup/up-removed
           prunedirs safe:photos-removed
+      - name: Clear out old card photos (unused for 30 days)
+        working-directory: api
+        run: |
+          rclone cat r2:card-tab-art/_backup/photo-cleanup.json > "$RUNNER_TEMP/pc.json" 2>/dev/null || echo '{}' > "$RUNNER_TEMP/pc.json"
+          rclone lsf -R --files-only r2:card-tab-art/up 2>/dev/null > "$RUNNER_TEMP/up.txt" || true
+          python3 ../tools/photo-cleanup.py "$RUNNER_TEMP/test.db" "$RUNNER_TEMP/pc.json" "$DAY" < "$RUNNER_TEMP/up.txt" > "$RUNNER_TEMP/rm.txt"
+          n=0; ids=""
+          while read -r k; do [ -n "$k" ] || continue
+            rclone purge "r2:card-tab-art/up/$k" && n=$((n+1))
+            id=${k#*/}; case "$id" in *[!A-Za-z0-9_-]*) ;; *) ids="$ids'$id',";; esac
+          done < "$RUNNER_TEMP/rm.txt"
+          # their upload records go too (shared pictures keep theirs)
+          if [ -n "$ids" ]; then npx --yes wrangler@4 d1 execute card-tab --remote --command "DELETE FROM art_uploads WHERE id IN (${ids%,}) AND status IN ('private','rejected')" >/dev/null; fi
+          rclone copyto "$RUNNER_TEMP/pc.json" r2:card-tab-art/_backup/photo-cleanup.json
+          echo "PHOTOS_CLEARED=$n" >> "$GITHUB_ENV"
       - name: Record the result (shown in the daily check)
         if: always()
         run: |
           size() { rclone size "$1" --json 2>/dev/null | sed -n 's/.*"bytes":\([0-9]*\).*/\1/p'; }
           ART=$(size r2:card-tab-art); BAK=$(size r2:card-tab-backup)
-          printf '{"day":"%s","at":%s,"ok":%s,"users":"%s","entries":"%s","artBytes":%s,"backupBytes":%s}' \
-            "$DAY" "$(date -u +%s)" "${{ job.status == 'success' && 'true' || 'false' }}" "${USERS:-}" "${ENTRIES:-}" "${ART:-0}" "${BAK:-0}" > "$RUNNER_TEMP/status.json"
+          printf '{"day":"%s","at":%s,"ok":%s,"users":"%s","entries":"%s","artBytes":%s,"backupBytes":%s,"photosCleared":%s}' \
+            "$DAY" "$(date -u +%s)" "${{ job.status == 'success' && 'true' || 'false' }}" "${USERS:-}" "${ENTRIES:-}" "${ART:-0}" "${BAK:-0}" "${PHOTOS_CLEARED:-0}" > "$RUNNER_TEMP/status.json"
           rclone copyto "$RUNNER_TEMP/status.json" r2:card-tab-art/_backup/status.json
