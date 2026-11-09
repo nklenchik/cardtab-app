@@ -1,4 +1,4 @@
-/* Card art crops in widgets (v42.21): show the card's artwork, not its text box.
+/* Card art crops in widgets (v42.21; v50.74 trims the side borders and spots secret-rare numbering): show the card's artwork, not its text box.
    Every card keeps its art in about the same band: on Dragon Ball cards roughly 10% to 59% of the way down (Nick's
    measurement), on Pokémon about 10% to 54%. Full-art and alternate-art printings are artwork top to bottom, so their
    band is most of the card. A widget's picture is sized so that band fills the box and is centered in it.
@@ -7,16 +7,20 @@
 (function () {
   'use strict';
   const FULL = /\((spr|scr|slr|sar|sir|gdr|alt[^)]*|alternate art[^)]*|special[^)]*|secret[^)]*)\)|special illustration|illustration rare|\bart rare|character rare|full art|alt(ernate)? art|secret rare|special rare|special leader|god rare/i;
+  // a card numbered past its set's size (199/165) is a secret or special art printing: artwork top to bottom
+  const pastSet = t => { const m = t.match(/\b(\d{1,3})\s*\/\s*(\d{1,3})\b/); return !!m && +m[1] > +m[2]; };
   function band(meta) {
     const t = String(meta || '');
-    if (FULL.test(t)) return [0.06, 0.70];
+    if (FULL.test(t) || pastSet(t)) return [0.12, 0.66];   // below the name bar and evolution badge, above the attack text
     if (/pokemon|pok[eé]mon/i.test(t)) return [0.10, 0.54];
     return [0.096, 0.588];
   }
-  // where the picture goes in a W x H box so the band covers the box, centered
-  function layout(W, H, b, aspect) {
+  // where the picture goes in a W x H box so the band covers the box, centered.
+  // v50.74: the card's side borders (about 5% each side) are trimmed too, so the art reaches both edges of the box
+  const SIDE = 0.05;
+  function layout(W, H, b, aspect, side) {
     const bh = b[1] - b[0], c = (b[0] + b[1]) / 2;
-    const iw = Math.max(W, H / (bh * aspect)), ih = iw * aspect;
+    const iw = Math.max(W / (1 - 2 * (side || 0)), H / (bh * aspect)), ih = iw * aspect;
     const top = Math.min(0, Math.max(H - ih, H / 2 - c * ih));
     return { iw, ih, left: (W - iw) / 2, top };
   }
@@ -32,7 +36,7 @@
     const r = box.getBoundingClientRect(); if (!r.width || !r.height) return;
     const a = img.naturalWidth ? img.naturalHeight / img.naturalWidth : 1.396;
     if (a < 1.15) return;                                                          // landscape pictures (sealed products): leave
-    const L = layout(r.width, r.height, band(img.dataset.meta), a);
+    const L = layout(r.width, r.height, band(img.dataset.meta), a, SIDE);
     const s = img.style;
     s.setProperty('object-fit', 'fill', 'important'); s.setProperty('inset', 'auto', 'important');
     s.setProperty('width', L.iw.toFixed(1) + 'px', 'important'); s.setProperty('height', L.ih.toFixed(1) + 'px', 'important');
