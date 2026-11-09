@@ -28,6 +28,9 @@ r = await call('/auth/email/verify', { method: 'POST', body: { token } }); asser
 let j = await r.json(); assert.equal(j.user.email, 'nklenchik@gmail.com'); assert.equal(j.user.role, 'admin'); assert.equal(j.isNew, true);
 const sc = r.headers.get('set-cookie'); assert.match(sc, /ct_s=[\w-]{40,}; Domain=cardtab.app; Path=\/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000/);
 const c1 = cookieOf(r);
+// a new account gets one welcome email (replies go to hello@)
+const wl = mails.filter(x => /Welcome to Card Tab/.test(x.subject)); assert.equal(wl.length, 1, 'one welcome'); assert.equal(wl[0].to, 'nklenchik@gmail.com'); assert.equal(wl[0].replyTo, 'hello@cardtab.app');
+assert.match(wl[0].text, /Add your first card/); assert.doesNotMatch(wl[0].html, /Import/, 'no Premium-only tips');
 // link works once
 assert.equal((await call('/auth/email/verify', { method: 'POST', body: { token } })).status, 400);
 // me
@@ -40,6 +43,7 @@ const m2 = mails.at(-1); assert.match(m2.subject, /sign-up/); const code2 = /cod
 r = await call('/auth/email/verify', { method: 'POST', body: { email: 'fan@x.com', code: code2 === '000000' ? '111111' : '000000' } }); assert.equal(r.status, 400);
 r = await call('/auth/email/verify', { method: 'POST', body: { email: 'FAN@x.com', code: code2.slice(0, 3) + ' ' + code2.slice(3) } }); assert.equal(r.status, 200);
 j = await r.json(); assert.equal(j.user.role, 'user'); const c2 = cookieOf(r);
+assert.equal(mails.filter(x => /Welcome to Card Tab/.test(x.subject)).length, 2, 'the second new account gets its own welcome');
 assert.equal((await call('/auth/plan', { method: 'POST', body: { plan: 'premium' }, cookie: c2 })).status, 403, 'non-admins cannot switch plans');
 // 5 wrong codes end it
 await call('/auth/email/start', { method: 'POST', body: { email: 'guess@x.com' } });
@@ -90,4 +94,5 @@ assert.equal((await call('/auth/me', { cookie: c1 })).status, 401, 'every sessio
 assert.equal(sq.prepare('SELECT COUNT(*) n FROM users WHERE email=?').get('nklenchik@gmail.com').n, 0);
 // card lookups still work alongside
 assert.equal((await call('/api/lookup')).status, 400);
+assert.equal(mails.filter(x => /Welcome to Card Tab/.test(x.subject) && x.to === 'nklenchik@gmail.com').length, 1, 'signing in again sends no second welcome');
 console.log('auth tests ok:', mails.length, 'emails sent');

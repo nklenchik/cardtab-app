@@ -101,6 +101,15 @@ S.subs.sub_A.status = 'past_due';
 await hook('invoice.payment_failed', { subscription: 'sub_A' });
 j = await (await call('/auth/billing', { cookie: cf })).json();
 assert.equal(j.plan, 'premium', 'still Premium during the grace period'); assert.ok(j.sub.graceUntil > Date.now() / 1000 + 6 * 86400);
+// the payment emails: one when it fails, one reminder near the end, never repeated
+const pay = () => mails.filter(x => /payment didn't go through|Premium ends/.test(x.subject));
+assert.equal(pay().length, 1); assert.equal(pay()[0].to, 'friend@x.com'); assert.match(pay()[0].text, /\?billing=fix/); assert.equal(pay()[0].replyTo, 'hello@cardtab.app');
+await hook('invoice.payment_failed', { subscription: 'sub_A' }); assert.equal(pay().length, 1, 'a retry failing again sends nothing new');
+await worker.scheduled({ cron: '17 8 * * *' }, env, { waitUntil: p => p }); await new Promise(r => setTimeout(r, 50)); assert.equal(pay().length, 1, 'no reminder with 7 days left');
+sq.prepare('UPDATE billing SET grace_until=? WHERE user_id=?').run(Math.floor(Date.now() / 1000) + 86400, uid);
+await worker.scheduled({ cron: '17 8 * * *' }, env, { waitUntil: p => p }); await new Promise(r => setTimeout(r, 50));
+assert.equal(pay().length, 2); assert.match(pay()[1].subject, /Premium ends/);
+await worker.scheduled({ cron: '17 8 * * *' }, env, { waitUntil: p => p }); await new Promise(r => setTimeout(r, 50)); assert.equal(pay().length, 2, 'one reminder only');
 sq.prepare('UPDATE billing SET grace_until=? WHERE user_id=?').run(Math.floor(Date.now() / 1000) - 10, uid);
 await worker.scheduled({ cron: '17 8 * * *' }, env, { waitUntil: p => p }); await new Promise(r => setTimeout(r, 50));
 assert.equal(planOf('friend@x.com'), 'free', 'off after 7 days');

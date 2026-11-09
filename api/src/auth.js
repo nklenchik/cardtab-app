@@ -20,7 +20,7 @@ import { handleAsk } from './ask.js';
    POST /auth/plan {plan}   admins only: switch your own plan for testing
    POST /auth/sync          send and receive entries and settings (see sync.js) */
 import { report } from './budget.js';
-import { signInEmail, sendMail } from './email.js';
+import { signInEmail, sendMail, welcomeEmail } from './email.js';
 import { handleSync, deleteSynced } from './sync.js';
 
 const DAY = 86400, SESSION_DAYS = 30, LINK_MIN = 15;
@@ -54,6 +54,8 @@ async function upsertUser(env, email, extra = {}) {
     u = { id: rand(12), email, name: extra.name || '', google_sub: extra.sub || null, plan: 'free', created_at: now() };
     await env.DB.prepare('INSERT INTO users (id,email,name,google_sub,plan,created_at,last_seen_at) VALUES (?,?,?,?,?,?,?)').bind(u.id, email, u.name, u.google_sub, u.plan, u.created_at, u.created_at).run();
     u.isNew = true;
+    // v50.72: one welcome email for a new account (a hiccup here never blocks signing in)
+    try { await sendMail(env, { to: email, replyTo: 'hello@cardtab.app', ...welcomeEmail({ name: u.name, appUrl: appUrl(env), open: env.BILLING_OPEN === 'on', opens: env.BILLING_OPENS || '', joinedAt: u.created_at }) }); } catch (e) {}
   } else if ((extra.name && !u.name) || (extra.sub && !u.google_sub)) {
     await env.DB.prepare('UPDATE users SET name=COALESCE(NULLIF(name,\'\'),?), google_sub=COALESCE(google_sub,?) WHERE id=?').bind(extra.name || '', extra.sub || null, u.id).run();
     u.name = u.name || extra.name || ''; u.google_sub = u.google_sub || extra.sub || null;

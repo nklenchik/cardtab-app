@@ -201,6 +201,8 @@
     const q = new URLSearchParams(location.search), cs = q.get('checkout'), back = q.get('billing');
     if (cs || back) { q.delete('checkout'); q.delete('billing'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); }
     if (cs && REAL) { setTimeout(() => done(cs), 800); return; }
+    // v50.72: "Update my card" in a payment email goes straight to Stripe's page for changing the card
+    if (back === 'fix' && REAL) { setTimeout(async () => { try { await load(true); if (status && status.sub) portal(); } catch (e) {} }, 600); return; }
     setTimeout(() => load(true), back ? 300 : 2500);
   })();
   S.on && S.on(r => { if (r === 'plan' && !REAL) { status = demoStatus(); after(); } });

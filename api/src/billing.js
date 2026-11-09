@@ -16,6 +16,7 @@
      POST /auth/admin/people/gift     admins: { id, on }
    Public:
      POST /stripe/webhook             Stripe's events, signature checked */
+import { sendMail, paymentEmail } from './email.js';
 
 export const FOUNDER_JOIN_BEFORE = Date.parse('2027-01-01T00:00:00-05:00') / 1000;
 export const FOUNDER_UPGRADE_BY = Date.parse('2027-02-01T00:00:00-05:00') / 1000;   // through the end of Jan 31, Eastern
@@ -57,16 +58,18 @@ let tableReady = false;
 async function ensureTable(env) {
   if (tableReady) return;
   await env.DB.batch([
-    env.DB.prepare('CREATE TABLE IF NOT EXISTS billing ( user_id TEXT PRIMARY KEY, customer TEXT, sub TEXT, status TEXT, price_key TEXT, interval TEXT, amount INTEGER, founder INTEGER DEFAULT 0, period_end INTEGER, cancel_at_end INTEGER DEFAULT 0, grace_until INTEGER, card_brand TEXT, card_last4 TEXT, pending_key TEXT, schedule TEXT, gift INTEGER DEFAULT 0, updated INTEGER )'),
+    env.DB.prepare('CREATE TABLE IF NOT EXISTS billing ( user_id TEXT PRIMARY KEY, customer TEXT, sub TEXT, status TEXT, price_key TEXT, interval TEXT, amount INTEGER, founder INTEGER DEFAULT 0, period_end INTEGER, cancel_at_end INTEGER DEFAULT 0, grace_until INTEGER, card_brand TEXT, card_last4 TEXT, pending_key TEXT, schedule TEXT, gift INTEGER DEFAULT 0, updated INTEGER, mailed INTEGER DEFAULT 0 )'),
     env.DB.prepare('CREATE INDEX IF NOT EXISTS billing_customer ON billing (customer)')
   ]);
+  // v50.72: which payment emails went out for this problem (0 none, 1 the first, 2 the reminder); older tables get the column
+  try { await env.DB.prepare('ALTER TABLE billing ADD COLUMN mailed INTEGER DEFAULT 0').run(); } catch (e) {}
   tableReady = true;
 }
 const rowOf = async (env, uid) => (await env.DB.prepare('SELECT * FROM billing WHERE user_id=?').bind(uid).first()) || null;
 async function saveRow(env, uid, patch) {
   const cur = (await rowOf(env, uid)) || { user_id: uid };
   const r = Object.assign({ gift: 0, founder: 0, cancel_at_end: 0 }, cur, patch, { updated: now() });
-  const cols = ['user_id', 'customer', 'sub', 'status', 'price_key', 'interval', 'amount', 'founder', 'period_end', 'cancel_at_end', 'grace_until', 'card_brand', 'card_last4', 'pending_key', 'schedule', 'gift', 'updated'];
+  const cols = ['user_id', 'customer', 'sub', 'status', 'price_key', 'interval', 'amount', 'founder', 'period_end', 'cancel_at_end', 'grace_until', 'card_brand', 'card_last4', 'pending_key', 'schedule', 'gift', 'updated', 'mailed'];
   await env.DB.prepare('INSERT OR REPLACE INTO billing (' + cols.join(',') + ') VALUES (' + cols.map(() => '?').join(',') + ')').bind(...cols.map(c => (r[c] === undefined ? null : r[c]))).run();
   return r;
 }
@@ -138,12 +141,23 @@ export async function syncSubscription(env, sub, uidHint) {
     schedule: typeof sub.schedule === 'string' ? sub.schedule : (sub.schedule && sub.schedule.id) || null };
   if (!patch.schedule) patch.pending_key = null;
   if (pm && pm.card) { patch.card_brand = pm.card.brand; patch.card_last4 = pm.card.last4; }
-  if (sub.status !== 'past_due') patch.grace_until = null;
-  else if (!(cur && cur.grace_until)) patch.grace_until = now() + GRACE;
+  let firstFail = false;
+  if (sub.status !== 'past_due') { patch.grace_until = null; patch.mailed = 0; }
+  else if (!(cur && cur.grace_until)) { patch.grace_until = now() + GRACE; firstFail = true; }
   if (sub.status === 'canceled' || sub.status === 'incomplete_expired') Object.assign(patch, { sub: null, price_key: null, interval: null, amount: null, founder: 0, period_end: null, cancel_at_end: 0, pending_key: null, schedule: null });
-  const r = await saveRow(env, uid, patch);
+  let r = await saveRow(env, uid, patch);
   await applyPlan(env, uid, r);
+  if (firstFail && !r.gift && !(r.mailed >= 1) && await payMail(env, uid, r, 'failed')) r = await saveRow(env, uid, { mailed: 1 });
   return r;
+}
+// v50.72: the payment emails (always sent: they're about the person's own account, not marketing)
+async function payMail(env, uid, r, kind) {
+  try {
+    const u = await env.DB.prepare('SELECT email FROM users WHERE id=?').bind(uid).first(); if (!u || !u.email) return false;
+    const card = r.card_last4 ? (r.card_brand ? r.card_brand[0].toUpperCase() + r.card_brand.slice(1) : 'card') + ' ending ' + r.card_last4 : '';
+    await sendMail(env, { to: u.email, replyTo: 'hello@cardtab.app', ...paymentEmail({ kind, graceUntil: r.grace_until, appUrl: env.APP_URL || 'https://app.cardtab.app', card }) });
+    return true;
+  } catch (e) { return false; }
 }
 const getSub = (env, id) => stripe(env, 'GET', '/subscriptions/' + id, { expand: { 0: 'default_payment_method' } });
 
@@ -198,6 +212,9 @@ export async function graceSweep(env) {
   try { await ensureTable(env); } catch (e) { return; }
   const rows = (await env.DB.prepare("SELECT * FROM billing WHERE status='past_due' AND grace_until IS NOT NULL AND grace_until<? AND COALESCE(gift,0)=0").bind(now()).all()).results || [];
   for (const r of rows) await applyPlan(env, r.user_id, r);
+  // one reminder when two days or less are left
+  const soon = (await env.DB.prepare("SELECT * FROM billing WHERE status='past_due' AND grace_until IS NOT NULL AND grace_until>=? AND grace_until<=? AND COALESCE(mailed,0)<2 AND COALESCE(gift,0)=0").bind(now(), now() + 2 * 86400).all()).results || [];
+  for (const r of soon) if (await payMail(env, r.user_id, r, 'reminder')) await saveRow(env, r.user_id, { mailed: 2 });
 }
 
 // ---------- signed-in routes ----------

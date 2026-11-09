@@ -38,17 +38,94 @@ export function signInEmail({ link, code, mode }) {
 }
 
 // Send through Cloudflare Email Service when its binding is set up (needs Workers Paid for any recipient), otherwise Resend.
-export async function sendMail(env, { to, subject, html, text }) {
+export async function sendMail(env, { to, subject, html, text, replyTo }) {
   const from = env.MAIL_FROM || 'login@cardtab.app';
   if (env.EMAIL && env.EMAIL.send) {
-    await env.EMAIL.send({ to, from: { email: from, name: 'Card Tab' }, subject, html, text });
+    await env.EMAIL.send({ to, from: { email: from, name: 'Card Tab' }, subject, html, text, ...(replyTo ? { replyTo } : {}) });
     return 'cloudflare';
   }
   if (env.RESEND_API_KEY) {
     const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { authorization: 'Bearer ' + env.RESEND_API_KEY, 'content-type': 'application/json' },
-      body: JSON.stringify({ from: `Card Tab <${from}>`, to: [to], subject, html, text }) });
+      body: JSON.stringify({ from: `Card Tab <${from}>`, to: [to], subject, html, text, ...(replyTo ? { reply_to: replyTo } : {}) }) });
     if (!r.ok) throw Object.assign(new Error('resend ' + r.status + ' ' + (await r.text()).slice(0, 200)), { status: 502 });
     return 'resend';
   }
   throw Object.assign(new Error('no email sender set up'), { status: 503 });
+}
+
+// ---------- v50.72: welcome and payment emails (same card layout as the sign-in email) ----------
+const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+function shell({ title, preheader, body, foot, note }) {
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>${esc(title)}</title></head>
+<body style="margin:0;padding:0;background:#f6f5f0;-webkit-text-size-adjust:100%">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(preheader)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f5f0"><tr><td align="center" style="padding:32px 16px">
+ <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:440px;background:#ffffff;border:1px solid #e9e6de;border-radius:20px">
+  <tr><td style="padding:28px 28px 8px;font-family:${FONT}">
+   <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+    <td style="width:30px;height:30px;vertical-align:middle"><img src="https://app.cardtab.app/icon-192.png" width="30" height="30" alt="" style="display:block;border:0;border-radius:8px"></td>
+    <td style="padding-left:10px;font-weight:800;font-size:17px;color:#1a1918">Card Tab</td></tr></table>
+  </td></tr>
+  <tr><td style="padding:14px 28px 0;font-family:${FONT};color:#1a1918">${body}</td></tr>
+  <tr><td style="padding:22px 28px 26px;font-family:${FONT};font-size:13px;line-height:1.5;color:#77736d">${foot}</td></tr>
+ </table>
+ <p style="margin:16px 0 0;font-family:${FONT};font-size:12px;line-height:1.5;color:#9a958e">${note ? note + '<br>' : ''}Card Tab · <a href="https://cardtab.app" style="color:#9a958e">cardtab.app</a></p>
+</td></tr></table></body></html>`;
+}
+const h1 = t => `<h1 style="margin:0 0 8px;font-size:24px;line-height:1.2;font-weight:800;letter-spacing:-.02em">${t}</h1>`;
+const lead = t => `<p style="margin:0 0 22px;font-size:15px;line-height:1.5;color:#55524c">${t}</p>`;
+const button = (href, label, top = 22) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:${top}px"><tr><td align="center" style="border-radius:999px;background:#a50e37">
+    <a href="${esc(href)}" style="display:block;padding:15px 20px;font-size:16px;font-weight:800;color:#ffffff;text-decoration:none;border-radius:999px">${esc(label)}</a></td></tr></table>`;
+const tip = (n, title, text, last) => `<tr><td style="width:28px;vertical-align:top;padding:0 0 ${last ? 4 : 16}px"><div style="width:26px;height:26px;border-radius:13px;background:#f6e3e8;color:#a50e37;font-weight:800;font-size:13px;line-height:26px;text-align:center">${n}</div></td>
+     <td style="padding:2px 0 ${last ? 4 : 16}px 12px;font-size:15px;line-height:1.45;color:#55524c"><b style="color:#1a1918">${title}</b> ${text}</td></tr>`;
+
+// What the Premium box says changes with the dates: before Premium opens, during the founders window, after it
+const FOUNDERS_JOIN_BEFORE = Date.parse('2027-01-01T00:00:00-05:00'), FOUNDERS_UPGRADE_BY = Date.parse('2027-02-01T00:00:00-05:00');
+export function premiumLine({ open, opens, joinedAt, t = Date.now() }) {
+  const perks = 'Premium adds unlimited entries, spreadsheet import, every Stories theme and your full history.';
+  const founder = joinedAt * 1000 < FOUNDERS_JOIN_BEFORE && t < FOUNDERS_UPGRADE_BY;
+  if (founder && !open) return { html: `<b style="color:#a50e37">Want more?</b> ${perks} You joined early, so you'll get founders pricing ($4 a month or $40 a year) if you upgrade by Jan 31. Premium opens ${esc(opens || 'soon')}.`,
+    text: `Want more? ${perks} You joined early, so you'll get founders pricing ($4 a month or $40 a year) if you upgrade by Jan 31. Premium opens ${opens || 'soon'}.` };
+  if (founder) return { html: `<b style="color:#a50e37">Want more?</b> ${perks} You joined early, so you can lock in founders pricing ($4 a month or $40 a year) if you upgrade by Jan 31.`,
+    text: `Want more? ${perks} You joined early, so you can lock in founders pricing ($4 a month or $40 a year) if you upgrade by Jan 31.` };
+  return { html: `<b style="color:#a50e37">Want more?</b> ${perks} $6 a month or $60 a year.`, text: `Want more? ${perks} $6 a month or $60 a year.` };
+}
+
+export function welcomeEmail({ name, appUrl, open, opens, joinedAt, t }) {
+  const first = String(name || '').trim().split(/\s+/)[0] || '';
+  const subject = 'Welcome to Card Tab';
+  const pl = premiumLine({ open, opens, joinedAt, t });
+  const body = h1('Welcome to Card Tab' + (first ? ', ' + esc(first) : '')) +
+    lead('Card Tab keeps track of the cards you buy and sell, and does the math for you. Here\'s how to get started.') +
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">` +
+    tip(1, 'Add your first card.', 'Tap <b style="color:#1a1918">+</b>, type the card\'s name, pick it from the list and enter the price. The art fills in on its own.') +
+    tip(2, 'See your numbers on the Board.', 'Profit, spending, fees and your biggest win, all in one place.') +
+    tip(3, 'Put Card Tab on your Home Screen.', 'It opens full screen, like an app. On iPhone, tap Share, then Add to Home Screen.', true) + `</table>` +
+    button(appUrl + '/', 'Open Card Tab') +
+    `<div style="margin:22px 0 0;padding:14px 16px;background:#f9f0f2;border-radius:14px;font-size:13.5px;line-height:1.5;color:#55524c">${pl.html}</div>`;
+  const html = shell({ title: subject, preheader: 'Three quick ways to get started.', body, foot: 'Questions or ideas? Just reply to this email. It comes straight to us.',
+    note: 'You\'re getting this because you created a Card Tab account. It\'s the only welcome email we send.' });
+  const text = `Welcome to Card Tab${first ? ', ' + first : ''}\n\nCard Tab keeps track of the cards you buy and sell, and does the math for you. Here's how to get started.\n\n` +
+    `1. Add your first card. Tap +, type the card's name, pick it from the list and enter the price. The art fills in on its own.\n` +
+    `2. See your numbers on the Board. Profit, spending, fees and your biggest win, all in one place.\n` +
+    `3. Put Card Tab on your Home Screen. It opens full screen, like an app. On iPhone, tap Share, then Add to Home Screen.\n\n` +
+    `Open Card Tab: ${appUrl}/\n\n${pl.text}\n\nQuestions or ideas? Just reply to this email.\n\nCard Tab · cardtab.app`;
+  return { subject, html, text };
+}
+
+// A renewal didn't go through: the first email when it happens, one reminder near the end of the 7 days
+const day = s => new Date(s * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'America/New_York' });
+export function paymentEmail({ kind, graceUntil, appUrl, card }) {
+  const link = appUrl + '/?billing=fix', when = day(graceUntil), cardTxt = card || 'card';
+  const reminder = kind === 'reminder';
+  const subject = reminder ? 'Your Card Tab Premium ends ' + when : 'Your Card Tab payment didn\'t go through';
+  const title = reminder ? 'Premium ends ' + esc(when) : 'Your payment didn\'t go through';
+  const msg = reminder
+    ? `We still couldn't charge your ${esc(cardTxt)} for Premium. Update it by ${esc(when)} to keep Premium. After that your account goes back to Free, and your entries stay just as they are.`
+    : `We couldn't charge your ${esc(cardTxt)} for your Card Tab Premium renewal. It happens: a card expires or a bank says no. Update your card by ${esc(when)} to keep Premium. We'll try the card again in the meantime.`;
+  const html = shell({ title: subject, preheader: reminder ? 'Update your card to keep Premium.' : 'Update your card by ' + when + ' to keep Premium.',
+    body: h1(title) + lead(msg) + button(link, 'Update my card', 0),
+    foot: 'Already fixed it? Then you can ignore this email. Questions? Just reply.' });
+  const text = `${reminder ? 'Premium ends ' + when : 'Your payment didn\'t go through'}\n\n${msg.replace(/<[^>]+>/g, '')}\n\nUpdate your card: ${link}\n\nAlready fixed it? Then you can ignore this email.\n\nCard Tab · cardtab.app`;
+  return { subject, html, text };
 }
