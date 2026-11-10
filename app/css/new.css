@@ -2260,8 +2260,8 @@ html[data-theme="dark"] :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdr
  .fb-mseg button{flex:1;min-width:0;height:36px;border:0;border-radius:999px;background:transparent;color:var(--ct-muted);font:inherit;font-size:14px;font-weight:750;cursor:pointer;white-space:nowrap;transition:background-color .2s ease,color .2s ease}
  .fb-mseg button em{font-style:normal;opacity:.55;margin-left:4px;font-weight:700}.fb-mseg button em:empty{display:none}
  .fb-mseg button[aria-pressed="true"]{background:var(--s-card);color:var(--ct-text);box-shadow:0 1px 2px rgba(40,30,20,.08),0 2px 8px -4px rgba(40,30,20,.18)}
- .fb-fbtn{position:relative;width:44px;height:44px;border-radius:50%;border:1px solid var(--s-hair);background:var(--s-card);color:var(--ct-text);display:grid;place-items:center;cursor:pointer;flex:none}
- .fb-dot{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--s-brand);box-shadow:0 0 0 2px var(--s-card)}
+ .fb-fbtn{position:relative;width:38px;height:38px;border-radius:50%;border:1px solid var(--s-hair);background:var(--s-card);color:var(--ct-text);display:grid;place-items:center;cursor:pointer;flex:none}
+ .fb-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--s-brand);box-shadow:0 0 0 2px var(--s-card)}
  .fb-dot[hidden]{display:none}
 }
 @media(max-width:360px){.fb-mseg button{font-size:13px}}
