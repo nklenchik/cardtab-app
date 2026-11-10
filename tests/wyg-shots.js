@@ -30,9 +30,9 @@ const WYG = () => { const now = new Date(), Y = now.getFullYear(), M = now.getMo
     const d = document.createElement('div'); d.style.cssText = 'position:fixed;left:0;right:0;bottom:0;pointer-events:none;z-index:' + (z - 1) + ';top:' + Math.round(top - 26) + 'px;background:linear-gradient(to bottom,transparent,' + bg + ' 22px)'; document.body.appendChild(d); });
   const shot = async (p, n) => { await p.evaluate(() => document.querySelectorAll('.ct-hint,.cbhint,[class*="hint"][class*="pop"]').forEach(x => x.remove())); await p.screenshot({ path: OUT + n + '.png' }); };
   const phone = { ...devices['iPhone 13'], viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, colorScheme: 'light' };
-  // 1) the collection as a small grid (three across), newest first, so all six cards show in the phone
-  let p = await b.newPage(phone); await setup(p, 'gallery');
-  await p.evaluate(() => { window.CTMonth && CTMonth.set('all'); const g = document.querySelector('.fb-vopts [data-gs="s"]'); g && g.click(); const so = document.getElementById('ct-sort'); if (so) { so.value = 'new'; so.dispatchEvent(new Event('change', { bubbles: true })); } });
+  // 1) the collection as a list, newest first, so all six cards show in the phone
+  let p = await b.newPage(phone); await setup(p, 'list');
+  await p.evaluate(() => { window.CTMonth && CTMonth.set('all'); const so = document.getElementById('ct-sort'); if (so) { so.value = 'new'; so.dispatchEvent(new Event('change', { bubbles: true })); } });
   await p.waitForTimeout(1500);
   await p.evaluate(() => { const f = document.querySelector('.ct-fbar'); if (f) scrollTo(0, f.getBoundingClientRect().top + scrollY - 64); const h = document.querySelector('.ct-month, [class*="month-h"]'); h && h.remove && 0; }); await p.waitForTimeout(900); await band(p); await shot(p, 'wyg-grid'); await p.close();
   // 2) the Board: profit, spent, the biggest win in full art, profit by month
