@@ -29,7 +29,7 @@
       d.dispatchEvent(new Event('closing'));
       if (calm.matches) { realClose(v); return; }
       d.classList.add('closing');
-      d._ct = setTimeout(() => { d.classList.remove('closing'); if (d.open) realClose(v); }, phone.matches ? 270 : id === 'ntf' ? 300 : 250);
+      d._ct = setTimeout(() => { d.classList.remove('closing'); if (d.open) realClose(v); }, phone.matches ? 250 : 250);   // v50.98: every sheet closes in .22s (phones) or .24s (computers)
     };
     d.addEventListener('cancel', e => { e.preventDefault(); d.close(); });
   });

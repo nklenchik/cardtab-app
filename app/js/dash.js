@@ -559,7 +559,7 @@
   const qclear = $('ct-qclear'); const hintSync = () => { const has = !!$('ct-search').value; hint.classList.toggle('ct-hide', has); qclear.hidden = !has; };
   qclear.addEventListener('click', e => { e.preventDefault(); const q = $('ct-search'); q.value = ''; q.dispatchEvent(new Event('input', { bubbles: true })); q.focus(); });
   $('ct-search').addEventListener('input', hintSync);
-  setInterval(() => { if (document.hidden || root.hidden || $('ct-search').value || calm.matches || (window.CTPage && CTPage.cur !== 'entries')) return; const old = wordBox.querySelector('.w:not(.above)'); wi = (wi + 1) % words.length; const next = document.createElement('span'); next.className = 'w below'; next.textContent = words[wi]; wordBox.appendChild(next); void next.offsetWidth; next.classList.remove('below'); if (old) { old.classList.add('above'); setTimeout(() => old.remove(), 600); } }, 3000);
+  setInterval(() => { if (document.hidden || root.hidden || $('ct-search').value || calm.matches || (window.CTPage && CTPage.cur !== 'entries') || document.querySelector('dialog[open]')) return; const old = wordBox.querySelector('.w:not(.above)'); wi = (wi + 1) % words.length; const next = document.createElement('span'); next.className = 'w below'; next.textContent = words[wi]; wordBox.appendChild(next); void next.offsetWidth; next.classList.remove('below'); if (old) { old.classList.add('above'); setTimeout(() => old.remove(), 600); } }, 3000);
 
   // ---------- Card Board opens from here on both plans; Ask note ----------
   const xb = $('ct-expand'), xp = $('ct-prem-pop'); let xt;

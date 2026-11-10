@@ -2236,3 +2236,21 @@ dialog .entlist .emh:not(:first-child){margin-top:14px}
 /* v50.94: a small widget's flip side: when there's no room below, "See entries" sits beside the total in its own column (never over it) */
 .ki.kt.kin2{grid-template-columns:minmax(0,1fr) auto;column-gap:10px}.ki.kt.kin2>span,.ki.kt.kin2>b{grid-column:1;overflow:hidden}
 .kgo.kin{grid-column:2;grid-row:1/3;align-self:end;margin-bottom:.15em;padding:0;font-size:max(10px,var(--fl));line-height:1.2;text-decoration-thickness:1px}
+
+/* ===== v50.98 one motion per kind of window (transform and opacity only, so it runs on the GPU at 60 fps) =====
+   Phones, bottom sheets: up in .42s cubic-bezier(.2,.8,.2,1), down in .22s cubic-bezier(.4,0,1,1); the veil fades in .3s, out with the sheet.
+   Computers, centered windows: in .52s cubic-bezier(.16,1,.3,1), out .24s cubic-bezier(.4,0,1,1); the veil fades out with the window.
+   (The dark veil used to vanish at the very end of a close because an older open rule outranked the fade-out.) */
+dialog.sheet.closing::backdrop,dialog.drawer.closing::backdrop{animation:bdOut .22s cubic-bezier(.4,0,1,1) both!important}
+@media(max-width:760px){
+ dialog.drawer[open] .askp,#shd[open] .shp{animation:ctAskUp .42s cubic-bezier(.2,.8,.2,1) both!important}
+ dialog.drawer.closing .askp,#shd.closing .shp{animation:ctAskDown .22s cubic-bezier(.4,0,1,1) both!important}
+ #aw[open] .awp{animation:shUp .42s cubic-bezier(.2,.8,.2,1) both;will-change:transform}
+ #aw.closing .awp{animation:shDown .22s cubic-bezier(.4,0,1,1) both}
+}
+@media(min-width:761px){
+ dialog.sheet.closing::backdrop,dialog.drawer.closing::backdrop{animation-duration:.24s!important}
+ #aw[open] .awp{animation:sheetInSoft .52s cubic-bezier(.16,1,.3,1) both}
+ #aw.closing .awp{animation:sheetOut .24s cubic-bezier(.4,0,1,1) both}
+}
+@media(prefers-reduced-motion:reduce){dialog.sheet.closing::backdrop,dialog.drawer.closing::backdrop,#aw[open] .awp,#aw.closing .awp{animation:none!important}}

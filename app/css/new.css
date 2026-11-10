@@ -2272,3 +2272,19 @@ html[data-theme="dark"] :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdr
 @media(max-width:360px){.fb-mseg button{font-size:13px}}
 @media(prefers-reduced-motion:reduce){.fb-fs,.fb-fs>*{animation:none!important}}
 
+
+/* ===== v50.98 one motion per kind of window: the app's own sheets match the Card Board's =====
+   Phones: the veil fades in .3s (it was .45s, slower than the sheet). Computers: the notifications drawer opens and closes on
+   the same timing as every other window (it was .6s in, .26s out). */
+@media(max-width:760px){.ed::backdrop,#imp::backdrop,#ntf::backdrop{animation-duration:.3s!important}
+ #as.closing .phone,.ed.closing .ed-form,#imp.closing .imp-form{animation-duration:.22s!important;animation-timing-function:cubic-bezier(.4,0,1,1)!important}
+ #as.closing::backdrop,.ed.closing::backdrop,#imp.closing::backdrop,#ntf.closing::backdrop{animation-duration:.22s!important;animation-timing-function:cubic-bezier(.4,0,1,1)!important}}
+/* phones: the other sheets that fall away (Add widget, delete account, home screen tip) close on the same timing */
+@media(max-width:760px){html #aw.closing .awp,html #dela.closing .bu-p,html .hs-sheet.closing .hs-p{animation-duration:.22s!important;animation-timing-function:cubic-bezier(.4,0,1,1)!important}html #aw.closing::backdrop{animation-duration:.22s!important;animation-timing-function:cubic-bezier(.4,0,1,1)!important}}
+/* computers: the veil fades out with the window, not ahead of it */
+@media(min-width:761px){#as.closing::backdrop,.ed.closing::backdrop,#imp.closing::backdrop,html #aw.closing::backdrop{animation-duration:.24s!important;animation-timing-function:cubic-bezier(.4,0,1,1)!important}}
+@media(min-width:761px){#ntf .ntf-form{animation-duration:.52s!important}#ntf.closing .ntf-form{animation-duration:.24s!important}#ntf::backdrop{animation-duration:.45s!important}#ntf.closing::backdrop{animation-duration:.24s!important}}
+/* the profile menu on computers fades away instead of vanishing */
+@keyframes amOut{to{opacity:0;transform:translateY(-4px) scale(.98)}}
+#app-menu.am-out{animation:amOut .14s cubic-bezier(.4,0,1,1) both!important;pointer-events:none}
+@media(prefers-reduced-motion:reduce){#app-menu.am-out{animation:none!important}}

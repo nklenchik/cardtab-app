@@ -165,8 +165,11 @@
     if (menu.hidden) return;
     // phones: the sheet slides back down (from wherever a swipe left it)
     if (PHONE.matches && !calmM.matches && !menu.dataset.closing) { menu.dataset.closing = '1'; const from = menu.style.transform || 'none'; menu.style.animation = 'none';
-      const a = menu.animate([{ transform: from }, { transform: 'translateY(100%)' }], { duration: 240, easing: 'cubic-bezier(.4,0,.8,.6)', fill: 'forwards' }); bd.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 240, fill: 'forwards' });
+      const a = menu.animate([{ transform: from }, { transform: 'translateY(100%)' }], { duration: 220, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' }); bd.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
       a.onfinish = () => { delete menu.dataset.closing; menu.style.transform = ''; menu.style.animation = ''; a.cancel(); bd.getAnimations().forEach(x => x.cancel()); reallyClose(focus, fromPop); }; return; }
+    // v50.98 computers: a quick fade instead of vanishing
+    if (!PHONE.matches && !calmM.matches && !menu.dataset.closing) { menu.dataset.closing = '1'; menu.classList.add('am-out');
+      setTimeout(() => { delete menu.dataset.closing; menu.classList.remove('am-out'); reallyClose(focus, fromPop); }, 140); return; }
     reallyClose(focus, fromPop);
   }
   function reallyClose(focus, fromPop) { if (menu.hidden) return; menu.hidden = true; bd.hidden = true; document.documentElement.classList.remove('am-lock'); if (!fromPop) window.CTNav.done('menu'); av.setAttribute('aria-expanded', 'false'); if (focus) av.focus(); }
