@@ -120,8 +120,13 @@
         const d = (r.top - top) - Math.min(60, vh * 0.22);
         if (Math.abs(d) > 5) window.scrollBy({ top: d, behavior: 'smooth' }); };
       const run = () => { timers.forEach(clearTimeout); timers = [60, 250, 500, 800, 1200].map(t => setTimeout(place, t)); };
-      page.addEventListener('focusin', e => { if (!touch.matches || !e.target.matches('input')) return; cur = e.target; page.classList.add('kb-up'); run(); });
-      page.addEventListener('focusout', () => { cur = null; setTimeout(() => { if (!cur) page.classList.remove('kb-up'); }, 150); });
+      // only a box the person tapped counts: the page can focus the email box by itself on load, and that must not scroll anything
+      let gesture = 0; const settle = () => setTimeout(() => { if (!cur) page.classList.remove('kb-up'); }, 400);   // lets a button tap finish before the extra room goes away
+      ['pointerdown', 'touchstart', 'keydown'].forEach(t => page.addEventListener(t, e => { gesture = Date.now(); if (t === 'pointerdown' && !e.target.closest('input,label')) { cur = null; settle(); } }, { passive: true, capture: true }));
+      const engage = e => { if (!touch.matches || !e.target.matches('input') || Date.now() - gesture > 900) return; cur = e.target; page.classList.add('kb-up'); run(); };
+      page.addEventListener('focusin', engage);
+      page.addEventListener('pointerup', engage);   // tapping a box that already has focus gives no focus event
+      page.addEventListener('focusout', () => { cur = null; settle(); });
       // the card changes height when you switch between Sign in and Create account: place the box again if one is focused
       seg.addEventListener('click', () => { if (cur) run(); });
       if (vv) { vv.addEventListener('resize', () => { if (cur) run(); }); } }

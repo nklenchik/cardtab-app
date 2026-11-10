@@ -38,7 +38,7 @@
     S.close(); closeMenu();
     vApp.hidden = true; vAuth.hidden = false; document.title = 'Sign in · Card Tab';
     if (!auth) auth = window.CTAuth.mount(vAuth, (s, isNew) => showApp(s, isNew)); else auth.reset();
-    setTimeout(() => $('auth-email').focus({ preventScroll: true }), 50);
+    if (!matchMedia('(pointer:coarse)').matches) setTimeout(() => $('auth-email').focus({ preventScroll: true }), 50);   // phones: don't pre-focus (no keyboard opens, and the next tap wouldn't register as a focus)
   }
 
   // ---------- sync status: a line in the profile menu; a small cloud on your picture only when offline or not saved yet ----------
