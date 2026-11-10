@@ -110,26 +110,32 @@
     });
     $('#auth-local').hidden = !LOCAL_MODE;
     // The marketing site links here with ?signup to open on Create account
-    // Phones: when you tap the email (or code) box, scroll it to the same spot near the top of what's visible, whichever of Sign in or
-    // Create account you're on. On iPhone Chrome the page area already ends above the keyboard and Chrome's own autofill bar, so the
-    // visible area is simply the visual viewport; the box lands about 60px below its top (Nick's picked spot, from his Sign in screenshot).
-    // Extra room is added at the bottom while a box has focus, so even the taller Create account card can scroll that far.
-    { const vv = window.visualViewport, page = document.getElementById('view-auth'), touch = matchMedia('(pointer:coarse)'); let cur = null, timers = [];
-      const place = () => { if (!cur || !document.contains(cur) || cur.offsetParent === null) return;
-        const vh = vv ? vv.height : window.innerHeight, top = vv ? vv.offsetTop : 0, r = cur.getBoundingClientRect();
-        const d = (r.top - top) - Math.min(60, vh * 0.22);
-        if (Math.abs(d) > 5) window.scrollBy({ top: d, behavior: 'smooth' }); };
-      const run = () => { timers.forEach(clearTimeout); timers = [60, 250, 500, 800, 1200].map(t => setTimeout(place, t)); };
-      // only a box the person tapped counts: the page can focus the email box by itself on load, and that must not scroll anything
-      let gesture = 0; const settle = () => setTimeout(() => { if (!cur) page.classList.remove('kb-up'); }, 400);   // lets a button tap finish before the extra room goes away
-      ['pointerdown', 'touchstart', 'keydown'].forEach(t => page.addEventListener(t, e => { gesture = Date.now(); if (t === 'pointerdown' && !e.target.closest('input,label')) { cur = null; settle(); } }, { passive: true, capture: true }));
-      const engage = e => { if (!touch.matches || !e.target.matches('input') || Date.now() - gesture > 900) return; cur = e.target; page.classList.add('kb-up'); run(); };
-      page.addEventListener('focusin', engage);
-      page.addEventListener('pointerup', engage);   // tapping a box that already has focus gives no focus event
-      page.addEventListener('focusout', () => { cur = null; settle(); });
-      // the card changes height when you switch between Sign in and Create account: place the box again if one is focused
-      seg.addEventListener('click', () => { if (cur) run(); });
-      if (vv) { vv.addEventListener('resize', () => { if (cur) run(); }); } }
+    // Phones: when you tap the email (or code) box, the page glides ONCE to put that box about 60px below the top of what's visible,
+    // the same spot on Sign in and Create account. The glide starts the moment the finger lands (before the keyboard has finished
+    // rising), so iPhone's own scrolling has nothing left to do; it is never repeated while the keyboard animates. When the keyboard goes
+    // away the page glides back up in one motion. Extra room at the bottom (`kb-up`) lets even the taller Create account card scroll that far.
+    { const vv = window.visualViewport, page = document.getElementById('view-auth'), touch = matchMedia('(pointer:coarse)');
+      let cur = null, placedAt = 0, downAt = 0, downPlain = false, fixT = 0, relT = 0;
+      const calm = matchMedia('(prefers-reduced-motion: reduce)');
+      const dist = el => { const top = vv ? vv.offsetTop : 0, vh = vv ? vv.height : window.innerHeight; return (el.getBoundingClientRect().top - top) - Math.min(60, vh * 0.22); };
+      const glide = (el, smooth) => { const d = dist(el); if (Math.abs(d) > 3) window.scrollBy({ top: d, behavior: smooth && !calm.matches ? 'smooth' : 'auto' }); };
+      const engage = el => {
+        if (!touch.matches || Date.now() - downAt > 900 || el === cur && Date.now() - placedAt < 1500) return;
+        clearTimeout(relT); cur = el; placedAt = Date.now(); page.classList.add('kb-up');
+        glide(el, true);
+        clearTimeout(fixT); fixT = setTimeout(() => { if (cur === el && Math.abs(dist(el)) > 24) glide(el, true); }, 1100);   // one quiet correction only if iPhone moved it
+      };
+      const release = () => { clearTimeout(fixT); if (cur) return; clearTimeout(relT);
+        if (!downPlain || Date.now() - downAt > 700) window.scrollTo({ top: 0, behavior: calm.matches ? 'auto' : 'smooth' });   // keyboard hidden: one glide back up
+        relT = setTimeout(() => { if (!cur) page.classList.remove('kb-up'); }, 520); };
+      page.addEventListener('pointerdown', e => { downAt = Date.now(); const t = e.target;
+        downPlain = !!t.closest('button,a,select,summary') && !t.closest('input,label');
+        const box = t.closest('input'); if (box) engage(box); else if (!t.closest('label')) { cur = null; if (downPlain) { relT = setTimeout(() => { if (!cur) page.classList.remove('kb-up'); }, 520); } else release(); } }, { passive: true, capture: true });
+      page.addEventListener('keydown', () => { downAt = Date.now(); }, { passive: true, capture: true });
+      page.addEventListener('focusin', e => { if (e.target.matches('input') && Date.now() - downAt <= 900) engage(e.target); });
+      page.addEventListener('focusout', () => { cur = null; setTimeout(() => { if (!cur) release(); }, 60); });
+      // the card changes height when you switch between Sign in and Create account: glide the focused box into place again
+      seg.addEventListener('click', () => { if (cur) { placedAt = 0; setTimeout(() => cur && glide(cur, true), 120); } }); }
     const qs = new URLSearchParams(location.search);
     setMode(qs.has('signup') || qs.get('mode') === 'signup' ? 'up' : 'in');
     return { reset() { email.value = ''; card.classList.remove('sent'); clearInterval(againT); setMode('in'); }, error(t) { card.classList.remove('sent'); showErr(t); } };
