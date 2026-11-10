@@ -87,7 +87,7 @@
     const nm = cardName(e);
     return '<span class="slab' + (cls ? ' ' + cls : '') + '" aria-label="' + esc(label(gr) + (gr.w ? ' ' + gr.w : '')) + ' graded">' +
       '<span class="sl-in"><span class="sl-lbl">' +
-        '<span class="sl-co">' + esc(gr.co) + '</span><span class="sl-nm">' + esc(cardName(e)) + '</span>' + (meta ? '<span class="sl-meta">' + esc(meta) + '</span>' : '') +
+        '<span class="sl-co">' + esc(gr.co) + '</span><span class="sl-nm">' + esc(cardName(e)) + '</span>' + '<span class="sl-meta">' + (meta ? esc(meta) : '&nbsp;') + '</span>' +
         '<span class="sl-gr"><b>' + esc(gr.g) + '</b><small>' + esc(gr.w || word(gr.co, gr.g)) + '</small></span>' +
         '<span class="sl-tiny"><span>' + esc(gr.co) + '</span><b>' + esc(gr.g) + '</b></span>' +
       '</span><span class="sl-well">' + art + '</span></span></span>';

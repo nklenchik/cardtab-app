@@ -2232,3 +2232,9 @@ html :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdrop,html :is(.am-bd,
 @media (prefers-color-scheme:dark){html:not([data-theme="light"]) :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdrop,html:not([data-theme="light"]) :is(.am-bd,.as-bd,.mbd){background:rgba(0,0,0,.5)!important}}
 html[data-theme="dark"] :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdrop,html[data-theme="dark"] :is(.am-bd,.as-bd,.mbd){background:rgba(0,0,0,.5)!important}
 #pm-go.pm-soon,#pm-go.pm-soon:hover{opacity:.5;cursor:default;transform:none}   /* v50.72: before launch */
+/* v50.86.4: every slab's label is the same size. The name always takes two lines' room (a one-line name keeps the second
+   line empty, like a printed label), the number/cert line always has its row, and names are a touch smaller to fit */
+.sl-nm{min-height:2.24em}
+.sl-lbl .sl-nm{font-size:6.2cqw}
+@container slab (max-width:175px){.sl-lbl .sl-nm{font-size:7.2cqw}}
+
