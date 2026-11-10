@@ -49,6 +49,11 @@
     if (!d || d.classList.contains('closing') || t.disabled || t.readOnly) return;
     if (on === d && up()) return;
     room(d, kbh || Math.round(innerHeight * .44));
+    // the tap that focused the box hasn't finished: its click comes next, at the spot where the box was. The box has moved up,
+    // so that spot is now outside the sheet, and a tap outside closes it. Swallow that one stray click.
+    const pn = panel(d), t0 = Date.now(), eat = ev => { if (Date.now() - t0 > 800) return off(); if (!pn || !pn.contains(ev.target)) { ev.preventDefault(); ev.stopImmediatePropagation(); } };
+    const off = () => ['click', 'mouseup', 'pointerup', 'touchend'].forEach(k => window.removeEventListener(k, eat, true));
+    ['click', 'mouseup', 'pointerup', 'touchend'].forEach(k => window.addEventListener(k, eat, true)); setTimeout(off, 800);
     clearTimeout(guess); guess = setTimeout(() => { if (!up()) back(); }, 1200);
   }, true);
 
