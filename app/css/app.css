@@ -103,6 +103,7 @@ button{font:inherit;color:inherit}
 /* ---------- sign in ---------- */
 .auth{min-height:100dvh;display:grid;place-items:center;padding:24px 16px;background:var(--ct-bg)}
 .auth{padding-bottom:calc(24px + var(--kb,0px))}
+.auth.kb-up{padding-bottom:calc(24px + var(--kb,0px) + 160px)}
 .auth-card{width:100%;max-width:400px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px 26px;display:flex;flex-direction:column;gap:14px;color:var(--text);font-size:14px;box-shadow:var(--shadow);animation:t-in .3s var(--ease)}
 .auth-brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px;color:var(--text);text-decoration:none;align-self:flex-start}
 .auth-seg{position:relative;display:flex;background:var(--surface);border-radius:10px;padding:3px}

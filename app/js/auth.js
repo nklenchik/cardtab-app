@@ -113,14 +113,18 @@
     // Phones: when the keyboard opens, scroll the box you're typing in to the upper part of the visible area (above the keyboard),
     // with the button under it still in view. The page gets room at the bottom for as long as the keyboard is up.
     { const vv = window.visualViewport, page = document.getElementById('view-auth'); let cur = null, raf = 0;
+      // iPhone Chrome puts its own autofill bar (address + expand arrow) above the keyboard, and the page isn't told its height, so leave room for it
+      const BAR = (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) ? 100 : 0;
       const kb = () => vv ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0;
       const reveal = () => { if (!cur || !document.contains(cur) || cur.offsetParent === null) return;
         const vh = vv ? vv.height : window.innerHeight, top = vv ? vv.offsetTop : 0, r = cur.getBoundingClientRect();
-        const want = Math.min(vh * 0.32, 170), d = (r.top - top) - want;
+        const want = Math.min((vh - BAR) * 0.3, 120), d = (r.top - top) - want;
         if (Math.abs(d) > 6) window.scrollBy({ top: d, behavior: 'smooth' }); };
       const sync = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { const k = kb(); page.style.setProperty('--kb', k + 'px'); page.classList.toggle('kb-up', k > 80); if (cur && k > 80) reveal(); }); };
-      page.addEventListener('focusin', e => { if (!e.target.matches('input')) return; cur = e.target; sync(); [250, 500, 800].forEach(t => setTimeout(() => { if (cur === e.target) sync(); }, t)); });
+      page.addEventListener('focusin', e => { if (!e.target.matches('input')) return; cur = e.target; sync(); [250, 500, 800, 1200].forEach(t => setTimeout(() => { if (cur === e.target) sync(); }, t)); });
       page.addEventListener('focusout', () => { cur = null; setTimeout(sync, 120); });
+      // switching between Sign in and Create account changes the card's height while the keyboard may stay up: place the box again
+      seg.addEventListener('click', () => [60, 350, 700].forEach(t => setTimeout(sync, t)));
       if (vv) { vv.addEventListener('resize', sync); vv.addEventListener('scroll', sync); } }
     const qs = new URLSearchParams(location.search);
     setMode(qs.has('signup') || qs.get('mode') === 'signup' ? 'up' : 'in');

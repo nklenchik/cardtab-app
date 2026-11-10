@@ -601,3 +601,7 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 - From Nick's screen recording (iPhone, Chrome): the email box stayed behind the keyboard; only Chrome's own bar above the keyboard showed the typed text.
 - auth.js now watches the visual viewport: when the keyboard opens, the page gets room at the bottom (`--kb`) and scrolls the focused box (email or code) to about a third of the way down the visible area, with the button below still in view. It re-checks at 250/500/800ms because iPhone animates the keyboard. Works for Sign in, Create account and the code step.
 - Tested with a simulated 420px keyboard (box at 147-196px, button at 258px, both above the keyboard; page returns to normal when it closes). Real iPhone check still needed.
+
+## v50.79: sign-in keyboard placement, Create account too (2026-11-09)
+- The box now lands about 120px from the top of the visible area on Sign in and Create account alike (before, Sign in's centered card couldn't scroll far enough). While the keyboard is up the page adds 160px of extra room at the bottom (`.auth.kb-up`), and on iPhone it also leaves 100px for Chrome's own autofill bar above the keyboard.
+- Switching between Sign in and Create account re-places the box. Simulated with a 336px keyboard plus the 100px bar: both modes put the box and the button fully above it. Real iPhone check still needed.
