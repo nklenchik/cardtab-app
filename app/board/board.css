@@ -2225,7 +2225,6 @@ dialog .entlist .emh:not(:first-child){margin-top:14px}
 /* Share Card Board on phones: the same bottom sheet as Ask (full width, grab handle, rises from the bottom, blurred backdrop) */
 @media(max-width:760px){
  #shd[open]{position:fixed!important;inset:0!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;overflow:hidden!important}
- #shd::backdrop{background:var(--win-veil)!important;-webkit-backdrop-filter:var(--win-blur)!important;backdrop-filter:var(--win-blur)!important;animation:ctAskFade .3s ease both}
  #shd .shp{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;margin:0!important;width:100%!important;max-width:none!important;height:min(90dvh,calc(100dvh - 40px - env(safe-area-inset-top,0px)))!important;max-height:none!important;border-radius:26px 26px 0 0!important;background:var(--sheet-bg,var(--card))!important;border:0!important;border-top:1px solid var(--win-edge,rgba(255,255,255,.1))!important;padding-top:24px!important}
  #shd .shp::before{content:"";position:absolute;top:8px;left:50%;width:38px;height:5px;margin-left:-19px;border-radius:999px;background:color-mix(in srgb,currentColor 22%,transparent)}
  #shd[open] .shp{animation:ctAskUp .44s cubic-bezier(.2,.8,.2,1) both!important;will-change:transform}
