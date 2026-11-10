@@ -42,4 +42,4 @@ BILLING_OPENS = "Dec 1"
 
 # v50: nightly analytics tidy-up (keeps two years of daily rows). Times are UTC.
 [triggers]
-crons = ["17 8 * * *", "7 12 * * *"]   # nightly tidy-up; daily check (v50.12)
+crons = ["17 8 * * *", "7 12 * * *", "*/5 * * * *"]   # nightly tidy-up; daily check (v50.12); catalog fill in the last week before the JustTCG reset (v51.3)

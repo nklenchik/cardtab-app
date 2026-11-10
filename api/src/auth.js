@@ -20,6 +20,7 @@ import { handleAsk } from './ask.js';
    POST /auth/plan {plan}   admins only: switch your own plan for testing
    POST /auth/sync          send and receive entries and settings (see sync.js) */
 import { report } from './budget.js';
+import { catReport } from './catalog.js';
 import { signInEmail, sendMail, welcomeEmail } from './email.js';
 import { handleSync, deleteSynced } from './sync.js';
 
@@ -188,7 +189,7 @@ export async function handleAuth(env, req, path) {
   }
   if (path === '/auth/usage') {   // card data use this billing month (admins)
     if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);
-    return out(env, req, await report(env));
+    return out(env, req, Object.assign(await report(env), { cat: await catReport(env) }));
   }
   if (path === '/auth/plan' && req.method === 'POST') {
     if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);

@@ -9,6 +9,8 @@ import { handlePublicShare, cleanupShares } from './share.js';
 import { cleanupAnalytics, handleSiteEvent } from './analytics.js';
 import { handleAuth, currentUser, isAdmin } from './auth.js';
 import { gate, count } from './budget.js';
+import { step as catalogStep } from './catalog.js';
+const CAT_CRON = '*/5 * * * *';   // v51.3: catalog fill, last week before the JustTCG reset (does nothing the rest of the month)
 import { handleArt, communityArt } from './artup.js';
 import { handleWebhook, graceSweep } from './billing.js';
 const JT = 'https://api.justtcg.com';
@@ -132,7 +134,8 @@ async function art(env, ctx, id, size) {
 }
 
 export default {
-  async scheduled(evt, env, ctx) { if (evt && evt.cron === HEALTH_CRON) { ctx.waitUntil(runHealth(env)); return; } ctx.waitUntil(cleanupAnalytics(env)); ctx.waitUntil(cleanupShares(env)); ctx.waitUntil(graceSweep(env)); },
+  async scheduled(evt, env, ctx) { if (evt && evt.cron === HEALTH_CRON) { ctx.waitUntil(runHealth(env)); return; }
+    if (evt && evt.cron === CAT_CRON) { ctx.waitUntil(catalogStep(env, { art: id => art(env, ctx, id, 'list') }).catch(() => {})); return; } ctx.waitUntil(cleanupAnalytics(env)); ctx.waitUntil(cleanupShares(env)); ctx.waitUntil(graceSweep(env)); },
   async fetch(req, env, ctx) {
     const u = new URL(req.url);
     { const m = u.pathname.match(/^\/s\/b\/([a-z0-9]{1,32})$/); if (m && req.method === 'GET') { try { return await handlePublicShare(env, req, m[1]); } catch (e) { return new Response(JSON.stringify({ error: 'gone' }), { status: 404, headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' } }); } } }

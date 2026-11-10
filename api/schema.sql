@@ -77,3 +77,8 @@ CREATE INDEX IF NOT EXISTS art_uploads_status ON art_uploads (status, created);
 -- v50.63 Premium billing (also made automatically on first use)
 CREATE TABLE IF NOT EXISTS billing ( user_id TEXT PRIMARY KEY, customer TEXT, sub TEXT, status TEXT, price_key TEXT, interval TEXT, amount INTEGER, founder INTEGER DEFAULT 0, period_end INTEGER, cancel_at_end INTEGER DEFAULT 0, grace_until INTEGER, card_brand TEXT, card_last4 TEXT, pending_key TEXT, schedule TEXT, gift INTEGER DEFAULT 0, updated INTEGER );
 CREATE INDEX IF NOT EXISTS billing_customer ON billing (customer);
+
+-- v51.3 catalog fill: in the last week before JustTCG's monthly reset, leftover requests save whole sets (newest first)
+CREATE TABLE IF NOT EXISTS cat_sets ( id TEXT PRIMARY KEY, game TEXT, name TEXT, released TEXT, total INTEGER, next_offset INTEGER NOT NULL DEFAULT 0, done INTEGER NOT NULL DEFAULT 0, cards INTEGER NOT NULL DEFAULT 0, listed TEXT );
+CREATE TABLE IF NOT EXISTS cat_cards ( id TEXT PRIMARY KEY, art INTEGER NOT NULL DEFAULT 0, at INTEGER );
+CREATE TABLE IF NOT EXISTS cat_day ( day TEXT PRIMARY KEY, calls INTEGER NOT NULL DEFAULT 0, sets INTEGER NOT NULL DEFAULT 0, cards INTEGER NOT NULL DEFAULT 0, art INTEGER NOT NULL DEFAULT 0 );

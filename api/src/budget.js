@@ -4,12 +4,13 @@
      and by plan. Cache hits are counted too, so the admin readout shows how much the cache saves.
    - Typing always comes first. Background art fill only uses its share of what's left: the month's remaining requests
      spread over the days left, and fill gets FILL_SHARE of each day's share. Free accounts' fill comes last: they only
-     use the first FREE_SHARE of the day's share, and at most FREE_PER_USER requests a day each. Premium fill gets the rest.
+     use the first FREE_SHARE of the day's share, and at most FREE_PER_USER requests a day each. Premium fill gets the rest, at most PREMIUM_PER_USER a day each (v51.3).
    - Nobody is told any of this. When fill has to wait, the app quietly tries again later. */
 const n = (v, d) => { const x = Number(v); return Number.isFinite(x) && x > 0 ? x : d; };
 export function limits(env) {
   return { month: n(env.MONTH_LIMIT, 10000), resetDay: n(env.RESET_DAY, 6), day: n(env.DAY_LIMIT, 1000),
-    fillShare: n(env.FILL_SHARE, 0.6), freeShare: n(env.FREE_SHARE, 0.3), freePerUser: n(env.FREE_PER_USER, 20) };
+    fillShare: n(env.FILL_SHARE, 0.6), freeShare: n(env.FREE_SHARE, 0.3), freePerUser: n(env.FREE_PER_USER, 20), premPerUser: n(env.PREMIUM_PER_USER, 100),
+    boost: n(env.LAST_WEEK_BOOST, 3) };
 }
 export const today = (t = Date.now()) => new Date(t).toISOString().slice(0, 10);
 // the billing month we're in: from the last reset day (UTC) to the next one
@@ -40,11 +41,12 @@ export async function gate(env, who, t = Date.now()) {
   // the day's fair share of what's left this month, decided at the start of the day so it doesn't shrink as the day goes on
   const share = Math.min(L.day, Math.floor((L.month - T.before) / T.cycle.daysLeft));
   if (T.fill >= share * L.fillShare) return 'later';
-  if (who.plan !== 'premium') {
-    if (T.freefill >= share * L.fillShare * L.freeShare) return 'later';
-    if (who.user) { const u = await env.DB.prepare('SELECT calls FROM usage_user WHERE day=? AND user_id=?').bind(today(t), who.user).first();
-      if (u && u.calls >= L.freePerUser) return 'later'; }
-  }
+  if (who.plan !== 'premium' && T.freefill >= share * L.fillShare * L.freeShare) return 'later';
+  // v51.3: one person can only take so much art fill a day (Free 20, Premium 100), so a big import can't crowd out
+  // everyone else. In the last week before the reset, when there's quota to spare, the caps triple.
+  if (who.user) { const u = await env.DB.prepare('SELECT calls FROM usage_user WHERE day=? AND user_id=?').bind(today(t), who.user).first();
+    const cap = (who.plan === 'premium' ? L.premPerUser : L.freePerUser) * (T.cycle.daysLeft <= 7 ? L.boost : 1);
+    if (u && u.calls >= cap) return 'later'; }
   return '';
 }
 
@@ -60,8 +62,8 @@ export async function count(env, who, calls, t = Date.now()) {
 export async function report(env, t = Date.now()) {
   const L = limits(env), T = await totals(env, t), c = T.cycle;
   const rows = (await env.DB.prepare('SELECT day,src,plan,calls,reqs FROM usage WHERE day>=? ORDER BY day DESC').bind(c.start).all()).results;
-  const days = {}; for (const r of rows) { const x = days[r.day] || (days[r.day] = { day: r.day, calls: 0, reqs: 0, type: 0, fill: 0, free: 0, premium: 0 });
-    x.calls += r.calls; x.reqs += r.reqs; x[r.src] += r.calls; if (r.plan === 'free' || r.plan === 'premium') x[r.plan] += r.calls; }
+  const days = {}; for (const r of rows) { const x = days[r.day] || (days[r.day] = { day: r.day, calls: 0, reqs: 0, type: 0, fill: 0, cat: 0, free: 0, premium: 0 });
+    x.calls += r.calls; x.reqs += r.reqs; x[r.src] = (x[r.src] || 0) + r.calls; if (r.plan === 'free' || r.plan === 'premium') x[r.plan] += r.calls; }
   const reqs = rows.reduce((a, r) => a + r.reqs, 0);
   const share = Math.min(L.day, Math.floor((L.month - T.before) / c.daysLeft));
   return { month: T.month, limit: L.month, resets: c.end, daysLeft: c.daysLeft, today: T.day, todayShare: share,

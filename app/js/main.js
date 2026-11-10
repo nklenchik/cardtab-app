@@ -73,7 +73,8 @@
     if (!$('am-dev').open || $('am-cd').hidden) return;
     try { const r = await Sess.api('/auth/usage'), t = r.days[0] && r.days[0].day === new Date().toISOString().slice(0, 10) ? r.days[0] : { type: 0, fill: 0 };
       $('am-cd-v').textContent = r.month.toLocaleString() + ' of ' + r.limit.toLocaleString();
-      $('am-cd-s').textContent = 'Resets ' + cdFmt(r.resets) + ' · today ' + r.today + ' (typing ' + t.type + ', art ' + t.fill + ') · today’s share ' + r.todayShare + ' · ' + r.savedPct + '% answered from saved lookups';
+      $('am-cd-s').textContent = 'Resets ' + cdFmt(r.resets) + ' · today ' + r.today + ' (typing ' + t.type + ', art ' + t.fill + ') · today’s share ' + r.todayShare + ' · ' + r.savedPct + '% answered from saved lookups'
+        + (r.cat ? ' · catalog fill ' + (r.cat.active ? 'on: today ' + r.cat.today.calls + ' requests, ' + r.cat.today.cards.toLocaleString() + ' cards, ' + r.cat.today.art + ' art' : 'starts in ' + r.cat.startsIn + ' days') + ' · saved ' + r.cat.cards.toLocaleString() + ' cards from ' + r.cat.setsDone + ' of ' + r.cat.sets + ' sets' : '');
     } catch (e) { $('am-cd-v').textContent = 'Couldn’t load'; $('am-cd-s').textContent = ''; }
   });
 
