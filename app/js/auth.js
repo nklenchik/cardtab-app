@@ -118,7 +118,7 @@
       const kb = () => vv ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0;
       const reveal = () => { if (!cur || !document.contains(cur) || cur.offsetParent === null) return;
         const vh = vv ? vv.height : window.innerHeight, top = vv ? vv.offsetTop : 0, r = cur.getBoundingClientRect();
-        const want = Math.min((vh - BAR) * 0.3, 120), d = (r.top - top) - want;
+        const up = !!document.querySelector('.auth-seg button.on[data-m="up"]'), want = Math.min((vh - BAR) * 0.3, up ? 78 : 120), d = (r.top - top) - want;   // Create account has more under the button (the founders note), so its box sits higher
         if (Math.abs(d) > 6) window.scrollBy({ top: d, behavior: 'smooth' }); };
       const sync = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { const k = kb(); page.style.setProperty('--kb', k + 'px'); page.classList.toggle('kb-up', k > 80); if (cur && k > 80) reveal(); }); };
       page.addEventListener('focusin', e => { if (!e.target.matches('input')) return; cur = e.target; sync(); [250, 500, 800, 1200].forEach(t => setTimeout(() => { if (cur === e.target) sync(); }, t)); });

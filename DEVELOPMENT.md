@@ -605,3 +605,6 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 ## v50.79: sign-in keyboard placement, Create account too (2026-11-09)
 - The box now lands about 120px from the top of the visible area on Sign in and Create account alike (before, Sign in's centered card couldn't scroll far enough). While the keyboard is up the page adds 160px of extra room at the bottom (`.auth.kb-up`), and on iPhone it also leaves 100px for Chrome's own autofill bar above the keyboard.
 - Switching between Sign in and Create account re-places the box. Simulated with a 336px keyboard plus the 100px bar: both modes put the box and the button fully above it. Real iPhone check still needed.
+
+## v50.80: Create account box sits higher (2026-11-09)
+- With the keyboard up, the Create account box now sits about 78px from the top of the visible area (Sign in stays at 120px), because that card has more under the button. Simulated iPhone: box 78px, button bottom 189px, founders note bottom 304px, all above the 408px of visible space (keyboard and Chrome's bar leave that much).
