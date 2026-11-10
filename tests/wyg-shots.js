@@ -13,9 +13,9 @@ const WYG = () => { const now = new Date(), Y = now.getFullYear(), M = now.getMo
   const sale = (mb, d, k, amt, fees, ship, o) => e(mb, d, 'sale', k, amt, Object.assign({ fees: String(fees), ship: String(ship) }, o || {}));
   const psa = { grade: { co: 'PSA', g: '10' }, condition: 'Graded' };
   return [
-    sale(0, 3, 'umb', 1520, 182, 6, psa), sale(0, 6, 'lug', 219, 28.5, 4.2),
-    e(1, 12, 'purchase', 'ray', 310, { platform: 'TCGplayer' }), sale(1, 22, 'bew', 132, 17.2, 1.27, { platform: 'TCGplayer' }), sale(1, 27, 'elsa', 395, 51.4, 4.2, { platform: 'TCGplayer' }),
-    e(2, 8, 'purchase', 'lug', 145), e(2, 15, 'purchase', 'bew', 88, { platform: 'Card Show', condition: 'Lightly Played' }), sale(2, 26, 'she', 79, 10.3, 1.27, { platform: 'TCGplayer' }),
+    sale(0, 3, 'umb', 1520, 182, 6, psa), sale(0, 5, 'elsa', 395, 51.4, 4.2, { platform: 'TCGplayer' }), sale(0, 7, 'bew', 132, 17.2, 1.27, { platform: 'TCGplayer' }),
+    e(1, 12, 'purchase', 'ray', 310, { platform: 'TCGplayer' }), sale(1, 22, 'lug', 219, 28.5, 4.2), sale(1, 26, 'she', 79, 10.3, 1.27, { platform: 'TCGplayer' }),
+    e(2, 8, 'purchase', 'lug', 145), e(2, 15, 'purchase', 'bew', 88, { platform: 'Card Show', condition: 'Lightly Played' }),
     e(3, 20, 'purchase', 'umb', 980, Object.assign({ platform: 'PWCC' }, psa)), e(3, 4, 'purchase', 'she', 62, { platform: 'TCGplayer' }), e(4, 9, 'purchase', 'elsa', 240, { platform: 'TCGplayer' })
   ]; };
 (async () => { const b = await chromium.launch();
@@ -30,11 +30,11 @@ const WYG = () => { const now = new Date(), Y = now.getFullYear(), M = now.getMo
     const d = document.createElement('div'); d.style.cssText = 'position:fixed;left:0;right:0;bottom:0;pointer-events:none;z-index:' + (z - 1) + ';top:' + Math.round(top - 26) + 'px;background:linear-gradient(to bottom,transparent,' + bg + ' 22px)'; document.body.appendChild(d); });
   const shot = async (p, n) => { await p.evaluate(() => document.querySelectorAll('.ct-hint,.cbhint,[class*="hint"][class*="pop"]').forEach(x => x.remove())); await p.screenshot({ path: OUT + n + '.png' }); };
   const phone = { ...devices['iPhone 13'], viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, colorScheme: 'light' };
-  // 1) the collection as a grid, newest first (every card once on the first screen)
+  // 1) the collection as a small grid (three across), newest first, so all six cards show in the phone
   let p = await b.newPage(phone); await setup(p, 'gallery');
-  await p.evaluate(() => { window.CTMonth && CTMonth.set('all'); const g = document.querySelector('.fb-vopts [data-gs="m"]'); g && g.click(); const so = document.getElementById('ct-sort'); if (so) { so.value = 'new'; so.dispatchEvent(new Event('change', { bubbles: true })); } });
+  await p.evaluate(() => { window.CTMonth && CTMonth.set('all'); const g = document.querySelector('.fb-vopts [data-gs="s"]'); g && g.click(); const so = document.getElementById('ct-sort'); if (so) { so.value = 'new'; so.dispatchEvent(new Event('change', { bubbles: true })); } });
   await p.waitForTimeout(1500);
-  await p.evaluate(() => { const f = document.querySelector('.ct-fbar'); if (f) scrollTo(0, f.getBoundingClientRect().top + scrollY - 64); }); await p.waitForTimeout(900); await band(p); await shot(p, 'wyg-grid'); await p.close();
+  await p.evaluate(() => { const f = document.querySelector('.ct-fbar'); if (f) scrollTo(0, f.getBoundingClientRect().top + scrollY - 64); const h = document.querySelector('.ct-month, [class*="month-h"]'); h && h.remove && 0; }); await p.waitForTimeout(900); await band(p); await shot(p, 'wyg-grid'); await p.close();
   // 2) the Board: profit, spent, the biggest win in full art, profit by month
   p = await b.newPage(phone); await setup(p);
   await p.evaluate(() => document.querySelector('.sh-tabs [data-tab="board"]').click()); await p.waitForTimeout(2500);
