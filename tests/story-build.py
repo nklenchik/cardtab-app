@@ -26,7 +26,7 @@ STORIES = {
     'came-from': (2, 2.0, {}),
     'budget':    (3, 2.2, {'BUDGET': '50000'}),
     'game':      (5, 2.2, {}),
-    'patience':  (8, 2.2, {}),
+    'patience':  (8, 3.6, {}),
 }
 LOOKS = {'': {'THEMENAME': 'Neon'}, 'holo-': {'THEMENAME': 'Holo', 'BG': 'Sunrise'}}
 
@@ -49,11 +49,15 @@ def retime(src, secs):
     t0 = ts[0]
     ct = [(t - t0) * meta['slow'] for t in ts]               # moments in the story's own (real-speed) time
     # the entrance starts at the key press, shortly after capture begins: start at the first frame that differs from the first
-    # the player's crossfade between slides is switched off while recording, so the slide starts on the first changed frame
-    first = Image.open(src + files[0]).convert('RGB')
-    start = 0
-    for k in range(1, len(files)):
-        if ImageStat.Stat(ImageChops.difference(first, Image.open(src + files[k]).convert('RGB'))).mean[0] > 4: start = k; break   # a slide change, not the Holo shimmer
+    # the player's crossfade between slides is switched off while recording, so the slide change is one big jump between two
+    # captured frames (animation steps are small): start on the frame after the biggest jump in the first second
+    small = lambda f: Image.open(src + f).convert('L').resize((90, 160))
+    lim = next((k for k, c in enumerate(ct) if c > 1.0), len(ct) - 1)
+    prev, best, start = small(files[0]), -1, 0
+    for k in range(1, lim):
+        cur = small(files[k]); dd = ImageStat.Stat(ImageChops.difference(prev, cur)).mean[0]
+        if dd > best: best, start = dd, k
+        prev = cur
     c0 = ct[start]
     seq, j = [], start
     n = int(secs * FPS)
