@@ -1158,9 +1158,14 @@ function fitFlip(w,b,rows){const W=w.clientWidth,H=w.clientHeight,wide=W/H>1.6,u
   b.style.cssText='--pad:'+pad.toFixed(1)+'px;--fr:'+fr.toFixed(1)+'px;--fv:'+fv.toFixed(1)+'px;--ft:'+ft.toFixed(1)+'px;--fl:'+fl.toFixed(1)+'px;--gap:'+cl(u*.04,4,14).toFixed(1)+'px;--cols:'+rows.length;
   /* v50.92: never spill out of the widget. If it doesn't fit, the type and spacing step down together; still too tall, and
      "See entries" moves up beside the total's label, then goes; then the first rows go, keeping the total. */
-  const over=()=>b.scrollHeight>b.clientHeight+1;let k=1,gap=cl(u*.04,4,14);
-  for(let i=0;i<10&&over();i++){k*=.92;b.style.setProperty('--fr',Math.max(10,fr*k).toFixed(1)+'px');b.style.setProperty('--fv',Math.max(10,fv*k).toFixed(1)+'px');b.style.setProperty('--ft',Math.max(15,ft*k).toFixed(1)+'px');b.style.setProperty('--fl',Math.max(10,fl*k).toFixed(1)+'px');b.style.setProperty('--gap',Math.max(3,gap*k).toFixed(1)+'px');b.style.setProperty('--pad',Math.max(10,pad*Math.max(k,.8)).toFixed(1)+'px')}
-  if(over()){const g=b.querySelector('.kgo'),kt=b.querySelector('.ki.kt');if(g&&kt&&!b.classList.contains('kh')){g.classList.add('kin');kt.appendChild(g)}if(over()&&g)g.style.display='none'}
+  const over=()=>b.scrollHeight>b.clientHeight+1;let k=1,gap=cl(u*.04,4,14);const g=b.querySelector('.kgo'),kt=b.querySelector('.ki.kt');
+  // first, "See entries" moves up beside the total (its own column) so the numbers can stay big; back below if they'd be cut
+  const beside=()=>{if(!g||!kt||b.classList.contains('kh'))return;g.classList.add('kin');kt.classList.add('kin2');kt.appendChild(g);
+    if([...kt.children].some(x=>x!==g&&x.scrollWidth>x.clientWidth+1)){g.classList.remove('kin');kt.classList.remove('kin2');b.appendChild(g)}};
+  if(over())beside();
+  for(let i=0;i<10&&over();i++){k*=.92;b.style.setProperty('--fr',Math.max(10,fr*k).toFixed(1)+'px');b.style.setProperty('--fv',Math.max(10,fv*k).toFixed(1)+'px');b.style.setProperty('--ft',Math.max(15,ft*k).toFixed(1)+'px');b.style.setProperty('--fl',Math.max(10,fl*k).toFixed(1)+'px');b.style.setProperty('--gap',Math.max(3,gap*k).toFixed(1)+'px');b.style.setProperty('--pad',Math.max(10,pad*Math.max(k,.8)).toFixed(1)+'px');
+    if(g&&!g.classList.contains('kin')&&over())beside()}
+  if(over()&&g)g.style.display='none';
   const ks=[...b.querySelectorAll('.ki:not(.kt)')];while(over()&&ks.length)ks.shift().style.display='none'}
 document.addEventListener('pointerdown',e=>{if(!TOUCH.matches)return;if(!e.target.closest('#simple .w.scrubbing'))document.querySelectorAll('#simple svg.sel').forEach(s=>s._clear&&s._clear());
   if(!e.target.closest('#simple .w.flipped'))document.querySelectorAll('#simple .kback').forEach(x=>flipTile(x.closest('.w'),null))},{passive:true});
