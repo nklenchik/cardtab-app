@@ -25,23 +25,33 @@ const SHOW = () => { const now = new Date(), Y = now.getFullYear(), M = now.getM
   ]; };
 (async () => { const b = await chromium.launch();
  const OUTD = '/tmp/claude-0/-home-claude/0d23d6a4-0497-5286-ae54-9e35a72a5811/scratchpad/sitepv/';
- const p = await b.newPage({ ...devices['iPhone 13'], viewport: { width: 540, height: 960 }, deviceScaleFactor: 1 });
+ const p = await b.newPage({ ...devices['iPhone 13'], viewport: { width: 360, height: 640 }, deviceScaleFactor: 1 });
  await p.route('**/x-demo/*', r => r.fulfill({ path: '/home/claude/cardtab-site/assets/' + r.request().url().split('/x-demo/')[1].split('?')[0] }));
- await p.goto('http://localhost:8765/index.html'); await p.evaluate(() => { localStorage.setItem('ct.session', JSON.stringify({ email: 'st@x.test', name: 'Nick', via: 'email', at: Date.now(), exp: Date.now() + 864e5 })); });
+ await p.goto('http://localhost:8765/index.html'); await p.evaluate(th => { localStorage.setItem('ct.session', JSON.stringify({ email: 'st@x.test', name: 'Nick', via: 'email', at: Date.now(), exp: Date.now() + 864e5 })); localStorage.setItem('cs.theme', th); }, process.env.THEME || '0');
  await p.reload(); await p.waitForTimeout(1200); await p.evaluate(async src => { await CTStore.setPlan('premium'); await CTStore._loadSample(eval('(' + src + ')')()); }, SHOW.toString()); await p.waitForTimeout(2500);
- await p.evaluate(() => document.querySelector('.sh-tabs [data-tab="stories"]').click()); await p.waitForTimeout(3500);
+ if (process.env.BUDGET) await p.evaluate(c => { window.CTBudgetCents = () => +c; }, process.env.BUDGET);
+ await p.evaluate(r => { if (r && window.CTMonth) CTMonth.set(r); }, process.env.RANGE || ''); await p.waitForTimeout(600); await p.evaluate(() => document.querySelector('.sh-tabs [data-tab="stories"]').click()); await p.waitForTimeout(3500);
  const fr = p.frames().find(f => f !== p.mainFrame());
- const fs = require('fs'), D = OUTD + 'clip/'; fs.rmSync(D, { recursive: true, force: true }); fs.mkdirSync(D);
+ const fs = require('fs'), D = OUTD + (process.env.DIR || 'clip') + '/'; fs.rmSync(D, { recursive: true, force: true }); fs.mkdirSync(D);
+ if (process.env.SPER) { await fr.locator(':text-is("Last month"):visible').first().click(); await p.waitForTimeout(600); await p.screenshot({ path: OUTD + 'menu.png' });
+   await fr.locator(':text-is("' + process.env.SPER + '"):visible').first().click(); await p.waitForTimeout(1500); }
+ if (process.env.THEMENAME) console.log('theme', await fr.evaluate(n => { const b = [...document.querySelectorAll('#tgrid [data-i]')].find(x => x.textContent.trim().toLowerCase().includes(n.toLowerCase())); if (b) { b.click(); return b.textContent.trim() + ' ' + b.dataset.i; } return 'not found: ' + [...document.querySelectorAll('#tgrid [data-i]')].map(x => x.textContent.trim()).join('|'); }, process.env.THEMENAME));
+  if (process.env.LIST) { const out = []; await fr.click('[data-play="0"]'); await p.waitForTimeout(1500);
+   for (let k = 0; k < 12; k++) { await p.waitForTimeout(900); await p.screenshot({ path: OUTD + 'sl-' + k + '.png' }); await p.keyboard.press('ArrowRight'); }
+   await b.close(); return; }
+ // real-time recording: the page is laid out at the stories' 360-wide size but drawn at 2x (zoom), so the clip is sharp
  const cdp = await p.context().newCDPSession(p); const frames = [];
  cdp.on('Page.screencastFrame', async f => { frames.push({ t: f.metadata.timestamp, d: f.data }); try { await cdp.send('Page.screencastFrameAck', { sessionId: f.sessionId }); } catch (e) {} });
- await fr.evaluate(() => { const st = document.createElement('style'); st.textContent = '.pl .pbot,.pl .arr,.pl .x{visibility:hidden!important}'; document.head.appendChild(st); });
- await fr.click('[data-play="0"]'); await p.waitForTimeout(2500); await p.keyboard.press('ArrowRight'); await p.waitForTimeout(900);
- await cdp.send('Page.startScreencast', { format: 'png', everyNthFrame: 1, maxWidth: 1080, maxHeight: 1920 });
- await p.waitForTimeout(150); await p.keyboard.press('ArrowLeft'); await p.waitForTimeout(4300);
+ await fr.evaluate(() => { const st = document.createElement('style'); st.textContent = '.pl .pbot,.pl .arr,.pl .x,.pl .strip{visibility:hidden!important}'; document.head.appendChild(st); });
+ await p.setViewportSize({ width: 720, height: 1280 }); await p.evaluate(() => { document.documentElement.style.zoom = 2; }); await p.waitForTimeout(800);   // 360-wide layout, drawn at 720
+ const SL = +(process.env.SLIDE || 0);
+ await fr.evaluate(() => document.querySelector('[data-play="0"]').click()); await p.waitForTimeout(1200);
+ for (let k = 0; k < SL + 1; k++) { await p.keyboard.press('ArrowRight'); await p.waitForTimeout(450); }
+ await p.waitForTimeout(500);
+ await cdp.send('Page.startScreencast', { format: 'png', everyNthFrame: 1, maxWidth: 2000, maxHeight: 4000 });
+ await p.waitForTimeout(150); await p.keyboard.press('ArrowLeft'); await p.waitForTimeout(+(process.env.MS || 4300));
  await cdp.send('Page.stopScreencast');
- const box = await fr.evaluate(() => { const c = document.querySelector('.pl .pcard').getBoundingClientRect(); return [c.x, c.y, c.width, c.height]; });
- const fb = await fr.evaluate(() => { const f = window.frameElement; return f ? [0, 0] : [0, 0]; });
  frames.forEach((f, k) => fs.writeFileSync(D + String(k).padStart(4, '0') + '.png', Buffer.from(f.d, 'base64')));
- fs.writeFileSync(D + 'times.json', JSON.stringify({ t: frames.map(f => f.t), box }));
- console.log('frames', frames.length, 'box', box);
+ fs.writeFileSync(D + 'times.json', JSON.stringify({ t: frames.map(f => f.t) }));
+ console.log('frames', frames.length);
  await b.close() })();
