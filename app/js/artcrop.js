@@ -11,7 +11,7 @@
   const pastSet = t => { const m = t.match(/\b(\d{1,3})\s*\/\s*(\d{1,3})\b/); return !!m && +m[1] > +m[2]; };
   function band(meta) {
     const t = String(meta || '');
-    if (FULL.test(t) || pastSet(t)) return [0.12, 0.66];   // below the name bar and evolution badge, above the attack text
+    if (FULL.test(t) || pastSet(t)) return [0.165, 0.565];   // below the name bar and the evolution badge (about 6-16% down), above the attack text
     if (/pokemon|pok[eé]mon/i.test(t)) return [0.10, 0.54];
     return [0.096, 0.588];
   }
