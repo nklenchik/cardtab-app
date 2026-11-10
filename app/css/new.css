@@ -2290,3 +2290,15 @@ html[data-theme="dark"] :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdr
 @media(prefers-reduced-motion:reduce){#app-menu.am-out{animation:none!important}}
 /* v51.0 entries open and close with transforms only: while the final layout is applied, nothing inside the entry transitions on its own */
 .ct-row.ct-noanim,.ct-row.ct-noanim *{transition:none!important}
+
+/* v51.5 sign-in screen: the website's near-black in dark mode, and a soft cranberry glow behind the card. The glow shares the
+   card's grid cell, so it's always centered on the card (even when Create account makes it taller). Still, not animated. */
+.auth{overflow:clip;isolation:isolate}
+.auth>.auth-card{grid-area:1/1}
+.auth-glow{grid-area:1/1;align-self:stretch;justify-self:center;width:min(1000px,190vw);position:relative;z-index:-1;pointer-events:none}
+.auth-glow::before{content:"";position:absolute;left:0;right:0;top:50%;aspect-ratio:1/.85;transform:translateY(-50%);border-radius:50%;
+  background:radial-gradient(closest-side,color-mix(in srgb,#bc103e 12%,transparent),transparent)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .auth{background:#141413}
+  :root:not([data-theme="light"]) .auth-glow::before{background:radial-gradient(closest-side,color-mix(in srgb,#c7234f 18%,transparent),transparent)}}
+:root[data-theme="dark"] .auth{background:#141413}
+:root[data-theme="dark"] .auth-glow::before{background:radial-gradient(closest-side,color-mix(in srgb,#c7234f 18%,transparent),transparent)}
