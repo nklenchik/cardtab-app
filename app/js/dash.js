@@ -198,24 +198,48 @@
   const fullArt = img => { if (!img || img.tagName !== 'IMG' || img.dataset.loaded) return; img.dataset.loaded = 1; const u = img.dataset.full, pre = new Image(), t0 = performance.now(); pre.src = u; (pre.decode ? pre.decode() : new Promise((r, j) => { pre.onload = r; pre.onerror = j; })).then(() => setTimeout(() => { if (img.isConnected) img.src = u; }, Math.max(0, 380 - (performance.now() - t0)))).catch(() => { delete img.dataset.loaded; }); };
   function setBtn(btn, open) { const t = S.get(btn.dataset.tx); if (!t) return; btn.setAttribute('aria-expanded', open); btn.setAttribute('aria-label', (open ? 'Collapse ' : 'Expand ') + t.name); btn.querySelector('.ct-row-chevron').textContent = open ? '−' : '+'; }
 
-  // Open/close in place: final layout first, then the art scales into place and the row height animates (as in the demo)
-  function flip(row, apply, keep) {
-    if (calm.matches) { apply(); return 0; }
-    const art = row.querySelector('.ct-card-art'), txt = row.querySelector('.ct-expanded-right');
-    if (row._flipT) { clearTimeout(row._flipT); row.style.transition = 'none'; row.style.height = ''; row.style.minHeight = ''; row.style.overflow = ''; row.style.transition = ''; art.style.transform = ''; art.style.transition = ''; txt.style.opacity = ''; txt.style.transition = ''; }
-    const r0 = row.getBoundingClientRect(), a0 = art.getBoundingClientRect();
+  // Open/close in place (v51.0: transform and opacity only, so it stays at 60 fps on phones).
+  // The final layout is applied at once; then everything is slid from where it was to where it lands:
+  //  - the art scales from its small spot into place (transform),
+  //  - opening: the entry is revealed downward with a clip (no height animation), its details fade in right away,
+  //  - closing: a copy of the open entry's details sits where they were and fades while the entries below slide up over it,
+  //  - the entries below slide from their old place to their new one (transform), instead of the whole list re-laying out every frame.
+  const FLIP_MS = 340, FLIP_EASE = 'cubic-bezier(.2,.8,.2,1)';
+  function flip(row, apply) {
+    if (calm.matches || !row.animate) { apply(); return 0; }
+    (row._anims || []).forEach(a => a.finish()); row._anims = []; clearTimeout(row._flipT);
+    if (row._ghost) { row._ghost.remove(); row._ghost = null; }
+    const art = row.querySelector('.ct-card-art'), list = row.parentElement, opening = !row.classList.contains('expanded');
+    const vh = innerHeight, r0 = row.getBoundingClientRect(), a0 = art ? art.getBoundingClientRect() : null;
+    // the entries (and month headings) below that are on screen, and where they are now
+    const below = []; for (let n = row.nextElementSibling; n && below.length < 40; n = n.nextElementSibling) { const r = n.getBoundingClientRect(); if (r.top > vh + 400) break; below.push([n, r.top]); }
+    // closing: keep a picture of the open entry's lower part where it was, to fade out
+    let ghost = null;
+    if (!opening) { ghost = row.cloneNode(true); ghost.removeAttribute('id'); ghost.querySelectorAll('[id]').forEach(x => x.removeAttribute('id'));
+      Object.assign(ghost.style, { position: 'absolute', top: row.offsetTop + 'px', left: row.offsetLeft + 'px', width: row.offsetWidth + 'px', height: r0.height + 'px', margin: '0', pointerEvents: 'none' }); ghost.setAttribute('aria-hidden', 'true'); ghost.classList.add('ct-noanim'); ghost.querySelectorAll('*').forEach(x => x.style.setProperty('transition', 'none', 'important')); }
     row.classList.add('ct-noanim'); apply();
-    const r1 = row.getBoundingClientRect(), a1 = art.getBoundingClientRect();
-    if (keep) { keep.style.gridTemplateRows = '1fr'; keep.style.opacity = '1'; keep.style.marginBottom = '12px'; }
-    row.style.minHeight = '0'; row.style.height = r0.height + 'px'; row.style.overflow = 'hidden';
-    art.style.transformOrigin = '0 0'; art.style.transform = 'translate(' + ((a0.left - r0.left) - (a1.left - r1.left)) + 'px,' + ((a0.top - r0.top) - (a1.top - r1.top)) + 'px) scale(' + (a0.width / a1.width) + ')';
-    txt.style.opacity = '0';
-    void row.offsetWidth; row.classList.remove('ct-noanim');
-    const ease = 'cubic-bezier(.2,.7,.2,1)';
-    row.style.transition = 'height .32s ' + ease; art.style.transition = 'transform .32s ' + ease; txt.style.transition = 'opacity .22s ease .08s';
-    row.style.height = r1.height + 'px'; art.style.transform = ''; txt.style.opacity = '';
-    row._flipT = setTimeout(() => { row._flipT = 0; if (keep && !row.classList.contains('expanded')) keep.remove(); row.style.transition = 'none'; row.style.height = ''; row.style.minHeight = ''; row.style.overflow = ''; void row.offsetWidth; row.style.transition = ''; art.style.transition = ''; txt.style.transition = ''; fadeSync(); }, 340);
-    return r1.height - r0.height;
+    const r1 = row.getBoundingClientRect(), dh = r1.height - r0.height, an = [];   // ct-noanim stays on until the motion ends, so no CSS transition starts
+    const rad = getComputedStyle(row).borderRadius || '0px';
+    if (art && a0) { const a1 = art.getBoundingClientRect();
+      if (a1.width) an.push(art.animate([{ transformOrigin: '0 0', transform: 'translate(' + ((a0.left - r0.left) - (a1.left - r1.left)) + 'px,' + ((a0.top - r0.top) - (a1.top - r1.top)) + 'px) scale(' + (a0.width / a1.width) + ')' }, { transformOrigin: '0 0', transform: 'none' }], { duration: FLIP_MS, easing: FLIP_EASE })); }
+    if (opening && dh > 0) {
+      an.push(row.animate([{ clipPath: 'inset(0 0 ' + dh + 'px 0 round ' + rad + ')' }, { clipPath: 'inset(0 0 0 0 round ' + rad + ')' }], { duration: FLIP_MS, easing: FLIP_EASE }));
+      const txt = row.querySelector('.ct-expanded-right'); if (txt) an.push(txt.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' }));
+      const acts = row.querySelector('.ct-open-actions'); if (acts) an.push(acts.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 240, delay: 60, easing: FLIP_EASE, fill: 'backwards' }));
+    }
+    if (ghost && dh < 0) {
+      ghost.style.clipPath = 'inset(' + r1.height + 'px 0 0 0)';   // only the part below the closed entry shows, from the very first frame
+      list.insertBefore(ghost, row.nextSibling); row._ghost = ghost;
+      const g = ghost.animate([{ opacity: 1, clipPath: 'inset(' + r1.height + 'px 0 0 0)' }, { opacity: 0, clipPath: 'inset(' + r1.height + 'px 0 0 0)' }], { duration: 200, easing: 'ease-out', fill: 'forwards' });
+      g.onfinish = () => { if (row._ghost === ghost) row._ghost = null; ghost.remove(); }; an.push(g);
+      // the closed entry's text comes in as the art shrinks back, instead of sitting on top of the big art
+      const txt = row.querySelector('.ct-expanded-right'); if (txt) an.push(txt.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, delay: 90, easing: 'ease-out', fill: 'backwards' }));
+    }
+    // the entries below glide to their new places (only those that are or will be on screen)
+    if (dh) below.forEach(([n, t0]) => { const t1 = n.getBoundingClientRect().top, d = t0 - t1; if (!d || (t1 > vh && t0 > vh)) return;
+      an.push(n.animate([{ transform: 'translateY(' + d + 'px)' }, { transform: 'none' }], { duration: FLIP_MS, easing: FLIP_EASE })); });
+    row._anims = an; clearTimeout(row._flipT); row._flipT = setTimeout(() => { row._flipT = 0; row.classList.remove('ct-noanim'); fadeSync(); }, FLIP_MS + 20);
+    return dh;
   }
   function pinList(delta, ms) {
     const l = $('ct-rows'); if (!phone.matches || calm.matches || l._skipPin) return; const now = performance.now();
@@ -267,7 +291,7 @@
         const prow = pb.parentElement, nrow = nb.parentElement, sc = scrollerOf(), y0 = nrow.getBoundingClientRect().top, h0 = list.getBoundingClientRect().height;
         // the list keeps its height until the new entry has opened, so a page near its end can't run out of room and shift
         list.style.minHeight = h0 + 'px'; clearTimeout(list._mhT); list._mhT = setTimeout(() => { list.style.minHeight = ''; }, 420);
-        if (prow._flipT) { clearTimeout(prow._flipT); prow._flipT = 0; }
+        if (prow._flipT) { clearTimeout(prow._flipT); prow._flipT = 0; } (prow._anims || []).forEach(x => x.cancel()); prow._anims = []; if (prow._ghost) { prow._ghost.remove(); prow._ghost = null; }
         prow.classList.add('ct-noanim', 'ct-snap'); ['height', 'minHeight', 'overflow', 'transition'].forEach(k => { prow.style[k] = ''; });
         prow.classList.remove('expanded'); setBtn(pb, false); const bx = prow.querySelector('.ct-open-actions'); if (bx) bx.remove(); const mm = prow.querySelector('.ct-money'); if (mm) mm.remove();
         void prow.offsetWidth; prow.classList.remove('ct-noanim'); requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -276,13 +300,13 @@
           if (nrow.classList.contains('expanded')) fitRow(nrow); }));   // then show the whole entry (starting it earlier would be cut off by the correction)
         quiet(500); const dy = nrow.getBoundingClientRect().top - y0; if (dy) { if (sc) sc.scrollTop += dy; else window.scrollTo(0, window.scrollY + dy); }
         prevIdDone = true; } }
-    if (prevId != null && !prevIdDone) { const btn = list.querySelector('[data-tx="' + prevId + '"]'); if (btn) { const row = btn.parentElement; const box0 = row.querySelector('.ct-open-actions'); pinDelta += flip(row, () => row.classList.remove('expanded'), box0) || 0; setBtn(btn, false); const box = row.querySelector('.ct-open-actions'); if (box) setTimeout(() => { if (!row.classList.contains('expanded')) { box.remove(); const m = row.querySelector('.ct-money'); if (m) m.remove(); } fadeSync(); }, 360); } }
+    if (prevId != null && !prevIdDone) { const btn = list.querySelector('[data-tx="' + prevId + '"]'); if (btn) { const row = btn.parentElement; const box0 = row.querySelector('.ct-open-actions'); pinDelta += flip(row, () => { row.classList.remove('expanded'); setBtn(btn, false); if (box0) box0.remove(); const m0 = row.querySelector('.ct-money'); if (m0) m0.remove(); }) || 0; const box = row.querySelector('.ct-open-actions'); if (box) setTimeout(() => { if (!row.classList.contains('expanded')) { box.remove(); const m = row.querySelector('.ct-money'); if (m) m.remove(); } fadeSync(); }, 360); } }
     if (expanded != null) {
       const btn = list.querySelector('[data-tx="' + id + '"]'), t = S.get(id); if (!btn || !t) return;
       const row = btn.parentElement; const old = row.querySelector('.ct-open-actions'); if (old) old.remove();
       row.insertAdjacentHTML('beforeend', detailsHtml(t));
       { const er = row.querySelector('.ct-expanded-right'), om = er.querySelector('.ct-money'); if (om) om.remove(); er.insertAdjacentHTML('beforeend', moneyHtml(t)); }
-      pinDelta += flip(row, () => row.classList.add('expanded')) || 0; setBtn(btn, true); fullArt(btn.querySelector('img.ct-card-art,.ct-slab-art img'));
+      pinDelta += flip(row, () => { row.classList.add('expanded'); setBtn(btn, true); }) || 0; fullArt(btn.querySelector('img.ct-card-art,.ct-slab-art img'));
       if (!prevIdDone) fitRow(row);
     }
     pinList(pinDelta, 360);
