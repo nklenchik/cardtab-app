@@ -61,7 +61,7 @@
   function cta() { const g = $('pm-go'), pms = $('pms'), fine = pms && pms.querySelector('.pmfine'); if (!g) return;
     g.disabled = closed(); g.classList.toggle('pm-soon', closed());
     g.textContent = closed() ? 'Premium opens ' + (status.opens || 'soon') : 'Continue · ' + dollars(priceOf(pick)) + (pick === 'year' ? ' a year' : ' a month');
-    if (fine) fine.textContent = closed() ? 'Sign up before Jan 1 to lock in founders pricing.' : 'Renews automatically. Cancel anytime in Settings.'; }
+    if (fine) fine.textContent = closed() ? (offer() ? 'You’re in early, so the founders price is yours. Upgrade by Jan 31.' : 'Premium isn’t open yet.') : 'Renews automatically. Cancel anytime in Settings.'; }
   // the sheet lives in the Card Board files, which load later: paint the picker whenever it opens
   new MutationObserver(() => { const pms = $('pms'); if (pms && pms.open && !pms._ctPlans) { pms._ctPlans = true; pick = 'year'; planPicker(); if (!status) load().then(planPicker); }
     if (pms && !pms.open) pms._ctPlans = false; }).observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ['open'] });
