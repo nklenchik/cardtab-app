@@ -590,3 +590,9 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 ## v50.75: Share Card Board is a phone bottom sheet (2026-11-09; v50.76 uses the same plain dark backdrop as Ask, no blur)
 - On phones the Share window was a full-height floating card with 16px side gaps. It's now the same bottom sheet as Ask (full width, grab handle, rises from the bottom, same dark backdrop, 90% height, title and "See what they'll see" pinned). Desktop is unchanged.
 - CSS only, appended to board/board.css under `#shd` (max-width 760px). Version bumped to 50.75 (index.html, share.html, board-loader.js).
+
+## v50.77: entries list scrolls on, no "Show earlier months" button (2026-11-09)
+- The list draws the newest 18 entries (list and grid, phone and desktop), then adds 15 more just before you reach the end (IntersectionObserver on a `.ct-more` sentinel, about 1100px of lead). Constants FIRST/STEP at the top of dash.js.
+- Month headers keep their full counts; the torn edge (`ct-last`) only goes on a month's real last entry, so partial months look right at the cut.
+- Changing period, type, platform, search, sort or view starts again at 18; an open entry always stays drawn; import/clear/sample reset it.
+- Checked with 150 entries on phone and desktop: position doesn't jump when entries are added (row moves exactly by the scroll distance) and an open entry stays open. The old button code and `showEarlier` are gone from dash.js; the `.ct-earlier*` CSS is now unused (clean up later).

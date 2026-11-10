@@ -41,7 +41,9 @@
   const premium = () => S.plan() === 'premium';
 
   // ---------- view state (filters remembered per browser) ----------
-  let type = 'all', view = 'monthly', selected = null, expanded = null, showEarlier = false, justAdded = null;
+  let type = 'all', view = 'monthly', selected = null, expanded = null, justAdded = null;
+  // The list draws the newest entries first (FIRST), then adds STEP more just before you reach the bottom, so it scrolls on without a button
+  const FIRST = 18, STEP = 15; let shown = FIRST, listSig = '', moreIO = null, moreCtx = null;
   const pref = {
     get(k, d) { try { return localStorage.getItem('ct.f.' + k) || d; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem('ct.f.' + k, v); } catch (e) {} }
@@ -348,8 +350,7 @@
   // phones: dragging the sheet down is handled for every sheet in js/sheetdrag.js
   S.on(() => { if (gp.open) paintGP(); });
 
-  // Older months behind "Show ..." aren't built until you open them, so the page stays light (sheets open faster, filters redraw faster)
-  let earlierHTML = '';
+  // Older entries aren't built until you scroll toward them, so the page stays light (sheets open faster, filters redraw faster)
   function render() {
     dates();
     const all = S.all(), empty = !all.length;
@@ -370,38 +371,52 @@
     $('ct-rows').classList.toggle('ct-onemonth', oneMonth);
     $('ct-rows').classList.toggle('ct-gal', gal); $('ct-rows').classList.toggle('gs-s', gal && gsz === 's'); $('ct-rows').classList.toggle('gs-l', gal && gsz === 'l');
     $('ct-count').innerHTML = esc(q ? 'All months' : periodLabel(period)) + ' · ' + nw(rows.length + (rows.length === 1 ? ' entry' : ' entries')) + (listFiltered ? ' · ' + nw('Spent ' + money(ft.spent)) + ' · ' + nw('Profit ' + money(ft.profit)) : '');
-    // Phones: newest entries stay visible (this month's, never fewer than three); older months tuck behind a "Show ..." button
-    const cur = t => t.date.startsWith(D.monthPrefix);
-    const keepN = Math.max(3, rows.filter(cur).length);
-    const collapse = !gal && phone.matches && period === 'all' && sort === 'new' && rows.length > keepN && !listFiltered;
-    const earlier = [...new Set(rows.slice(keepN).map(t => t.date.slice(0, 7)))].map(k => ymLabel(k, { month: 'long' })).filter((v, i, a) => a.indexOf(v) === i);
-    const earlierNames = earlier.length > 3 ? 'earlier months' : earlier.length < 2 ? earlier.join('') : earlier.slice(0, -1).join(', ') + ' and ' + earlier[earlier.length - 1];
+    const sg = [period, type, platform, q, sort, gal].join('|'); if (sg !== listSig) { listSig = sg; shown = FIRST; }
+    if (expanded != null) { const ix = rows.findIndex(t => t.id === expanded); if (ix >= shown) shown = ix + 1; }
     const perMonth = {}; rows.forEach(t => { const k = t.date.slice(0, 7); perMonth[k] = (perMonth[k] || 0) + 1; });
-    let marked = false; const chunks = []; let current = '', lastRow = -1;
-    // The last row of each month gets a class here (the torn receipt edge), so the browser never has to search for it
-    const endGroup = () => { if (lastRow > -1) { chunks[lastRow] = chunks[lastRow].replace('<div class="ct-row ', '<div class="ct-row ct-last '); lastRow = -1; } };
     if (expanded && !rows.some(t => t.id === expanded)) expanded = null;
-    rows.forEach((t, i) => {
-      const k = t.date.slice(0, 7), m = ymLabel(k, { month: 'long', year: 'numeric' });
-      if (collapse && !marked && i >= keepN) { endGroup(); marked = true; chunks.push('\u0000'); current = ''; }
-      if (sort !== 'high' && !oneMonth && m !== current) { endGroup(); current = m; chunks.push('<div class="ct-month">' + m + ' <span>' + perMonth[k] + (perMonth[k] === 1 ? ' entry' : ' entries') + '</span></div>'); }
-      if (gal) { chunks.push(tileHtml(t)); return; }
-      const open = expanded === t.id, badge = t.type === 'sale' ? 'Sale' : t.type === 'refund' ? 'Refund' : 'Purchase';
-      const after = t.type === 'sale' ? ' &nbsp; After fees <em>' + money(t.net) + '</em>' : '';
-      const verb = t.type === 'sale' ? 'Sold' : t.type === 'refund' ? 'Refunded to buyer' : 'Paid';
-      chunks.push('<div class="ct-row ' + (open ? 'expanded' : '') + (t.id === justAdded ? ' ct-new' : '') + '"><button type="button" class="ct-row-toggle" data-tx="' + t.id + '" aria-expanded="' + open + '" aria-label="' + (open ? 'Collapse' : 'Expand') + ' ' + esc(t.name) + '">' + artHtml(t, open) + '<div class="ct-expanded-right"><div class="ct-row-meta">' + shortDate(t.date) + (t.platform ? ' · ' + esc(t.platform) : '') + '</div>' + (pillOf(t) ? '<div class="ct-row-name ct-rn-g"><span class="ct-rn">' + esc(nmOf(t)) + (t.qty > 1 ? ' ×' + t.qty : '') + '</span> ' + pillOf(t) + '</div>' : '<div class="ct-row-name">' + esc(t.name) + (t.qty > 1 ? ' ×' + t.qty : '') + '</div>') + '<div class="ct-row-bottom">' + verb + ' <strong>' + money(t.amount) + '</strong>' + after + '</div>' +
-        // desktop: one quiet line under the name (type, platform, date) and the money on the right edge
-        '<div class="ct-row-line"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span>' + badge + ' · ' + (t.platform ? esc(t.platform) + ' · ' : '') + niceDate(t.date) + '</div>' + (open ? moneyHtml(t) : '') + '</div>' +
-        '<span class="ct-row-amt ' + t.type + '"><strong>' + amtText(t) + '</strong><small>' + (t.type === 'sale' ? money(t.net) + ' after fees' : t.type === 'refund' ? 'Refunded' : 'Paid') + '</small></span><span class="ct-tag ' + t.type + '">' + badge + '</span><span class="ct-row-chevron" aria-hidden="true">' + (open ? '−' : '+') + '</span></button>' + (open ? detailsHtml(t) : '') + '</div>');
-      lastRow = chunks.length - 1;
-    });
-    endGroup();
+    const heads = sort !== 'high' && !oneMonth;
+    // Rows from..to-1 as HTML. The last row of each month gets a class (the torn receipt edge), so the browser never has to search for it.
+    const build = (from, to) => {
+      let out = '';
+      for (let i = from; i < to; i++) {
+        const t = rows[i], k = t.date.slice(0, 7);
+        if (heads && (i === 0 || rows[i - 1].date.slice(0, 7) !== k)) out += '<div class="ct-month">' + ymLabel(k, { month: 'long', year: 'numeric' }) + ' <span>' + perMonth[k] + (perMonth[k] === 1 ? ' entry' : ' entries') + '</span></div>';
+        if (gal) { out += tileHtml(t); continue; }
+        const last = i === rows.length - 1 || (heads && rows[i + 1].date.slice(0, 7) !== k);
+        const open = expanded === t.id, badge = t.type === 'sale' ? 'Sale' : t.type === 'refund' ? 'Refund' : 'Purchase';
+        const after = t.type === 'sale' ? ' &nbsp; After fees <em>' + money(t.net) + '</em>' : '';
+        const verb = t.type === 'sale' ? 'Sold' : t.type === 'refund' ? 'Refunded to buyer' : 'Paid';
+        out += '<div class="ct-row ' + (last ? 'ct-last ' : '') + (open ? 'expanded' : '') + (t.id === justAdded ? ' ct-new' : '') + '"><button type="button" class="ct-row-toggle" data-tx="' + t.id + '" aria-expanded="' + open + '" aria-label="' + (open ? 'Collapse' : 'Expand') + ' ' + esc(t.name) + '">' + artHtml(t, open) + '<div class="ct-expanded-right"><div class="ct-row-meta">' + shortDate(t.date) + (t.platform ? ' · ' + esc(t.platform) : '') + '</div>' + (pillOf(t) ? '<div class="ct-row-name ct-rn-g"><span class="ct-rn">' + esc(nmOf(t)) + (t.qty > 1 ? ' ×' + t.qty : '') + '</span> ' + pillOf(t) + '</div>' : '<div class="ct-row-name">' + esc(t.name) + (t.qty > 1 ? ' ×' + t.qty : '') + '</div>') + '<div class="ct-row-bottom">' + verb + ' <strong>' + money(t.amount) + '</strong>' + after + '</div>' +
+          // desktop: one quiet line under the name (type, platform, date) and the money on the right edge
+          '<div class="ct-row-line"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span>' + badge + ' · ' + (t.platform ? esc(t.platform) + ' · ' : '') + niceDate(t.date) + '</div>' + (open ? moneyHtml(t) : '') + '</div>' +
+          '<span class="ct-row-amt ' + t.type + '"><strong>' + amtText(t) + '</strong><small>' + (t.type === 'sale' ? money(t.net) + ' after fees' : t.type === 'refund' ? 'Refunded' : 'Paid') + '</small></span><span class="ct-tag ' + t.type + '">' + badge + '</span><span class="ct-row-chevron" aria-hidden="true">' + (open ? '−' : '+') + '</span></button>' + (open ? detailsHtml(t) : '') + '</div>';
+      }
+      return out;
+    };
     justAdded = null;
-    let html = chunks.join('');
-    if (collapse) { const parts = html.split('\u0000'); html = parts[0] + '<button type="button" class="ct-earlier-btn" aria-expanded="' + showEarlier + '" data-names="' + esc(earlierNames) + '"><span>' + (showEarlier ? 'Hide ' : 'Show ') + esc(earlierNames) + '</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><div class="ct-earlier' + (showEarlier ? ' open' : '') + '"' + (showEarlier ? '' : ' inert') + '><div>' + (showEarlier ? parts[1] : '') + '</div></div>'; earlierHTML = parts[1]; } else earlierHTML = '';
+    moreCtx = { rows, build };
+    const html = build(0, Math.min(shown, rows.length)) + (shown < rows.length ? '<div class="ct-more" aria-hidden="true"></div>' : '');
     const list = $('ct-rows'), keepScroll = list.scrollTop;
     list.innerHTML = html || (oneMonth && !listFiltered ? '<div class="ct-empty ct-empty-month"><p>No entries in ' + esc(ymLabel(monthOf(period), { month: 'long' })) + ' yet.</p>' + (monthOf(period) === D.monthPrefix ? '<button type="button" data-empty-add>+ Add New</button>' : '') + '</div>' : '<div class="ct-empty"><p>No entries match.</p><button type="button" data-clear-filters>Clear filters</button></div>');
     list.scrollTop = keepScroll;
+    watchMore(list);
+    fadeSync();
+  }
+  // Adds the next STEP entries once the end of the list is within about a screen and a half of the view
+  function watchMore(list) {
+    if (moreIO) { moreIO.disconnect(); moreIO = null; }
+    const sent = list.querySelector('.ct-more'); if (!sent || !('IntersectionObserver' in window)) { if (sent) loadMore(true); return; }
+    const own = list.scrollHeight > list.clientHeight + 1 && /(auto|scroll)/.test(getComputedStyle(list).overflowY);
+    moreIO = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) loadMore(); }, { root: own ? list : null, rootMargin: '0px 0px 1100px 0px' });
+    moreIO.observe(sent);
+  }
+  function loadMore(all) {
+    const list = $('ct-rows'), sent = list.querySelector('.ct-more'); if (!sent || !moreCtx) return;
+    const from = shown; shown = all ? moreCtx.rows.length : Math.min(moreCtx.rows.length, shown + STEP);
+    sent.insertAdjacentHTML('beforebegin', moreCtx.build(from, shown));
+    if (shown >= moreCtx.rows.length) { sent.remove(); if (moreIO) { moreIO.disconnect(); moreIO = null; } }
+    else if (moreIO) { moreIO.unobserve(sent); moreIO.observe(sent); }   // still near the end: check again
     fadeSync();
   }
 
@@ -417,17 +432,6 @@
   }
   // One listener for everything in the list (rows are redrawn often)
   $('ct-rows').addEventListener('click', async e => {
-    const eb = e.target.closest('.ct-earlier-btn');
-    if (eb) {
-      const list = $('ct-rows'), box = list.querySelector('.ct-earlier'), opening = !showEarlier;
-      if (opening && box.firstElementChild && !box.firstElementChild.firstChild) box.firstElementChild.innerHTML = earlierHTML;
-      clearTimeout(box._empty); if (!opening) box._empty = setTimeout(() => { if (!showEarlier && box.isConnected && box.firstElementChild) box.firstElementChild.innerHTML = ''; }, 520);
-      const inner = box.firstElementChild ? box.firstElementChild.scrollHeight : 0; pinList(opening ? inner : -inner, 420);
-      showEarlier = opening; box.classList.toggle('open', opening); box.toggleAttribute('inert', !opening);
-      eb.setAttribute('aria-expanded', String(opening)); eb.querySelector('span').textContent = (opening ? 'Hide ' : 'Show ') + eb.dataset.names;
-      if (!opening && expanded != null && box.querySelector('[data-tx="' + expanded + '"]')) { list._skipPin = true; toggle(expanded); list._skipPin = false; }
-      return;
-    }
     if (e.target.closest('[data-empty-add]')) { $('ct-add').click(); return; }
     if (e.target.closest('[data-clear-filters]')) { clearFilters(); return; }
     const act = e.target.closest('[data-act]');
@@ -599,7 +603,7 @@
   // ---------- import (Premium) ----------
   function openImport() {
     if (!premium()) { toast('Import is part of Premium. Upgrading opens at launch.'); return; }
-    window.CTImportUI.open((n, file) => { expanded = null; showEarlier = false; render(); toast('Imported ' + n + (n === 1 ? ' entry' : ' entries') + (file ? ' from ' + file : ''), { undo: true }); });
+    window.CTImportUI.open((n, file) => { expanded = null; shown = FIRST; render(); toast('Imported ' + n + (n === 1 ? ' entry' : ' entries') + (file ? ' from ' + file : ''), { undo: true }); });
   }
 
   // ---------- export ----------
@@ -654,7 +658,7 @@
     off = S.on(reason => {
       if (reason === 'plan') { selected = null; }
       if (reason === 'open' || reason === 'sync' || reason === 'plan' || reason === 'remote' || reason === 'meta') applyStart();
-      if (reason === 'clear' || reason === 'sample' || reason === 'remote') { expanded = null; showEarlier = false; }
+      if (reason === 'clear' || reason === 'sample' || reason === 'remote') { expanded = null; shown = FIRST; }
       render();
     });
     render();
