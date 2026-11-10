@@ -507,9 +507,15 @@
         '<button type="button" class="fb-fdone">Done</button>';
     }
     const dot = () => { const on = typeNow() === 'refund' || plat.value !== 'all' || sortSel.value !== 'new'; btn.querySelector('.fb-dot').hidden = !on; btn.setAttribute('aria-label', on ? 'Filters (some are on)' : 'Filters'); };
+    // the card sits under the row and stops above the bottom bar (it scrolls inside if the screen is short)
+    const barTop = () => { const tb = document.getElementById('ct-tbar'); return tb && tb.offsetParent ? tb.getBoundingClientRect().top : innerHeight; };
+    const headBottom = () => { const hd = document.querySelector('.sh-in'); return Math.max(0, hd ? hd.getBoundingClientRect().bottom : 0); };
     function place() { const r = btn.getBoundingClientRect(), w = Math.min(380, innerWidth - 24); card.style.width = w + 'px'; card.style.left = Math.max(12, Math.min(r.right - w, innerWidth - w - 12)) + 'px';
-      const top = r.bottom + 8, room = innerHeight - top - 12; card.style.top = top + 'px'; card.style.maxHeight = Math.max(240, room) + 'px'; }
-    function open() { paint(); card.classList.remove('out'); card.hidden = false; place(); card.classList.add('anim'); clearTimeout(card._at); card._at = setTimeout(() => card.classList.remove('anim'), 420); btn.setAttribute('aria-expanded', 'true'); const b = card.querySelector('[aria-pressed="true"]'); if (b) b.focus({ preventScroll: true }); }
+      const top = Math.max(headBottom() + 8, r.bottom + 8); card.style.top = top + 'px'; card.style.maxHeight = Math.max(200, Math.min(innerHeight, barTop()) - top - 12) + 'px'; }
+    // opening brings the row up under the header first, so the whole card fits; the card follows the scroll
+    function lift() { const r = m.getBoundingClientRect(), dy = r.top - (headBottom() + 10); if (dy > 4) { quiet(900); scrollBy({ top: dy, behavior: calm.matches ? 'auto' : 'smooth' }); } }
+    let raf = 0; addEventListener('scroll', () => { if (card.hidden || raf) return; raf = requestAnimationFrame(() => { raf = 0; place(); }); }, { passive: true });
+    function open() { paint(); lift(); card.classList.remove('out'); card.hidden = false; place(); card.classList.add('anim'); clearTimeout(card._at); card._at = setTimeout(() => card.classList.remove('anim'), 420); btn.setAttribute('aria-expanded', 'true'); const b = card.querySelector('[aria-pressed="true"]'); if (b) b.focus({ preventScroll: true }); }
     function close(focus) { if (card.hidden || card.classList.contains('out')) return; btn.setAttribute('aria-expanded', 'false'); if (calm.matches) card.hidden = true; else { card.classList.add('out'); setTimeout(() => { card.hidden = true; card.classList.remove('out'); }, 140); } if (focus) btn.focus({ preventScroll: true }); }
     btn.addEventListener('click', e => { e.stopPropagation(); (card.hidden || card.classList.contains('out')) ? open() : close(); });
     card.addEventListener('click', e => {

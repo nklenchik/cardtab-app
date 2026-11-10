@@ -2251,7 +2251,7 @@ html[data-theme="dark"] :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdr
 .fb-fo button{height:36px;padding:0 13px;border-radius:99px;border:1px solid var(--s-hair);background:transparent;font:inherit;font-size:14px;font-weight:700;color:var(--ct-text);cursor:pointer}
 .fb-fo button em{font-style:normal;opacity:.55;margin-left:4px}
 .fb-fo button[aria-pressed="true"]{background:var(--ct-text);color:var(--s-card);border-color:transparent}
-.fb-fdone{display:block;width:100%;margin-top:16px;height:46px;border:0;border-radius:14px;background:var(--s-brand);color:#fff;font:inherit;font-size:15px;font-weight:800;cursor:pointer}
+.fb-fdone{position:sticky;bottom:0;box-shadow:0 -10px 14px -4px var(--s-card);display:block;width:100%;margin-top:16px;height:46px;border:0;border-radius:14px;background:var(--s-brand);color:#fff;font:inherit;font-size:15px;font-weight:800;cursor:pointer}
 .fb-fx{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:1px solid var(--s-hair);background:transparent;color:var(--ct-muted);font-size:18px;line-height:1;cursor:pointer}
 @media(max-width:760px){
  .ct-fbar>.fb-chips,.ct-fbar>.fb-dds,.ct-fbar>.fb-view{display:none!important}
