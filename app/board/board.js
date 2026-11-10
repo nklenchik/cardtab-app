@@ -1342,9 +1342,10 @@ window.CTPremiumStats=()=>Object.entries(st.n).map(([id,n])=>({id,headline:(HEAD
 // (After the Cloudflare move the art service makes artwork-only copies for every free user's top 3 purchases, so this fallback fades out.)
 const cardKey=e=>(e.name||'')+'|'+(e.no||'')+'|'+(e.set||'');
 function pick(rows){const best=new Map();rows.forEach(e=>{const a=e.art;if(!a||!(a.wall||a.detail))return;const k=cardKey(e),per=(e.amount||0)/Math.max(1,e.qty||1);const o=best.get(k);if(!o||per>o.per)best.set(k,{e,per})});
-  return [...best.values()].sort((x,y)=>y.per-x.per).slice(0,3).map(({e})=>{const a=e.art,f=Array.isArray(a.focus)?{x:a.focus[0]/100,y:a.focus[1]/100}:a.focus;
+  return [...best.values()].sort((x,y)=>y.per-x.per).slice(0,6).map(({e})=>{const a=e.art,f=Array.isArray(a.focus)?{x:a.focus[0]/100,y:a.focus[1]/100}:a.focus;
     return a.wall?{src:a.wall,focus:f}:{src:a.detail,card:true}})}
-function artList(){const rows=E||[];let out=pick(rows.filter(e=>e.type==='purchase'));if(!out.length)out=pick(rows.filter(e=>e.type==='sale'));
+// v50.99: up to 6 cards: the priciest buys, topped up with the priciest sales
+function artList(){const rows=E||[];let out=pick(rows.filter(e=>e.type==='purchase'));if(out.length<6){const have=new Set(out.map(a=>a.src));out=out.concat(pick(rows.filter(e=>e.type==='sale')).filter(a=>!have.has(a.src))).slice(0,6)}
   return out.length?out:(window.CTPremiumArt||[]).slice()}
 let shownId=null;
 function openPm(ctx){
@@ -1355,7 +1356,8 @@ function openPm(ctx){
   if(window.CTPremCopy){try{const r=CTPremCopy.fill(ctx);if(r)shownId=r.head}catch(e){}}
   bump(shownId,'v');
   const list=artList(),hero=$('pm-art');
-  if(list.length){const a=list[st.a%list.length];st.a=(st.a+1)%420;saveSt();
+  // v50.99: shuffled, never the same card twice in a row
+  if(list.length){let i=Math.floor(Math.random()*list.length);if(list.length>1&&list[i].src===st.as)i=(i+1+Math.floor(Math.random()*(list.length-1)))%list.length;const a=list[i];st.as=a.src;saveSt();
     const fy=a.focus&&a.focus.y!=null?Math.round(a.focus.y*100)+'%':'24%',fx=a.focus&&a.focus.x!=null?Math.round(a.focus.x*100)+'%':'50%';
     hero.style.backgroundImage='url("'+new URL(a.src,document.baseURI).href.replace(/"/g,'%22')+'")';
     // a whole card: zoom past the frame and name strip so only the artwork window fills the header
