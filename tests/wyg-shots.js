@@ -16,7 +16,7 @@ const WYG = () => { const now = new Date(), Y = now.getFullYear(), M = now.getMo
     sale(0, 3, 'umb', 1520, 182, 6, psa), sale(0, 5, 'elsa', 395, 51.4, 4.2, { platform: 'TCGplayer' }), sale(0, 7, 'bew', 132, 17.2, 1.27, { platform: 'TCGplayer' }),
     e(1, 12, 'purchase', 'ray', 310, { platform: 'TCGplayer' }), sale(1, 22, 'lug', 219, 28.5, 4.2), sale(1, 26, 'she', 79, 10.3, 1.27, { platform: 'TCGplayer' }),
     e(2, 8, 'purchase', 'lug', 145), e(2, 15, 'purchase', 'bew', 88, { platform: 'Card Show', condition: 'Lightly Played' }),
-    e(3, 20, 'purchase', 'umb', 980, Object.assign({ platform: 'PWCC' }, psa)), e(3, 4, 'purchase', 'she', 62, { platform: 'TCGplayer' }), e(4, 9, 'purchase', 'elsa', 240, { platform: 'TCGplayer' })
+    e(3, 20, 'purchase', 'umb', 980, Object.assign({ platform: 'Fanatics' }, psa)), e(3, 4, 'purchase', 'she', 62, { platform: 'TCGplayer' }), e(4, 9, 'purchase', 'elsa', 240, { platform: 'TCGplayer' })
   ]; };
 (async () => { const b = await chromium.launch();
   const route = p => p.route('**/x-wyg/*', r => r.fulfill({ path: ART + r.request().url().split('/x-wyg/')[1].split('?')[0], contentType: 'image/webp' }));

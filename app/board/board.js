@@ -355,7 +355,7 @@ function drawCv(el,sp){{const W=Math.floor(el.clientWidth),H=Math.floor(el.clien
     bindTip(rc,bar||rc,()=>sp.tip(i));if(sp.ent)rc.addEventListener('click',e=>{if(!canDrill())return;e.stopPropagation();openEntries(sp.ent(i))})})}}
 function spark(vals){const n=vals.length;if(n<2)return '';const mx=Math.max(...vals),mn=Math.min(0,...vals),r=(mx-mn)||1;const pts=vals.map((v,i)=>[(i/(n-1)*100).toFixed(1),(28-((v-mn)/r)*26).toFixed(1)]);
   return '<svg class="spk" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><path d="M'+pts.map(p=>p.join(' ')).join('L')+'" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
-const CHIP={eBay:['--cb-crbg','--cb-cr'],TCGplayer:['--cb-blbg','--cb-bl']};
+const CHIP={eBay:['--cb-crbg','--cb-cr'],TCGplayer:['--cb-blbg','--cb-bl'],Fanatics:['--cb-fnbg','--cb-fn']};   // Fanatics (formerly PWCC): a mid gray, since its own logo is black
 const chip=p=>{const c=CHIP[p]||['--cb-inkbg','--cb-ink'];return '<span class="ch" style="background:var('+c[0]+');color:var('+c[1]+')">'+esc(p[0])+'</span>'};
 const segCol=p=>CHIP[p]?'var('+CHIP[p][1]+')':'var(--cb-gry)';
 // one bar split by share: the top two platforms, then everything else as "Other"
