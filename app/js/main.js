@@ -172,7 +172,7 @@
       setTimeout(() => { delete menu.dataset.closing; menu.classList.remove('am-out'); reallyClose(focus, fromPop); }, 140); return; }
     reallyClose(focus, fromPop);
   }
-  function reallyClose(focus, fromPop) { if (menu.hidden) return; menu.hidden = true; bd.hidden = true; document.documentElement.classList.remove('am-lock'); if (!fromPop) window.CTNav.done('menu'); av.setAttribute('aria-expanded', 'false'); if (focus) av.focus(); }
+  function reallyClose(focus, fromPop) { if (menu.hidden) return; menu.hidden = true; menu.style.removeProperty('animation'); menu.style.removeProperty('transition'); menu.style.transform = ''; bd.style.opacity = ''; bd.hidden = true; document.documentElement.classList.remove('am-lock'); if (!fromPop) window.CTNav.done('menu'); av.setAttribute('aria-expanded', 'false'); if (focus) av.focus(); }
   av.addEventListener('click', e => { e.stopPropagation(); menu.hidden ? openMenu() : closeMenu(); });
   // one profile menu everywhere: Card Board's and Stories' avatars open this same menu
   window.CTMenu = { open: src => { if (menu.hidden) openMenu(src); else closeMenu(); }, close: () => closeMenu(), get open_() { return !menu.hidden; } };

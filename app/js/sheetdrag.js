@@ -37,7 +37,8 @@
         s.drag = s.head || (dy > 0 && top);
         if (!s.drag) { s = null; return; }
         s.y0 = y; s.sheet.getAnimations().forEach(a => { if (a.id === 'ct-drag') a.cancel(); });
-        s.sheet.style.transition = 'none'; s.sheet.style.animation = 'none';
+        // v51.1: 'important', so an opening animation that is itself !important (the profile menu's) can't hold the sheet in place
+        s.sheet.style.setProperty('transition', 'none', 'important'); s.sheet.style.setProperty('animation', 'none', 'important');
       }
       const d = y - s.y0; s.dy = d > 0 ? d : Math.max(-60, d / 3);                 // down 1:1, up with resistance
       set(s.sheet, s.dy); s.pts.push([performance.now(), y]); if (s.pts.length > 6) s.pts.shift();
@@ -55,7 +56,7 @@
           // hidden until the window has really closed, so its own closing animation can't flash it back
           c.sheet.style.visibility = 'hidden'; c.sheet.style.transform = '';
           try { o.dismiss(c.sheet); } catch (er) {}
-          const clear = () => { c.sheet.style.visibility = ''; c.sheet.style.transition = ''; c.sheet.style.animation = ''; if (o.backdrop) o.backdrop.style.opacity = ''; };
+          const clear = () => { c.sheet.style.visibility = ''; c.sheet.style.removeProperty('transition'); c.sheet.style.removeProperty('animation'); if (o.backdrop) o.backdrop.style.opacity = ''; };
           const dlg = c.sheet.closest('dialog'); if (dlg && dlg.open) dlg.addEventListener('close', () => setTimeout(clear, 30), { once: true }); else setTimeout(clear, 400);
         };
         if (calm()) { fin(); return; }
@@ -65,8 +66,11 @@
       }
       // spring back
       const from = c.sheet.style.transform; set(c.sheet, 0);
-      if (from && !calm()) { const an = c.sheet.animate([{ transform: from }, { transform: 'none' }], { duration: 300, easing: EASE_BACK }); an.id = 'ct-drag'; an.onfinish = () => { c.sheet.style.transition = ''; c.sheet.style.animation = ''; }; }
-      else { c.sheet.style.transition = ''; c.sheet.style.animation = ''; }
+      // the opening animation stays off (switching it back on would replay the slide-up); it comes back once the window closes
+      const reset = () => { c.sheet.style.removeProperty('transition'); c.sheet.style.removeProperty('animation'); };
+      const later = () => { const dlg = c.sheet.closest('dialog'); if (dlg) dlg.addEventListener('close', reset, { once: true }); else c.sheet.style.removeProperty('transition'); };
+      if (from && !calm()) { const an = c.sheet.animate([{ transform: from }, { transform: 'none' }], { duration: 300, easing: EASE_BACK }); an.id = 'ct-drag'; an.onfinish = later; }
+      else later();
     };
     zone.addEventListener('touchend', end, { passive: true }); zone.addEventListener('touchcancel', end, { passive: true });
   }
