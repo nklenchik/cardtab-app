@@ -6,3 +6,4 @@ tests/out-desktop/
 tests/out-phone/
 tests/tests/
 tests/out-qa/
+__pycache__/
