@@ -110,22 +110,21 @@
     });
     $('#auth-local').hidden = !LOCAL_MODE;
     // The marketing site links here with ?signup to open on Create account
-    // Phones: when the keyboard opens, scroll the box you're typing in to the upper part of the visible area (above the keyboard),
-    // with the button under it still in view. The page gets room at the bottom for as long as the keyboard is up.
-    { const vv = window.visualViewport, page = document.getElementById('view-auth'); let cur = null, raf = 0;
-      // iPhone Chrome puts its own autofill bar (address + expand arrow) above the keyboard, and the page isn't told its height, so leave room for it
-      const BAR = (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) ? 100 : 0;
-      const kb = () => vv ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0;
-      const reveal = () => { if (!cur || !document.contains(cur) || cur.offsetParent === null) return;
+    // Phones: when you tap the email (or code) box, scroll it to the same spot near the top of what's visible, whichever of Sign in or
+    // Create account you're on. On iPhone Chrome the page area already ends above the keyboard and Chrome's own autofill bar, so the
+    // visible area is simply the visual viewport; the box lands about 60px below its top (Nick's picked spot, from his Sign in screenshot).
+    // Extra room is added at the bottom while a box has focus, so even the taller Create account card can scroll that far.
+    { const vv = window.visualViewport, page = document.getElementById('view-auth'), touch = matchMedia('(pointer:coarse)'); let cur = null, timers = [];
+      const place = () => { if (!cur || !document.contains(cur) || cur.offsetParent === null) return;
         const vh = vv ? vv.height : window.innerHeight, top = vv ? vv.offsetTop : 0, r = cur.getBoundingClientRect();
-        const up = !!document.querySelector('.auth-seg button.on[data-m="up"]'), want = Math.min((vh - BAR) * 0.3, up ? 78 : 120), d = (r.top - top) - want;   // Create account has more under the button (the founders note), so its box sits higher
-        if (Math.abs(d) > 6) window.scrollBy({ top: d, behavior: 'smooth' }); };
-      const sync = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { const k = kb(); page.style.setProperty('--kb', k + 'px'); page.classList.toggle('kb-up', k > 80); if (cur && k > 80) reveal(); }); };
-      page.addEventListener('focusin', e => { if (!e.target.matches('input')) return; cur = e.target; sync(); [250, 500, 800, 1200].forEach(t => setTimeout(() => { if (cur === e.target) sync(); }, t)); });
-      page.addEventListener('focusout', () => { cur = null; setTimeout(sync, 120); });
-      // switching between Sign in and Create account changes the card's height while the keyboard may stay up: place the box again
-      seg.addEventListener('click', () => [60, 350, 700].forEach(t => setTimeout(sync, t)));
-      if (vv) { vv.addEventListener('resize', sync); vv.addEventListener('scroll', sync); } }
+        const d = (r.top - top) - Math.min(60, vh * 0.22);
+        if (Math.abs(d) > 5) window.scrollBy({ top: d, behavior: 'smooth' }); };
+      const run = () => { timers.forEach(clearTimeout); timers = [60, 250, 500, 800, 1200].map(t => setTimeout(place, t)); };
+      page.addEventListener('focusin', e => { if (!touch.matches || !e.target.matches('input')) return; cur = e.target; page.classList.add('kb-up'); run(); });
+      page.addEventListener('focusout', () => { cur = null; setTimeout(() => { if (!cur) page.classList.remove('kb-up'); }, 150); });
+      // the card changes height when you switch between Sign in and Create account: place the box again if one is focused
+      seg.addEventListener('click', () => { if (cur) run(); });
+      if (vv) { vv.addEventListener('resize', () => { if (cur) run(); }); } }
     const qs = new URLSearchParams(location.search);
     setMode(qs.has('signup') || qs.get('mode') === 'signup' ? 'up' : 'in');
     return { reset() { email.value = ''; card.classList.remove('sent'); clearInterval(againT); setMode('in'); }, error(t) { card.classList.remove('sent'); showErr(t); } };

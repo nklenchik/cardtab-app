@@ -608,3 +608,8 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 
 ## v50.80: Create account box sits higher (2026-11-09)
 - With the keyboard up, the Create account box now sits about 78px from the top of the visible area (Sign in stays at 120px), because that card has more under the button. Simulated iPhone: box 78px, button bottom 189px, founders note bottom 304px, all above the 408px of visible space (keyboard and Chrome's bar leave that much).
+
+## v50.81: sign-in box lands in the same spot on Sign in and Create account (2026-11-09)
+- Nick's real iPhone screenshots showed the page area already ends above the keyboard and Chrome's own autofill bar (the layout shrinks, so the old "keyboard height" check never ran). Sign in landed well (box about 60pt below the top of the visible area, button and text under it in view); Create account stayed far lower (box cut off by the bar).
+- auth.js now does not try to measure the keyboard. On a touch device, when a box (email or code) gets focus it scrolls that box to about 60px below the top of the visible area (or 22% of it if the area is tiny), re-checking at 60/250/500/800/1200ms and when switching tabs. `.auth.kb-up` adds 320px of room at the bottom while a box has focus so the taller Create account card can scroll that far.
+- Simulated by shrinking the page to 330px high (like iPhone Chrome with keyboard): direct, tab-switched, and ?signup all put the box at 60px with the button visible.
