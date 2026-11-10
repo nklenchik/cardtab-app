@@ -59,7 +59,7 @@
   setInterval(() => { sendJourney(); try { const u = S() && S().usage && S().usage(); if (u && u.blocked && !limitSent) { limitSent = true; ev('limit', 'entries'); } } catch (e) {} }, 5000);
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-upgrade],[data-act=premium]'); if (!b) return;
     let ctx = 'upgrade button'; try { const u = S() && S().usage && S().usage(); if (/all time/i.test(b.textContent)) ctx = 'all time'; else if (b.closest('[data-act]') || b.dataset.act) ctx = 'tip'; else if (u && u.blocked) ctx = 'entries used up'; else if (u && u.left != null && u.left <= 5) ctx = 'entries nearly used'; } catch (er) {}
-    CTTrack.prem(ctx); }, true);
+    lastPrem = ctx; }, true);   // v50.96: the Premium sheet it opens counts the open (with this as where it came from)
   // longer ranges (All time and This year are Premium) and exports
   document.addEventListener('change', e => { const t = e.target; if (!t || !window.CTMonth) return; try { const v = String(t.value || ''); if (v === 'all') ev('range', 'all time'); else if (/^year/.test(v)) ev('range', 'year'); } catch (er) {} }, true);
 

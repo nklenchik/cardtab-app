@@ -49,7 +49,7 @@
     stories: [10, 11, 12, 13, 14, 1, 2, 3, 6, 15, 16]
   };
   // what was tapped -> the bullet that always shows
-  const MUST = { 'locked theme': 11, 'locked background': 13, 'locked story': 12, video: 12, stories: 14, range: 3, 'all time': 2, ask: 5, layouts: 8, export: 9, share: 9, import: 4, 'entries used up': 1, limit: 1 };
+  const MUST = { 'locked theme': 11, 'locked background': 13, 'locked story': 12, video: 12, stories: 14, range: 3, 'all time': 2, ask: 5, layouts: 8, export: 9, share: 9, import: 4, 'entries used up': 1, 'entries nearly used': 1, limit: 1 };
   const STORIES_CTX = /^(locked theme|locked background|locked story|stories|video)$/;
   const pageNow = () => { const x = document.getElementById('csx'); if (x && x.classList.contains('in')) return 'stories'; const c = document.querySelector('.cbx'); if (c && !c.classList.contains('off') && !c.classList.contains('pmonly')) return 'board'; return 'entries'; };
   const rnd = n => Math.floor(Math.random() * n);

@@ -68,7 +68,11 @@
     box.appendChild(t); toastEl = t;
     toastT = setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 220); if (toastEl === t) toastEl = null; }, opts.undo ? 6000 : 2800);
   }
-  const upgradeNote = () => toast('Upgrading opens at launch. For now, switch plans under Testing tools in the account menu.');
+  // v50.96: every Upgrade button on the entries screen (the entry limit, All time, the banner, tips) opens the Premium sheet
+  const upgradeNote = () => {
+    const ctx = (window.CTTrack && window.CTTrack.premCtx) || 'upgrade button', go = () => window.CTPremiumOpen && window.CTPremiumOpen(ctx);
+    if (window.CTPremiumOpen) go(); else if (window.CTBoardLoader) window.CTBoardLoader.load().then(() => setTimeout(go, 60)); else toast('Premium is coming soon.');
+  };
 
   // ---------- data shaping (all in cents) ----------
   function tileScope() { const all = S.all(); return premium() ? all.filter(t => inPeriod(t, $('ct-period').value)) : all.filter(t => t.date.startsWith(monthOf($('ct-period').value) || D.monthPrefix)); }
