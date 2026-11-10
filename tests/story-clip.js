@@ -27,7 +27,7 @@ const SHOW = () => { const now = new Date(), Y = now.getFullYear(), M = now.getM
  const OUTD = '/tmp/claude-0/-home-claude/0d23d6a4-0497-5286-ae54-9e35a72a5811/scratchpad/sitepv/';
  const p = await b.newPage({ ...devices['iPhone 13'], viewport: { width: 360, height: 640 }, deviceScaleFactor: 1 });
  await p.route('**/x-demo/*', r => r.fulfill({ path: '/home/claude/cardtab-site/assets/' + r.request().url().split('/x-demo/')[1].split('?')[0] }));
- await p.goto('http://localhost:8765/index.html'); await p.evaluate(th => { localStorage.setItem('ct.session', JSON.stringify({ email: 'st@x.test', name: 'Nick', via: 'email', at: Date.now(), exp: Date.now() + 864e5 })); localStorage.setItem('cs.theme', th); }, process.env.THEME || '0');
+ await p.goto('http://localhost:8765/index.html'); await p.evaluate(([th, bg]) => { localStorage.setItem('ct.session', JSON.stringify({ email: 'st@x.test', name: 'Nick', via: 'email', at: Date.now(), exp: Date.now() + 864e5 })); localStorage.setItem('cs.theme', th); if (bg) localStorage.setItem('cs.bg', bg); }, [process.env.THEME || '0', process.env.BG || '']);
  await p.reload(); await p.waitForTimeout(1200); await p.evaluate(async src => { await CTStore.setPlan('premium'); await CTStore._loadSample(eval('(' + src + ')')()); }, SHOW.toString()); await p.waitForTimeout(2500);
  if (process.env.BUDGET) await p.evaluate(c => { window.CTBudgetCents = () => +c; }, process.env.BUDGET);
  await p.evaluate(r => { if (r && window.CTMonth) CTMonth.set(r); }, process.env.RANGE || ''); await p.waitForTimeout(600); await p.evaluate(() => document.querySelector('.sh-tabs [data-tab="stories"]').click()); await p.waitForTimeout(3500);
@@ -36,6 +36,7 @@ const SHOW = () => { const now = new Date(), Y = now.getFullYear(), M = now.getM
  if (process.env.SPER) { await fr.locator(':text-is("Last month"):visible').first().click(); await p.waitForTimeout(600); await p.screenshot({ path: OUTD + 'menu.png' });
    await fr.locator(':text-is("' + process.env.SPER + '"):visible').first().click(); await p.waitForTimeout(1500); }
  if (process.env.THEMENAME) console.log('theme', await fr.evaluate(n => { const b = [...document.querySelectorAll('#tgrid [data-i]')].find(x => x.textContent.trim().toLowerCase().includes(n.toLowerCase())); if (b) { b.click(); return b.textContent.trim() + ' ' + b.dataset.i; } return 'not found: ' + [...document.querySelectorAll('#tgrid [data-i]')].map(x => x.textContent.trim()).join('|'); }, process.env.THEMENAME));
+ if (process.env.BG) console.log('bg', await fr.evaluate(n => { const b = [...document.querySelectorAll('#bgrow button')].find(x => x.textContent.trim().toLowerCase().includes(n.toLowerCase())); if (b) { b.click(); return b.textContent.trim(); } return 'not found: ' + [...document.querySelectorAll('#bgrow button')].map(x => x.textContent.trim()).join('|') + ' / stored ' + localStorage.getItem('cs.bg'); }, process.env.BG));
   if (process.env.LIST) { const out = []; await fr.click('[data-play="0"]'); await p.waitForTimeout(1500);
    for (let k = 0; k < 12; k++) { await p.waitForTimeout(900); await p.screenshot({ path: OUTD + 'sl-' + k + '.png' }); await p.keyboard.press('ArrowRight'); }
    await b.close(); return; }
@@ -49,9 +50,10 @@ const SHOW = () => { const now = new Date(), Y = now.getFullYear(), M = now.getM
  for (let k = 0; k < SL + 1; k++) { await p.keyboard.press('ArrowRight'); await p.waitForTimeout(450); }
  await p.waitForTimeout(500);
  await cdp.send('Page.startScreencast', { format: 'png', everyNthFrame: 1, maxWidth: 2000, maxHeight: 4000 });
+ const SLOW = +(process.env.SLOW || 1); if (SLOW !== 1) { await cdp.send('Animation.enable'); await cdp.send('Animation.setPlaybackRate', { playbackRate: SLOW }); }
  await p.waitForTimeout(150); await p.keyboard.press('ArrowLeft'); await p.waitForTimeout(+(process.env.MS || 4300));
  await cdp.send('Page.stopScreencast');
  frames.forEach((f, k) => fs.writeFileSync(D + String(k).padStart(4, '0') + '.png', Buffer.from(f.d, 'base64')));
- fs.writeFileSync(D + 'times.json', JSON.stringify({ t: frames.map(f => f.t) }));
+ fs.writeFileSync(D + 'times.json', JSON.stringify({ t: frames.map(f => f.t), slow: +(process.env.SLOW || 1) }));
  console.log('frames', frames.length);
  await b.close() })();
