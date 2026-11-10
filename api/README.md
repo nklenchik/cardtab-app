@@ -13,3 +13,6 @@ Then open `app/index.html` and set `window.CARDTAB_API` to the Worker URL it pri
 
 Image resizing (the WebP copies) needs Cloudflare Image Resizing / Transformations enabled on the account.
 Run `node test.mjs` for the offline tests.
+
+## Deploys
+This Worker deploys itself: Cloudflare Workers Builds runs `npx wrangler deploy` from `api/` on every push to main that changes it. Tables are kept up to date by the Worker (src/schema.js), so no database commands are needed. Secrets are set in the Cloudflare dashboard (Settings → Variables and Secrets).
