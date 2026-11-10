@@ -74,8 +74,10 @@
     const valid = v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
     function sentState(on) {
       card.classList.toggle('sent', on);
-      if (on) { $('#auth-sent-t').textContent = sentTo; code.value = ''; setTimeout(() => code.focus({ preventScroll: true }), 60); startAgain(); }
-      else { clearInterval(againT); setTimeout(() => email.focus({ preventScroll: true }), 60); }
+      const touchOnly = matchMedia('(pointer:coarse)').matches;   // phones: no automatic focus (it opens no keyboard); the page just returns to the top
+      root.dispatchEvent(new Event('auth-reset'));
+      if (on) { $('#auth-sent-t').textContent = sentTo; code.value = ''; if (!touchOnly) setTimeout(() => code.focus({ preventScroll: true }), 60); startAgain(); }
+      else { clearInterval(againT); if (!touchOnly) setTimeout(() => email.focus({ preventScroll: true }), 60); }
     }
     function startAgain() { let n = 30; again.disabled = true; again.textContent = 'Send again in ' + n; clearInterval(againT);
       againT = setInterval(() => { n--; if (n <= 0) { clearInterval(againT); again.disabled = false; again.textContent = 'Send again'; } else again.textContent = 'Send again in ' + n; }, 1000); }
@@ -111,31 +113,41 @@
     $('#auth-local').hidden = !LOCAL_MODE;
     // The marketing site links here with ?signup to open on Create account
     // Phones: when you tap the email (or code) box, the page glides ONCE to put that box about 60px below the top of what's visible,
-    // the same spot on Sign in and Create account. The glide starts the moment the finger lands (before the keyboard has finished
-    // rising), so iPhone's own scrolling has nothing left to do; it is never repeated while the keyboard animates. When the keyboard goes
-    // away the page glides back up in one motion. Extra room at the bottom (`kb-up`) lets even the taller Create account card scroll that far.
+    // the same spot on Sign in and Create account (the card hangs from the top, so both tabs line up). The glide starts the moment the
+    // finger lands, before the keyboard has finished rising, so iPhone's own scrolling has nothing left to do. It isn't repeated while the
+    // keyboard animates. When the keyboard goes away the page glides back up once. While a box has focus the page has extra room at the
+    // bottom (`kb-up`, `--pad`) so it can scroll that far; once things settle that room is trimmed to exactly what the spot needs, so you
+    // can't scroll into an empty page.
     { const vv = window.visualViewport, page = document.getElementById('view-auth'), touch = matchMedia('(pointer:coarse)');
-      let cur = null, placedAt = 0, downAt = 0, downPlain = false, fixT = 0, relT = 0;
+      let cur = null, placedAt = 0, downAt = 0, downPlain = false, fixT = 0, relT = 0, trimT = 0;
       const calm = matchMedia('(prefers-reduced-motion: reduce)');
       const dist = el => { const top = vv ? vv.offsetTop : 0, vh = vv ? vv.height : window.innerHeight; return (el.getBoundingClientRect().top - top) - Math.min(60, vh * 0.22); };
       const glide = (el, smooth) => { const d = dist(el); if (Math.abs(d) > 3) window.scrollBy({ top: d, behavior: smooth && !calm.matches ? 'smooth' : 'auto' }); };
+      const trim = () => { if (!cur) return; const cs = getComputedStyle(page), base = Math.max(window.innerHeight, card.offsetHeight + parseFloat(cs.paddingTop) + 24);
+        const need = Math.max(0, Math.ceil(window.scrollY + window.innerHeight - base)); page.style.setProperty('--pad', need + 'px'); };
+      const later = () => { clearTimeout(trimT); trimT = setTimeout(trim, 450); };
       const engage = el => {
         if (!touch.matches || Date.now() - downAt > 900 || el === cur && Date.now() - placedAt < 1500) return;
-        clearTimeout(relT); cur = el; placedAt = Date.now(); page.classList.add('kb-up');
+        clearTimeout(relT); cur = el; placedAt = Date.now(); page.style.removeProperty('--pad'); page.classList.add('kb-up');
         glide(el, true);
         clearTimeout(fixT); fixT = setTimeout(() => { if (cur === el && Math.abs(dist(el)) > 24) glide(el, true); }, 1100);   // one quiet correction only if iPhone moved it
+        clearTimeout(trimT); trimT = setTimeout(trim, 1500);
       };
-      const release = () => { clearTimeout(fixT); if (cur) return; clearTimeout(relT);
+      const drop = () => { relT = setTimeout(() => { if (!cur) { page.classList.remove('kb-up'); page.style.removeProperty('--pad'); } }, 520); };
+      const release = () => { clearTimeout(fixT); clearTimeout(trimT); if (cur) return; clearTimeout(relT);
         if (!downPlain || Date.now() - downAt > 700) window.scrollTo({ top: 0, behavior: calm.matches ? 'auto' : 'smooth' });   // keyboard hidden: one glide back up
-        relT = setTimeout(() => { if (!cur) page.classList.remove('kb-up'); }, 520); };
+        drop(); };
       page.addEventListener('pointerdown', e => { downAt = Date.now(); const t = e.target;
         downPlain = !!t.closest('button,a,select,summary') && !t.closest('input,label');
-        const box = t.closest('input'); if (box) engage(box); else if (!t.closest('label')) { cur = null; if (downPlain) { relT = setTimeout(() => { if (!cur) page.classList.remove('kb-up'); }, 520); } else release(); } }, { passive: true, capture: true });
+        const box = t.closest('input'); if (box) engage(box); else if (!t.closest('label')) { cur = null; if (downPlain) { clearTimeout(fixT); clearTimeout(trimT); drop(); } else release(); } }, { passive: true, capture: true });
       page.addEventListener('keydown', () => { downAt = Date.now(); }, { passive: true, capture: true });
       page.addEventListener('focusin', e => { if (e.target.matches('input') && Date.now() - downAt <= 900) engage(e.target); });
       page.addEventListener('focusout', () => { cur = null; setTimeout(() => { if (!cur) release(); }, 60); });
-      // the card changes height when you switch between Sign in and Create account: glide the focused box into place again
-      seg.addEventListener('click', () => { if (cur) { placedAt = 0; setTimeout(() => cur && glide(cur, true), 120); } }); }
+      // switching between Sign in and Create account: the card is taller or shorter, so glide the focused box into place again
+      seg.addEventListener('click', () => { if (cur) { placedAt = 0; setTimeout(() => { if (cur) { glide(cur, true); later(); } }, 120); } });
+      // the page changed (sent / back): go to the top and drop the extra room
+      root.addEventListener('auth-reset', () => { cur = null; clearTimeout(fixT); clearTimeout(trimT); window.scrollTo({ top: 0, behavior: 'auto' }); drop(); });
+      if (vv) vv.addEventListener('resize', later); }
     const qs = new URLSearchParams(location.search);
     setMode(qs.has('signup') || qs.get('mode') === 'signup' ? 'up' : 'in');
     return { reset() { email.value = ''; card.classList.remove('sent'); clearInterval(againT); setMode('in'); }, error(t) { card.classList.remove('sent'); showErr(t); } };

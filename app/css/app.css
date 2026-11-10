@@ -101,9 +101,9 @@ button{font:inherit;color:inherit}
 :root[data-theme="dark"] .app-toast{background:#f1efe8;color:#1d1d1b}:root[data-theme="dark"] .app-toast button{color:#1765a5}
 
 /* ---------- sign in ---------- */
-.auth{min-height:100dvh;display:grid;place-items:center;padding:24px 16px;background:var(--ct-bg)}
-.auth{padding-bottom:calc(24px + var(--kb,0px))}
-.auth.kb-up{padding-bottom:calc(24px + var(--kb,0px) + 320px)}
+.auth{min-height:100dvh;display:grid;place-items:start center;align-content:start;padding:64px 16px 24px;background:var(--ct-bg)}   /* the card hangs from the top, so it doesn't jump when Create account makes it taller */
+@media(min-width:760px){.auth{padding-top:max(64px,12vh)}}
+.auth.kb-up{padding-bottom:calc(24px + var(--pad,360px))}   /* room to scroll while the keyboard is up; trimmed to what is needed once it settles */
 .auth-card{width:100%;max-width:400px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px 26px;display:flex;flex-direction:column;gap:14px;color:var(--text);font-size:14px;box-shadow:var(--shadow);animation:t-in .3s var(--ease)}
 .auth-brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px;color:var(--text);text-decoration:none;align-self:flex-start}
 .auth-seg{position:relative;display:flex;background:var(--surface);border-radius:10px;padding:3px}

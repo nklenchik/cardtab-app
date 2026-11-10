@@ -623,3 +623,10 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 - Nick's recording (v50.82): the box reached its spot in several jumps, and the page slid back in steps when the keyboard closed. Cause: the placement re-ran at 60/250/500/800/1200ms while the keyboard was still moving, on top of iPhone's own scrolling.
 - Now: one smooth glide that starts the moment the finger lands (before the keyboard finishes rising, so iPhone's own scroll has nothing to do); never repeated during the keyboard animation, except one quiet correction at ~1.1s if the box is more than 24px off. When the keyboard goes away the page glides to the top once, then the extra room (`kb-up`) is removed 520ms later. A tap on a button doesn't trigger the glide-up (the button must not move under the finger). Honors reduced motion.
 - Checked by sampling scroll position every frame while the page was shrunk in steps like the keyboard rising and falling: opening and closing each move one way only (0 direction reversals), on Sign in and Create account.
+
+## v50.84 — Sign in / Create account audit
+- Card now hangs from the top of the page, so the tab control no longer jumps when Create account makes the card taller.
+- Replaced the fixed 320px extra bottom space (blank, odd scrolling) with a pad trimmed to exactly what the keyboard position needs (`--pad`).
+- Phones: no auto-focus on the code/email box after Sent/Back (it opened no keyboard); page returns to the top instead.
+- Email and code inputs: `name`, `autocapitalize`, `autocorrect`, `spellcheck` set.
+- Tested (390 and 320 wide, light and dark, desktop 1280): tab switch, typing with simulated keyboard, close — box stays ~60px from the visible top, 0 scroll reversals.
