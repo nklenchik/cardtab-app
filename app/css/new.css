@@ -1498,6 +1498,10 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 /* ===== v41.1 real sign-in: after the email goes out, the card turns into "Check your inbox" with a code field ===== */
 .auth-sent{display:none}
 .auth-card.sent .auth-form,.auth-card.sent .auth-seg,.auth-card.sent #auth-h,.auth-card.sent #auth-sub,.auth-card.sent .auth-early{display:none!important}
+/* v50.91: the terms and privacy policy, under the sign-in and sign-up buttons */
+.auth-legal{margin:0;text-align:center;color:var(--muted);font-size:12px;line-height:1.5}
+.auth-legal a{color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:2px;text-decoration-color:color-mix(in srgb,currentColor 45%,transparent)}
+.auth-card.sent .auth-legal{display:none}
 .auth-card.sent .auth-sent{display:grid;gap:12px;background:none;padding:0;animation:ct-fsIn .28s cubic-bezier(.2,.8,.2,1) both}
 .auth-sent-h{font-size:24px;font-weight:800;letter-spacing:-.02em;color:var(--text)}
 .auth-sent-p{margin:-4px 0 0;color:var(--muted);font-size:14.5px;line-height:1.45}
