@@ -635,3 +635,7 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 - Cause of the "all over the place" scrolling: touching anywhere that wasn't a box (e.g. dragging on the card) counted as "keyboard closed" and smooth-scrolled the page to the top against the finger; a drag starting on the email box also fired the placement glide.
 - Now only a real TAP (finger lifts, not a scroll) on a box glides the page. Touching anywhere else just cancels pending moves. The correction and the bottom-room trim never run while a finger is down; trim is measured from the placement spot, not the current scroll.
 - Tested with raw touch swipes (up/down, from card text and from the box, keyboard up/down, 390/320 wide): follows the finger, no snap-back, max per-frame jump 17px.
+
+## v50.86 — Sign-in: no empty space after the keyboard hides
+- iPhone doesn't blur the box when the keyboard is dismissed, so the extra scroll room reserved for the keyboard stayed (a screenful of empty page). Now when the page grows back by more than 120px while a box is focused, the box is released: page glides to top, room removed.
+- Room is re-trimmed on every resize. Tested: keyboard up + scrolled to bottom, card ends 24px above the bottom edge; keyboard hidden, max scroll is the card's natural height only.

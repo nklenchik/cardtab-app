@@ -132,7 +132,7 @@
       const later = () => { clearTimeout(trimT); trimT = setTimeout(trim, 450); };
       const engage = el => {
         if (!touch.matches || Date.now() - downAt > 900 || el === cur && Date.now() - placedAt < 1500) return;
-        clearTimeout(relT); cur = el; placedAt = Date.now(); page.style.removeProperty('--pad'); page.classList.add('kb-up');
+        clearTimeout(relT); cur = el; lowIh = 0; placedAt = Date.now(); page.style.removeProperty('--pad'); page.classList.add('kb-up');
         glide(el, true);
         clearTimeout(fixT); fixT = setTimeout(() => { if (cur === el && !touching && Date.now() - lastTouch > 600 && Math.abs(dist(el)) > 24) glide(el, true); }, 1100);   // one quiet correction only if iPhone moved it, never against a finger
         clearTimeout(trimT); trimT = setTimeout(trim, 1500);
@@ -159,7 +159,12 @@
       seg.addEventListener('click', () => { if (cur) { placedAt = 0; setTimeout(() => { if (cur) { glide(cur, true); later(); } }, 120); } });
       // the page changed (sent / back): go to the top and drop the extra room
       root.addEventListener('auth-reset', () => { cur = null; clearTimeout(fixT); clearTimeout(trimT); window.scrollTo({ top: 0, behavior: 'auto' }); drop(); });
-      if (vv) vv.addEventListener('resize', later); }
+      // keyboard hidden while the box is still focused (swipe-down / Done on iPhone doesn't blur it): the page grew back, so let go of the
+      // box, which glides the page to the top and removes the extra room right away
+      let lowIh = 0;
+      const sizeWatch = () => { if (!cur) { lowIh = 0; return; } const ih = window.innerHeight; lowIh = lowIh ? Math.min(lowIh, ih) : ih;
+        if (ih - lowIh > 120) { lowIh = 0; clearTimeout(trimT); cur.blur(); } else later(); };
+      addEventListener('resize', sizeWatch); if (vv) vv.addEventListener('resize', sizeWatch); }
     const qs = new URLSearchParams(location.search);
     setMode(qs.has('signup') || qs.get('mode') === 'signup' ? 'up' : 'in');
     return { reset() { email.value = ''; card.classList.remove('sent'); clearInterval(againT); setMode('in'); }, error(t) { card.classList.remove('sent'); showErr(t); } };
