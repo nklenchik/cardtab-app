@@ -26,8 +26,8 @@
     p.n.textContent = fmt(0); requestAnimationFrame(step);
   }
   if (!('IntersectionObserver' in window)) return;
-  const io = new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting) return; io.unobserve(e.target); const k = key(e.target); if (seen.has(k)) return; seen.add(k); if (!calm.matches && !document.hidden) run(e.target); }), { threshold: 0.6 });
-  const take = el => { if (el._ctRise) return; el._ctRise = 1; if (!seen.has(key(el))) io.observe(el); };
+  const io = new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting) return; io.unobserve(e.target); const k = key(e.target); if (!seen.has(k)) { seen.add(k); if (!calm.matches && !document.hidden) run(e.target); } e.target.style.opacity = ''; }), { threshold: 0.25 });
+  const take = el => { if (el._ctRise) return; el._ctRise = 1; if (!seen.has(key(el))) { if (!calm.matches) el.style.opacity = '0'; io.observe(el); } };  // hidden until it counts in, so the final number never flashes first
   const scan = root => { if (root.matches && root.matches(SEL)) take(root); if (root.querySelectorAll) root.querySelectorAll(SEL).forEach(take); };
   new MutationObserver(ms => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) scan(n); }).observe(document.documentElement, { childList: true, subtree: true });
   if (document.readyState !== 'loading') scan(document); else document.addEventListener('DOMContentLoaded', () => scan(document));
