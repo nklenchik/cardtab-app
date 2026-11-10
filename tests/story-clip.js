@@ -43,7 +43,7 @@ const SHOW = () => { const now = new Date(), Y = now.getFullYear(), M = now.getM
  // real-time recording: the page is laid out at the stories' 360-wide size but drawn at 2x (zoom), so the clip is sharp
  const cdp = await p.context().newCDPSession(p); const frames = [];
  cdp.on('Page.screencastFrame', async f => { frames.push({ t: f.metadata.timestamp, d: f.data }); try { await cdp.send('Page.screencastFrameAck', { sessionId: f.sessionId }); } catch (e) {} });
- await fr.evaluate(() => { const st = document.createElement('style'); st.textContent = '.pl .pbot,.pl .arr,.pl .x,.pl .strip{visibility:hidden!important}'; document.head.appendChild(st); });
+ await fr.evaluate(hw => { const st = document.createElement('style'); st.textContent = '.pl .pbot,.pl .arr,.pl .x,.pl .strip{visibility:hidden!important}' + (hw ? '.pl .ptop,.pl .pbars{visibility:hidden!important}.pl .st{transition:none!important}' : ''); document.head.appendChild(st); }, !!process.env.HIDEWHO);
  await p.setViewportSize({ width: 720, height: 1280 }); await p.evaluate(() => { document.documentElement.style.zoom = 2; }); await p.waitForTimeout(800);   // 360-wide layout, drawn at 720
  const SL = +(process.env.SLIDE || 0);
  await fr.evaluate(() => document.querySelector('[data-play="0"]').click()); await p.waitForTimeout(1200);
