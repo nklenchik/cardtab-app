@@ -163,6 +163,7 @@ export async function handleAuth(env, req, path) {
     catch (e) { return out(env, req, { error: e.message }, e.status || 502); }
     await deleteUserPhotos(env, me.id);   // their own card photos and upload records (v50.61)
     await env.DB.batch([...(await deleteSynced(env, me.id)), env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(me.id), env.DB.prepare('DELETE FROM an_active WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM an_feat WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM shares WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM an_user WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM login_tokens WHERE email=?').bind(me.email), env.DB.prepare('DELETE FROM users WHERE id=?').bind(me.id)]);
+    try { await env.DB.prepare('DELETE FROM an_copy WHERE uid=?').bind(me.id).run(); } catch (e) { /* v50.95 copy test table not made yet */ }
     return out(env, req, { ok: true }, 200, { 'set-cookie': setCookie(env, 'ct_s', '', 0) });
   }
   // v50.63 Premium billing (Stripe) and, for admins, finding people and giving Premium

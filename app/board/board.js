@@ -1350,7 +1350,10 @@ let shownId=null;
 function openPm(ctx){
   const c=CTX[ctx];let id,h;
   if(c){[id,h]=c}else{const x=HEADS[st.h%HEADS.length];st.h=(st.h+1)%HEADS.length;[id,h]=x}
-  shownId=id;$('pm-h').textContent=h;bump(id,'v');
+  shownId=id;$('pm-h').textContent=h;
+  // v50.95: the copy test (js/premcopy.js) picks the headline and six bullets for where the sheet was opened
+  if(window.CTPremCopy){try{const r=CTPremCopy.fill(ctx);if(r)shownId=r.head}catch(e){}}
+  bump(shownId,'v');
   const list=artList(),hero=$('pm-art');
   if(list.length){const a=list[st.a%list.length];st.a=(st.a+1)%420;saveSt();
     const fy=a.focus&&a.focus.y!=null?Math.round(a.focus.y*100)+'%':'24%',fx=a.focus&&a.focus.x!=null?Math.round(a.focus.x*100)+'%':'50%';
@@ -1367,7 +1370,7 @@ PM_OPEN=openPm;
 // warm the art up the first time a free user opens the board, so the sheet never shows a blank header
 let warmed=false;function warmArt(){if(warmed||!cbFree())return;warmed=true;artList().slice(0,3).forEach(a=>{const i=new Image();i.decoding='async';i.src=a.src})}
 pms.addEventListener('click',e=>{if(e.target===pms||e.target.closest('[data-close]')){pms.close();return}
-  if(e.target.closest('#pm-go')){if(shownId)bump(shownId,'t');window.CTTrack&&CTTrack.tap(shownId);buzz('firm');
+  if(e.target.closest('#pm-go')){if(shownId)bump(shownId,'t');window.CTTrack&&CTTrack.tap(shownId);window.CTPremCopy&&CTPremCopy.tap();buzz('firm');
     if(window.CTBoardUpgrade){pms.close();setTimeout(()=>window.CTBoardUpgrade(),calm.matches?0:260)}else toast('Upgrading opens at launch')}});
 // --- locks ---
 const lockAct=(el,ctx)=>el&&el.addEventListener('click',e=>{if(!cbFree())return;e.preventDefault();e.stopImmediatePropagation();openPm(ctx)},true);

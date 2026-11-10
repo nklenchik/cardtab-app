@@ -82,8 +82,11 @@ const uid = sq.prepare("SELECT id FROM users WHERE email='friend@x.com'").get().
 S.subs.sub_A = { id: 'sub_A', customer: sess.customer, status: 'active', cancel_at_period_end: false, metadata: { uid }, items: { data: [{ current_period_end: P, price: priceBy('ct_fm4') }] }, default_payment_method: { card: { brand: 'visa', last4: '4242' } } };
 assert.equal((await hook('checkout.session.completed', { mode: 'subscription', subscription: 'sub_A', customer: sess.customer, client_reference_id: uid }, 'wrong')).status, 400, 'bad signature refused');
 assert.equal(planOf('friend@x.com'), 'free');
+// v50.95 copy test: the Premium sheet copy they saw last gets the credit for the purchase
+sq.prepare('INSERT INTO an_copy (uid,last,last_day) VALUES (?,?,?)').run(uid, 'b2:1.4.6.7.9.16', '2026-11-10');
 assert.equal((await hook('checkout.session.completed', { mode: 'subscription', subscription: 'sub_A', customer: sess.customer, client_reference_id: uid })).status, 200);
 assert.equal(planOf('friend@x.com'), 'premium');
+{ const c = sq.prepare('SELECT buy, buy_iv, buy_day FROM an_copy WHERE uid=?').get(uid); assert.equal(c.buy, 'b2:1.4.6.7.9.16'); assert.equal(c.buy_iv, 'month'); assert.ok(c.buy_day); }
 j = await (await call('/auth/billing', { cookie: cf })).json();
 assert.equal(j.sub.founder, true); assert.equal(j.sub.amount, 400); assert.equal(j.sub.interval, 'month'); assert.deepEqual(j.sub.card, { brand: 'visa', last4: '4242' }); assert.equal(j.sub.periodEnd, P);
 assert.equal((await call('/auth/billing/checkout', { method: 'POST', cookie: cf, body: { plan: 'monthly' } })).status, 409, 'no second subscription');

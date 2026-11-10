@@ -80,4 +80,13 @@ assert.equal(s.signupSec.find(x => x.dim === 'pricing').n, 1);
 await site({ ref: 'https://www.instagram.com/', ev: [{ e: 'join', d: 'waitlist' }, { e: 'join_src', d: '' }, { e: 'join_sec', d: 'pricing' }, { e: 'join_demo', d: 'stories' }, { e: 'join_scroll', d: '75' }] }, { ip: '7.7.7.7' });
 s = await (await call('/auth/admin/stats', { cookie: boss })).json();
 assert.deepEqual(s.join.find(x => x.ev === 'join_src'), { ev: 'join_src', dim: 'instagram', n: 1 });
+// v50.95 Premium copy test: views and taps per headline and bullet are counted; the last-shown copy is kept per person
+await call('/auth/ev', { method: 'POST', cookie: a, body: { dev: 'phone', ev: [{ e: 'pc_view', d: 's2' }, { e: 'pc_bul', d: 's:11' }, { e: 'pc_last', d: 's2:11.3.12.1.6.15' }, { e: 'pc_tap', d: 's2' }] } });
+assert.equal(sq.prepare("SELECT c.last FROM an_copy c JOIN users u ON u.id=c.uid WHERE u.email=?").get('fan@x.com').last, 's2:11.3.12.1.6.15');
+await call('/auth/ev', { method: 'POST', cookie: a, body: { ev: [{ e: 'pc_last', d: 'DROP TABLE' }] } });
+assert.equal(sq.prepare("SELECT c.last FROM an_copy c JOIN users u ON u.id=c.uid WHERE u.email=?").get('fan@x.com').last, 's2:11.3.12.1.6.15', 'junk ignored');
+sq.prepare("UPDATE an_copy SET buy=last, buy_day=?, buy_iv='year'").run(new Date().toISOString().slice(0, 10));
+s = await (await call('/auth/admin/stats', { cookie: boss })).json();
+assert.equal(s.copyBuys.length, 1); assert.equal(s.copyBuys[0].buy, 's2:11.3.12.1.6.15'); assert.ok(s.copyDays.some(r => r.dim === 's2' && r.n === 1));
+assert.ok(s.events.some(r => r.ev === 'pc_bul' && r.dim === 's:11'));
 console.log('analytics tests ok');

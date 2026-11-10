@@ -15,7 +15,7 @@ export async function handleEvents(env, req, me, out) {
   const dev = b.dev === 'desk' ? 'desk' : 'phone', plan = me.plan === 'premium' ? 'premium' : 'free', d = day();
   const sum = new Map();
   for (const x of evs) {
-    if (!x || !EV_OK.test(x.e) || x.e === 'journey') continue;
+    if (!x || !EV_OK.test(x.e) || x.e === 'journey' || x.e === 'pc_last') continue;
     const k = x.e + '\u0001' + clean(x.d), cur = sum.get(k) || { e: x.e, d: clean(x.d), n: 0, v: 0 };
     cur.n += Math.max(0, Math.min(500, +x.n || 1)); cur.v += Math.max(0, Math.min(86400, +x.v || 0)); sum.set(k, cur);
   }
@@ -38,6 +38,9 @@ export async function handleEvents(env, req, me, out) {
     }
     if (J && (!u || !u.src)) { ex.push(env.DB.prepare('INSERT INTO an_day (day,ev,dim,plan,dev,n,v) VALUES (?,?,?,?,?,1,0) ON CONFLICT(day,ev,dim,plan,dev) DO UPDATE SET n=n+1').bind(d, 'signup_src', J.src, plan, dev)); }
   } catch (e) { /* the new tables aren't there until schema.sql is run again: counting carries on without them */ }
+  // v50.95: the Premium sheet copy this person saw last (so a purchase can be credited to it)
+  let pc = ''; for (const x of evs) if (x && x.e === 'pc_last') pc = String(x.d || '').replace(/[^a-z0-9:.]/g, '').slice(0, 48);
+  if (/^[ebs][1-9]:[\d.]+$/.test(pc)) { try { await env.DB.prepare('INSERT INTO an_copy (uid,last,last_day) VALUES (?,?,?) ON CONFLICT(uid) DO UPDATE SET last=excluded.last, last_day=excluded.last_day').bind(me.id, pc, d).run(); } catch (e) { /* table not made yet */ } }
   const secs = Math.max(0, Math.min(3600, Math.round(+b.secs || 0)));
   st.push(env.DB.prepare('INSERT INTO an_active (day,uid,plan,dev,secs) VALUES (?,?,?,?,?) ON CONFLICT(day,uid) DO UPDATE SET secs=secs+excluded.secs, plan=excluded.plan, dev=excluded.dev').bind(d, me.id, plan, dev, secs));
   try { await env.DB.batch(st.concat(ex)); } catch (e) { if (!ex.length) throw e; await env.DB.batch(st); }
@@ -123,10 +126,15 @@ export async function handleStats(env, req, out) {
     safe(q('SELECT COALESCE(src, \'not known\') src, plan0, plan, sec, demo, up_day FROM an_user WHERE first_day BETWEEN ? AND ?', [from, to])),
     safe(q("SELECT ev, dim, SUM(n) n FROM an_site WHERE day BETWEEN ? AND ? AND ev IN ('join_src','join_sec','join_demo','join_scroll') GROUP BY ev, dim", [from, to]))
   ]);
+  // v50.95 Premium copy test: purchases credited to the copy that was showing, and sheet views per headline per day
+  const [copyBuys, copyDays] = await Promise.all([
+    safe(q('SELECT buy_day day, buy, buy_iv iv FROM an_copy WHERE buy_day BETWEEN ? AND ? AND buy IS NOT NULL', [from, to])),
+    safe(q("SELECT day, dim, SUM(n) n FROM an_day" + w1 + " AND ev = 'pc_view' GROUP BY day, dim", p1))
+  ]);
   const tally = (rows, key) => { const m = {}; rows.forEach(r => String(r[key] || '').split('.').filter(Boolean).forEach(k => { m[k] = (m[k] || 0) + 1; })); return Object.entries(m).map(([dim, n]) => ({ dim, n })).sort((a, b) => b.n - a.n); };
   const bySrc = {}; srcRows.forEach(r => { const o = bySrc[r.src] = bySrc[r.src] || { dim: r.src, n: 0, free: 0, premium: 0, upgraded: 0 }; o.n++; o[r.plan0 === 'premium' ? 'premium' : 'free']++; if (r.up_day) o.upgraded++; });
   const v504 = { reach, reachPrev, upgraders: (upg[0] || {}).n || 0, upDays: (upg[0] || {}).days || 0, upFeat: upgFeat, freeBase: (baseN[0] || {}).n || 0, freeFeat: baseFeat, upCtx,
-    signupSrc: Object.values(bySrc).sort((a, b) => b.n - a.n), signupSec: tally(srcRows, 'sec'), signupDemo: tally(srcRows, 'demo'), signupKnown: srcRows.filter(r => r.src !== 'not known').length, signupAll: srcRows.length, join: joinSec };
+    signupSrc: Object.values(bySrc).sort((a, b) => b.n - a.n), signupSec: tally(srcRows, 'sec'), signupDemo: tally(srcRows, 'demo'), signupKnown: srcRows.filter(r => r.src !== 'not known').length, signupAll: srcRows.length, join: joinSec, copyBuys, copyDays };
   return out({
     from, to, pFrom, pTo, days: n, plan: plan || 'all', dev: dev || 'all',
     active: cur.active, activePrev: prev.active, secs: cur.secs, secsPrev: prev.secs, people, peoplePrev,
