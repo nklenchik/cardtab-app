@@ -483,6 +483,49 @@
     rows.addEventListener('touchmove', e => { if (d0 && e.touches.length === 2) k = dist(e.touches) / d0; }, { passive: true });
     rows.addEventListener('touchend', () => { if (!d0) return; const i = SZ.indexOf(gsz), n = k > 1.25 ? i + 1 : k < .8 ? i - 1 : i; d0 = 0; if (n !== i && SZ[n]) setView('gallery', SZ[n]); }); }
   fbar.addEventListener('click', e => { const c = e.target.closest('[data-fb]'); if (!c) return; const b = root.querySelector('.ct-filters [data-ct-type="' + c.dataset.fb + '"]'); if (b) b.click(); });
+  // v50.87 phones: one row of controls (All / Sales / Bought and a Filters button). The Filters card holds type (with Refunds),
+  // platform, sort and view; it drives the same controls as the full row, so filtering works exactly the same.
+  { const SL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>';
+    const m = document.createElement('div'); m.className = 'fb-m';
+    m.innerHTML = '<div class="fb-mseg" role="group" aria-label="Show">' + [['all', 'All'], ['sale', 'Sales'], ['purchase', 'Bought']].map(x => '<button type="button" data-fb="' + x[0] + '" aria-pressed="false">' + x[1] + '<em></em></button>').join('') + '</div><button type="button" class="fb-fbtn" aria-label="Filters" aria-haspopup="dialog" aria-expanded="false">' + SL + '<i class="fb-dot" hidden></i></button>';
+    fbar.prepend(m);
+    const card = document.createElement('div'); card.className = 'fb-fs'; card.hidden = true; card.setAttribute('role', 'dialog'); card.setAttribute('aria-label', 'Filters');
+    document.body.appendChild(card);
+    const btn = m.querySelector('.fb-fbtn'), plat = $('ct-platform'), sortSel = $('ct-sort');
+    const typeNow = () => { const c = fbar.querySelector('.fb-chips [aria-pressed="true"]'); return c ? c.dataset.fb : 'all'; };
+    const viewNow = () => { const c = fbar.querySelector('.fb-vopts [aria-pressed="true"]'); return c ? (c.dataset.gs || 'list') : 'list'; };
+    const count = k => { const c = fbar.querySelector('.fb-chips [data-fb="' + k + '"] em'); return c && c.textContent ? '<em>' + c.textContent + '</em>' : ''; };
+    const opts = (k, list) => '<div class="fb-fo" role="group">' + list.map(o => '<button type="button" data-k="' + k + '" data-v="' + esc(o[0]) + '" aria-pressed="' + (o[2] ? 'true' : 'false') + '">' + o[1] + '</button>').join('') + '</div>';
+    const shown = () => { const n = $('ct-rows').querySelectorAll('[data-tx]').length; return n; };
+    function paint() {
+      const t = typeNow(), v = viewNow();
+      card.innerHTML = '<button type="button" class="fb-fx" aria-label="Close">×</button>' +
+        '<h6>Type</h6>' + opts('ty', [['all', 'All' + count('all'), t === 'all'], ['sale', 'Sales' + count('sale'), t === 'sale'], ['purchase', 'Purchases' + count('purchase'), t === 'purchase'], ['refund', 'Refunds' + count('refund'), t === 'refund']]) +
+        '<h6>Platform</h6>' + opts('plat', [...plat.options].map(o => [o.value, o.value === 'all' ? 'All' : esc(o.textContent), plat.value === o.value])) +
+        '<h6>Sort</h6>' + opts('sort', [['new', 'Newest', sortSel.value === 'new'], ['old', 'Oldest', sortSel.value === 'old'], ['high', 'Highest', sortSel.value === 'high']]) +
+        '<h6>View</h6>' + opts('view', [['list', 'List', v === 'list'], ['s', 'Small grid', v === 's'], ['m', 'Grid', v === 'm'], ['l', 'Large grid', v === 'l']]) +
+        '<button type="button" class="fb-fdone">Done</button>';
+    }
+    const dot = () => { const on = typeNow() === 'refund' || plat.value !== 'all' || sortSel.value !== 'new'; btn.querySelector('.fb-dot').hidden = !on; btn.setAttribute('aria-label', on ? 'Filters (some are on)' : 'Filters'); };
+    function place() { const r = btn.getBoundingClientRect(), w = Math.min(380, innerWidth - 24); card.style.width = w + 'px'; card.style.left = Math.max(12, Math.min(r.right - w, innerWidth - w - 12)) + 'px';
+      const top = r.bottom + 8, room = innerHeight - top - 12; card.style.top = top + 'px'; card.style.maxHeight = Math.max(240, room) + 'px'; }
+    function open() { paint(); card.classList.remove('out'); card.hidden = false; place(); card.classList.add('anim'); clearTimeout(card._at); card._at = setTimeout(() => card.classList.remove('anim'), 420); btn.setAttribute('aria-expanded', 'true'); const b = card.querySelector('[aria-pressed="true"]'); if (b) b.focus({ preventScroll: true }); }
+    function close(focus) { if (card.hidden || card.classList.contains('out')) return; btn.setAttribute('aria-expanded', 'false'); if (calm.matches) card.hidden = true; else { card.classList.add('out'); setTimeout(() => { card.hidden = true; card.classList.remove('out'); }, 140); } if (focus) btn.focus({ preventScroll: true }); }
+    btn.addEventListener('click', e => { e.stopPropagation(); (card.hidden || card.classList.contains('out')) ? open() : close(); });
+    card.addEventListener('click', e => {
+      e.stopPropagation(); if (e.target.closest('.fb-fx, .fb-fdone')) { close(true); return; }
+      const o = e.target.closest('[data-k]'); if (!o) return; const k = o.dataset.k, v = o.dataset.v; card.classList.remove('anim');
+      if (k === 'ty') { const c = fbar.querySelector('.fb-chips [data-fb="' + v + '"]'); if (c) c.click(); }
+      else if (k === 'plat' || k === 'sort') { const sel = k === 'plat' ? plat : sortSel; sel.value = v; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+      else if (k === 'view') { const b = fbar.querySelector('.fb-vopts ' + (v === 'list' ? '[data-view="list"]' : '[data-gs="' + v + '"]')); if (b) b.click(); }
+      paint(); dot();
+    });
+    document.addEventListener('click', e => { if (e.isTrusted && !card.hidden && !card.contains(e.target) && !btn.contains(e.target)) close(); });   // only real taps outside (the card itself clicks the row's chips)
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !card.hidden) close(true); });
+    addEventListener('resize', () => { if (!card.hidden) place(); });
+    phone.addEventListener('change', () => close());
+    new MutationObserver(dot).observe(fbar, { subtree: true, attributes: true, attributeFilter: ['aria-pressed'] });
+    [plat, sortSel].forEach(x => x.addEventListener('change', dot)); dot(); }
 
   // ---------- filters ----------
   $$('[data-ct-type]').forEach(b => b.addEventListener('click', () => { type = b.dataset.ctType; expanded = null; $$('[data-ct-type]').forEach(x => x.classList.toggle('ct-selected', x === b)); render(); }));

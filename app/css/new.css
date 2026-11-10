@@ -2237,4 +2237,33 @@ html[data-theme="dark"] :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdr
 .sl-nm{min-height:2.24em}
 .sl-lbl .sl-nm{font-size:6.2cqw}
 @container slab (max-width:175px){.sl-lbl .sl-nm{font-size:7.2cqw}}
+/* v50.87 phones: one row of controls (All / Sales / Bought + Filters); type, platform, sort and view live in the Filters card */
+.fb-m{display:none}
+.fb-fs{position:fixed;z-index:60;background:var(--s-card);color:var(--ct-text);border:1px solid var(--s-hair);border-radius:22px;padding:16px 16px 14px;box-shadow:0 24px 60px -16px rgba(0,0,0,.4);overflow:auto;overscroll-behavior:contain;transform-origin:100% 0}
+.fb-fs[hidden]{display:none}
+.fb-fs.anim{animation:amIn .26s cubic-bezier(.2,.8,.2,1) both}
+.fb-fs.anim>*{animation:amItem .26s cubic-bezier(.2,.8,.2,1) both}
+.fb-fs.anim>:nth-child(2){animation-delay:.02s}.fb-fs.anim>:nth-child(3){animation-delay:.04s}.fb-fs.anim>:nth-child(4){animation-delay:.06s}.fb-fs.anim>:nth-child(5){animation-delay:.08s}.fb-fs.anim>:nth-child(6){animation-delay:.1s}.fb-fs.anim>:nth-child(7){animation-delay:.12s}.fb-fs.anim>:nth-child(n+8){animation-delay:.14s}
+.fb-fs.out{animation:msPopOut .14s ease-in both}
+.fb-fs h6{margin:12px 2px 8px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ct-muted)}
+.fb-fs h6:first-of-type{margin-top:2px}
+.fb-fo{display:flex;flex-wrap:wrap;gap:7px}
+.fb-fo button{height:36px;padding:0 13px;border-radius:99px;border:1px solid var(--s-hair);background:transparent;font:inherit;font-size:14px;font-weight:700;color:var(--ct-text);cursor:pointer}
+.fb-fo button em{font-style:normal;opacity:.55;margin-left:4px}
+.fb-fo button[aria-pressed="true"]{background:var(--ct-text);color:var(--s-card);border-color:transparent}
+.fb-fdone{display:block;width:100%;margin-top:16px;height:46px;border:0;border-radius:14px;background:var(--s-brand);color:#fff;font:inherit;font-size:15px;font-weight:800;cursor:pointer}
+.fb-fx{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:1px solid var(--s-hair);background:transparent;color:var(--ct-muted);font-size:18px;line-height:1;cursor:pointer}
+@media(max-width:760px){
+ .ct-fbar>.fb-chips,.ct-fbar>.fb-dds,.ct-fbar>.fb-view{display:none!important}
+ .fb-m{display:flex;align-items:center;gap:8px;width:100%}
+ .fb-mseg{flex:1;min-width:0;display:flex;padding:4px;border-radius:999px;background:var(--s-track)}
+ .fb-mseg button{flex:1;min-width:0;height:36px;border:0;border-radius:999px;background:transparent;color:var(--ct-muted);font:inherit;font-size:14px;font-weight:750;cursor:pointer;white-space:nowrap;transition:background-color .2s ease,color .2s ease}
+ .fb-mseg button em{font-style:normal;opacity:.55;margin-left:4px;font-weight:700}.fb-mseg button em:empty{display:none}
+ .fb-mseg button[aria-pressed="true"]{background:var(--s-card);color:var(--ct-text);box-shadow:0 1px 2px rgba(40,30,20,.08),0 2px 8px -4px rgba(40,30,20,.18)}
+ .fb-fbtn{position:relative;width:44px;height:44px;border-radius:50%;border:1px solid var(--s-hair);background:var(--s-card);color:var(--ct-text);display:grid;place-items:center;cursor:pointer;flex:none}
+ .fb-dot{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--s-brand);box-shadow:0 0 0 2px var(--s-card)}
+ .fb-dot[hidden]{display:none}
+}
+@media(max-width:360px){.fb-mseg button{font-size:13px}}
+@media(prefers-reduced-motion:reduce){.fb-fs,.fb-fs>*{animation:none!important}}
 
