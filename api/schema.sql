@@ -82,3 +82,7 @@ CREATE INDEX IF NOT EXISTS billing_customer ON billing (customer);
 CREATE TABLE IF NOT EXISTS cat_sets ( id TEXT PRIMARY KEY, game TEXT, name TEXT, released TEXT, total INTEGER, next_offset INTEGER NOT NULL DEFAULT 0, done INTEGER NOT NULL DEFAULT 0, cards INTEGER NOT NULL DEFAULT 0, listed TEXT );
 CREATE TABLE IF NOT EXISTS cat_cards ( id TEXT PRIMARY KEY, art INTEGER NOT NULL DEFAULT 0, at INTEGER );
 CREATE TABLE IF NOT EXISTS cat_day ( day TEXT PRIMARY KEY, calls INTEGER NOT NULL DEFAULT 0, sets INTEGER NOT NULL DEFAULT 0, cards INTEGER NOT NULL DEFAULT 0, art INTEGER NOT NULL DEFAULT 0 );
+
+-- v51.5 plan changes, for the daily check's "upgrades / back to Free" (paid only, gifts aren't counted)
+CREATE TABLE IF NOT EXISTS plan_ev ( at INTEGER NOT NULL, uid TEXT NOT NULL, kind TEXT NOT NULL );
+CREATE INDEX IF NOT EXISTS plan_ev_at ON plan_ev (at);

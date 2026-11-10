@@ -146,3 +146,6 @@ assert.deepEqual(S.deleted, [cus], 'Stripe customer deleted'); assert.equal(sq.p
 // signature check alone
 assert.equal(await verifyStripe('s', 't=1,v1=00', 'x', 1), false);
 console.log('billing tests ok:', S.calls.length, 'Stripe calls');
+
+// v51.5: paid upgrades and moves back to Free are logged for the daily check (gifts are not)
+{ const ev = sq.prepare("SELECT kind, COUNT(*) n FROM plan_ev GROUP BY kind").all(); console.log("plan changes logged:", JSON.stringify(ev)); assert.ok(ev.some(e => e.kind === "up"), "a paid upgrade is logged"); }

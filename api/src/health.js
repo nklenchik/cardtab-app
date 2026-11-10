@@ -16,6 +16,25 @@ async function page(url, must) {
   return { ok: true };
 }
 
+// v51.5: who signed up in the last 24 hours and where the totals stand. Admins' own accounts and gifted Premium (beta
+// testers) are left out, so the numbers are real users; gifts are shown separately.
+const plural = (n, one, many) => n + ' ' + (n === 1 ? one : (many || one + 's'));
+export async function people(env, t = now()) {
+  const adm = admins(env).map(s => s.toLowerCase()), notAdm = adm.length ? `lower(u.email) NOT IN (${adm.map(() => '?').join(',')})` : '1=1';
+  const q = async (where, extra = []) => { const sql = `SELECT COUNT(*) n, COALESCE(SUM(CASE WHEN u.google_sub IS NOT NULL AND u.google_sub<>'' THEN 1 ELSE 0 END),0) g, COALESCE(SUM(CASE WHEN u.plan='premium' THEN 1 ELSE 0 END),0) p FROM users u WHERE ${notAdm} AND ${where}`;
+    try { return await env.DB.prepare(sql + " AND u.id NOT IN (SELECT user_id FROM billing WHERE gift=1)").bind(...adm, ...extra).first(); }
+    catch (e) { return await env.DB.prepare(sql).bind(...adm, ...extra).first(); } };          // before the billing table exists
+  const since = t - 86400, nw = await q('u.created_at >= ?', [since]), all = await q('1=1');
+  let gifts = 0, up = 0, down = 0;
+  try { gifts = ((await env.DB.prepare('SELECT COUNT(*) n FROM billing WHERE gift=1').first()) || {}).n || 0; } catch (e) {}
+  try { const rows = (await env.DB.prepare(`SELECT e.kind, COUNT(*) n FROM plan_ev e JOIN users u ON u.id=e.uid WHERE e.at >= ? AND ${notAdm} GROUP BY e.kind`).bind(since, ...adm).all()).results || [];
+    rows.forEach(r => { if (r.kind === 'up') up = r.n; if (r.kind === 'down') down = r.n; }); } catch (e) {}
+  const r = { new: nw.n, newFree: nw.n - nw.p, newPremium: nw.p, google: nw.g, email: nw.n - nw.g, total: all.n, free: all.n - all.p, premium: all.p, gifts, up, down };
+  r.line1 = 'Last 24 hours: ' + plural(r.new, 'new sign-up') + (r.new ? ' (' + r.newFree + ' Free, ' + r.newPremium + ' Premium) · ' + r.google + ' via Google, ' + r.email + ' via email link' : '');
+  r.line2 = 'Totals: ' + plural(r.total, 'account') + ' · ' + r.free + ' Free, ' + r.premium + ' Premium' + (r.gifts ? ' (+' + r.gifts + ' gifted)' : '') + ' · ' + plural(r.up, 'upgrade') + ', ' + r.down + ' back to Free';
+  return r;
+}
+
 export async function runHealth(env, { send = true } = {}) {
   const app = env.APP_URL || 'https://app.cardtab.app', yest = day(Date.now() - 864e5);
   const C = [];
@@ -61,25 +80,27 @@ export async function runHealth(env, { send = true } = {}) {
     return { ok: true, warn: n >= 25, note: n ? n + ' (' + rows.map(r => r.dim + ' ×' + r.n).join(', ') + ')' : 'none' };
   }), 'Errors went up. Send this report to Claude to look into the files named here.');
 
+  let P = null; try { P = await people(env); } catch (e) {}
   const bad = C.filter(c => !c.ok), warn = C.filter(c => c.ok && c.warn), ok = !bad.length;
   try { await env.DB.prepare('INSERT INTO health (day, at, ok, n_bad, n_warn, checks) VALUES (?,?,?,?,?,?) ON CONFLICT(day) DO UPDATE SET at=excluded.at, ok=excluded.ok, n_bad=excluded.n_bad, n_warn=excluded.n_warn, checks=excluded.checks').bind(day(), now(), ok ? 1 : 0, bad.length, warn.length, JSON.stringify(C)).run(); } catch (e) {}
 
   try { await env.DB.prepare('DELETE FROM health WHERE day < ?').bind(day(Date.now() - 90 * 864e5)).run(); } catch (e) {}
   const mode = env.HEALTH_EMAIL || 'daily';   // 'daily' = every day; 'problems' = only when something fails or needs a look
   if (send && (mode === 'daily' || bad.length || warn.length)) {
-    const subject = ok && !warn.length ? 'Card Tab daily check: all ' + C.length + ' passed ✓' : ok ? 'Card Tab daily check: passed, ' + warn.length + ' to look at' : 'Card Tab daily check: ' + bad.length + ' problem' + (bad.length > 1 ? 's' : '') + ' found';
+    const subject = (ok && !warn.length ? 'Card Tab daily check: all ' + C.length + ' passed ✓' : ok ? 'Card Tab daily check: passed, ' + warn.length + ' to look at' : 'Card Tab daily check: ' + bad.length + ' problem' + (bad.length > 1 ? 's' : '') + ' found') + (P && P.new ? ' · ' + plural(P.new, 'new sign-up') : '');
     const row = c => `<tr><td style="padding:8px 0;border-bottom:1px solid #eee;font-size:14px">${c.ok ? (c.warn ? '🟡' : '✅') : '❌'} ${esc(c.name)}${c.note ? `<div style="color:#77736d;font-size:12.5px">${esc(c.note)}</div>` : ''}${c.fix ? `<div style="margin-top:4px;font-size:12.5px;color:#a50e37"><b>Suggested fix:</b> ${esc(c.fix)}</div>` : ''}</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;color:#9a958e;font-size:12px">${c.ms ? c.ms + ' ms' : ''}</td></tr>`;
     const html = `<!doctype html><html><body style="margin:0;background:#f6f5f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:28px 16px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fff;border:1px solid #e9e6de;border-radius:18px"><tr><td style="padding:24px">
       <div style="font-weight:800;font-size:16px;color:#1a1918">Card Tab · daily check</div>
       <h1 style="margin:10px 0 4px;font-size:22px;color:${ok ? '#2e8b4f' : '#c0392b'}">${ok ? (warn.length ? 'Everything works · ' + warn.length + ' to look at' : 'Everything passed') : bad.length + ' problem' + (bad.length > 1 ? 's' : '') + ' found'}</h1>
       <p style="margin:0 0 14px;color:#77736d;font-size:13px">${esc(new Date().toUTCString())}. Nothing was changed automatically${bad.length ? ': each problem has a suggested fix for you to approve' : ''}.</p>
+      ${P ? `<div style="margin:0 0 14px;padding:12px 14px;background:#f6f5f0;border-radius:10px;font-size:14px;color:#1a1918;line-height:1.5"><div style="font-weight:700">${esc(P.line1)}</div><div style="color:#77736d;font-size:13px">${esc(P.line2)}</div></div>` : ''}
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${C.map(row).join('')}</table>
       <p style="margin:16px 0 0;font-size:12.5px;color:#77736d">History is on the admin dashboard → Health. To get this email only when something’s wrong: npx wrangler secret put HEALTH_EMAIL and enter problems.</p>
     </td></tr></table></td></tr></table></body></html>`;
-    const text = subject + '\n\n' + C.map(c => (c.ok ? (c.warn ? '[look] ' : '[ok] ') : '[FAIL] ') + c.name + (c.note ? ' — ' + c.note : '') + (c.fix ? '\n   Suggested fix: ' + c.fix : '')).join('\n');
+    const text = subject + '\n\n' + (P ? P.line1 + '\n' + P.line2 + '\n\n' : '') + C.map(c => (c.ok ? (c.warn ? '[look] ' : '[ok] ') : '[FAIL] ') + c.name + (c.note ? ' — ' + c.note : '') + (c.fix ? '\n   Suggested fix: ' + c.fix : '')).join('\n');
     for (const to of admins(env)) { try { await sendMail(env, { to, subject, html, text }); } catch (e) {} }
   }
-  return { ok, bad: bad.length, warn: warn.length, checks: C, at: now() };
+  return { ok, bad: bad.length, warn: warn.length, checks: C, people: P, at: now() };
 }
 
 export async function handleHealth(env, req, out) {

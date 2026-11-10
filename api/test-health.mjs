@@ -35,4 +35,14 @@ down = 'board'; await worker.scheduled({ cron: '7 12 * * *' }, env, { waitUntil:
 assert.ok(/1 problem found/.test(mails[0].subject)); assert.ok(mails[0].html.includes('Suggested fix'));
 r = await (await call('/auth/admin/health', { cookie: boss })).json(); assert.equal(r.latest.ok, 0); assert.ok(r.history.length >= 1);
 const fan = await signIn('fan@x.com', '2.2.2.2'); assert.equal((await call('/auth/admin/health', { cookie: fan })).status, 403);
+// v51.5 sign-ups and totals: admins and gifts left out, Google vs email, paid upgrades counted
+const nowS = Math.floor(Date.now() / 1000);
+sq.prepare("INSERT INTO users (id,email,google_sub,plan,created_at) VALUES ('g1','g1@x.com','sub1','free',?),('g2','g2@x.com','sub2','premium',?),('old','old@x.com',NULL,'free',?),('gift','gift@x.com',NULL,'premium',?)").run(nowS - 100, nowS - 200, nowS - 5 * 86400, nowS - 50);
+sq.prepare("INSERT INTO billing (user_id,gift) VALUES ('gift',1)").run();
+sq.prepare("INSERT INTO plan_ev (at,uid,kind) VALUES (?,?,?),(?,?,?)").run(nowS - 60, 'g2', 'up', nowS - 3 * 86400, 'old', 'down');
+down = ''; env.HEALTH_EMAIL = 'daily'; mails.length = 0;
+await worker.scheduled({ cron: '7 12 * * *' }, env, { waitUntil: p => p }); await new Promise(r => setTimeout(r, 30));
+const m = mails[0]; assert.ok(m.text.includes('Last 24 hours: 3 new sign-ups (2 Free, 1 Premium) · 2 via Google, 1 via email link'), m.text.split('\n').slice(0, 4).join(' | '));
+assert.ok(m.text.includes('Totals: 4 accounts · 3 Free, 1 Premium (+1 gifted) · 1 upgrade, 0 back to Free'), m.text);
+assert.ok(/· 3 new sign-ups$/.test(m.subject), m.subject); assert.ok(m.html.includes('Last 24 hours'));
 console.log('health tests ok');

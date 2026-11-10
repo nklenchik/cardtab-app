@@ -80,11 +80,13 @@ async function applyPlan(env, uid, r) {
   const u = await env.DB.prepare('SELECT plan FROM users WHERE id=?').bind(uid).first(); if (!u) return;
   const want = planOf(r);
   // an admin's own test switch (/auth/plan) is left alone unless Stripe or a gift says Premium
-  if (want === 'premium' && u.plan !== 'premium') await env.DB.prepare("UPDATE users SET plan='premium' WHERE id=?").bind(uid).run();
+  if (want === 'premium' && u.plan !== 'premium') { await env.DB.prepare("UPDATE users SET plan='premium' WHERE id=?").bind(uid).run(); if (!r.gift && r.customer) await planEv(env, uid, 'up'); }
   // v50.95: a paid purchase (not a gift) is credited to the Premium sheet copy this person saw last (the copy test)
   if (want === 'premium' && !r.gift && r.customer) { try { await env.DB.prepare("UPDATE an_copy SET buy_day=?, buy=last, buy_iv=? WHERE uid=? AND buy IS NULL AND last IS NOT NULL").bind(new Date().toISOString().slice(0, 10), r.interval || null, uid).run(); } catch (e) { /* table not made yet */ } }
-  if (want === 'free' && u.plan === 'premium' && (r.customer || r.gift === 0)) await env.DB.prepare("UPDATE users SET plan='free' WHERE id=?").bind(uid).run();
+  if (want === 'free' && u.plan === 'premium' && (r.customer || r.gift === 0)) { await env.DB.prepare("UPDATE users SET plan='free' WHERE id=?").bind(uid).run(); if (r.customer) await planEv(env, uid, 'down'); }
 }
+// v51.5: paid upgrades and moves back to Free, counted in the daily check
+async function planEv(env, uid, kind) { try { await env.DB.prepare('INSERT INTO plan_ev (at,uid,kind) VALUES (?,?,?)').bind(now(), uid, kind).run(); } catch (e) { /* table made on the next background run */ } }
 
 // ---------- prices and the billing page settings, made once and found again ----------
 let priceCache = null;
