@@ -630,3 +630,8 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 - Phones: no auto-focus on the code/email box after Sent/Back (it opened no keyboard); page returns to the top instead.
 - Email and code inputs: `name`, `autocapitalize`, `autocorrect`, `spellcheck` set.
 - Tested (390 and 320 wide, light and dark, desktop 1280): tab switch, typing with simulated keyboard, close — box stays ~60px from the visible top, 0 scroll reversals.
+
+## v50.85 — Sign-in scrolling fix
+- Cause of the "all over the place" scrolling: touching anywhere that wasn't a box (e.g. dragging on the card) counted as "keyboard closed" and smooth-scrolled the page to the top against the finger; a drag starting on the email box also fired the placement glide.
+- Now only a real TAP (finger lifts, not a scroll) on a box glides the page. Touching anywhere else just cancels pending moves. The correction and the bottom-room trim never run while a finger is down; trim is measured from the placement spot, not the current scroll.
+- Tested with raw touch swipes (up/down, from card text and from the box, keyboard up/down, 390/320 wide): follows the finger, no snap-back, max per-frame jump 17px.

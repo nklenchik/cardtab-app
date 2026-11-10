@@ -123,23 +123,35 @@
       const calm = matchMedia('(prefers-reduced-motion: reduce)');
       const dist = el => { const top = vv ? vv.offsetTop : 0, vh = vv ? vv.height : window.innerHeight; return (el.getBoundingClientRect().top - top) - Math.min(60, vh * 0.22); };
       const glide = (el, smooth) => { const d = dist(el); if (Math.abs(d) > 3) window.scrollBy({ top: d, behavior: smooth && !calm.matches ? 'smooth' : 'auto' }); };
-      const trim = () => { if (!cur) return; const cs = getComputedStyle(page), base = Math.max(window.innerHeight, card.offsetHeight + parseFloat(cs.paddingTop) + 24);
-        const need = Math.max(0, Math.ceil(window.scrollY + window.innerHeight - base)); page.style.setProperty('--pad', need + 'px'); };
+      let touching = false, lastTouch = 0, tapBox = null, downXY = [0, 0];
+      // extra room below the card is trimmed to exactly what the placement spot needs (measured from where the box WOULD sit, not where
+      // the page happens to be scrolled), and never while a finger is on the page
+      const trim = () => { if (!cur) return; if (touching || Date.now() - lastTouch < 600) { later(); return; }
+        const cs = getComputedStyle(page), base = Math.max(window.innerHeight, card.offsetHeight + parseFloat(cs.paddingTop) + 24);
+        const need = Math.max(0, Math.ceil(window.scrollY + dist(cur) + window.innerHeight - base)); page.style.setProperty('--pad', need + 'px'); };
       const later = () => { clearTimeout(trimT); trimT = setTimeout(trim, 450); };
       const engage = el => {
         if (!touch.matches || Date.now() - downAt > 900 || el === cur && Date.now() - placedAt < 1500) return;
         clearTimeout(relT); cur = el; placedAt = Date.now(); page.style.removeProperty('--pad'); page.classList.add('kb-up');
         glide(el, true);
-        clearTimeout(fixT); fixT = setTimeout(() => { if (cur === el && Math.abs(dist(el)) > 24) glide(el, true); }, 1100);   // one quiet correction only if iPhone moved it
+        clearTimeout(fixT); fixT = setTimeout(() => { if (cur === el && !touching && Date.now() - lastTouch > 600 && Math.abs(dist(el)) > 24) glide(el, true); }, 1100);   // one quiet correction only if iPhone moved it, never against a finger
         clearTimeout(trimT); trimT = setTimeout(trim, 1500);
       };
-      const drop = () => { relT = setTimeout(() => { if (!cur) { page.classList.remove('kb-up'); page.style.removeProperty('--pad'); } }, 520); };
-      const release = () => { clearTimeout(fixT); clearTimeout(trimT); if (cur) return; clearTimeout(relT);
-        if (!downPlain || Date.now() - downAt > 700) window.scrollTo({ top: 0, behavior: calm.matches ? 'auto' : 'smooth' });   // keyboard hidden: one glide back up
+      const drop = () => { clearTimeout(relT); relT = setTimeout(() => { if (!cur) { page.classList.remove('kb-up'); page.style.removeProperty('--pad'); } }, 520); };
+      const release = () => { clearTimeout(fixT); clearTimeout(trimT); if (cur) return;
+        if (!touching && (!downPlain || Date.now() - downAt > 700)) window.scrollTo({ top: 0, behavior: calm.matches ? 'auto' : 'smooth' });   // keyboard hidden: one glide back up
         drop(); };
-      page.addEventListener('pointerdown', e => { downAt = Date.now(); const t = e.target;
+      // Only a tap on a box ever moves the page. Touching anywhere else (including dragging to scroll) just stops anything pending,
+      // so the page is only ever moved by your finger.
+      page.addEventListener('pointerdown', e => { downAt = lastTouch = Date.now(); touching = true; const t = e.target;
         downPlain = !!t.closest('button,a,select,summary') && !t.closest('input,label');
-        const box = t.closest('input'); if (box) engage(box); else if (!t.closest('label')) { cur = null; if (downPlain) { clearTimeout(fixT); clearTimeout(trimT); drop(); } else release(); } }, { passive: true, capture: true });
+        tapBox = t.closest('input'); downXY = [e.clientX, e.clientY]; clearTimeout(fixT); }, { passive: true, capture: true });
+      // a tap (finger lifts without the browser taking over to scroll) on a box glides the page; a drag that starts on a box just scrolls
+      addEventListener('pointerup', e => { touching = false; lastTouch = Date.now();
+        if (tapBox && Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]) < 10) engage(tapBox); tapBox = null; }, { passive: true });
+      addEventListener('pointercancel', () => { touching = false; lastTouch = Date.now(); tapBox = null; }, { passive: true });
+      const up = () => { touching = false; lastTouch = Date.now(); };
+      addEventListener('touchend', up, { passive: true }); addEventListener('touchcancel', up, { passive: true });
       page.addEventListener('keydown', () => { downAt = Date.now(); }, { passive: true, capture: true });
       page.addEventListener('focusin', e => { if (e.target.matches('input') && Date.now() - downAt <= 900) engage(e.target); });
       page.addEventListener('focusout', () => { cur = null; setTimeout(() => { if (!cur) release(); }, 60); });
