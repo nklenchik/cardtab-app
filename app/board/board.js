@@ -1505,7 +1505,7 @@ const MONEY=/^([+−-]?)\$([\d,]+)(\.\d\d)?$/;
 const kmb=(sg,d)=>{const v=Number(d.replace(/,/g,''));return v<1000?null:sg+'$'+(v>=1e6?(v/1e6).toFixed(v<1e7?1:0).replace(/\.0$/,'')+'M':(v/1e3).toFixed(v<1e4?1:0).replace(/\.0$/,'')+'K')};
 const cut=n=>n.scrollWidth>n.clientWidth+1;
 function fitShort(root){root.querySelectorAll('[data-short]').forEach(n=>{if(n.dataset.full==null)n.dataset.full=n.innerHTML;n.innerHTML=n.dataset.full;if(cut(n))n.innerHTML=n.dataset.short});
-  root.querySelectorAll('.num,.bn,b,strong').forEach(n=>{if(n.children.length)return;if(n.dataset.amt==null){if(!MONEY.test(n.textContent.trim()))return;n.dataset.amt=n.textContent.trim()}
+  root.querySelectorAll('.num,.bn,b,strong').forEach(n=>{if(n.children.length)return;if(n._ctRising)return;/* v50.88: counting in (js/rise.js) — leave it */if(n.dataset.amt==null){if(!MONEY.test(n.textContent.trim()))return;n.dataset.amt=n.textContent.trim()}
     const full=n.dataset.amt,m=full.match(MONEY),isBn=n.classList.contains('bn'),mx=isBn?parseFloat(getComputedStyle(n).getPropertyValue('--mx'))||34:0;
     // a big number shrinks its type to fit; past about a tenth smaller it shortens instead, so big numbers stay big
     const set=t=>{n.textContent=t;if(isBn)n.style.setProperty('--len',Math.max(4,t.length))},bad=()=>isBn?parseFloat(getComputedStyle(n).fontSize)<mx*.9:cut(n);

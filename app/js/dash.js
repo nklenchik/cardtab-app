@@ -95,9 +95,12 @@
   function countTo(el, c) {
     const old = el.dataset.c != null ? +el.dataset.c : null; el.dataset.c = c;
     cancelAnimationFrame(tweens.get(el) || 0);
-    if (old === null || old === c || calm.matches || document.hidden || !el.getClientRects().length) { el.textContent = money(c); return; }
-    const t0 = performance.now(), D = 560;
-    const step = now => { const k = Math.min(1, (now - t0) / D), e = 1 - Math.pow(1 - k, 3); el.textContent = money(k < 1 ? Math.round(old + (c - old) * e) : c); if (k < 1) tweens.set(el, requestAnimationFrame(step)); };
+    // v50.88: the first real total after the app opens counts up from $0 and slides in, up for a gain, down for a loss
+    const first = !el._rose && c !== 0 && !calm.matches && !document.hidden && el.getClientRects().length > 0;
+    if (first) { el._rose = 1; el.animate([{ transform: 'translateY(' + (c < 0 ? -14 : 14) + 'px)', opacity: 0, offset: 0 }, { opacity: 1, offset: .35 }, { transform: 'none', opacity: 1 }], { duration: 900, easing: 'cubic-bezier(.2,.8,.2,1)' }); }
+    else if (old === null || old === c || calm.matches || document.hidden || !el.getClientRects().length) { el.textContent = money(c); return; }
+    const t0 = performance.now(), D = first ? 900 : 560, from = first ? 0 : old;
+    const step = now => { const k = Math.min(1, (now - t0) / D), e = 1 - Math.pow(1 - k, 3); el.textContent = money(k < 1 ? Math.round(from + (c - from) * e) : c); if (k < 1) tweens.set(el, requestAnimationFrame(step)); };
     tweens.set(el, requestAnimationFrame(step));
   }
   function stats() {
