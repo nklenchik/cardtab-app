@@ -12,7 +12,14 @@
   const on = () => { try { const s = Sess() && Sess().get(); if (!s || s.role === 'admin') return false; const v = S() && S().meta('shareUsage'); return v !== false; } catch (e) { return false; } };
   const word = s => String(s == null ? '' : s).toLowerCase().replace(/\d{4}/g, '').replace(/[^a-z0-9 &+\-]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 40);
 
-  function ev(e, d, v) { if (!on()) return; q.push({ e, d: d == null ? '' : String(d), v: +v || 0 }); if (q.length > 100) flush(); }
+  // v50.97: a running tally of what this person uses, kept only on this device (never sent): the Premium sheet leans its
+  // bullets toward the features they use most
+  const use = (() => { try { return JSON.parse(localStorage.getItem('ct.use') || '{}') || {}; } catch (e) { return {}; } })(); let useDirty = false;
+  const USE_EV = /^(entry_add|range|ask|widget_add|widget_size|layout_save|layout_update|export|story_play|story_save|story_share|theme|background)$/;
+  const keepUse = () => { if (!useDirty) return; useDirty = false; try { localStorage.setItem('ct.use', JSON.stringify(use)); } catch (e) {} };
+  function tallyUse(e, d) { const k = e === 'page_view' ? (/^(board|stories|import)$/.test(d) ? 'page_view:' + d : '') : (USE_EV.test(e) ? e : ''); if (!k) return; use[k] = Math.min(1e6, (use[k] || 0) + 1); useDirty = true; }
+  setInterval(keepUse, 15000); addEventListener('pagehide', keepUse);
+  function ev(e, d, v) { tallyUse(e, d == null ? '' : String(d)); if (!on()) return; q.push({ e, d: d == null ? '' : String(d), v: +v || 0 }); if (q.length > 100) flush(); }
   // time on the current page, counted only while the app is on screen
   function tickTime() { const t = performance.now(); if (visible) { const ms = t - since; activeMs += ms; if (ms > 400) q.push({ e: 'page_time', d: page, v: Math.round(ms / 1000) }); } since = t; }
   function setPage(p) { p = word(p) || 'entries'; if (p === page) return; tickTime(); page = p; ev('page_view', p); }

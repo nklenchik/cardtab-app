@@ -1,7 +1,8 @@
 /* Premium sheet copy test (v50.95).
    The Premium sheet comes in three versions, by where it was opened: Entries, Board or Stories. Each time it opens it shows
-   one of that version's three headlines and six of its bullets, picked at random (the bullet for whatever was just tapped is
-   always one of the six, so a locked theme always says "All 24 Stories themes"). What was shown is counted (views), so is a
+   one of that version's three headlines and six bullets: three about that page's Premium features (whatever was just tapped
+   is always one, so a locked theme always says "All 24 Stories themes") and three from elsewhere in the app, leaning toward
+   what this person uses most (v50.97). What was shown is counted (views), so is a
    tap on Continue, and the server keeps each person's last-shown copy so a purchase can be credited to the copy that made it.
    The admin page's Premium tab reads the results. Every bullet stays 27 characters or fewer.
    This file is also loaded by admin.html for the headline and bullet wording. */
@@ -43,11 +44,19 @@
     9: ['Export to PDF and Excel', 'exp'], 10: ['Every Stories theme + video', 'story'], 11: ['All 24 Stories themes', 'theme'], 12: ['Unlimited Stories video', 'video'],
     13: ['Every Stories background', 'bg'], 14: ['Stories for any date range', 'range'], 15: ['Your all-time biggest wins', 'win'], 16: ['Profit by month, all time', 'bars']
   };
-  const POOL = {
-    entries: [1, 2, 3, 4, 5, 9, 15, 16, 6, 10, 14],
-    board: [1, 2, 3, 4, 5, 6, 7, 8, 9, 15, 16, 10],
-    stories: [10, 11, 12, 13, 14, 1, 2, 3, 6, 15, 16]
-  };
+  // v50.97: each bullet's home page. A sheet shows 3 from the page it opened on (what was tapped is always one of them) and
+  // 3 from elsewhere in the app, leaning toward the features this person uses most (counted on this device only).
+  const HOME = { entries: [1, 2, 3, 4], board: [5, 6, 7, 8, 9, 15, 16], stories: [10, 11, 12, 13, 14] };
+  const ALL = Object.keys(BUL).map(Number);
+  const POOL = { entries: ALL, board: ALL, stories: ALL };   // any bullet can show on any page (the admin page lists them all)
+  // what this person has used, by bullet (from the app's own usage counts, kept on this device: see track.js)
+  const USE = { 1: ['entry_add'], 2: ['range'], 3: ['range'], 4: ['page_view:import'], 5: ['ask'], 6: ['page_view:board', 'widget_add'], 7: ['widget_add', 'widget_size'],
+    8: ['layout_save', 'layout_update', 'widget_add'], 9: ['export'], 10: ['story_play', 'theme'], 11: ['theme'], 12: ['story_save', 'story_share'], 13: ['background'],
+    14: ['story_play', 'page_view:stories'], 15: ['page_view:board'], 16: ['page_view:board'] };
+  const used = () => { let u = {}; try { u = JSON.parse(localStorage.getItem('ct.use') || '{}') || {}; } catch (e) {} return u; };
+  // weighted pick without repeats: a bullet's chance grows with how much its feature gets used (everything keeps a chance)
+  function pickWeighted(list, n) { const u = used(), w = list.map(b => 1 + Math.sqrt((USE[b] || []).reduce((a, k) => a + (+u[k] || 0), 0))), out = [];
+    const L = list.slice(); while (out.length < n && L.length) { const tot = w.reduce((a, x) => a + x, 0); let r = Math.random() * tot, i = 0; while (i < L.length - 1 && (r -= w[i]) > 0) i++; out.push(L[i]); L.splice(i, 1); w.splice(i, 1); } return out; }
   // what was tapped -> the bullet that always shows
   const MUST = { 'locked theme': 11, 'locked background': 13, 'locked story': 12, video: 12, stories: 14, range: 3, 'all time': 2, ask: 5, layouts: 8, export: 9, share: 9, import: 4, 'entries used up': 1, 'entries nearly used': 1, limit: 1 };
   const STORIES_CTX = /^(locked theme|locked background|locked story|stories|video)$/;
@@ -61,8 +70,10 @@
     const pms = document.getElementById('pms'); if (!pms) return null;
     const page = STORIES_CTX.test(ctx || '') ? 'stories' : pageNow();
     const heads = Object.keys(HEADS).filter(k => HEADS[k][0] === page), head = heads[rnd(heads.length)];
-    const must = MUST[ctx] && POOL[page].includes(MUST[ctx]) ? MUST[ctx] : null;
-    const rest = shuffle(POOL[page].filter(b => b !== must)), ids = shuffle((must ? [must] : []).concat(rest).slice(0, 6));
+    const must = MUST[ctx] || null;
+    const own = (must ? [must] : []).concat(shuffle(HOME[page].filter(b => b !== must))).slice(0, 3);
+    const other = pickWeighted(ALL.filter(b => !HOME[page].includes(b) && !own.includes(b)), 6 - own.length);
+    const ids = shuffle(own.concat(other));
     const h = document.getElementById('pm-h'); if (h) h.textContent = HEADS[head][1];
     const f = pms.querySelector('.pmf'); if (f) f.innerHTML = ids.map(b => '<div>' + IC[BUL[b][1]] + '<span>' + BUL[b][0] + '</span></div>').join('');
     shown = { page, head, ids, tag: head + ':' + ids.join('.') };
@@ -74,5 +85,5 @@
     t.ev('pc_tap', shown.head); shown.ids.forEach(b => t.ev('pc_btap', shown.page[0] + ':' + b)); t.ev('pc_last', shown.tag);
     try { t.flush && t.flush(); } catch (e) {}   // so the server knows this copy before the purchase lands
   }
-  window.CTPremCopy = { HEADS, BUL, POOL, fill, tap, get shown() { return shown; } };
+  window.CTPremCopy = { HEADS, BUL, POOL, HOME, fill, tap, get shown() { return shown; } };
 })();
