@@ -2232,3 +2232,6 @@ dialog .entlist .emh:not(:first-child){margin-top:14px}
  #shd .shp>.awh{margin-top:-24px!important;padding-top:30px!important}
 }
 @media(max-width:760px) and (prefers-reduced-motion:reduce){#shd[open] .shp,#shd.closing .shp{animation:none!important}}
+
+/* v50.92: a small widget's flip side: "See entries" can sit on the total's label line when there's no room below */
+.ki.kt{position:relative}.kgo.kin{position:absolute;right:0;top:var(--gap,8px);padding:0;font-size:max(11px,calc(var(--fl)*.88));line-height:1.2;text-decoration-thickness:1px}

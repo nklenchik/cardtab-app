@@ -1155,7 +1155,13 @@ function fitFlip(w,b,rows){const W=w.clientWidth,H=w.clientHeight,wide=W/H>1.6,u
   if(wide){const colW=(iw-2*14)/rows.length;fv=cl(Math.min(H*.13,colW/(vmax*.6)),13,46);ft=cl(Math.min(H*.17,colW/(len(tot[1])*.6)),15,60);fl=cl(fv*.52,11,19);fr=fl}
   else{const rmax=Math.max(...rows.slice(0,-1).map(r=>len(r[0])+len(r[1])+2));fr=cl(Math.min(u*.08,iw/(rmax*.56)),11,18);ft=cl(Math.min(u*.155,iw/(len(tot[1])*.62)),18,48);fl=cl(fr*.92,11,16);fv=fr}
   const big=u>=230;b.classList.add(wide?'kh':'kv');b.classList.toggle('kbig',big);
-  b.style.cssText='--pad:'+pad.toFixed(1)+'px;--fr:'+fr.toFixed(1)+'px;--fv:'+fv.toFixed(1)+'px;--ft:'+ft.toFixed(1)+'px;--fl:'+fl.toFixed(1)+'px;--gap:'+cl(u*.04,4,14).toFixed(1)+'px;--cols:'+rows.length}
+  b.style.cssText='--pad:'+pad.toFixed(1)+'px;--fr:'+fr.toFixed(1)+'px;--fv:'+fv.toFixed(1)+'px;--ft:'+ft.toFixed(1)+'px;--fl:'+fl.toFixed(1)+'px;--gap:'+cl(u*.04,4,14).toFixed(1)+'px;--cols:'+rows.length;
+  /* v50.92: never spill out of the widget. If it doesn't fit, the type and spacing step down together; still too tall, and
+     "See entries" moves up beside the total's label, then goes; then the first rows go, keeping the total. */
+  const over=()=>b.scrollHeight>b.clientHeight+1;let k=1,gap=cl(u*.04,4,14);
+  for(let i=0;i<10&&over();i++){k*=.92;b.style.setProperty('--fr',Math.max(10,fr*k).toFixed(1)+'px');b.style.setProperty('--fv',Math.max(10,fv*k).toFixed(1)+'px');b.style.setProperty('--ft',Math.max(15,ft*k).toFixed(1)+'px');b.style.setProperty('--fl',Math.max(10,fl*k).toFixed(1)+'px');b.style.setProperty('--gap',Math.max(3,gap*k).toFixed(1)+'px');b.style.setProperty('--pad',Math.max(10,pad*Math.max(k,.8)).toFixed(1)+'px')}
+  if(over()){const g=b.querySelector('.kgo'),kt=b.querySelector('.ki.kt');if(g&&kt&&!b.classList.contains('kh')){g.classList.add('kin');kt.appendChild(g)}if(over()&&g)g.style.display='none'}
+  const ks=[...b.querySelectorAll('.ki:not(.kt)')];while(over()&&ks.length)ks.shift().style.display='none'}
 document.addEventListener('pointerdown',e=>{if(!TOUCH.matches)return;if(!e.target.closest('#simple .w.scrubbing'))document.querySelectorAll('#simple svg.sel').forEach(s=>s._clear&&s._clear());
   if(!e.target.closest('#simple .w.flipped'))document.querySelectorAll('#simple .kback').forEach(x=>flipTile(x.closest('.w'),null))},{passive:true});
 
