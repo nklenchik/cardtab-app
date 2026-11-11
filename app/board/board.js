@@ -1347,6 +1347,45 @@ function pick(rows){const best=new Map();rows.forEach(e=>{const a=e.art;if(!a||!
 // v50.99: up to 6 cards: the priciest buys, topped up with the priciest sales
 function artList(){const rows=E||[];let out=pick(rows.filter(e=>e.type==='purchase'));if(out.length<6){const have=new Set(out.map(a=>a.src));out=out.concat(pick(rows.filter(e=>e.type==='sale')).filter(a=>!have.has(a.src))).slice(0,6)}
   return out.length?out:(window.CTPremiumArt||[]).slice()}
+// v52.5: the header is a fan of three whole cards over a soft wash of their colors, shuffling through up to 9 while open.
+// Raw cards only: slabs don't fan well, so graded cards are left out. Their own priciest buys first, then sales, then the app's picks.
+const GRADED_RX=/\b(psa|bgs|cgc|sgc|tag|ace|beckett|ags)\s*(10|[1-9])/i;
+const rawCard=e=>!e.grade&&!GRADED_RX.test(e.name||'');
+const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const cssUrl=s=>'url("'+new URL(s,document.baseURI).href.replace(/"/g,'%22')+'")';
+function fanList(){const per=e=>(e.amount||0)/Math.max(1,e.qty||1);
+  const of=type=>(E||[]).filter(e=>e.type===type&&rawCard(e)&&e.art&&(e.art.detail||e.art.list)).sort((x,y)=>per(y)-per(x));
+  const seen=new Set(),out=[];
+  for(const e of of('purchase').concat(of('sale'))){const k=cardKey(e);if(seen.has(k))continue;seen.add(k);out.push({src:e.art.detail||e.art.list,sm:e.art.list||e.art.detail});if(out.length>=9)break}
+  if(out.length<3){const have=new Set(out.map(a=>a.src));shuf((window.CTPremiumFan||[]).slice()).forEach(a=>{if(out.length<9&&!have.has(a.src))out.push(a)})}
+  return out}
+const fan={t:0,q:[],n:0};
+function fanCard(a,cls){const d=document.createElement('div');d.className='pmc '+cls;d.style.backgroundImage=cssUrl(a.src);return d}
+function fanStop(){clearInterval(fan.t);fan.t=0}
+function fanStart(){fanStop();const hero=$('pm-art'),list=shuf(fanList());
+  hero.querySelectorAll('.pmwash,.pmfan').forEach(x=>x.remove());
+  hero.classList.remove('pmart');hero.style.backgroundImage=hero.style.backgroundSize=hero.style.backgroundPosition='';
+  if(!list.length){hero.classList.remove('pmfanned');return}
+  // never the same front card twice in a row
+  if(list.length>1&&(list[1]||{}).src===st.as)list.push(list.splice(1,1)[0]);
+  const show=list.slice(0,3),slots=show.length===1?['s1']:show.length===2?['s0','s2']:['s0','s1','s2'];
+  st.as=(show[1]||show[0]).src;saveSt();
+  const w=document.createElement('div');w.className='pmwash';w.style.backgroundImage=show.map(a=>cssUrl(a.sm||a.src)).join(',');
+  const f=document.createElement('div');f.className='pmfan';
+  show.forEach((a,i)=>f.appendChild(fanCard(a,slots[i])));
+  hero.prepend(f);hero.prepend(w);hero.classList.add('pmfanned');
+  fan.q=list;fan.n=3;
+  if(list.length>3&&!calm.matches)fan.t=setInterval(fanNext,3400)}
+// one step of the shuffle: the left card slips away, the others move over, the next card comes in on the right (only once its image is ready)
+function fanNext(){if(document.hidden||!pms.open)return;const f=document.querySelector('#pm-art .pmfan');if(!f)return;
+  const a=fan.q[fan.n%fan.q.length];fan.n++;
+  const pre=new Image();pre.src=new URL(a.src,document.baseURI).href;
+  (pre.decode?pre.decode():Promise.resolve()).catch(()=>{}).then(()=>{if(!pms.open||!f.isConnected)return;
+    const L=f.querySelector('.s0'),C=f.querySelector('.s1'),R=f.querySelector('.s2');
+    if(L){L.classList.replace('s0','gone');setTimeout(()=>L.remove(),800)}
+    if(C)C.classList.replace('s1','s0');if(R)R.classList.replace('s2','s1');
+    const n=fanCard(a,'enter');f.appendChild(n);void n.offsetWidth;n.classList.replace('enter','s2')})}
+pms.addEventListener('close',fanStop);
 let shownId=null;
 function openPm(ctx){
   const c=CTX[ctx];let id,h;
@@ -1355,14 +1394,7 @@ function openPm(ctx){
   // v50.95: the copy test (js/premcopy.js) picks the headline and six bullets for where the sheet was opened
   if(window.CTPremCopy){try{const r=CTPremCopy.fill(ctx);if(r)shownId=r.head}catch(e){}}
   bump(shownId,'v');
-  const list=artList(),hero=$('pm-art');
-  // v50.99: shuffled, never the same card twice in a row
-  if(list.length){let i=Math.floor(Math.random()*list.length);if(list.length>1&&list[i].src===st.as)i=(i+1+Math.floor(Math.random()*(list.length-1)))%list.length;const a=list[i];st.as=a.src;saveSt();
-    const fy=a.focus&&a.focus.y!=null?Math.round(a.focus.y*100)+'%':'24%',fx=a.focus&&a.focus.x!=null?Math.round(a.focus.x*100)+'%':'50%';
-    hero.style.backgroundImage='url("'+new URL(a.src,document.baseURI).href.replace(/"/g,'%22')+'")';
-    // a whole card: zoom past the frame and name strip so only the artwork window fills the header
-    hero.style.backgroundSize=a.card?'120% auto':'';hero.style.backgroundPosition=a.card?'50% 21%':fx+' '+fy;hero.classList.add('pmart')}
-  else{hero.classList.remove('pmart');hero.style.backgroundImage='';hero.style.backgroundPosition='';hero.style.backgroundSize=''}
+  fanStart();
   closeMenus();hideTip();buzz('tap');pms.showModal();pms.scrollTop=0;
   // focus the window itself, which never moves: focusing the panel while it's still sliding up from below made iPhone scroll the window to it, leaving the panel pushed off the top
   pms.tabIndex=-1;try{pms.focus({preventScroll:true})}catch(e){}pms.scrollTop=0}
@@ -1370,7 +1402,7 @@ function openPm(ctx){
 pms.addEventListener('scroll',()=>{if(pms.scrollTop||pms.scrollLeft){pms.scrollTop=0;pms.scrollLeft=0}});
 PM_OPEN=openPm;
 // warm the art up the first time a free user opens the board, so the sheet never shows a blank header
-let warmed=false;function warmArt(){if(warmed||!cbFree())return;warmed=true;artList().slice(0,3).forEach(a=>{const i=new Image();i.decoding='async';i.src=a.src})}
+let warmed=false;function warmArt(){if(warmed||!cbFree())return;warmed=true;fanList().slice(0,4).forEach(a=>{const i=new Image();i.decoding='async';i.src=a.src})}
 pms.addEventListener('click',e=>{if(e.target===pms||e.target.closest('[data-close]')){pms.close();return}
   if(e.target.closest('#pm-go')){if(shownId)bump(shownId,'t');window.CTTrack&&CTTrack.tap(shownId);window.CTPremCopy&&CTPremCopy.tap();buzz('firm');
     if(window.CTBoardUpgrade){pms.close();setTimeout(()=>window.CTBoardUpgrade(),calm.matches?0:260)}else toast('Upgrading opens at launch')}});

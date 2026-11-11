@@ -2339,3 +2339,23 @@ html[data-theme="dark"] :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdr
  .pms .pmb>.pmplans,.pms .pmb>.pmpill,.pms .pmb>.pmcta,.pms .pmb>.pmfine,.pms .pmb>.pmlater{grid-column:2}
  .pms .pmb>.pmplans{margin-bottom:12px}
 }
+
+/* v52.5: Premium header = a fan of three whole raw cards over a blurred wash of their colors (phone and desktop).
+   The cards shuffle through up to 9 while the window is open; only transform and opacity animate. */
+#pms .pmhero.pmfanned{--cw:86px;--ch:120px;--dx:48px;--ft:62px;height:206px!important;overflow:hidden;background:linear-gradient(150deg,color-mix(in srgb,var(--brand) 70%,#000),#1d1214 75%)!important}
+#pms .pmhero.pmfanned::after{z-index:0;background:linear-gradient(180deg,rgba(0,0,0,.18),rgba(0,0,0,0) 34%,color-mix(in srgb,var(--cb-alt) 70%,transparent) 74%,var(--cb-alt) 97%)}
+#pms .pmhero.pmfanned+.pmb{margin-top:-14px!important}
+.pmwash{position:absolute;inset:-40px;background-repeat:no-repeat;background-size:50% auto,50% auto,cover;background-position:left center,right center,center;filter:blur(36px) saturate(1.3);opacity:.8;pointer-events:none}
+.pmfan{position:absolute;z-index:1;left:50%;top:var(--ft);width:var(--cw);height:var(--ch);margin-left:calc(var(--cw)/-2);pointer-events:none}
+.pmc{position:absolute;inset:0;border-radius:calc(var(--cw)*.055);background:#2a2724 center/cover no-repeat;box-shadow:0 12px 26px rgba(0,0,0,.42);transform-origin:50% 100%;
+  transition:transform .75s cubic-bezier(.22,.8,.24,1),opacity .55s ease;will-change:transform,opacity;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+.pmc.s0{z-index:1;transform:translateX(calc(var(--dx)*-1)) rotate(-14deg)}
+.pmc.s1{z-index:2;transform:translateY(-6px)}
+.pmc.s2{z-index:1;transform:translateX(var(--dx)) rotate(14deg)}
+.pmc.gone{z-index:0;opacity:0;transform:translateX(calc(var(--dx)*-2)) rotate(-26deg)}
+.pmc.enter{z-index:0;opacity:0;transform:translateX(calc(var(--dx)*2)) rotate(26deg)}
+@media(min-width:900px) and (min-height:600px){
+ #pms .pmhero.pmfanned{--cw:110px;--ch:153px;--dx:60px;--ft:30px;height:212px!important}
+ #pms .pmhero.pmfanned+.pmb{margin-top:-8px!important}
+}
+@media(prefers-reduced-motion:reduce){.pmc{transition:none}}
