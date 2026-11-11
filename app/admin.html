@@ -100,6 +100,47 @@ td.n,th.n{text-align:right}
 .hct{display:grid;min-width:0}.hct small{color:var(--muted);font-size:12px;overflow-wrap:anywhere}.hct em{font-style:normal;color:var(--bad);font-size:12px;margin-top:3px}
 .hcm{color:var(--muted);font-size:11.5px;font-variant-numeric:tabular-nums}
 .hchist{display:flex;gap:3px;margin-top:14px}.hchist i{flex:1;height:18px;border-radius:3px;background:var(--good);opacity:.8}.hchist i.w{background:#e0a100}.hchist i.b{background:var(--bad)}
+
+/* v52.8 People: tappable rows and the account panel */
+.pplr{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--hair);cursor:pointer;width:100%;border-radius:10px}
+@media(hover:hover){.pplr:hover{background:var(--card2)}}
+.pplr:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.pdpl{display:inline-block;flex:none;font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:999px;background:var(--card2);color:var(--muted)}.pdpl.on{background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--brand)}
+.pdch{flex:none;color:var(--muted)}
+.pdbd{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);animation:pdF .2s ease}
+.pdw{position:fixed;z-index:61;top:0;right:0;bottom:0;width:min(480px,100vw);overflow-y:auto;overscroll-behavior:contain;background:var(--page);border-left:1px solid var(--hair);box-shadow:-24px 0 60px rgba(0,0,0,.25);padding:26px 26px max(30px,env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;animation:pdIn .28s cubic-bezier(.2,.8,.2,1)}
+html.pdopen{overflow:hidden}
+@keyframes pdIn{from{transform:translateX(40px);opacity:0}}@keyframes pdUp{from{transform:translateY(100%)}}@keyframes pdF{from{opacity:0}}
+.pdhd{display:flex;align-items:flex-start;gap:12px;margin-bottom:4px}.pdhd>div{flex:1;min-width:0}
+.pdhd h2{margin:0 0 4px;font-size:20px;font-weight:800;letter-spacing:-.01em;overflow-wrap:anywhere}.pdsub{margin:0 0 10px;color:var(--muted);font-size:13px;font-weight:600}
+.pdx{all:unset;box-sizing:border-box;flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--card2);cursor:pointer;font-size:13px;font-weight:800}
+.pdwarn{padding:12px 14px;border-radius:14px;background:color-mix(in srgb,var(--bad) 13%,transparent);color:var(--bad);font-weight:700;font-size:13px}
+.pds{background:var(--card);border:1px solid var(--hair);border-radius:18px;padding:18px}
+.pds h3{margin:0 0 10px;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.pdrw{display:flex;align-items:center;gap:10px;min-height:40px;font-size:13.5px}.pdrw>span{flex:1;color:var(--muted);font-weight:600}.pdrw>b{font-weight:800;text-align:right}.pdrw small{color:var(--muted);font-weight:600}
+.pdm{display:block;height:6px;border-radius:999px;background:var(--card2);overflow:hidden;margin:0 0 8px}.pdm i{display:block;height:100%;border-radius:inherit;background:var(--s2)}.pdm i.full{background:var(--bad)}
+.pdn{margin:8px 0 0;color:var(--muted);font-size:12.5px;font-weight:600;line-height:1.5}
+.pdlbl{font-size:12.5px;font-weight:700;color:var(--muted);margin:2px 0 8px}
+.pdseg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.pdseg button{all:unset;box-sizing:border-box;text-align:center;height:40px;line-height:40px;border-radius:12px;background:var(--card2);font-weight:800;font-size:12.5px;cursor:pointer}
+@media(hover:hover){.pdseg button:hover{background:color-mix(in srgb,var(--brand) 14%,var(--card2))}}
+.pdacts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.pdb{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;height:38px;padding:0 14px;border-radius:999px;background:var(--card2);font-weight:800;font-size:12.5px;cursor:pointer;white-space:nowrap;text-decoration:none;color:var(--text);flex:none}
+.pdrw .pdb{height:32px;padding:0 12px}
+.pdb[disabled]{opacity:.5;cursor:default}
+.pdb.warn{color:var(--text)}.pdb.danger{color:var(--bad)}
+.pdb.arm{background:var(--bad);color:#fff}
+.pdem{display:flex;gap:8px}.pdem input{flex:1;min-width:0;height:40px;border-radius:12px;border:1px solid var(--hair);background:var(--page);color:inherit;font:inherit;font-size:14px;padding:0 12px}
+.pdem .pdb{height:40px}
+.pdtg{display:flex;align-items:center;gap:12px;padding:14px 0 0;margin-top:14px;border-top:1px solid var(--hair)}.pdtg>span{flex:1;min-width:0}.pdtg b{display:block;font-size:13.5px}.pdtg small{display:block;color:var(--muted);font-size:12px;font-weight:600;margin-top:2px}
+.swt.danger[aria-checked="true"]{background:var(--bad)}.swt.arm{box-shadow:0 0 0 3px color-mix(in srgb,var(--bad) 45%,transparent)}
+.pdarmn{color:var(--bad)}
+.pdh{display:grid;gap:8px;font-size:13px}.pdh div{display:flex;gap:12px}.pdh span{flex:none;width:96px;color:var(--muted);font-weight:600}
+.pdmsg{min-height:20px;text-align:center;font-weight:800;font-size:13px;color:var(--good)}
+@media(max-width:760px){
+ .pdw{top:auto;left:0;width:auto;max-height:92vh;border-left:0;border-top:1px solid var(--hair);border-radius:24px 24px 0 0;padding:20px 16px max(24px,env(safe-area-inset-bottom,0px));animation:pdUp .3s cubic-bezier(.2,.8,.2,1)}
+ .pdseg{grid-template-columns:repeat(2,1fr)}
+}
+@media(prefers-reduced-motion:reduce){.pdw,.pdbd{animation:none}}
 </style></head><body><div class="wrap">
 </head><body>
 <style>
@@ -532,7 +573,7 @@ async function aqAct(id,action){if(st.smp||!REAL){AQ.items=AQ.items.filter(x=>x.
   try{await fetch(API+'/api/admin/art',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:JSON.stringify({id,action})})}catch(e){}AQ.items=(AQ.items||[]).filter(x=>x.id!==id);aqPaint()}
 // v50.63 Find a person: search accounts by email, give Premium as a gift (beta testers), list everyone with a gift
 let PPL=null,PQ='',PT=0;
-function peopleCard(){setTimeout(()=>{pplLoad(PQ)},0);return '<div class="grid" style="margin-bottom:14px"><div class="card c12" id="ppl"><div class="hch"><div><h3>Find a person</h3><div class="sub">Search by email to see someone’s plan, or give Premium as a gift (no card needed)</div></div></div>'+
+function peopleCard(){setTimeout(()=>{pplLoad(PQ)},0);return '<div class="grid" style="margin-bottom:14px"><div class="card c12" id="ppl"><div class="hch"><div><h3>Find a person</h3><div class="sub">Search by email, then tap someone to see their account: plan, gifts, limits, devices and more</div></div></div>'+
  '<input id="pplq" class="pplq" type="search" placeholder="Search by email" autocomplete="off" value="'+esc(PQ)+'"><div id="pplr"><div class="empty">Loading…</div></div></div></div>'}
 async function pplLoad(q){PQ=q||'';
  if(!REAL||st.smp){const all=[{id:'a',email:'jordan@example.com',name:'Jordan',plan:'premium',joined:1793900000,gift:true,paying:false,founderEligible:true},{id:'b',email:'sam.k@example.com',name:'Sam',plan:'free',joined:1794100000,gift:false,paying:false,founderEligible:true},{id:'c',email:'alex@example.com',name:'',plan:'premium',joined:1793500000,gift:false,paying:true,founderPrice:true,interval:'year',founderEligible:true}];
@@ -540,15 +581,99 @@ async function pplLoad(q){PQ=q||'';
  try{const r=await fetch(API+'/auth/admin/people?q='+encodeURIComponent(PQ),{credentials:'include'});PPL=await r.json();if(!r.ok)PPL={error:PPL.error||'Couldn’t load'}}catch(e){PPL={error:'Couldn’t load'}}pplPaint()}
 function pplPaint(){const el=document.getElementById('pplr');if(!el)return;if(!PPL){el.innerHTML='<div class="empty">Loading…</div>';return}if(PPL.error){el.innerHTML='<div class="empty">'+esc(PPL.error)+'</div>';return}
  const L=PPL.people||[],head=PQ.length>=2?'':'<div class="pplh">Everyone with a gift</div>';
- if(!L.length){el.innerHTML=head+'<div class="empty">'+(PQ.length>=2?'No account matches “'+esc(PQ)+'”.':'Nobody has a gift yet. Search for someone’s email to give them Premium.')+'</div>';return}
+ if(!L.length){el.innerHTML=head+'<div class="empty">'+(PQ.length>=2?'No account matches “'+esc(PQ)+'”.':'Nobody has a gift yet. Search for someone’s email to see their account.')+'</div>';return}
  const d=t=>t?new Date(t*1000).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
- el.innerHTML=head+'<div class="ppll">'+L.map(p=>{const plan=p.gift?'Premium (gift)':p.paying?'Premium · '+(p.interval==='year'?'yearly':'monthly')+(p.founderPrice?' · founders price':''):p.plan==='premium'?'Premium':'Free';
-  return '<div class="pplr"><div class="pplt"><b>'+esc(p.email)+'</b><small>'+(p.name?esc(p.name)+' · ':'')+'Joined '+d(p.joined)+' · '+plan+(p.founderEligible&&!p.paying&&!p.gift?' · founders price eligible':'')+'</small></div>'+
-  (p.paying?'<span class="pplpay">Paying</span>':'<button type="button" class="swt" role="switch" aria-checked="'+!!p.gift+'" aria-label="Give Premium to '+esc(p.email)+'" data-gift="'+esc(p.id)+'"><i></i></button>')+'</div>'}).join('')+'</div>'+(PPL.sample?'<div class="sub" style="margin-top:8px">Sample people. Live on cardtab.app.</div>':'')}
+ el.innerHTML=head+'<div class="ppll">'+L.map(p=>{const plan=p.gift?'Premium (gift)':p.paying?'Premium · '+(p.interval==='year'?'yearly':'monthly'):p.plan==='premium'?'Premium':'Free';
+  return '<button type="button" class="pplr" data-person="'+esc(p.id)+'"><span class="pplt"><b>'+esc(p.email)+'</b><small>'+(p.name?esc(p.name)+' · ':'')+'Joined '+d(p.joined)+'</small></span><span class="pdpl'+(plan!=='Free'?' on':'')+'">'+plan+'</span><svg class="pdch" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>'}).join('')+'</div>'+(PPL.sample?'<div class="sub" style="margin-top:8px">Sample people. Live on cardtab.app.</div>':'')}
 document.addEventListener('input',e=>{if(e.target&&e.target.id==='pplq'){clearTimeout(PT);const v=e.target.value.trim();PT=setTimeout(()=>pplLoad(v),280)}});
-document.addEventListener('click',async e=>{const b=e.target.closest('[data-gift]');if(!b)return;const on=b.getAttribute('aria-checked')!=='true';b.setAttribute('aria-checked',String(on));
- if(!REAL||st.smp){const p=(PPL.people||[]).find(x=>x.id===b.dataset.gift);if(p){p.gift=on;p.plan=on?'premium':'free'}pplPaint();return}
- try{const r=await fetch(API+'/auth/admin/people/gift',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:JSON.stringify({id:b.dataset.gift,on})});if(!r.ok)throw 0;pplLoad(PQ)}catch(er){b.setAttribute('aria-checked',String(!on))}});
+
+// ---------- v52.8 one person: details and account tools (a side panel on desktop, a bottom sheet on phones) ----------
+let PD=null,PDbusy=false,PDmsg='',PDarm='',PDarmT=0;
+const SAMPLE_P={a:{id:'a',email:'jordan@example.com',name:'Jordan',joined:1793900000,lastSeen:Math.floor(Date.now()/1000)-7200,via:'Google',plan:'premium',gift:true,giftUntil:Math.floor(Date.now()/1000)+21*86400,paying:false,stripe:'',month:{entries:34,limit:null,bonus:0,ask:12,askLimit:50},totals:{entries:212,uploads:3},share:{live:true,views:48,since:1794000000},devices:[{name:'iPhone · Safari',since:Math.floor(Date.now()/1000)-86400*3},{name:'Mac · Chrome',since:Math.floor(Date.now()/1000)-86400*12}],suspended:false,uploadsOff:false,history:[{at:Math.floor(Date.now()/1000)-86400*9,what:'Gift of Premium for 30 days'}]},
+ b:{id:'b',email:'sam.k@example.com',name:'Sam',joined:1794100000,lastSeen:Math.floor(Date.now()/1000)-86400,via:'Email',plan:'free',gift:false,giftUntil:null,paying:false,stripe:'',month:{entries:18,limit:20,bonus:0,ask:5,askLimit:5},totals:{entries:41,uploads:0},share:null,devices:[{name:'Android · Chrome',since:Math.floor(Date.now()/1000)-86400*2}],suspended:false,uploadsOff:false,history:[]},
+ c:{id:'c',email:'alex@example.com',name:'',joined:1793500000,lastSeen:Math.floor(Date.now()/1000)-600,via:'Email',plan:'premium',gift:false,paying:true,interval:'year',founderPrice:true,status:'active',renews:Math.floor(Date.now()/1000)+300*86400,cancelAtEnd:false,stripe:'https://dashboard.stripe.com/test/customers/cus_sample',month:{entries:52,limit:null,bonus:0,ask:7,askLimit:50},totals:{entries:388,uploads:1},share:{live:false,views:5,since:1794000000},devices:[{name:'iPhone · Safari',since:Math.floor(Date.now()/1000)-86400}],suspended:false,uploadsOff:false,history:[{at:Math.floor(Date.now()/1000)-86400*20,what:'Upgraded to Premium'}]}};
+const pdSample=()=>!REAL||st.smp;
+const pdD=t=>t?new Date(t*1000).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
+const pdAgo=t=>{if(!t)return 'Never';const s=Date.now()/1000-t;return s<3600?'Just now':s<86400?Math.round(s/3600)+' hr ago':s<86400*30?(Math.round(s/86400)===1?'1 day ago':Math.round(s/86400)+' days ago'):pdD(t)};
+async function pdOpen(id){PD={loading:1,id};PDmsg='';PDarm='';pdShow();
+ if(pdSample()){PD=JSON.parse(JSON.stringify(SAMPLE_P[id]||SAMPLE_P.b));PD.sample=1;pdPaint();return}
+ try{const r=await fetch(API+'/auth/admin/people/one?id='+encodeURIComponent(id),{credentials:'include'});const j=await r.json();PD=r.ok?j.person:{error:j.error||'Couldn’t load'}}catch(e){PD={error:'Couldn’t load'}}pdPaint()}
+function pdShow(){let w=document.getElementById('pdw');if(!w){document.body.insertAdjacentHTML('beforeend','<div class="pdbd" id="pdbd"></div><aside class="pdw" id="pdw" role="dialog" aria-modal="true" aria-label="Account"></aside>');w=document.getElementById('pdw')}
+ document.getElementById('pdbd').hidden=false;w.hidden=false;document.documentElement.classList.add('pdopen');pdPaint();setTimeout(()=>{const x=w.querySelector('.pdx');x&&x.focus({preventScroll:true})},30)}
+function pdClose(){const w=document.getElementById('pdw');if(!w)return;w.hidden=true;document.getElementById('pdbd').hidden=true;document.documentElement.classList.remove('pdopen');PD=null}
+function pdRow(label,val,act){return '<div class="pdrw"><span>'+label+'</span><b>'+val+'</b>'+(act||'')+'</div>'}
+const pdBtn=(act,label,o={})=>'<button type="button" class="pdb'+(o.cls?' '+o.cls:'')+(PDarm===act?' arm':'')+'" data-pact="'+act+'"'+(o.extra||'')+(PDbusy?' disabled':'')+'>'+(PDarm===act?(o.armLabel||'Tap again to confirm'):label)+'</button>';
+function pdPaint(){const w=document.getElementById('pdw');if(!w||w.hidden)return;
+ const x='<button type="button" class="pdx" data-pdclose aria-label="Close">✕</button>';
+ if(!PD||PD.loading){w.innerHTML='<div class="pdhd"><div><h2>Loading…</h2></div>'+x+'</div>';return}
+ if(PD.error){w.innerHTML='<div class="pdhd"><div><h2>Couldn’t open this account</h2><p class="pdsub">'+esc(PD.error)+'</p></div>'+x+'</div>';return}
+ if(PD.deleted){w.innerHTML='<div class="pdhd"><div><h2>Account deleted</h2><p class="pdsub">'+esc(PD.email)+' and everything kept for it are gone.</p></div>'+x+'</div>';return}
+ const P=PD,M=P.month||{},plan=P.gift?'Premium · gift'+(P.giftUntil?' until '+pdD(P.giftUntil):''):P.paying?'Premium · '+(P.interval==='year'?'yearly':'monthly')+(P.founderPrice?' · founders price':''):P.plan==='premium'?'Premium':'Free';
+ const meter=(n,l)=>l?'<span class="pdm"><i style="width:'+Math.min(100,n/l*100)+'%"'+(n>=l?' class="full"':'')+'></i></span>':'';
+ let h='<div class="pdhd"><div><h2>'+esc(P.email)+'</h2><p class="pdsub">'+(P.name?esc(P.name)+' · ':'')+'Joined '+pdD(P.joined)+' · Signs in with '+esc(P.via)+'</p><span class="pdpl'+(plan!=='Free'?' on':'')+'">'+plan+'</span></div>'+x+'</div>';
+ if(P.suspended)h+='<div class="pdwarn">This account is paused. They’re signed out and can’t sign in until you unpause it.</div>';
+ // plan
+ h+='<section class="pds"><h3>Plan</h3>';
+ if(P.paying){h+=pdRow('Status',P.cancelAtEnd?'Cancels '+pdD(P.renews):(P.status==='past_due'?'Payment failed, retrying':'Renews '+pdD(P.renews)))+'<p class="pdn">They pay through Stripe, so gifts are off for this account. Refunds and receipts live in Stripe.</p>'}
+ else{h+='<div class="pdlbl">'+(P.gift?'Change the gift':'Give Premium as a gift')+'</div><div class="pdseg">'+[[7,'7 days'],[30,'30 days'],[365,'1 year'],[0,'No end date']].map(([d,l])=>'<button type="button" data-pact="gift" data-days="'+d+'"'+(PDbusy?' disabled':'')+'>'+l+'</button>').join('')+'</div>'+(P.gift?'<div class="pdacts">'+pdBtn('giftoff','Turn the gift off')+'</div>':'')}
+ if(P.stripe)h+='<div class="pdacts"><a class="pdb" href="'+esc(P.stripe)+'" target="_blank" rel="noopener">Open in Stripe ↗</a></div>';
+ h+='</section>';
+ // this month
+ h+='<section class="pds"><h3>This month</h3>'+
+  pdRow('Entries',M.limit?M.entries+' of '+M.limit+(M.bonus?' <small>(+'+M.bonus+' from you)</small>':''):M.entries+' <small>· no limit</small>',P.plan==='premium'?'':pdBtn('entries','Give 20 more'))+(M.limit?meter(M.entries,M.limit):'')+
+  pdRow('Ask questions',M.ask+' of '+M.askLimit,M.ask?pdBtn('ask','Reset'):'')+meter(M.ask,M.askLimit)+
+  '<p class="pdn">Entries count from synced devices. Free resets on the 1st.</p></section>';
+ // activity
+ const sh=P.share;
+ h+='<section class="pds"><h3>Activity</h3>'+pdRow('Last active',pdAgo(P.lastSeen))+pdRow('Entries in all',(P.totals||{}).entries||0)+pdRow('Card photos uploaded',(P.totals||{}).uploads||0)+
+  pdRow('Shared board',sh?(sh.live?'Live · '+sh.views+' views':'Off · '+sh.views+' views'):'Never shared',sh&&sh.live?pdBtn('share','Turn link off',{cls:'warn'}):'')+'</section>';
+ // devices
+ const D=P.devices||[];
+ h+='<section class="pds"><h3>Signed in on</h3>'+(D.length?D.map(d=>pdRow(esc(d.name),'Since '+pdD(d.since))).join(''):'<p class="pdn">Not signed in anywhere right now.</p>')+(D.length?'<div class="pdacts">'+pdBtn('signout','Sign out everywhere',{cls:'warn'})+'</div>':'')+'</section>';
+ // account
+ h+='<section class="pds"><h3>Account</h3><div class="pdlbl">Sign-in email</div><form class="pdem" data-pdem><input type="email" id="pdemi" value="'+esc(P.email)+'" autocomplete="off" aria-label="New sign-in email"><button type="submit" class="pdb'+(PDarm==='email'?' arm':'')+'"'+(PDbusy?' disabled':'')+'>'+(PDarm==='email'?'Tap again to save':'Save')+'</button></form>'+
+  '<p class="pdn">For when they lose access to their old address. They’ll sign in with the new one.</p>'+
+  '<div class="pdtg"><span><b>Card photo uploads</b><small>Turn off for someone uploading junk</small></span><button type="button" class="swt" role="switch" aria-checked="'+!P.uploadsOff+'" data-pact="uploads" aria-label="Card photo uploads"><i></i></button></div>'+
+  '<div class="pdtg"><span><b>Pause account</b><small>Signs them out and stops sign-in. Nothing is deleted.</small></span><button type="button" class="swt danger'+(PDarm==='suspend'?' arm':'')+'" role="switch" aria-checked="'+!!P.suspended+'" data-pact="suspend" aria-label="Pause account"><i></i></button></div>'+(PDarm==='suspend'?'<p class="pdn pdarmn">Tap the switch again to pause.</p>':'')+'</section>';
+ // history
+ const H=P.history||[];
+ h+='<section class="pds"><h3>History</h3>'+(H.length?'<div class="pdh">'+H.map(e=>'<div><span>'+pdD(e.at)+'</span>'+esc(e.what)+'</div>').join('')+'</div>':'<p class="pdn">Nothing yet. Plan changes and anything you do here show up in this list.</p>')+'</section>';
+ // privacy
+ h+='<section class="pds"><h3>Privacy requests</h3><div class="pdacts">'+pdBtn('export','Download their data')+pdBtn('delete','Delete account',{cls:'danger',armLabel:'Tap again to delete forever'})+'</div>'+
+  '<p class="pdn">'+(P.paying&&!P.cancelAtEnd?'Delete is blocked while their subscription runs. Cancel it in Stripe first.':'Delete removes their account, entries, photos and shared board. It can’t be undone.')+'</p></section>';
+ h+='<div class="pdmsg" role="status" aria-live="polite">'+esc(PDmsg)+'</div>'+(P.sample?'<p class="pdn" style="text-align:center">Sample account. Nothing here is real.</p>':'');
+ const top=w.scrollTop;w.innerHTML=h;w.scrollTop=top}
+const ARMED=new Set(['giftoff','signout','share','email','suspend','delete']);
+async function pdAct(act,extra={}){
+ if(ARMED.has(act)&&PDarm!==act&&!(act==='suspend'&&PD.suspended)){PDarm=act;clearTimeout(PDarmT);PDarmT=setTimeout(()=>{PDarm='';pdPaint()},3500);pdPaint();return}
+ PDarm='';clearTimeout(PDarmT);
+ const body=Object.assign({id:PD.id,act},extra);
+ if(act==='giftoff'){body.act='gift';body.on=false}
+ if(act==='gift'){body.on=true}
+ if(act==='uploads')body.on=PD.uploadsOff;
+ if(act==='suspend')body.on=!PD.suspended;
+ const said={gift:'Gift saved',giftoff:'Gift turned off',entries:'20 more entries for this month',ask:'Ask questions reset',signout:'Signed out everywhere',email:'Email changed',share:'Shared board link turned off',uploads:body.on?'Photo uploads allowed':'Photo uploads blocked',suspend:body.on?'Account paused':'Account unpaused',export:'Downloaded',delete:'Deleted'}[act];
+ if(pdSample()){pdSampleAct(body,act);PDmsg=said+' (sample)';pdPaint();return}
+ PDbusy=true;pdPaint();
+ try{const r=await fetch(API+'/auth/admin/people/act',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:JSON.stringify(body)});const j=await r.json();
+  if(!r.ok)throw new Error(j.error||'That didn’t work');
+  if(act==='export')pdSave(j.data);
+  if(j.deleted){PD={deleted:1,email:PD.email};pplLoad(PQ)}else{PD=j.person;if(['gift','giftoff','email'].includes(act))pplLoad(PQ)}
+  PDmsg=said}catch(e){PDmsg=e.message||'That didn’t work'}PDbusy=false;pdPaint()}
+function pdSave(data){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='card-tab-'+String((data.account||{}).email||'account').replace(/[^\w.-]+/g,'_')+'.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function pdSampleAct(b,act){const P=PD,t=Math.floor(Date.now()/1000),log=w=>P.history.unshift({at:t,what:w});
+ if(b.act==='gift'){P.gift=!!b.on;P.plan=b.on?'premium':'free';P.giftUntil=b.on&&b.days?t+b.days*86400:null;if(P.plan==='premium'){P.month.limit=null;P.month.askLimit=50}else{P.month.limit=20;P.month.askLimit=5}log(b.on?'Gift of Premium'+(b.days?' for '+b.days+' days':', no end date'):'Gift turned off')}
+ else if(act==='entries'){P.month.bonus+=20;P.month.limit+=20;log('20 more entries this month')}else if(act==='ask'){P.month.ask=0;log('Ask questions reset for this month')}
+ else if(act==='signout'){P.devices=[];log('Signed out everywhere')}else if(act==='email'){P.email=b.email;log('Email changed')}else if(act==='share'){P.share.live=false;log('Shared board link turned off')}
+ else if(act==='uploads'){P.uploadsOff=!b.on;log(b.on?'Photo uploads allowed':'Photo uploads blocked')}else if(act==='suspend'){P.suspended=!!b.on;if(b.on)P.devices=[];log(b.on?'Account paused':'Account unpaused')}
+ else if(act==='export')pdSave({sample:true,account:{email:P.email},entries:[]});else if(act==='delete')PD={deleted:1,email:P.email}}
+document.addEventListener('click',e=>{const pr=e.target.closest('[data-person]');if(pr){pdOpen(pr.dataset.person);return}
+ if(e.target.closest('[data-pdclose]')||e.target.id==='pdbd'){pdClose();return}
+ const b=e.target.closest('#pdw [data-pact]');if(!b||PDbusy)return;const act=b.dataset.pact;
+ if(act==='gift'){pdAct('gift',{days:+b.dataset.days});return}
+ pdAct(act)});
+document.addEventListener('submit',e=>{if(!e.target.closest('[data-pdem]'))return;e.preventDefault();const v=(document.getElementById('pdemi').value||'').trim();if(!v||v===PD.email){PDmsg='Type their new email first';pdPaint();return}pdAct('email',{email:v})});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('pdw')&&!document.getElementById('pdw').hidden)pdClose()});
 function artCard(){setTimeout(()=>{if(!AQ)aqLoad();else aqPaint()},0);return '<div class="grid" style="margin-bottom:14px"><div class="card c12" id="aq"><h3>Card art to review</h3><div class="empty">Loading…</div></div></div>'}
 function aqPaint(){const el=document.getElementById('aq');if(!el)return;const L=(AQ&&AQ.items)||[],src=u=>/^https?:/.test(u)||!REAL||(AQ&&L[0]&&L[0].sample)?u:API+u;
   const ago=t=>{const m=Math.round((Date.now()/1000-t)/60);return m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago'};

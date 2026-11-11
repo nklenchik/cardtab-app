@@ -130,6 +130,10 @@
 
   // ---------- plan + usage ----------
   function plan() { return meta.plan === 'premium' ? 'premium' : 'free'; }
+  // v52.8: extra Free entries an admin gave this month ({ m: 'YYYY-MM', n }), from the server on each start
+  let bonus = null;
+  function setBonus(b) { bonus = b && b.m && b.n > 0 ? { m: String(b.m), n: Math.floor(b.n) } : null; }
+  const limitNow = () => FREE_LIMIT + (bonus && bonus.m === ym(new Date()) ? bonus.n : 0);
   function usageRaw() {
     const m = ym(new Date()), t = meta.usageTest;   // usageTest: the testing tool's override
     if (t && t.month === m) return { month: m, used: t.used };
@@ -141,8 +145,8 @@
     const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     const resetsOn = next.toLocaleString('en-US', { month: 'short', day: 'numeric' });
     if (p === 'premium') return { plan: p, used: u.used, limit: Infinity, left: Infinity, warn: false, blocked: false, resetsOn };
-    const left = Math.max(0, FREE_LIMIT - u.used);
-    return { plan: p, used: u.used, limit: FREE_LIMIT, left, warn: u.used >= WARN_AT && u.used < FREE_LIMIT, blocked: u.used >= FREE_LIMIT, resetsOn };
+    const L = limitNow(), left = Math.max(0, L - u.used);
+    return { plan: p, used: u.used, limit: L, left, warn: u.used >= L - 3 && u.used < L, blocked: u.used >= L, resetsOn };
   }
   async function bumpUsage(d) { const t = meta.usageTest; if (t && t.month === ym(new Date())) await rawMeta('usageTest', { month: t.month, used: Math.max(0, t.used + d) }); }   // otherwise usage follows the entries
 
@@ -155,7 +159,7 @@
 
   // ---------- public API ----------
   const Store = {
-    FREE_LIMIT, WARN_AT, toCents, fromCents, today, ymd,
+    FREE_LIMIT, WARN_AT, setBonus, toCents, fromCents, today, ymd,
     get persistent() { return persistent; },
     get account() { return account; },
 

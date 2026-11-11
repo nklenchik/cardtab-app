@@ -3,6 +3,7 @@
    GET /art/:id/:size                          -> our own copy of the card art as WebP (size: list | detail)
    /auth/*                                     -> sign-in (see auth.js)
    Nothing here is exposed to the app except our own ids and our own image URLs. */
+import { giftSweep } from './people.js';
 import { runHealth } from './health.js';
 const HEALTH_CRON = '7 12 * * *';   // daily check: 12:07 UTC (7:07am Eastern in winter, 8:07am in summer)
 import { handlePublicShare, cleanupShares } from './share.js';
@@ -137,7 +138,7 @@ async function art(env, ctx, id, size) {
 export default {
   async scheduled(evt, env, ctx) { ctx.waitUntil(ensureSchema(env).catch(() => {}));   // v51.4: tables kept up to date by the Worker itself
     if (evt && evt.cron === HEALTH_CRON) { ctx.waitUntil(runHealth(env)); return; }
-    if (evt && evt.cron === CAT_CRON) { ctx.waitUntil(catalogStep(env, { art: id => art(env, ctx, id, 'list') }).catch(() => {})); return; } ctx.waitUntil(cleanupAnalytics(env)); ctx.waitUntil(cleanupShares(env)); ctx.waitUntil(graceSweep(env)); },
+    if (evt && evt.cron === CAT_CRON) { ctx.waitUntil(catalogStep(env, { art: id => art(env, ctx, id, 'list') }).catch(() => {})); return; } ctx.waitUntil(giftSweep(env)); ctx.waitUntil(cleanupAnalytics(env)); ctx.waitUntil(cleanupShares(env)); ctx.waitUntil(graceSweep(env)); },
   async fetch(req, env, ctx) {
     const u = new URL(req.url);
     { const m = u.pathname.match(/^\/s\/b\/([a-z0-9]{1,32})$/); if (m && req.method === 'GET') { try { return await handlePublicShare(env, req, m[1]); } catch (e) { return new Response(JSON.stringify({ error: 'gone' }), { status: 404, headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' } }); } } }

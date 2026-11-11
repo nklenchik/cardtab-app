@@ -55,7 +55,7 @@ export async function stripe(env, method, path, params) {
 
 // ---------- the billing table (made on first use) ----------
 let tableReady = false;
-async function ensureTable(env) {
+export async function ensureTable(env) {
   if (tableReady) return;
   await env.DB.batch([
     env.DB.prepare('CREATE TABLE IF NOT EXISTS billing ( user_id TEXT PRIMARY KEY, customer TEXT, sub TEXT, status TEXT, price_key TEXT, interval TEXT, amount INTEGER, founder INTEGER DEFAULT 0, period_end INTEGER, cancel_at_end INTEGER DEFAULT 0, grace_until INTEGER, card_brand TEXT, card_last4 TEXT, pending_key TEXT, schedule TEXT, gift INTEGER DEFAULT 0, updated INTEGER, mailed INTEGER DEFAULT 0 )'),
@@ -65,17 +65,17 @@ async function ensureTable(env) {
   try { await env.DB.prepare('ALTER TABLE billing ADD COLUMN mailed INTEGER DEFAULT 0').run(); } catch (e) {}
   tableReady = true;
 }
-const rowOf = async (env, uid) => (await env.DB.prepare('SELECT * FROM billing WHERE user_id=?').bind(uid).first()) || null;
-async function saveRow(env, uid, patch) {
+export const rowOf = async (env, uid) => (await env.DB.prepare('SELECT * FROM billing WHERE user_id=?').bind(uid).first()) || null;
+export async function saveRow(env, uid, patch) {
   const cur = (await rowOf(env, uid)) || { user_id: uid };
   const r = Object.assign({ gift: 0, founder: 0, cancel_at_end: 0 }, cur, patch, { updated: now() });
   const cols = ['user_id', 'customer', 'sub', 'status', 'price_key', 'interval', 'amount', 'founder', 'period_end', 'cancel_at_end', 'grace_until', 'card_brand', 'card_last4', 'pending_key', 'schedule', 'gift', 'updated', 'mailed'];
   await env.DB.prepare('INSERT OR REPLACE INTO billing (' + cols.join(',') + ') VALUES (' + cols.map(() => '?').join(',') + ')').bind(...cols.map(c => (r[c] === undefined ? null : r[c]))).run();
   return r;
 }
-const ACTIVE = s => s === 'active' || s === 'trialing' || s === 'past_due';
+export const ACTIVE = s => s === 'active' || s === 'trialing' || s === 'past_due';
 // the plan an account should have: a gift, or a subscription that's paid up (or within its 7 days after a failed payment)
-const planOf = r => (r && (r.gift || (ACTIVE(r.status) && !(r.status === 'past_due' && r.grace_until && r.grace_until < now()))) ? 'premium' : 'free');
+export const planOf = r => (r && (r.gift || (ACTIVE(r.status) && !(r.status === 'past_due' && r.grace_until && r.grace_until < now()))) ? 'premium' : 'free');
 async function applyPlan(env, uid, r) {
   const u = await env.DB.prepare('SELECT plan FROM users WHERE id=?').bind(uid).first(); if (!u) return;
   const want = planOf(r);
@@ -86,7 +86,7 @@ async function applyPlan(env, uid, r) {
   if (want === 'free' && u.plan === 'premium' && (r.customer || r.gift === 0)) { await env.DB.prepare("UPDATE users SET plan='free' WHERE id=?").bind(uid).run(); if (r.customer) await planEv(env, uid, 'down'); }
 }
 // v51.5: paid upgrades and moves back to Free, counted in the daily check
-async function planEv(env, uid, kind) { try { await env.DB.prepare('INSERT INTO plan_ev (at,uid,kind) VALUES (?,?,?)').bind(now(), uid, kind).run(); } catch (e) { /* table made on the next background run */ } }
+export async function planEv(env, uid, kind) { try { await env.DB.prepare('INSERT INTO plan_ev (at,uid,kind) VALUES (?,?,?)').bind(now(), uid, kind).run(); } catch (e) { /* table made on the next background run */ } }
 
 // ---------- prices and the billing page settings, made once and found again ----------
 let priceCache = null;

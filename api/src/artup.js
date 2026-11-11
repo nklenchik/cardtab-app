@@ -7,6 +7,7 @@
 //   Passes become the card's default art when auto-fill has none. Anything flagged (or when the check can't run) waits in the
 //   admin review queue.
 import { currentUser, isAdmin } from './auth.js';
+import { acctOf } from './people.js';
 
 const SIZES = { detail: { maxW: 700, maxH: 1000, maxB: 600 * 1024 }, list: { maxW: 260, maxH: 380, maxB: 160 * 1024 } };
 const SHARE_MIN_W = 600, PER_DAY = 40;
@@ -104,6 +105,7 @@ export async function handleArt(env, req, path, cors, ctx) {
   const me = await currentUser(env, req).catch(() => null);
   if (path === '/api/art/upload' && req.method === 'POST') {
     if (!me) return J(env, cors, { error: 'Sign in to upload a photo.' }, 401);
+    if ((await acctOf(env, me.id)).no_upload) return J(env, cors, { error: 'Photo uploads are turned off for this account. Email hello@cardtab.app if that’s a mistake.' }, 403);   // v52.8
     const recent = await env.DB.prepare('SELECT COUNT(*) n FROM art_uploads WHERE user_id=? AND created>?').bind(me.id, now() - 86400).first();
     if (recent && recent.n >= PER_DAY) return J(env, cors, { error: 'That’s a lot of photos for one day. Try again tomorrow.' }, 429);
     let fd; try { fd = await req.formData(); } catch (e) { return J(env, cors, { error: 'Couldn’t read the photo.' }, 400); }

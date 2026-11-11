@@ -1,5 +1,4 @@
 import { handleBilling, cancelForDelete } from './billing.js';
-import { deleteUserPhotos } from './artup.js';
 import { handleHealth } from './health.js';
 import { handleShare } from './share.js';
 import { handleEvents, handleStats, handleSiteStats } from './analytics.js';
@@ -22,7 +21,8 @@ import { handleAsk } from './ask.js';
 import { report } from './budget.js';
 import { catReport } from './catalog.js';
 import { signInEmail, sendMail, welcomeEmail } from './email.js';
-import { handleSync, deleteSynced } from './sync.js';
+import { handleSync } from './sync.js';
+import { handlePeople, acctOf, bonusOut, wipeAccount } from './people.js';
 
 const DAY = 86400, SESSION_DAYS = 30, LINK_MIN = 15;
 const now = () => Math.floor(Date.now() / 1000);
@@ -47,6 +47,7 @@ const out = (env, req, body, status = 200, extra = {}) => new Response(JSON.stri
 const cookieDomain = env => env.COOKIE_DOMAIN === undefined ? 'cardtab.app' : env.COOKIE_DOMAIN;
 const setCookie = (env, name, val, maxAge, path = '/') => `${name}=${val}; ${cookieDomain(env) ? 'Domain=' + cookieDomain(env) + '; ' : ''}Path=${path}; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
 const getCookie = (req, name) => { const m = (req.headers.get('cookie') || '').match(new RegExp('(?:^|;\\s*)' + name + '=([^;]+)')); return m ? m[1] : ''; };
+const PAUSED = 'This account is paused. Email hello@cardtab.app and we’ll sort it out.';
 const userOut = (env, u) => ({ id: u.id, email: u.email, name: u.name || '', plan: u.plan || 'free', role: isAdmin(env, u.email) ? 'admin' : 'user', since: u.created_at });
 
 async function upsertUser(env, email, extra = {}) {
@@ -107,8 +108,9 @@ async function emailVerify(env, req) {
   if (!row || row.used_at || row.expires_at < t) return out(env, req, { error: 'This sign-in link has expired or was already used. Ask for a new one.' }, 400);
   await env.DB.prepare('UPDATE login_tokens SET used_at=? WHERE id=?').bind(t, row.id).run();
   const u = await upsertUser(env, row.email);
+  if ((await acctOf(env, u.id)).suspended) return out(env, req, { error: PAUSED }, 403);   // v52.8: paused by an admin
   const c = await newSession(env, req, u);
-  return out(env, req, { user: userOut(env, u), isNew: !!u.isNew }, 200, { 'set-cookie': c });
+  return out(env, req, { user: Object.assign(userOut(env, u), { bonus: bonusOut(await acctOf(env, u.id)) }), isNew: !!u.isNew }, 200, { 'set-cookie': c });
 }
 
 async function googleStart(env, req) {
@@ -130,6 +132,7 @@ async function googleCallback(env, req) {
   let p = {}; try { p = JSON.parse(atob(tok.id_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch (e) {}
   if (p.aud !== env.GOOGLE_CLIENT_ID || !/accounts\.google\.com$/.test(p.iss || '') || !p.email || p.email_verified === false || p.exp < now()) return back('signin_error=google');
   const user = await upsertUser(env, normEmail(p.email), { name: p.given_name || p.name || '', sub: p.sub });
+  if ((await acctOf(env, user.id)).suspended) return back('signin_error=paused');
   const c = await newSession(env, req, user);
   const h = new Headers({ location: appUrl(env) + '/?signedin=google' + (user.isNew || mode === 'up' ? '&new=1' : ''), 'cache-control': 'no-store' });
   h.append('set-cookie', c); h.append('set-cookie', setCookie(env, 'ct_g', '', 0, '/auth/google'));
@@ -146,7 +149,7 @@ export async function handleAuth(env, req, path) {
   if (path === '/auth/me') {
     if (!me) return out(env, req, { user: null }, 401);
     if (now() - (me.last_seen_at || 0) > 3600) await env.DB.prepare('UPDATE users SET last_seen_at=? WHERE id=?').bind(now(), me.id).run();
-    return out(env, req, { user: userOut(env, me) });
+    return out(env, req, { user: Object.assign(userOut(env, me), { bonus: bonusOut(await acctOf(env, me.id)) }) });   // v52.8: extra Free entries an admin gave this month
   }
   if (path === '/auth/logout' && req.method === 'POST') {
     if (me) await env.DB.prepare('DELETE FROM sessions WHERE id=?').bind(me.sid).run();
@@ -162,10 +165,13 @@ export async function handleAuth(env, req, path) {
   if (path === '/auth/delete' && req.method === 'POST') {
     try { await cancelForDelete(env, me.id); }   // Premium ends first; if Stripe can't be reached, nothing is deleted (v50.72)
     catch (e) { return out(env, req, { error: e.message }, e.status || 502); }
-    await deleteUserPhotos(env, me.id);   // their own card photos and upload records (v50.61)
-    await env.DB.batch([...(await deleteSynced(env, me.id)), env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(me.id), env.DB.prepare('DELETE FROM an_active WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM an_feat WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM shares WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM an_user WHERE uid=?').bind(me.id), env.DB.prepare('DELETE FROM login_tokens WHERE email=?').bind(me.email), env.DB.prepare('DELETE FROM users WHERE id=?').bind(me.id)]);
-    try { await env.DB.prepare('DELETE FROM an_copy WHERE uid=?').bind(me.id).run(); } catch (e) { /* v50.95 copy test table not made yet */ }
+    await wipeAccount(env, me.id, me.email);   // v52.8: the same wipe the admin dashboard uses
     return out(env, req, { ok: true }, 200, { 'set-cookie': setCookie(env, 'ct_s', '', 0) });
+  }
+  // v52.8 admin account tools: one person's details and actions
+  if (path === '/auth/admin/people/one' || path === '/auth/admin/people/act') {
+    if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);
+    const r = await handlePeople(env, req, path, (body, status = 200) => out(env, req, body, status)); if (r) return r;
   }
   // v50.63 Premium billing (Stripe) and, for admins, finding people and giving Premium
   if (path.startsWith('/auth/billing') || path.startsWith('/auth/admin/people')) { try { const r = await handleBilling(env, req, me, path, (body, status = 200) => out(env, req, body, status), isAdmin(env, me.email)); if (r) return r; } catch (e) { return out(env, req, { error: e.status === 503 ? 'Payments aren’t set up yet.' : (e.message || 'Something went wrong. Try again.') }, e.status || 500); } }

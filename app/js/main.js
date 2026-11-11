@@ -31,6 +31,7 @@
     $('am-dev').hidden = !((session && session.role === 'admin') || (Sess.LOCAL_MODE && !PUBLIC_HOST));
     $('am-cd').hidden = !(Sess.REAL && session && session.role === 'admin');
     if (Sess.REAL && session && session.plan && S.plan && S.plan() !== session.plan) S.setPlan(session.plan);
+    if (S.setBonus) S.setBonus(session && session.bonus);   // v52.8: extra Free entries from an admin
   }
   function showAuth() {
     if (window.CTSync) window.CTSync.stop();
@@ -141,7 +142,7 @@
       p.innerHTML = ''; p.hidden = true;
       n.hidden = true;
     } else {
-      p.hidden = false; p.innerHTML = '<div class="r"><b>Free plan</b><button type="button" class="up" data-upgrade>Upgrade</button></div><div class="am-meter' + (u.used >= S.WARN_AT ? ' warn' : '') + '"><i style="width:' + Math.min(100, u.used / u.limit * 100) + '%"></i></div><small>' + u.used + ' of ' + u.limit + ' entries this month · resets ' + u.resetsOn + '</small>';
+      p.hidden = false; p.innerHTML = '<div class="r"><b>Free plan</b><button type="button" class="up" data-upgrade>Upgrade</button></div><div class="am-meter' + (u.warn || u.blocked ? ' warn' : '') + '"><i style="width:' + Math.min(100, u.used / u.limit * 100) + '%"></i></div><small>' + u.used + ' of ' + u.limit + ' entries this month · resets ' + u.resetsOn + '</small>';
       n.hidden = !(u.warn || u.blocked);
       n.textContent = u.blocked ? 'You’ve used all 20 free entries. They reset on ' + u.resetsOn + '.' : 'You’re nearing your limit: ' + u.left + (u.left === 1 ? ' entry' : ' entries') + ' left this month.';
     }

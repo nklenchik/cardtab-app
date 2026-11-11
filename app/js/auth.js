@@ -26,12 +26,12 @@
         return s;
       } catch (e) { return null; }
     },
-    signIn({ email, name, via, role, plan, id }) {
-      const s = { email: String(email).trim().toLowerCase(), name: name || '', via: via || 'email', role: role || 'user', plan: plan || '', id: id || '', expires: Date.now() + DAYS * 864e5 };
+    signIn({ email, name, via, role, plan, id, bonus }) {
+      const s = { email: String(email).trim().toLowerCase(), name: name || '', via: via || 'email', role: role || 'user', plan: plan || '', id: id || '', bonus: bonus || null, expires: Date.now() + DAYS * 864e5 };
       try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* private window: session lasts until the tab closes */ }
       Session._mem = s; return s;
     },
-    fromUser(u, via) { return Session.signIn({ email: u.email, name: u.name, via: via || 'email', role: u.role, plan: u.plan, id: u.id }); },
+    fromUser(u, via) { return Session.signIn({ email: u.email, name: u.name, via: via || 'email', role: u.role, plan: u.plan, id: u.id, bonus: u.bonus || null }); },
     signOut() { if (REAL) api('/auth/logout', {}).catch(() => {}); try { localStorage.removeItem(KEY); } catch (e) {} Session._mem = null; },
     // Settings → Account: ends every session for this account (throws if the account can't be reached, so nothing is half done)
     async signOutAll() { if (REAL) await api('/auth/logout-all', {}); try { localStorage.removeItem(KEY); } catch (e) {} Session._mem = null; },
@@ -44,7 +44,7 @@
       if (!REAL) return null;
       if (q.get('login')) { const t = q.get('login'); clean(); try { const j = await api('/auth/email/verify', { token: t }); return { session: Session.fromUser(j.user, 'email'), isNew: j.isNew }; } catch (e) { return { error: e.message }; } }
       if (q.get('signedin') === 'google') { const isNew = q.has('new'); clean(); const s = await Session.check(); if (s) { s.via = 'google'; Session.signIn(s); } return s ? { session: s, isNew } : { error: 'Google sign-in didn’t finish. Try again.' }; }
-      if (q.get('signin_error')) { const k = q.get('signin_error'); clean(); return { error: k === 'google_off' ? 'Google sign-in isn’t switched on yet. Use your email for now.' : 'Google sign-in didn’t finish. Try again.' }; }
+      if (q.get('signin_error')) { const k = q.get('signin_error'); clean(); return { error: k === 'google_off' ? 'Google sign-in isn’t switched on yet. Use your email for now.' : k === 'paused' ? 'This account is paused. Email hello@cardtab.app and we’ll sort it out.' : 'Google sign-in didn’t finish. Try again.' }; }
       return null;
     },
     api
