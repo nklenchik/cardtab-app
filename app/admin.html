@@ -143,6 +143,45 @@ html.pdopen{overflow:hidden}
  .pdseg{grid-template-columns:repeat(2,1fr)}
 }
 @media(prefers-reduced-motion:reduce){.pdw,.pdbd{animation:none}}
+/* v52.20 search and Ask */
+.sbtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--hair);background:var(--card);color:var(--text);display:grid;place-items:center;cursor:pointer;flex:none;transition:transform .15s}
+.sbtn:active{transform:scale(.92)}.sbtn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.sk{position:fixed;inset:0;z-index:70}
+.skbd{position:absolute;inset:0;background:rgba(10,8,8,.42);animation:skFade .2s ease}
+.skp{position:absolute;left:50%;top:max(72px,calc(env(safe-area-inset-top,0px) + 16px));width:min(640px,calc(100vw - 24px));max-height:min(620px,calc(100dvh - 110px));display:flex;flex-direction:column;background:var(--page);border:1px solid var(--hair);border-radius:22px;box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;transform:translateX(-50%);animation:skIn .24s cubic-bezier(.2,.8,.2,1)}
+@keyframes skFade{from{opacity:0}}@keyframes skIn{from{opacity:0;transform:translate(-50%,-8px)}}
+.skin{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--hair)}
+.skin svg{flex:none;color:var(--muted)}
+.skin input{flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:16px;font-weight:600;color:var(--text);outline:none}
+.skin input::placeholder{color:var(--muted)}
+.skx{all:unset;cursor:pointer;font-size:12px;font-weight:800;color:var(--muted);border:1px solid var(--hair);border-radius:8px;padding:4px 7px}
+.skx:focus-visible{outline:2px solid var(--brand)}
+.skr{overflow-y:auto;overscroll-behavior:contain;padding:8px}
+.skrow{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:14px;cursor:pointer}
+.skrow[aria-selected=true]{background:var(--card2)}
+.skrow .ski{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--card);border:1px solid var(--hair);color:var(--muted)}
+.skrow.ask .ski{background:var(--brand);border-color:var(--brand);color:#fff}
+.skrow b{display:block;font-size:14.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.skrow small{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.skrow span.skt{flex:1;min-width:0}
+.skrow em{flex:none;font-style:normal;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.skemp{padding:14px 12px;color:var(--muted);font-size:13.5px;font-weight:600;line-height:1.5}
+.skhd{padding:8px 12px 4px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.skchat{display:flex;flex-direction:column;gap:10px;padding:8px 6px}
+.skq{align-self:flex-end;max-width:85%;background:var(--brand);color:#fff;padding:9px 13px;border-radius:16px 16px 4px 16px;font-size:14px;font-weight:650;line-height:1.45;overflow-wrap:anywhere}
+.ska{align-self:flex-start;max-width:92%;background:var(--card);border:1px solid var(--hair);padding:11px 14px;border-radius:16px 16px 16px 4px;font-size:14px;font-weight:550;line-height:1.55;overflow-wrap:anywhere;white-space:pre-wrap}
+.ska.err{color:var(--bad)}
+.skgo{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;white-space:normal}
+.skgo button{all:unset;cursor:pointer;font-size:12.5px;font-weight:800;padding:6px 10px;border-radius:999px;background:var(--card2);color:var(--text)}
+.skgo button:focus-visible{outline:2px solid var(--brand)}
+.skdots{display:inline-flex;gap:4px}.skdots i{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:skDot 1s ease-in-out infinite}.skdots i:nth-child(2){animation-delay:.15s}.skdots i:nth-child(3){animation-delay:.3s}
+@keyframes skDot{0%,100%{opacity:.25}50%{opacity:1}}
+.skfoot{padding:8px 16px 12px;font-size:11.5px;font-weight:600;color:var(--muted);border-top:1px solid var(--hair);display:flex;gap:10px;justify-content:space-between;align-items:center}
+.skfoot button{all:unset;cursor:pointer;font-weight:800;color:var(--text)}
+.skring{position:absolute;inset:-4px;border-radius:22px;border:2px solid var(--brand);pointer-events:none;opacity:0;animation:skHit 2s ease}
+@keyframes skHit{15%,65%{opacity:1}100%{opacity:0}}
+@media(max-width:600px){.skp{top:max(10px,env(safe-area-inset-top,0px));max-height:calc(100dvh - 24px - env(safe-area-inset-top,0px))}}
+@media(prefers-reduced-motion:reduce){.skp,.skbd,.skring,.skdots i{animation-duration:.01ms!important}}
 </style></head><body><div class="wrap">
 </head><body>
 <style>
@@ -255,7 +294,7 @@ html.pdopen{overflow:hidden}
  .hgrid{grid-template-columns:1fr}}
 @media(max-width:760px){
  .hd2{flex-wrap:wrap;gap:10px;padding:14px 0;margin-bottom:20px}.hd2 .lg{display:none}
- .pernav{order:9;width:100%}.perb{flex:1;justify-content:center}
+ .pernav{order:9;width:calc(100% - 48px)}.perb{flex:1;justify-content:center}.hd2 .sbtn{order:10}
  .hd2 .xclose{position:static}
  .phd h2{font-size:22px}.phd .range{display:none}
  .tabs{margin-bottom:18px}
@@ -272,7 +311,7 @@ html.pdopen{overflow:hidden}
 @media (prefers-reduced-motion:reduce){.perp{animation:none}}
 </style>
 <div class="wrap" id="app">
-<header class="hd2"><span class="logo">C</span><h1><span class="lg">Card Tab </span>Admin</h1><span class="sp"></span><div class="seg" id="srcsw" role="tablist" aria-label="Show numbers for"></div><div class="pernav"><button type="button" class="parr" id="pprev" aria-label="Earlier">‹</button><button type="button" class="perb" id="perb" aria-haspopup="dialog" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span id="perl"></span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="parr" id="pnext" aria-label="Later">›</button></div><button type="button" class="xclose" id="xclose" aria-label="Close the dashboard" title="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><span class="tag" id="mode" hidden>Live</span></header><div class="smpban" id="smpban" hidden><span>Showing sample numbers, not real data</span><button type="button" id="smpoff">Show real numbers</button></div><div class="lay"><nav class="side" id="side" aria-label="Sections"></nav><main class="mainc"><div class="phd"><h2 id="sech">Overview</h2><span class="range" id="rlab"></span></div><div class="tabs" id="tabs" role="tablist"></div>
+<header class="hd2"><span class="logo">C</span><h1><span class="lg">Card Tab </span>Admin</h1><span class="sp"></span><div class="seg" id="srcsw" role="tablist" aria-label="Show numbers for"></div><div class="pernav"><button type="button" class="parr" id="pprev" aria-label="Earlier">‹</button><button type="button" class="perb" id="perb" aria-haspopup="dialog" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span id="perl"></span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="parr" id="pnext" aria-label="Later">›</button></div><button type="button" class="sbtn" id="sbtn" aria-label="Search or ask" title="Search or ask (/)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button><button type="button" class="xclose" id="xclose" aria-label="Close the dashboard" title="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><span class="tag" id="mode" hidden>Live</span></header><div class="smpban" id="smpban" hidden><span>Showing sample numbers, not real data</span><button type="button" id="smpoff">Show real numbers</button></div><div class="lay"><nav class="side" id="side" aria-label="Sections"></nav><main class="mainc"><div class="phd"><h2 id="sech">Overview</h2><span class="range" id="rlab"></span></div><div class="tabs" id="tabs" role="tablist"></div>
 <div id="view"></div>
 <div class="priv" id="priv"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Counts only: no card names, prices, emails or typed text. People who switch off "Share anonymous usage" aren't counted. Daily counts are kept for two years.</div><div class="smpq"><button type="button" id="smpq" hidden>Preview with sample numbers</button></div></main></div>
 <div class="perbd" id="perbd" hidden></div><div class="perp" id="perp" role="dialog" aria-label="Choose dates and filters" hidden></div>
@@ -692,5 +731,94 @@ function aqPaint(){const el=document.getElementById('aq');if(!el)return;const L=
   if(on){const l=on.offsetLeft-t.offsetLeft,r=l+on.offsetWidth;if(l<t.scrollLeft+8||r>t.scrollLeft+t.clientWidth-40)t.scrollTo({left:Math.max(0,l-24),behavior:'smooth'})}
   const end=()=>t.classList.toggle('end',t.scrollLeft+t.clientWidth>=t.scrollWidth-4);end();if(!t._e){t._e=1;t.addEventListener('scroll',end,{passive:true})}}}
 chrome();paint();load();
+</script>
+<div class="sk" id="sk" hidden><div class="skbd" id="skbd"></div><div class="skp" role="dialog" aria-modal="true" aria-label="Search or ask"><div class="skin"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="skq" type="text" autocomplete="off" enterkeyhint="go" placeholder="Search numbers, or ask a question" aria-label="Search numbers, or ask a question"><button type="button" class="skx" id="skx" aria-label="Close">Esc</button></div><div class="skr" id="skr"></div><div class="skfoot" id="skfoot" hidden></div></div></div>
+<script>
+/* v52.20 Search and Ask. Search finds any card or number on any page (App and Website) and jumps to it. The list is made by
+   drawing every page once with sample numbers and reading the card names, so new cards are found without updating a list.
+   Ask sends a question to /auth/admin/ask, which reads the dashboard's real numbers and accounts. */
+(function(){
+const $=id=>document.getElementById(id),sk=$('sk'),q=$('skq'),out=$('skr'),foot=$('skfoot');
+const ICO={c:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V12M10 20V6M15 20v-9M20 20V9"/></svg>',k:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 9h14M5 15h14M10 4L8 20M16 4l-2 16"/></svg>',s:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>',a:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>'};
+// other words people use for the same things (added to anything whose name contains the key)
+const SYN={ask:'questions question ai assistant chat',question:'ask','entries added':'total entries cards logged how many entries count',entr:'entries items purchases sales',purchase:'buys bought spent',sale:'sold sells',sign:'signups signup sign-ups register registrations joined new accounts new users',join:'joined signups waitlist',premium:'paid paying subscribers subscription upgrade upgrades revenue money conversions',upgrad:'premium paid conversions conversion',member:'users accounts people customers total members',active:'users daily active engagement dau',visitor:'traffic visits visitors views',page:'views pages',stor:'stories story video themes',board:'widgets layouts',widget:'board',error:'bugs crashes errors problems',spend:'cost money budget',cost:'spend money price',health:'checks status uptime errors',source:'referrers traffic where from',coming:'retention returning cohorts',time:'minutes seconds duration',game:'pokemon magic one piece tcg',platform:'ebay tcgplayer whatnot',person:'people user account email lookup',find:'search lookup',theme:'stories',funnel:'conversion steps',load:'speed performance slow'};
+let IDX=null,SEL=0,ROWS=[],MODE='search',TURNS=[],BUSY=false;
+const norm=s=>String(s||'').toLowerCase().replace(/[’']/g,'').replace(/[^a-z0-9$%&+ ]+/g,' ').replace(/\s+/g,' ').trim();
+function build(){
+ const keep={D,st:JSON.stringify(st),cid},sT=window.setTimeout,list=[],[a,b]=range(),box=document.createElement('div');
+ window.setTimeout=()=>0;   // pages that load things later (health, people) don't start loading while they're drawn here
+ try{
+  for(const src of ['app','site']){
+   const nav=NAV[src],names=src==='site'?STABS:TABS.concat(['People']),n=src==='site'?STABS.length:11;
+   try{D=src==='site'?Object.assign(siteSample(a,b),{_site:1}):sample(a,b)}catch(e){continue}
+   st.src=src;
+   nav.forEach(x=>list.push({src,t:x[2][0],kind:'s',title:x[0],sub:x[3]||'',where:(src==='site'?'Website':'App')}));
+   for(let t=0;t<n;t++){
+    const sec=nav.find(x=>x[2].includes(t));if(!sec)continue;const tn=src==='site'?STABS[t]:SUBN[t];
+    if(sec[2].length>1)list.push({src,t,kind:'s',title:tn,sub:sec[0],where:(src==='site'?'Website':'App')+' · '+sec[0]});
+    let html='';try{if(src==='site')st.stab=t;else st.tab=t;html=(src==='site'?siteViews():views())[t]()}catch(e){continue}
+    box.innerHTML=html;const seen={},where=(src==='site'?'Website':'App')+' · '+sec[0]+(sec[2].length>1?' › '+tn:'');
+    box.querySelectorAll('.card>h3,.card .hch h3,.kpi>small').forEach(el=>{const title=el.textContent.trim();if(!title)return;const kind=el.tagName==='SMALL'?'k':'c',key=kind+title;seen[key]=(seen[key]||0);
+     const card=el.closest('.card'),sub=kind==='c'&&card?((card.querySelector('.sub')||{}).textContent||''):'';
+     list.push({src,t,kind,title,sub:sub.trim(),where,nth:seen[key]++})});
+   }
+  }
+ }finally{window.setTimeout=sT;D=keep.D;Object.assign(st,JSON.parse(keep.st));cid=keep.cid;box.innerHTML=''}
+ list.forEach(e=>{let h=norm(e.title+' '+e.sub+' '+e.where);const ex=[];for(const k in SYN)if(h.includes(k))ex.push(SYN[k]);e.hay=h+' '+norm(ex.join(' '));e.ht=norm(e.title)});
+ return list}
+const idx=()=>IDX||(IDX=build());
+function score(e,toks,full){let s=0;for(const w of toks){const re=new RegExp('(^| )'+w.replace(/[$+]/g,'\\$&'));if(re.test(e.ht))s+=4;else if(re.test(e.hay))s+=1.5;else if(w.length>=4&&e.hay.includes(w))s+=.8;else return 0}
+ if(e.ht===full)s+=8;else if(e.hay.includes(full)&&toks.length>1)s+=3;else if(e.ht.startsWith(full))s+=4;if(e.src===st.src)s+=.6;if(e.kind==='k')s+=.3;return s}
+const looksAsk=s=>/\?\s*$/.test(s)||(s.trim().split(/\s+/).length>=3&&/^(how|what|whats|who|which|when|why|where|is|are|did|does|do|was|were|can|show|tell|list|compare|give)\b/i.test(s.trim()));
+function search(){const raw=q.value.trim(),full=norm(raw),toks=full.split(' ').filter(Boolean);ROWS=[];
+ if(toks.length){const r=idx().map(e=>[score(e,toks,full),e]).filter(x=>x[0]>0).sort((x,y)=>y[0]-x[0]);const seen=new Set();
+  for(const [,e] of r){const k=e.src+e.t+e.kind+e.title;if(seen.has(k))continue;seen.add(k);ROWS.push({e});if(ROWS.length>=8)break}}
+ if(raw){const ask={ask:raw};if(looksAsk(raw)||!ROWS.length)ROWS.unshift(ask);else ROWS.push(ask)}
+ SEL=0;paint()}
+function paint(){
+ if(MODE==='chat')return;foot.hidden=true;
+ if(!q.value.trim()){out.innerHTML='<div class="skemp">Type what you’re looking for, like <b>ask questions</b>, <b>total entries</b> or <b>sign-ups</b>, and pick it to jump there.<br>Or ask a question about your numbers or a person, like <b>How many people upgraded this week?</b> or <b>Tell me about someone@email.com</b>.</div>';return}
+ out.innerHTML=ROWS.map((r,i)=>r.ask?'<button type="button" class="skrow ask" role="option" data-i="'+i+'" aria-selected="'+(i===SEL)+'"><span class="ski">'+ICO.a+'</span><span class="skt"><b>Ask: '+esc(r.ask)+'</b><small>Answers from your real numbers and accounts</small></span></button>'
+  :'<button type="button" class="skrow" role="option" data-i="'+i+'" aria-selected="'+(i===SEL)+'"><span class="ski">'+ICO[r.e.kind]+'</span><span class="skt"><b>'+esc(r.e.title)+'</b><small>'+esc(r.e.where)+'</small></span><em>'+(r.e.kind==='k'?'Number':r.e.kind==='s'?'Page':'Chart')+'</em></button>').join('')||'<div class="skemp">Nothing found.</div>';
+ const s=out.querySelector('[aria-selected=true]');if(s)s.scrollIntoView({block:'nearest'})}
+function open(){if(!sk.hidden)return;sk.hidden=false;document.body.style.overflow='hidden';if(MODE==='chat'){q.placeholder='Ask a follow-up';}q.value='';search();setTimeout(()=>q.focus(),20);setTimeout(idx,30)}
+function close(){sk.hidden=true;document.body.style.overflow='';q.blur()}
+function pick(i){const r=ROWS[i];if(!r)return;if(r.ask)return ask(r.ask);jump(r.e)}
+// go to a card: switch App/Website and page, then find it, bring it into view and outline it for a moment
+function jump(e){close();const re=st.src!==e.src;st.src=e.src;if(e.src==='site')st.stab=e.t;else st.tab=e.t;st.last=st.last||{};const sec=secOf();st.last[st.src+':'+sec[0]]=e.t;
+ if(re)changed();else{save();chrome();paint0()}
+ if(e.kind==='s'){scrollTo({top:0,behavior:'smooth'});return}
+ let tries=0;(function find(){const v=$('view');const els=v&&!v.classList.contains('load')?[...v.querySelectorAll(e.kind==='k'?'.kpi>small':'.card>h3,.card .hch h3')].filter(x=>x.textContent.trim()===e.title):[];
+  const el=els[e.nth||0]||els[0];if(!el){if(++tries<50)setTimeout(find,100);return}
+  const box=el.closest(e.kind==='k'?'.kpi':'.card');if(getComputedStyle(box).position==='static')box.style.position='relative';
+  box.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+  const ring=document.createElement('span');ring.className='skring';box.appendChild(ring);setTimeout(()=>ring.remove(),2100)})()}
+const paint0=window.paint;
+// ---------- Ask ----------
+function chatPaint(){out.innerHTML='<div class="skchat">'+TURNS.map(t=>t.role==='user'?'<div class="skq">'+esc(t.content)+'</div>':'<div class="ska'+(t.err?' err':'')+'">'+esc(t.content)+(t.show&&t.show.length?'<div class="skgo">'+t.show.map(s=>'<button type="button" data-show="'+esc(s)+'">Show me: '+esc(s)+' →</button>').join('')+'</div>':'')+'</div>').join('')+(BUSY?'<div class="ska"><span class="skdots" aria-label="Thinking"><i></i><i></i><i></i></span></div>':'')+'</div>';
+ foot.hidden=false;foot.innerHTML='<span>Real numbers · uses the Ask budget</span><button type="button" id="sknew">New search</button>';out.scrollTop=out.scrollHeight}
+async function ask(text){MODE='chat';q.value='';q.placeholder='Ask a follow-up';const prior=TURNS.filter(t=>!t.err).map(t=>({role:t.role,content:t.content}));TURNS.push({role:'user',content:text});BUSY=true;chatPaint();
+ let a;try{
+  if(!REAL)a={err:1,content:'Ask works on the live dashboard (app.cardtab.app/admin), where it can read your real numbers.'};
+  else{const [f,t]=range(),spots=[...new Set(idx().filter(e=>e.kind!=='s').map(e=>e.title))];
+   const r=await fetch(API+'/auth/admin/ask',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:JSON.stringify({q:text,turns:prior,view:{label:perLabel()+' · '+(st.src==='site'?'Website':'App'),from:f,to:t},spots})});
+   const j=await r.json().catch(()=>({}));
+   a=j.text?{content:j.text,show:j.show||[]}:{err:1,content:j.error==='cap'?'This month’s Ask spending cap has been reached, so Ask is paused until the 1st.':j.error==='setup'?'Ask isn’t set up on the server yet.':'Ask couldn’t answer just now. '+(j.detail?'('+j.detail+')':'Try again in a moment.')}}
+ }catch(e){a={err:1,content:'Couldn’t reach the server. Check the connection and try again.'}}
+ BUSY=false;TURNS.push(Object.assign({role:'assistant'},a));if(!sk.hidden)chatPaint();q.focus()}
+function showMe(title){const l=idx().filter(e=>e.title===title&&e.kind!=='s');const e=l.find(x=>x.src===st.src)||l[0];if(e)jump(e)}
+// ---------- wiring ----------
+$('sbtn').onclick=open;$('skbd').onclick=close;$('skx').onclick=close;
+q.addEventListener('input',()=>{if(MODE==='chat')return;search()});
+q.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();close();return}
+ if(MODE==='chat'){if(e.key==='Enter'&&q.value.trim()&&!BUSY){e.preventDefault();ask(q.value.trim())}return}
+ if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!ROWS.length)return;SEL=(SEL+(e.key==='ArrowDown'?1:-1)+ROWS.length)%ROWS.length;paint()}
+ else if(e.key==='Enter'){e.preventDefault();pick(SEL)}});
+out.addEventListener('click',e=>{const s=e.target.closest('[data-show]');if(s)return showMe(s.dataset.show);const r=e.target.closest('[data-i]');if(r)pick(+r.dataset.i)});
+foot.addEventListener('click',e=>{if(e.target.id==='sknew'){MODE='search';TURNS=[];q.placeholder='Search numbers, or ask a question';q.value='';search();q.focus()}});
+document.addEventListener('keydown',e=>{const tg=e.target,typing=tg&&(tg.tagName==='INPUT'||tg.tagName==='TEXTAREA'||tg.isContentEditable);
+ if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();sk.hidden?open():close();return}
+ if(e.key==='/'&&!typing&&sk.hidden){e.preventDefault();open()}});
+})();
 </script>
 </body></html>

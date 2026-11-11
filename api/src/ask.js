@@ -137,3 +137,5 @@ async function spend(env, m, tin, tout) {
   await env.DB.prepare('INSERT INTO ask_spend (month,tin,tout,n) VALUES (?,?,?,1) ON CONFLICT(month) DO UPDATE SET tin=tin+excluded.tin, tout=tout+excluded.tout, n=n+1').bind(m, tin, tout).run();
 }
 export { runTool, totals as askTotals };
+// v52.20: shared with the admin dashboard's Ask (adminask.js), so both use one model and one monthly spending cap
+export { claude as claudeCall, spend as addSpend, MODEL as ASK_MODEL, PRICE as ASK_PRICE };

@@ -1,4 +1,5 @@
 import { handleBilling, cancelForDelete } from './billing.js';
+import { handleAdminAsk } from './adminask.js';
 import { handleHealth } from './health.js';
 import { handleShare } from './share.js';
 import { handleEvents, handleStats, handleSiteStats } from './analytics.js';
@@ -183,6 +184,11 @@ export async function handleAuth(env, req, path) {
   if ((path === '/auth/share' || path === '/auth/share/invite') && req.method === 'POST') return handleShare(env, req, Object.assign({}, me, { admin: isAdmin(env, me.email) }), path, (body, status = 200) => out(env, req, body, status));
   // v50 analytics: the app's counts, and the admin dashboard's numbers
   if (path === '/auth/ev' && req.method === 'POST') return handleEvents(env, req, me, (body, status = 200) => out(env, req, body, status));
+  // v52.20: Ask on the admin dashboard (the dashboard's numbers and individual accounts)
+  if (path === '/auth/admin/ask' && req.method === 'POST') {
+    if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);
+    return handleAdminAsk(env, req, (body, status = 200) => out(env, req, body, status));
+  }
   if (path === '/auth/admin/health') {
     if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);
     return handleHealth(env, req, (body, status = 200) => out(env, req, body, status));

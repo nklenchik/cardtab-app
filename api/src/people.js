@@ -112,6 +112,7 @@ const q1 = async (env, sql, ...a) => { try { return (await env.DB.prepare(sql).b
 const qa = async (env, sql, ...a) => { try { return (await env.DB.prepare(sql).bind(...a).all()).results || []; } catch (e) { return []; } };
 const stripeUrl = (env, cus) => cus ? 'https://dashboard.stripe.com/' + (/^sk_test_/.test(env.STRIPE_SECRET_KEY || '') ? 'test/' : '') + 'customers/' + encodeURIComponent(cus) : '';
 
+export const personDetails = (env, uid) => details(env, uid);   // v52.20: admin Ask
 async function details(env, uid) {
   const u = await q1(env, 'SELECT * FROM users WHERE id=?', uid); if (!u.id) return null;
   await ensureTable(env);
