@@ -2408,3 +2408,28 @@ html[data-theme="dark"] :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdr
 .ia-pulse{animation:iaPulse .6s ease}
 @keyframes iaPulse{30%{transform:scale(1.02)}60%{transform:scale(.995)}}
 @media(prefers-reduced-motion:reduce){.ia-pulse{animation:none}}
+
+/* v52.23 Help and feedback sheet (a centred card on desktop, a bottom sheet on phones) */
+dialog.fbd{border:0;padding:0;margin:auto;width:min(460px,calc(100vw - 32px));max-height:calc(100dvh - 40px);overflow:auto;border-radius:22px;background:var(--sheet-bg,var(--card,#fff));color:var(--text);box-shadow:0 30px 80px rgba(0,0,0,.3);animation:fbIn .26s cubic-bezier(.2,.8,.2,1)}
+dialog.fbd.out{animation:fbOut .2s ease forwards}
+@keyframes fbIn{from{opacity:0;transform:translateY(12px) scale(.98)}}@keyframes fbOut{to{opacity:0;transform:translateY(12px) scale(.98)}}
+.fbp{display:grid;gap:14px;padding:22px}
+.fbhd{display:flex;align-items:center;justify-content:space-between;gap:10px}.fbhd h2{margin:0;font-size:20px;letter-spacing:-.01em}
+.fbx{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--text);font-size:13px;cursor:pointer;flex:none}
+.fbsub{margin:-6px 0 0;color:var(--muted);font-size:13.5px;line-height:1.5;font-weight:550}
+.fbseg{display:flex;gap:4px;padding:4px;border-radius:999px;background:color-mix(in srgb,var(--text) 6%,transparent)}
+.fbseg button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:800;font-size:14px;padding:9px 6px;border-radius:999px;cursor:pointer;transition:background .18s,color .18s}
+.fbseg button[aria-checked=true]{background:var(--sheet-bg,var(--card,#fff));color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.fbl{display:grid;gap:7px}.fbls{font-size:13px;font-weight:800}
+.fbl textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:110px;border:1px solid var(--line);border-radius:14px;padding:12px 13px;font:inherit;font-size:16px;line-height:1.45;background:var(--bg,transparent);color:var(--text)}
+.fbl textarea:focus{outline:2px solid color-mix(in srgb,var(--brand) 55%,transparent);outline-offset:1px}
+.fbadd{display:inline-flex;align-items:center;gap:8px;border:1px dashed var(--line);background:transparent;color:var(--text);font:inherit;font-weight:700;font-size:13.5px;padding:10px 14px;border-radius:12px;cursor:pointer}
+.fbthumb{position:relative;display:inline-block;max-width:140px}.fbthumb img{display:block;max-width:140px;max-height:180px;border-radius:12px;border:1px solid var(--line)}
+.fbthumb button{position:absolute;top:-8px;right:-8px;width:26px;height:26px;border-radius:50%;border:0;background:var(--text);color:var(--sheet-bg,#fff);font-size:11px;cursor:pointer}
+.fberr{margin:0;color:#c0392b;font-size:13px;font-weight:700}
+.fbgo{border:0;border-radius:999px;background:var(--brand);color:#fff;font:inherit;font-weight:800;font-size:16px;padding:14px;cursor:pointer}.fbgo:disabled{opacity:.6}
+.fbfoot{margin:-4px 0 0;text-align:center;color:var(--muted);font-size:12.5px;font-weight:600}.fbfoot span{user-select:all;color:var(--text)}
+.fbd button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+@media(max-width:600px){dialog.fbd{margin:auto 0 0;width:100%;max-width:100%;border-radius:24px 24px 0 0;max-height:92dvh;animation-name:fbUp}dialog.fbd.out{animation-name:fbDown}.fbp{padding:20px 18px max(22px,env(safe-area-inset-bottom,0px))}}
+@keyframes fbUp{from{transform:translateY(100%)}}@keyframes fbDown{to{transform:translateY(100%)}}
+@media(prefers-reduced-motion:reduce){dialog.fbd,dialog.fbd.out{animation:none}}

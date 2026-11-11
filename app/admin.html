@@ -196,6 +196,24 @@ body.navopen .navfab .i2{opacity:1;transform:none}
 .navbd{position:fixed;inset:0;z-index:30;display:none}
 body.navopen .navbd{display:block}
 @media(max-width:360px){header.hd2 h1{display:none}}
+.fbf{margin:0 0 12px}
+.fbi{border-top:1px solid var(--hair);padding:16px 0;display:grid;gap:10px}.fbi:first-child{border-top:0;padding-top:4px}
+.fbm{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:12.5px;color:var(--muted);font-weight:650}
+.fbk{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:999px}
+.fbk.b{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}.fbk.i{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good)}.fbk.o{background:var(--card2);color:var(--muted)}
+.fbi.new .fbk::after{content:" · new"}
+.fbwho{all:unset;cursor:pointer;color:var(--text);font-weight:800;font-size:13.5px;text-decoration:underline;text-decoration-color:var(--hair);text-underline-offset:3px}
+.fbwho:focus-visible{outline:2px solid var(--brand)}
+.fbt{margin-left:auto}
+.fbmsg{font-size:14.5px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.fbsh{all:unset;cursor:zoom-in;justify-self:start}.fbsh img{display:block;max-width:160px;max-height:220px;border-radius:12px;border:1px solid var(--hair);background:var(--card2);min-width:60px;min-height:60px}
+.fbsh:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.fbnoshot{font-size:12.5px;color:var(--muted)}
+.fbrep{font-size:13.5px;line-height:1.5;background:var(--card2);border-radius:12px;padding:10px 12px;white-space:pre-wrap}.fbrep b{display:block;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.fbact{display:flex;gap:8px;flex-wrap:wrap}.fbact .chip.go{background:var(--brand);color:#fff;border-color:var(--brand)}
+.fbform{display:grid;gap:8px}.fbform textarea{width:100%;box-sizing:border-box;border:1px solid var(--hair);border-radius:12px;padding:10px 12px;font:inherit;font-size:15px;background:var(--card);color:var(--text);resize:vertical}
+.fblb{position:fixed;inset:0;z-index:80;background:rgba(10,8,8,.82);display:grid;place-items:center;gap:10px;padding:max(16px,env(safe-area-inset-top,0px)) 16px max(16px,env(safe-area-inset-bottom,0px));cursor:zoom-out;animation:skFade .2s ease}
+.fblb img{max-width:100%;max-height:calc(100dvh - 80px);border-radius:14px;object-fit:contain}.fblb span{color:#fff;opacity:.7;font-size:12.5px;font-weight:600}
 </style></head><body><div class="wrap">
 </head><body>
 <style>
@@ -348,6 +366,7 @@ const TABS=['Overview','Features','Time & pages','Board','Stories','Premium','Si
 let st={r:'30',pm:'p',at:'',cmp:true,plan:'all',dev:'all',tab:0,cf:'',ct:'',src:'app',stab:0,smp:false},D=null,busy=0;
 const STABS=['Overview','Sources','Pages & sections','Funnel','Who joins'];
 try{Object.assign(st,JSON.parse(localStorage.getItem('ct.admin')||'{}'))}catch(e){}
+if(location.hash==='#feedback'){st.src='app';st.tab=11;history.replaceState(null,'',location.pathname)}   // v52.23: from the feedback summary email
 const save=()=>{try{localStorage.setItem('ct.admin',JSON.stringify(st))}catch(e){}};
 const iso=t=>new Date(t.getTime()-t.getTimezoneOffset()*6e4).toISOString().slice(0,10);
 // v52.3: a period is a day, a week (Monday to Sunday), a month, a year, a custom range, or one of the quick picks (st.pm 'p')
@@ -460,7 +479,46 @@ function views(){const E=D.events,P=st.cmp?D.eventsPrev:null,PP=D.eventsPrev,L=d
   card('c6','What the website showed new members','Sections they reached on cardtab.app before opening the app',list(Object.fromEntries((D.signupSec||[]).map(r=>[r.dim,r.n])),null,'var(--s2)'))+
   card('c6','Demos new members tried','Taps in each live demo on cardtab.app before opening the app',list(Object.fromEntries((D.signupDemo||[]).map(r=>[r.dim,r.n])),null,'var(--s5)'))+'</div>'};
  // v52.8: Find a person has its own section (People), right under Overview
- return [S[0],FEAT,S[1],S[2],S[3],S[4],UPG,S[5],S[6],S[7],()=>peopleCard()]}
+ return [S[0],FEAT,S[1],S[2],S[3],S[4],UPG,S[5],S[6],S[7],()=>peopleCard(),()=>feedbackCard()]}
+// v52.23 Feedback: what people send from Help and feedback in the app. Screenshots load through the API (never public);
+// a reply reaches the person as a notice in the app.
+let FB=null,FBF='new';const FBSHOT={};
+function feedbackCard(){setTimeout(fbLoad,0);return '<div class="grid" style="margin-bottom:14px"><div class="card c12" id="fbc"><div class="hch"><div><h3>Inbox</h3><div class="sub">Bugs, ideas and notes sent from Help and feedback in the app. You get one summary email each morning; replies show up in the person’s app.</div></div></div>'+
+ '<div class="seg fbf" id="fbf"></div><div id="fbl"><div class="empty">Loading…</div></div></div></div>'}
+function fbSample(){const t=Date.now()/1000;return {items:[{id:'s1',uid:'a',email:'jordan@example.com',name:'Jordan',plan:'premium',kind:'bug',msg:'When I add a card on the Board page the total doesn’t update until I switch tabs.',page:'Board',dev:'iPhone · Instagram',ver:'52.23',shot:true,at:t-3600,status:'new',reply:''},
+ {id:'s2',uid:'b',email:'sam.k@example.com',name:'Sam',plan:'free',kind:'idea',msg:'Would love a way to tag cards as PSA submissions so I can track what’s out for grading.',page:'Entries',dev:'Android · Chrome',ver:'52.23',shot:false,at:t-86400*1.2,status:'new',reply:''},
+ {id:'s3',uid:'c',email:'alex@example.com',name:'',plan:'premium',kind:'other',msg:'Love the Stories. Shared one with my group chat already.',page:'Stories',dev:'Mac · Safari',ver:'52.21',shot:false,at:t-86400*3,status:'handled',reply:'Thanks Alex, glad you like them!',repliedAt:t-86400*2}],total:3,fresh:2,sample:1}}
+async function fbLoad(){if(!REAL||st.smp){FB=fbSample();if(FBF==='new')FB.items=FB.items.filter(i=>i.status==='new');fbPaint();return}
+ try{const r=await fetch(API+'/auth/admin/feedback'+(FBF==='new'?'?status=new':''),{credentials:'include'});FB=await r.json();if(!r.ok)FB={error:FB.error||'Couldn’t load'}}catch(e){FB={error:'Couldn’t load'}}fbPaint()}
+const FBK={bug:['Bug','b'],idea:['Idea','i'],other:['Other','o']};
+function fbAgo(t){const s=Date.now()/1000-t;if(s<3600)return Math.max(1,Math.round(s/60))+' min ago';if(s<86400)return Math.round(s/3600)+' h ago';if(s<86400*7)return Math.round(s/86400)+' d ago';return new Date(t*1000).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+function fbPaint(){const el=document.getElementById('fbl'),sw=document.getElementById('fbf');if(!el)return;
+ if(sw)sw.innerHTML=[['new','New'+(FB&&FB.fresh?' · '+FB.fresh:'')],['all','All'+(FB&&FB.total?' · '+FB.total:'')]].map(([v,l])=>'<button type="button" data-fbf="'+v+'" aria-pressed="'+(FBF===v)+'">'+l+'</button>').join('');
+ if(!FB){el.innerHTML='<div class="empty">Loading…</div>';return}if(FB.error){el.innerHTML='<div class="empty">'+esc(FB.error)+'</div>';return}
+ if(!FB.items.length){el.innerHTML='<div class="empty">'+(FBF==='new'?'Nothing new. You’re all caught up.':'No feedback yet. It shows here as soon as someone sends some from the app menu → Help and feedback.')+'</div>';return}
+ el.innerHTML=FB.items.map(f=>'<div class="fbi'+(f.status==='new'?' new':'')+'" data-fb="'+esc(f.id)+'"><div class="fbm"><span class="fbk '+FBK[f.kind][1]+'">'+FBK[f.kind][0]+'</span><button type="button" class="fbwho" data-fbp="'+esc(f.uid)+'">'+esc(f.name||f.email)+'</button><span>'+esc([f.plan==='premium'?'Premium':'Free',f.page,f.dev,f.ver?'v'+f.ver:''].filter(Boolean).join(' · '))+'</span><span class="fbt">'+fbAgo(f.at)+'</span></div>'+
+  '<div class="fbmsg">'+esc(f.msg)+'</div>'+(f.shot?'<button type="button" class="fbsh" data-fbs="'+esc(f.id)+'" aria-label="Open screenshot"><img alt="Screenshot" data-fbimg="'+esc(f.id)+'"></button>':'')+
+  (f.reply?'<div class="fbrep"><b>You replied</b> '+esc(f.reply)+'</div>':'')+
+  '<div class="fbact"><button type="button" class="chip" data-fbr="'+esc(f.id)+'">'+(f.reply?'Reply again':'Reply')+'</button><button type="button" class="chip" data-fbh="'+esc(f.id)+'">'+(f.status==='new'?'Mark handled':'Mark new')+'</button></div>'+
+  '<form class="fbform" data-fbform="'+esc(f.id)+'" hidden><textarea rows="3" maxlength="2000" placeholder="Write a reply. They’ll see it as a notice in the app."></textarea><div class="fbact"><button type="submit" class="chip go">Send reply</button><button type="button" class="chip" data-fbc="'+esc(f.id)+'">Cancel</button></div></form></div>').join('');
+ el.querySelectorAll('[data-fbimg]').forEach(fbThumb)}
+async function fbThumb(img){const id=img.dataset.fbimg;
+ if(FB&&FB.sample){img.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844"><rect width="390" height="844" fill="#f4f1ec"/><rect x="20" y="80" width="350" height="120" rx="18" fill="#fff"/><rect x="20" y="220" width="350" height="300" rx="18" fill="#fff"/><text x="40" y="150" font-family="sans-serif" font-size="28" font-weight="700" fill="#a50e37">Sample screenshot</text></svg>');return}
+ try{if(!FBSHOT[id]){const r=await fetch(API+'/auth/admin/feedback/shot?id='+encodeURIComponent(id),{credentials:'include'});if(!r.ok)throw 0;FBSHOT[id]=URL.createObjectURL(await r.blob())}img.src=FBSHOT[id]}catch(e){img.closest('.fbsh').outerHTML='<div class="fbnoshot">Screenshot couldn’t load</div>'}}
+async function fbAct(id,act,text){if(FB&&FB.sample){const f=FB.items.find(x=>x.id===id);if(act==='reply'){f.reply=text;f.status='handled'}else f.status=act;if(FBF==='new')FB.items=FB.items.filter(x=>x.status==='new');FB.fresh=FB.items.filter(x=>x.status==='new').length;fbPaint();return true}
+ try{const r=await fetch(API+'/auth/admin/feedback/act',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:JSON.stringify({id,act,text})});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Didn’t save');await fbLoad();return true}catch(e){alertFb(e.message);return false}}
+function alertFb(m){const el=document.getElementById('fbl');if(el)el.insertAdjacentHTML('afterbegin','<div class="empty" style="color:var(--bad)">'+esc(m)+'</div>')}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-fbf],[data-fbp],[data-fbs],[data-fbr],[data-fbh],[data-fbc],.fblb');if(!t)return;const d=t.dataset;
+ if(d.fbf){FBF=d.fbf;FB=null;fbPaint();fbLoad();return}
+ if(d.fbp){if(typeof pdOpen==='function')pdOpen(d.fbp);return}
+ if(d.fbs){const img=t.querySelector('img');if(!img||!img.src)return;const lb=document.createElement('div');lb.className='fblb';lb.innerHTML='<img alt="Screenshot" src="'+img.src+'"><span>Tap anywhere to close</span>';document.body.appendChild(lb);return}
+ if(t.classList.contains('fblb')){t.remove();return}
+ if(d.fbr){const f=document.querySelector('[data-fbform="'+CSS.escape(d.fbr)+'"]');if(f){f.hidden=false;f.querySelector('textarea').focus()}return}
+ if(d.fbc){const f=document.querySelector('[data-fbform="'+CSS.escape(d.fbc)+'"]');if(f)f.hidden=true;return}
+ if(d.fbh){const f=FB&&FB.items.find(x=>x.id===d.fbh);if(f)fbAct(f.id,f.status==='new'?'handled':'new');return}});
+document.addEventListener('submit',async e=>{const f=e.target.closest('[data-fbform]');if(!f)return;e.preventDefault();const ta=f.querySelector('textarea'),txt=ta.value.trim();if(txt.length<2){ta.focus();return}
+ const b=f.querySelector('button[type=submit]');b.disabled=true;b.textContent='Sending…';const ok=await fbAct(f.dataset.fbform,'reply',txt);if(!ok){b.disabled=false;b.textContent='Send reply'}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const lb=document.querySelector('.fblb');if(lb)lb.remove()}});
 function siteViews(){const E=D.events,PP=D.eventsPrev,P=st.cmp?PP:null,L=dayLabels(),V=D.visitors.reduce((t,x)=>t+x,0),VP=D.visitorsPrev.reduce((t,x)=>t+x,0),tv=V||1;
  const toMap=rows=>Object.fromEntries((rows||[]).map(r=>[r.dim,r.n]));
  const cname=c=>{try{return new Intl.DisplayNames(['en'],{type:'region'}).of(c)}catch(e){return c}};
@@ -501,11 +559,11 @@ function dd(id,label,groups){const w=document.getElementById(id),b=w.querySelect
 const closeDd=()=>document.querySelectorAll('.dd .mn').forEach(m=>{m.hidden=true;m.previousElementSibling.setAttribute('aria-expanded','false')});
 document.addEventListener('click',closeDd);document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDd()});
 const IC=p=>'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>';
-const ICS={ov:IC('<rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/>'),gr:IC('<path d="M4 19h16M6 15l4-4 3 3 5-6"/>'),en:IC('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>'),co:IC('<rect x="6" y="3" width="12" height="18" rx="2.5"/>'),he:IC('<path d="M3 12h4l2-5 4 10 2-5h6"/>'),so:IC('<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>'),pg:IC('<rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/>'),fu:IC('<path d="M4 5h16l-6 8v6l-4-2v-4z"/>'),wj:IC('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>'),pp:IC('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2a5 5 0 016 4.8"/>')};
+const ICS={fb:IC('<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12.5h5"/>'),ov:IC('<rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/>'),gr:IC('<path d="M4 19h16M6 15l4-4 3 3 5-6"/>'),en:IC('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>'),co:IC('<rect x="6" y="3" width="12" height="18" rx="2.5"/>'),he:IC('<path d="M3 12h4l2-5 4 10 2-5h6"/>'),so:IC('<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>'),pg:IC('<rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/>'),fu:IC('<path d="M4 5h16l-6 8v6l-4-2v-4z"/>'),wj:IC('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>'),pp:IC('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2a5 5 0 016 4.8"/>')};
 // sections: [name, icon, view indexes (TABS / STABS), what's inside]
-const NAV={app:[['Overview','ov',[0],''],['People','pp',[10],'Find someone, give Premium'],['Growth','gr',[6,5],'Sign-ups, upgrades, Premium'],['Engagement','en',[1,2,3,4,7],'Features, time, Board, Stories, Ask','Activity'],['Collection','co',[8],'Entries, games, platforms','Cards'],['Health','he',[9],'Checks, errors, art review']],
+const NAV={app:[['Overview','ov',[0],''],['People','pp',[10],'Find someone, give Premium'],['Growth','gr',[6,5],'Sign-ups, upgrades, Premium'],['Engagement','en',[1,2,3,4,7],'Features, time, Board, Stories, Ask','Activity'],['Collection','co',[8],'Entries, games, platforms','Cards'],['Health','he',[9],'Checks, errors, art review'],['Feedback','fb',[11],'Bugs, ideas, replies']],
   site:[['Overview','ov',[0],''],['Sources','so',[1],'Where visitors come from'],['Pages','pg',[2],'How far people read'],['Funnel','fu',[3],'Visit to sign-up'],['Who joins','wj',[4],'What sign-ups saw first','Joiners']]};
-const SUBN={0:'Overview',1:'Features',2:'Time & pages',3:'Board',4:'Stories',5:'Premium',6:'Sign-ups & upgrades',7:'Ask',8:'Collection',9:'Health',10:'People'};
+const SUBN={0:'Overview',1:'Features',2:'Time & pages',3:'Board',4:'Stories',5:'Premium',6:'Sign-ups & upgrades',7:'Ask',8:'Collection',9:'Health',10:'People',11:'Feedback'};
 const curTab=()=>st.src==='site'?st.stab:st.tab;
 function secOf(){return NAV[st.src==='site'?'site':'app'].find(x=>x[2].includes(curTab()))||NAV.app[0]}
 const fmtD=(s,o)=>D0(s).toLocaleDateString('en-US',o);
@@ -529,7 +587,7 @@ function chrome(){const pv=document.getElementById('priv');if(pv)pv.lastChild.te
  document.getElementById('sech').textContent=sec[0];
  {const fb=document.getElementById('navfab');if(fb){fb.querySelector('.i1').innerHTML=ICS[sec[1]];fb.setAttribute('aria-label','Pages, now on '+sec[0])}}
  // v52.8: People isn't counts and doesn't use dates, so the date line and the counts-only note step aside there
- {const pp=st.src!=='site'&&st.tab===10;document.getElementById('rlab').hidden=pp;if(pv)pv.style.display=pp?'none':''}
+ {const pp=st.src!=='site'&&(st.tab===10||st.tab===11);document.getElementById('rlab').hidden=pp;if(pv)pv.style.display=pp?'none':''}
  document.getElementById('tabs').innerHTML=sec[2].length>1?sec[2].map(t=>'<button role="tab" aria-selected="'+(t===curTab())+'" data-t="'+t+'">'+(st.src==='site'?STABS[t]:SUBN[t])+'</button>').join(''):'';
  if(!document.getElementById('perp').hidden)paintPer()}
 document.getElementById('side').onclick=e=>{const b=e.target.closest('[data-sec]');if(!b)return;const x=NAV[st.src==='site'?'site':'app'][+b.dataset.sec];st.last=st.last||{};const k=st.src+':'+x[0],t=x[2].includes(st.last[k])?st.last[k]:x[2][0];if(st.src==='site')st.stab=t;else st.tab=t;save();chrome();paint();scrollTo({top:0})};
@@ -773,7 +831,7 @@ function build(){
  window.setTimeout=()=>0;   // pages that load things later (health, people) don't start loading while they're drawn here
  try{
   for(const src of ['app','site']){
-   const nav=NAV[src],names=src==='site'?STABS:TABS.concat(['People']),n=src==='site'?STABS.length:11;
+   const nav=NAV[src],n=src==='site'?STABS.length:12;
    try{D=src==='site'?Object.assign(siteSample(a,b),{_site:1}):sample(a,b)}catch(e){continue}
    st.src=src;
    nav.forEach(x=>list.push({src,t:x[2][0],kind:'s',title:x[0],sub:x[3]||'',where:(src==='site'?'Website':'App')}));

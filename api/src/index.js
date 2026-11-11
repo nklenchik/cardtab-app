@@ -5,6 +5,7 @@
    Nothing here is exposed to the app except our own ids and our own image URLs. */
 import { giftSweep } from './people.js';
 import { runHealth } from './health.js';
+import { feedbackDigest } from './feedback.js';
 const HEALTH_CRON = '7 12 * * *';   // daily check: 12:07 UTC (7:07am Eastern in winter, 8:07am in summer)
 import { handlePublicShare, cleanupShares } from './share.js';
 import { cleanupAnalytics, handleSiteEvent } from './analytics.js';
@@ -137,7 +138,7 @@ async function art(env, ctx, id, size) {
 
 export default {
   async scheduled(evt, env, ctx) { ctx.waitUntil(ensureSchema(env).catch(() => {}));   // v51.4: tables kept up to date by the Worker itself
-    if (evt && evt.cron === HEALTH_CRON) { ctx.waitUntil(runHealth(env)); return; }
+    if (evt && evt.cron === HEALTH_CRON) { ctx.waitUntil(runHealth(env)); ctx.waitUntil(feedbackDigest(env).catch(() => {})); return; }   // v52.23: plus the daily feedback summary
     if (evt && evt.cron === CAT_CRON) { ctx.waitUntil(catalogStep(env, { art: id => art(env, ctx, id, 'list') }).catch(() => {})); return; } ctx.waitUntil(giftSweep(env)); ctx.waitUntil(cleanupAnalytics(env)); ctx.waitUntil(cleanupShares(env)); ctx.waitUntil(graceSweep(env)); },
   async fetch(req, env, ctx) {
     const u = new URL(req.url);

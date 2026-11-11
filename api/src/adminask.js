@@ -7,6 +7,7 @@
    - Answers may end with "SHOW: name; name": up to two dashboard cards to jump to, picked from the names the page sent. */
 import { handleStats, handleSiteStats } from './analytics.js';
 import { personDetails } from './people.js';
+import { feedbackForAsk } from './feedback.js';
 import { askLimits, claudeCall, addSpend, ASK_MODEL, ASK_PRICE } from './ask.js';
 
 const month = () => new Date().toISOString().slice(0, 7);
@@ -90,6 +91,8 @@ const TOOLS = [
     input_schema: { type: 'object', properties: { q: { type: 'string' }, plan: { type: 'string', enum: ['any', 'free', 'premium'] }, gift: { type: 'boolean' }, sort: { type: 'string', enum: ['newest', 'oldest', 'last_seen'] }, limit: { type: 'integer', minimum: 1, maximum: 25 } } } },
   { name: 'person', description: 'Everything about one account: plan, gift and its end, payments and renewal, entries and Ask questions this month and limits, total entries, uploads, shared board, devices, account history. Give the id from find_people, or the exact email.',
     input_schema: { type: 'object', properties: { id: { type: 'string' }, email: { type: 'string' } } } },
+  { name: 'feedback', description: 'Messages people sent from Help and feedback in the app (bugs, ideas, other), newest first, with who sent them, the page, device, whether handled and replied to.',
+    input_schema: { type: 'object', properties: { kind: { type: 'string', enum: ['any', 'bug', 'idea', 'other'] }, status: { type: 'string', enum: ['any', 'new', 'handled'] }, days: { type: 'integer', minimum: 1, maximum: 365 } } } },
   { name: 'health', description: 'The latest daily health check: each check, whether it passed, notes and suggested fixes.', input_schema: { type: 'object', properties: {} } }
 ];
 async function runTool(env, name, a) {
@@ -99,6 +102,7 @@ async function runTool(env, name, a) {
     if (name === 'find_people') return await findPeople(env, a || {});
     if (name === 'person') return await person(env, a || {});
     if (name === 'health') return await health(env);
+    if (name === 'feedback') return await feedbackForAsk(env, a || {});
   } catch (e) { console.log('admin ask tool', name, e.message); return { error: 'Couldn’t read that just now.' }; }
   return { error: 'Unknown tool.' };
 }

@@ -14,6 +14,7 @@
         delete                  removes the account and its data (not while a paid subscription is running)
    Only counts and dates are shown; never their cards or prices (export is the one exception, for that person's own request).
    Every action is logged in acct_log, which also feeds the plan history. */
+import { wipeFeedback } from './feedback.js';
 import { rowOf, saveRow, planOf, ACTIVE, ensureTable, cancelForDelete } from './billing.js';
 import { deleteUserPhotos } from './artup.js';
 import { deleteSynced } from './sync.js';
@@ -100,6 +101,7 @@ export function device(ua) {
 // everything the delete removes (the person's own Settings → Delete account uses this too)
 export async function wipeAccount(env, uid, email) {
   await deleteUserPhotos(env, uid);
+  await wipeFeedback(env, uid);   // v52.23: their feedback and screenshots
   const st = [...(await deleteSynced(env, uid))];
   for (const [t, c] of [['sessions', 'user_id'], ['an_active', 'uid'], ['an_feat', 'uid'], ['shares', 'uid'], ['an_user', 'uid'], ['ask_usage', 'user_id'], ['usage_user', 'user_id']]) st.push(env.DB.prepare(`DELETE FROM ${t} WHERE ${c}=?`).bind(uid));
   st.push(env.DB.prepare('DELETE FROM login_tokens WHERE email=?').bind(email), env.DB.prepare('DELETE FROM users WHERE id=?').bind(uid));
