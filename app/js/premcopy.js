@@ -55,8 +55,11 @@
     14: ['story_play', 'page_view:stories'], 15: ['page_view:board'], 16: ['page_view:board'] };
   const used = () => { let u = {}; try { u = JSON.parse(localStorage.getItem('ct.use') || '{}') || {}; } catch (e) {} return u; };
   // weighted pick without repeats: a bullet's chance grows with how much its feature gets used (everything keeps a chance)
-  function pickWeighted(list, n) { const u = used(), w = list.map(b => 1 + Math.sqrt((USE[b] || []).reduce((a, k) => a + (+u[k] || 0), 0))), out = [];
-    const L = list.slice(); while (out.length < n && L.length) { const tot = w.reduce((a, x) => a + x, 0); let r = Math.random() * tot, i = 0; while (i < L.length - 1 && (r -= w[i]) > 0) i++; out.push(L[i]); L.splice(i, 1); w.splice(i, 1); } return out; }
+  // v52.19: bullets that say nearly the same thing never show together (e.g. "Every Stories theme + video" and "All 24 Stories themes")
+  const CLASH = [[10, 11, 12], [6, 7, 8], [2, 3, 16], [3, 14]];
+  const fits = (taken, b) => !taken.some(x => CLASH.some(g => g.includes(x) && g.includes(b)));
+  function pickWeighted(list, n, taken) { taken = taken || []; const u = used(), w = list.map(b => 1 + Math.sqrt((USE[b] || []).reduce((a, k) => a + (+u[k] || 0), 0))), out = [];
+    const L = list.slice(); while (out.length < n && L.length) { const tot = w.reduce((a, x) => a + x, 0); let r = Math.random() * tot, i = 0; while (i < L.length - 1 && (r -= w[i]) > 0) i++; if (fits(taken.concat(out), L[i])) out.push(L[i]); L.splice(i, 1); w.splice(i, 1); } return out; }
   // what was tapped -> the bullet that always shows
   const MUST = { 'locked theme': 11, 'locked background': 13, 'locked story': 12, video: 12, stories: 14, range: 3, 'all time': 2, ask: 5, layouts: 8, export: 9, share: 9, import: 4, 'entries used up': 1, 'entries nearly used': 1, limit: 1 };
   const STORIES_CTX = /^(locked theme|locked background|locked story|stories|video)$/;
@@ -71,8 +74,8 @@
     const page = STORIES_CTX.test(ctx || '') ? 'stories' : pageNow();
     const heads = Object.keys(HEADS).filter(k => HEADS[k][0] === page), head = heads[rnd(heads.length)];
     const must = MUST[ctx] || null;
-    const own = (must ? [must] : []).concat(shuffle(HOME[page].filter(b => b !== must))).slice(0, 3);
-    const other = pickWeighted(ALL.filter(b => !HOME[page].includes(b) && !own.includes(b)), 6 - own.length);
+    const own = must ? [must] : []; shuffle(HOME[page].filter(b => b !== must)).forEach(b => { if (own.length < 3 && fits(own, b)) own.push(b); });
+    const other = pickWeighted(ALL.filter(b => !HOME[page].includes(b) && !own.includes(b)), 6 - own.length, own);
     const ids = shuffle(own.concat(other));
     const h = document.getElementById('pm-h'); if (h) h.textContent = HEADS[head][1];
     const f = pms.querySelector('.pmf'); if (f) f.innerHTML = ids.map(b => '<div>' + IC[BUL[b][1]] + '<span>' + BUL[b][0] + '</span></div>').join('');
