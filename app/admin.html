@@ -182,6 +182,17 @@ html.pdopen{overflow:hidden}
 @keyframes skHit{15%,65%{opacity:1}100%{opacity:0}}
 @media(max-width:600px){.skp{top:max(10px,env(safe-area-inset-top,0px));max-height:calc(100dvh - 24px - env(safe-area-inset-top,0px))}}
 @media(prefers-reduced-motion:reduce){.skp,.skbd,.skring,.skdots i{animation-duration:.01ms!important}}
+.navfab{display:none;position:fixed;z-index:32;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));width:54px;height:54px;border-radius:50%;border:0;background:var(--text);color:var(--page);place-items:center;box-shadow:0 10px 28px rgba(0,0,0,.28);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .2s ease}
+.navfab:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
+.navfab.away{transform:translateY(calc(100% + 30px));opacity:0;pointer-events:none}
+.navfab:active{transform:scale(.93)}
+.navfab>span{grid-area:1/1;display:grid;place-items:center;transition:opacity .18s ease,transform .24s cubic-bezier(.2,.8,.2,1)}
+.navfab svg{width:22px;height:22px}
+.navfab .i2{opacity:0;transform:rotate(-90deg) scale(.6)}
+body.navopen .navfab .i1{opacity:0;transform:rotate(90deg) scale(.6)}
+body.navopen .navfab .i2{opacity:1;transform:none}
+.navbd{position:fixed;inset:0;z-index:30;display:none}
+body.navopen .navbd{display:block}
 </style></head><body><div class="wrap">
 </head><body>
 <style>
@@ -285,12 +296,14 @@ html.pdopen{overflow:hidden}
 .hg .hcr{border-top:1px solid var(--hair);padding:10px 0}.hg .hcr:first-of-type{border-top:0}
 .hg.att{grid-column:1/-1;background:color-mix(in srgb,var(--bad) 9%,var(--card2))}
 @media(max-width:900px){.lay{grid-template-columns:minmax(0,1fr);gap:0}.mainc{min-width:0}
- .side{position:fixed;z-index:30;top:auto;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom,0px));display:flex;justify-content:space-around;background:var(--card);border:1px solid var(--hair);border-radius:24px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
- .side button{flex:1;flex-direction:column;align-items:center;gap:3px;padding:8px 2px;border-radius:16px;font-size:11px}
- .side .nl{display:none}.side .ns{display:inline}
- .side button b{font-size:11px;white-space:nowrap}.side button small,.side .snote{display:none}
+ /* v52.21: on phones the sections live behind one round button (bottom right) that shows the current section's icon,
+    hides while scrolling down and comes back on scroll up; tapping it opens this menu above it */
+ .side{position:fixed;z-index:31;top:auto;left:auto;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + 66px);width:min(300px,calc(100vw - 32px));box-sizing:border-box;display:grid;gap:2px;background:var(--card);border:1px solid var(--hair);border-radius:22px;padding:6px;box-shadow:0 18px 50px rgba(0,0,0,.28);transform-origin:100% 100%;opacity:0;transform:translateY(10px) scale(.96);pointer-events:none;visibility:hidden;transition:opacity .18s ease,transform .24s cubic-bezier(.2,.8,.2,1),visibility 0s .24s}
+ body.navopen .side{opacity:1;transform:none;pointer-events:auto;visibility:visible;transition:opacity .18s ease,transform .24s cubic-bezier(.2,.8,.2,1),visibility 0s}
+ .side button{padding:11px 12px}.side .snote{display:none}
  .side button[aria-current=page]{box-shadow:none;background:var(--card2)}
- .wrap{padding-bottom:120px}
+ .navfab{display:grid}
+ .wrap{padding-bottom:96px}
  .hgrid{grid-template-columns:1fr}}
 @media(max-width:760px){
  .hd2{flex-wrap:wrap;gap:10px;padding:14px 0;margin-bottom:20px}.hd2 .lg{display:none}
@@ -312,7 +325,7 @@ html.pdopen{overflow:hidden}
 </style>
 <div class="wrap" id="app">
 <header class="hd2"><span class="logo">C</span><h1><span class="lg">Card Tab </span>Admin</h1><span class="sp"></span><div class="seg" id="srcsw" role="tablist" aria-label="Show numbers for"></div><div class="pernav"><button type="button" class="parr" id="pprev" aria-label="Earlier">‹</button><button type="button" class="perb" id="perb" aria-haspopup="dialog" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span id="perl"></span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="parr" id="pnext" aria-label="Later">›</button></div><button type="button" class="sbtn" id="sbtn" aria-label="Search or ask" title="Search or ask (/)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button><button type="button" class="xclose" id="xclose" aria-label="Close the dashboard" title="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><span class="tag" id="mode" hidden>Live</span></header><div class="smpban" id="smpban" hidden><span>Showing sample numbers, not real data</span><button type="button" id="smpoff">Show real numbers</button></div><div class="lay"><nav class="side" id="side" aria-label="Sections"></nav><main class="mainc"><div class="phd"><h2 id="sech">Overview</h2><span class="range" id="rlab"></span></div><div class="tabs" id="tabs" role="tablist"></div>
-<div id="view"></div>
+<div id="view"></div><div class="navbd" id="navbd"></div><button type="button" class="navfab" id="navfab" aria-label="Pages" aria-controls="side" aria-expanded="false"><span class="i1"></span><span class="i2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></span></button>
 <div class="priv" id="priv"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Counts only: no card names, prices, emails or typed text. People who switch off "Share anonymous usage" aren't counted. Daily counts are kept for two years.</div><div class="smpq"><button type="button" id="smpq" hidden>Preview with sample numbers</button></div></main></div>
 <div class="perbd" id="perbd" hidden></div><div class="perp" id="perp" role="dialog" aria-label="Choose dates and filters" hidden></div>
 </div>
@@ -504,6 +517,7 @@ function chrome(){const pv=document.getElementById('priv');if(pv)pv.lastChild.te
  const nav=NAV[st.src==='site'?'site':'app'],sec=secOf();
  document.getElementById('side').innerHTML=nav.map((x,i)=>'<button type="button" data-sec="'+i+'"'+(x===sec?' aria-current="page"':'')+'>'+ICS[x[1]]+'<span><b>'+(x[4]?'<i class="nl">'+x[0]+'</i><i class="ns">'+x[4]+'</i>':x[0])+'</b>'+(x[3]?'<small>'+x[3]+'</small>':'')+'</span></button>').join('')+'<div class="snote">Your own devices are left out of every number</div>';
  document.getElementById('sech').textContent=sec[0];
+ {const fb=document.getElementById('navfab');if(fb){fb.querySelector('.i1').innerHTML=ICS[sec[1]];fb.setAttribute('aria-label','Pages, now on '+sec[0])}}
  // v52.8: People isn't counts and doesn't use dates, so the date line and the counts-only note step aside there
  {const pp=st.src!=='site'&&st.tab===10;document.getElementById('rlab').hidden=pp;if(pv)pv.style.display=pp?'none':''}
  document.getElementById('tabs').innerHTML=sec[2].length>1?sec[2].map(t=>'<button role="tab" aria-selected="'+(t===curTab())+'" data-t="'+t+'">'+(st.src==='site'?STABS[t]:SUBN[t])+'</button>').join(''):'';
@@ -819,6 +833,21 @@ foot.addEventListener('click',e=>{if(e.target.id==='sknew'){MODE='search';TURNS=
 document.addEventListener('keydown',e=>{const tg=e.target,typing=tg&&(tg.tagName==='INPUT'||tg.tagName==='TEXTAREA'||tg.isContentEditable);
  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();sk.hidden?open():close();return}
  if(e.key==='/'&&!typing&&sk.hidden){e.preventDefault();open()}});
+})();
+</script>
+<script>
+/* v52.21 phone section menu: the round button opens the sections; it slides away while you scroll down and back on scroll up */
+(function(){const fab=document.getElementById('navfab'),bd=document.getElementById('navbd'),side=document.getElementById('side');if(!fab||!side)return;
+ const set=o=>{document.body.classList.toggle('navopen',o);fab.setAttribute('aria-expanded',String(o));if(o)fab.classList.remove('away')};
+ fab.onclick=()=>set(!document.body.classList.contains('navopen'));bd.onclick=()=>set(false);
+ side.addEventListener('click',e=>{if(e.target.closest('[data-sec]'))set(false)});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('navopen')){set(false);fab.focus()}});
+ let lastY=scrollY,tick=false;
+ addEventListener('scroll',()=>{if(tick)return;tick=true;requestAnimationFrame(()=>{tick=false;const y=scrollY,d=y-lastY;
+  if(document.body.classList.contains('navopen')){lastY=y;return}
+  const end=y+innerHeight>=document.documentElement.scrollHeight-40;
+  if(y<80||d<-6||end)fab.classList.remove('away');else if(d>6)fab.classList.add('away');
+  if(Math.abs(d)>6)lastY=y})},{passive:true});
 })();
 </script>
 </body></html>
