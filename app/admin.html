@@ -249,7 +249,7 @@ html.pdopen{overflow:hidden}
  .side{position:fixed;z-index:30;top:auto;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom,0px));display:flex;justify-content:space-around;background:var(--card);border:1px solid var(--hair);border-radius:24px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
  .side button{flex:1;flex-direction:column;align-items:center;gap:3px;padding:8px 2px;border-radius:16px;font-size:11px}
  .side .nl{display:none}.side .ns{display:inline}
- .side button b{font-size:11px}.side button small,.side .snote{display:none}
+ .side button b{font-size:11px;white-space:nowrap}.side button small,.side .snote{display:none}
  .side button[aria-current=page]{box-shadow:none;background:var(--card2)}
  .wrap{padding-bottom:120px}
  .hgrid{grid-template-columns:1fr}}
@@ -442,7 +442,7 @@ const IC=p=>'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke=
 const ICS={ov:IC('<rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/>'),gr:IC('<path d="M4 19h16M6 15l4-4 3 3 5-6"/>'),en:IC('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>'),co:IC('<rect x="6" y="3" width="12" height="18" rx="2.5"/>'),he:IC('<path d="M3 12h4l2-5 4 10 2-5h6"/>'),so:IC('<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>'),pg:IC('<rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/>'),fu:IC('<path d="M4 5h16l-6 8v6l-4-2v-4z"/>'),wj:IC('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>'),pp:IC('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2a5 5 0 016 4.8"/>')};
 // sections: [name, icon, view indexes (TABS / STABS), what's inside]
 const NAV={app:[['Overview','ov',[0],''],['People','pp',[10],'Find someone, give Premium'],['Growth','gr',[6,5],'Sign-ups, upgrades, Premium'],['Engagement','en',[1,2,3,4,7],'Features, time, Board, Stories, Ask','Activity'],['Collection','co',[8],'Entries, games, platforms','Cards'],['Health','he',[9],'Checks, errors, art review']],
-  site:[['Overview','ov',[0],''],['Sources','so',[1],'Where visitors come from'],['Pages','pg',[2],'How far people read'],['Funnel','fu',[3],'Visit to sign-up'],['Who joins','wj',[4],'What sign-ups saw first']]};
+  site:[['Overview','ov',[0],''],['Sources','so',[1],'Where visitors come from'],['Pages','pg',[2],'How far people read'],['Funnel','fu',[3],'Visit to sign-up'],['Who joins','wj',[4],'What sign-ups saw first','Joiners']]};
 const SUBN={0:'Overview',1:'Features',2:'Time & pages',3:'Board',4:'Stories',5:'Premium',6:'Sign-ups & upgrades',7:'Ask',8:'Collection',9:'Health',10:'People'};
 const curTab=()=>st.src==='site'?st.stab:st.tab;
 function secOf(){return NAV[st.src==='site'?'site':'app'].find(x=>x[2].includes(curTab()))||NAV.app[0]}
