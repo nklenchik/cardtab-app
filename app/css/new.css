@@ -2314,3 +2314,14 @@ html[data-theme="dark"] :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdr
  .ct-demo .ct-row .ct-pacts .ct-demo-actions.ct-acts4 button:not([data-act="edit"]) .ct-al{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
  .ct-demo .ct-row .ct-pacts .ct-demo-actions.ct-acts4 button[data-act="del"]{color:var(--s-brand)!important}
 }
+
+/* v51.9 Delete's second tap: a red "Delete?" (transform and opacity only for the little pop) */
+.ct-demo-actions button[data-act="del"].ct-arm,.ct-demo-actions button[data-gact="del"].ct-arm{background:var(--s-brand)!important;color:#fff!important;border-color:transparent!important;animation:ct-armpop .22s cubic-bezier(.2,.8,.2,1)}
+@keyframes ct-armpop{from{transform:scale(.92);opacity:.6}to{transform:none;opacity:1}}
+@media(max-width:760px){
+ .ct-demo .ct-row .ct-pacts .ct-demo-actions.ct-acts4 button[data-act="del"].ct-arm{flex:0 0 auto!important;width:auto;padding:0 16px!important;background:var(--s-brand)!important;color:#fff!important;border-color:transparent!important}
+ .ct-demo .ct-row .ct-pacts .ct-demo-actions.ct-acts4 button[data-act="del"].ct-arm .ct-ai{display:none}
+ .ct-demo .ct-row .ct-pacts .ct-demo-actions.ct-acts4 button[data-act="del"].ct-arm .ct-al{position:static;width:auto;height:auto;overflow:visible;clip:auto;font-size:14px;font-weight:700}
+ .ct-demo .ct-row .ct-pacts .ct-demo-actions.ct-acts4:has(.ct-arm) button[data-act="edit"]{padding:0 10px!important;gap:6px}   /* room for "Delete?" on small phones */
+}
+@media (prefers-reduced-motion:reduce){.ct-demo-actions .ct-arm{animation:none!important}}

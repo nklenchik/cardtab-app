@@ -381,7 +381,7 @@
     if (e.target === gp) { closeGP(); return; }
     if (e.target.closest('[data-gx]')) { closeGP(); return; }
     const st = e.target.closest('[data-gstep]'); if (st) { stepGP(+st.dataset.gstep); return; }
-    const a = e.target.closest('[data-gact]'); if (a) { const id = gpId, k = a.dataset.gact; closeGP(() => doAct(k, id)); }
+    const a = e.target.closest('[data-gact]'); if (a) { if (a.dataset.gact === 'del' && armDel(a)) return; const id = gpId, k = a.dataset.gact; closeGP(() => doAct(k, id)); }
   });
   gp.addEventListener('cancel', e => { e.preventDefault(); closeGP(); });
   gp.addEventListener('keydown', e => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); stepGP(e.key === 'ArrowLeft' ? -1 : 1); } });
@@ -458,6 +458,15 @@
     fadeSync();
   }
 
+  // v51.9: Delete takes two taps. The first turns it into a red "Delete?" for 3 seconds; the second deletes (and Undo still
+  // follows). A stray tap on the small trash icon does nothing.
+  function disarmDel(btn) { clearTimeout(btn._armT); btn.classList.remove('ct-arm'); const al = btn.querySelector('.ct-al'); if (al && al.dataset.t) al.textContent = al.dataset.t; btn.setAttribute('aria-label', 'Delete'); }
+  function armDel(btn) {
+    if (btn.classList.contains('ct-arm')) { disarmDel(btn); return false; }
+    document.querySelectorAll('.ct-arm').forEach(disarmDel);
+    btn.classList.add('ct-arm'); const al = btn.querySelector('.ct-al'); if (al) { al.dataset.t = al.dataset.t || al.textContent; al.textContent = 'Delete?'; }
+    btn.setAttribute('aria-label', 'Tap again to delete'); btn._armT = setTimeout(() => disarmDel(btn), 3000); return true;
+  }
   async function doAct(a, id) {
     const t = S.get(id); if (!t) return;
     if (a === 'edit') window.CTEditor.open(t, afterEditor);
@@ -475,6 +484,7 @@
     const act = e.target.closest('[data-act]');
     if (act) {
       e.stopPropagation();
+      if (act.dataset.act === 'del' && armDel(act)) return;
       doAct(act.dataset.act, act.closest('.ct-row').querySelector('.ct-row-toggle').dataset.tx);
       return;
     }
