@@ -19,7 +19,9 @@
   function norm(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim(); }
   // card numbers compare without leading zeros in each part, so 14/102 matches 014/102
   function numKey(s) { return norm(s).split(' ').map(function (x) { return x.replace(/^0+(?=\d)/, ''); }).join(' '); }
-  function words(s) { return norm(s).split(' ').filter(function (w) { return w.length > 1; }); }
+  // v52.17: Stories and search ask for the same names again and again; remember answers (a copy each time, so callers can't change the saved one)
+  var WC = new Map();
+  function words(s) { var k = String(s || ''), w = WC.get(k); if (!w) { w = norm(k).split(' ').filter(function (x) { return x.length > 1; }); if (WC.size > 5000) WC.clear(); WC.set(k, w); } return w.slice(); }
   function hit(hay, needle) { return needle.length && needle.every(function (w) { return hay.some(function (h) { return h.indexOf(w) === 0 || w.indexOf(h) === 0; }); }); }
 
   // Settings → Adding entries → Games you collect: those games come first when two printings score the same

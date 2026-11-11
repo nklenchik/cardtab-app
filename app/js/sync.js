@@ -38,7 +38,7 @@
   const soon = (ms) => { clearTimeout(timer); timer = setTimeout(run, ms == null ? 1200 : ms); };
 
   // saves made here go out a moment later; changes that came from sync don't trigger another send
-  S.on(reason => { if (on && reason !== 'sync' && reason !== 'open' && reason !== 'remote') { if (status === 'synced' || status === 'idle') set('pending'); soon(); } });
+  S.on(reason => { if (on && reason !== 'sync' && reason !== 'open' && reason !== 'remote') { if (status === 'synced' || status === 'idle') set('pending'); soon(); } }, true);   // every change, notifications too
   addEventListener('online', () => soon(200));
   addEventListener('offline', () => set(S._sync && S._sync.dirty().length ? 'offline-pending' : 'offline'));
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') soon(300); });

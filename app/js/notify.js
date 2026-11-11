@@ -249,7 +249,7 @@
   }
   async function clearDemo() { await save(s => { s.items = []; s.read = {}; s.tips = {}; }); }
 
-  S.on(() => { paintDot(); if (dlg.open) paint(); checkTips(); });
+  S.on(() => { paintDot(); if (dlg.open) paint(); checkTips(); }, true);
   paintDot();
   // v52.10 messages from Card Tab: when an admin gives Premium, extra entries or Ask questions, or resets something,
   // the server keeps a message; the app picks new ones up on start and when you come back to it (at most every 5 minutes)

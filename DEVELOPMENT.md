@@ -654,6 +654,13 @@ every tap and scroll was slower than the demo. Fixed in v52.15 (board.js fitAll:
 - When writing code that watches for changes (MutationObserver, ResizeObserver) and then changes the page in response,
   make sure the response can't trigger the watcher again (takeRecords() after your own changes, or skip unchanged writes).
 
+## Mobile moves check (added 2026-11-11, v52.17)
+`node tests/mobile-moves.js` times switching pages and opening/closing every window on a slowed-down iPhone (300 entries).
+Fixed from it: opening Notifications redrew the whole app behind it (marking read counted as a data change: notification
+saves are now a quiet 'notif' change only sync and notifications hear; listeners that need every change use S.on(fn, true));
+the word splitter Stories leans on now remembers answers; search waits for a typing pause (~0.1s) before redrawing.
+Normal: ~45ms when any window opens (the browser restyling the page for the window).
+
 ## Dec 1 launch checklist (Premium opens)
 Only once the NY sales tax Certificate of Authority has arrived.
 1. Stripe live mode: create the webhook event destination (Your account, Snapshot) to https://api.cardtab.app/stripe/webhook with: checkout.session.completed, customer.subscription.created/updated/deleted/paused/resumed, invoice.paid, invoice.payment_failed, customer.updated, payment_method.attached.

@@ -603,8 +603,11 @@
   $$('[data-ct-type]').forEach(b => b.addEventListener('click', () => { type = b.dataset.ctType; expanded = null; $$('[data-ct-type]').forEach(x => x.classList.toggle('ct-selected', x === b)); render(); }));
   $('ct-type').addEventListener('change', e => { const b = root.querySelector('[data-ct-type="' + e.target.value + '"]'); if (b) b.click(); });
   phone.addEventListener('change', () => { expanded = null; render(); });
-  ['ct-search', 'ct-platform', 'ct-period', 'ct-sort'].forEach(id => $(id).addEventListener(id === 'ct-search' ? 'input' : 'change', () => {
-    expanded = null; if (id === 'ct-period' || id === 'ct-sort') pref.set(id, $(id).value); render();
+  // v52.17: typing in search redraws once you pause (about a tenth of a second), not on every letter; clearing is instant
+  let qT = 0;
+  ['ct-search', 'ct-platform', 'ct-period', 'ct-sort'].forEach(id => $(id).addEventListener(id === 'ct-search' ? 'input' : 'change', e => {
+    if (id === 'ct-search' && e.isTrusted && $(id).value) { clearTimeout(qT); qT = setTimeout(() => { expanded = null; render(); }, 110); return; }
+    clearTimeout(qT); expanded = null; if (id === 'ct-period' || id === 'ct-sort') pref.set(id, $(id).value); render();
   }));
   $$('[data-ct-view]').forEach(b => b.addEventListener('click', () => {
     const v = b.dataset.ctView; $$('[data-ct-view]').forEach(x => x.classList.toggle('ct-selected', x === b));

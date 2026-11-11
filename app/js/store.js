@@ -68,7 +68,10 @@
   let meta = {};                    // k -> value
   const undoStack = [];             // [{label, run}]
 
-  function emit(reason) { listeners.forEach(fn => { try { fn(reason); } catch (e) { console.error(e); } }); }
+  // v52.17: 'notif' (notifications read/cleared) only reaches listeners that asked for every change (sync, notifications);
+  // before, marking notifications read redrew the entries list, Board, Stories, budget and home behind the window
+  const QUIET = new Set(['notif']);
+  function emit(reason) { const q = QUIET.has(reason); listeners.forEach(fn => { if (q && !fn._all) return; try { fn(reason); } catch (e) { console.error(e); } }); }
 
   // _d = changed here and not yet sent to the account (sync); copies that came from another device are saved without it
   async function putEntry(e, fromSync) { if (fromSync) delete e._d; else e._d = 1; entries.set(e.id, e); if (db) await reqP(db.transaction('entries', 'readwrite').objectStore('entries').put(e)); }
@@ -188,7 +191,7 @@
     },
     close() { if (chan) chan.close(); chan = null; if (db) db.close(); db = null; entries = new Map(); meta = {}; undoStack.length = 0; },
 
-    on(fn) { listeners.add(fn); return () => listeners.delete(fn); },
+    on(fn, all) { if (all) fn._all = 1; listeners.add(fn); return () => listeners.delete(fn); },
 
     all() { return [...entries.values()].filter(e => !e.deleted).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt)); },
     get(id) { const e = entries.get(id); return e && !e.deleted ? clone(e) : null; },
@@ -306,7 +309,7 @@
 
     // ---------- small per-account settings (notifications and the like) ----------
     meta(k) { const v = meta[k]; return v == null ? null : clone(v); },
-    async setMeta(k, v) { await putMeta(k, v); changed('meta'); },
+    async setMeta(k, v) { await putMeta(k, v); changed(k === 'notif' ? 'notif' : 'meta'); },
     // Unmatched cards: Fix sets the card's name and art (never the amounts); Leave keeps it as typed. One Undo puts it back.
     async matchCard(id, patch) {
       const cur = entries.get(id); if (!cur || cur.deleted) return null;
