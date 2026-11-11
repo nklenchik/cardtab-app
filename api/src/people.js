@@ -18,6 +18,7 @@ import { rowOf, saveRow, planOf, ACTIVE, ensureTable, cancelForDelete } from './
 import { deleteUserPhotos } from './artup.js';
 import { deleteSynced } from './sync.js';
 import { askLimits } from './ask.js';
+import { sendMail, giftEmail } from './email.js';
 
 const now = () => Math.floor(Date.now() / 1000);
 const DAY = 86400;
@@ -160,6 +161,8 @@ export async function handlePeople(env, req, path, out) {
       const r = await saveRow(env, uid, { gift: b.on ? 1 : 0 });
       await setAcct(env, uid, { gift_until: b.on && days ? now() + days * DAY : null });
       await env.DB.prepare('UPDATE users SET plan=? WHERE id=?').bind(planOf(r), uid).run();
+      // v52.11: a new gift also gets an email (changing an existing gift's length doesn't)
+      if (b.on && !cur.gift) { try { await sendMail(env, { to: u.email, replyTo: 'hello@cardtab.app', ...giftEmail({ name: u.name, until: days ? now() + days * DAY : null, appUrl: env.APP_URL || 'https://app.cardtab.app' }) }); } catch (e) { /* the notification still goes */ } }
       if (b.on) await tell('You’ve been given Premium', 'A gift from Card Tab: Premium ' + (days ? 'for ' + days + ' days, until ' + day(now() + days * DAY) : 'with no end date') + '. Nothing to pay, and it won’t renew.');
       else if (cur.gift) await tell('Your Premium gift has ended', 'You’re back on Free. Everything you added is still here.');
       return done(b.on ? 'Gift of Premium' + (days ? ' for ' + days + ' days' : ', no end date') : 'Gift turned off');

@@ -138,3 +138,23 @@ export function paymentEmail({ kind, graceUntil, appUrl, card, amount, interval 
     `Update your card: ${link}\n\nAlready fixed it? Then you can ignore this email.\n\nCard Tab · cardtab.app`;
   return { subject, html, text };
 }
+
+// v52.11: an admin gave Premium as a gift (sent once, when the gift starts)
+export function giftEmail({ name, until, appUrl }) {
+  const first = String(name || '').trim().split(/\s+/)[0] || '';
+  const subject = 'You’ve been given Card Tab Premium';
+  const when = until ? day(until) : '';
+  const intro = until ? 'A gift from Card Tab: Premium is yours until ' + when + '. There’s nothing to pay, and it won’t renew.' : 'A gift from Card Tab: Premium is yours, with no end date. There’s nothing to pay.';
+  const body = h1('You’ve been given Premium' + (first ? ', ' + esc(first) : '')) + lead(esc(intro)) +
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">` +
+    tip(1, 'No monthly limit.', 'Add every card you buy and sell.') +
+    tip(2, 'Your whole history.', 'Totals and the Board for any date range, all the way back.') +
+    tip(3, 'Every Stories theme and video.', 'Share your month, your year, or your best flips.', true) + `</table>` +
+    button(appUrl + '/', 'Open Card Tab');
+  const html = shell({ title: subject, preheader: until ? 'Premium until ' + when + ', on us.' : 'Premium, on us.', body,
+    foot: (until ? 'When the gift ends you’ll go back to Free, and everything you added stays.<br>' : '') + 'Questions? Just reply to this email.' });
+  const text = `You’ve been given Premium${first ? ', ' + first : ''}\n\n${intro}\n\n1. No monthly limit. Add every card you buy and sell.\n2. Your whole history. Totals and the Board for any date range, all the way back.\n3. Every Stories theme and video. Share your month, your year, or your best flips.\n\nOpen Card Tab: ${appUrl}/\n\n` +
+    (until ? 'When the gift ends you’ll go back to Free, and everything you added stays.\n' : '') + 'Questions? Just reply to this email.\n\nCard Tab · cardtab.app';
+  return { subject, html, text };
+}
+
