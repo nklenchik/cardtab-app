@@ -116,9 +116,9 @@ export async function runHealth(env, { send = true } = {}) {
   add('spend', 'Ask spending this month', await timed(async () => {
     const m = new Date().toISOString().slice(0, 7), r = await env.DB.prepare('SELECT tin, tout, n FROM ask_spend WHERE month=?').bind(m).first().catch(() => null);
     const cost = r ? (r.tin * 0.10 + r.tout * 0.50) / 1e6 : 0, cap = +(env.ASK_MONTH_USD || 25), pct = cap ? cost / cap * 100 : 0;
-    // v52.18: how many answers that covers, and the average size of one, so an odd total explains itself
+    // v52.18: how many questions that covers, and the average size of one, so an odd total explains itself
     const k = x => x >= 1e6 ? (x / 1e6).toFixed(1) + 'M' : x >= 1e3 ? Math.round(x / 1e3) + 'K' : String(x);
-    const per = r && r.n ? ' · ' + r.n + ' answers, about ' + k(Math.round(r.tin / r.n)) + ' tokens in and ' + k(Math.round(r.tout / r.n)) + ' out each' : '';
+    const per = r && r.n ? ' · ' + r.n + ' questions, about ' + k(Math.round(r.tin / r.n)) + ' tokens in and ' + k(Math.round(r.tout / r.n)) + ' out each' : '';
     return { ok: true, warn: pct >= 80, note: '$' + cost.toFixed(2) + ' of $' + cap + ' (' + Math.round(pct) + '%)' + per };
   }), 'Ask is close to its monthly cap. Raise it if that’s expected: add ASK_MONTH_USD (a dollar amount) in Cloudflare → card-tab-api → Settings → Runtime variables and secrets.');
   add('errors', 'App errors yesterday', await timed(async () => {
