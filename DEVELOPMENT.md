@@ -640,6 +640,17 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 - iPhone doesn't blur the box when the keyboard is dismissed, so the extra scroll room reserved for the keyboard stayed (a screenful of empty page). Now when the page grows back by more than 120px while a box is focused, the box is released: page glides to top, room removed.
 - Room is re-trimmed on every resize. Tested: keyboard up + scrolled to bottom, card ends 24px above the bottom edge; keyboard hidden, max scroll is the card's natural height only.
 
+## Before every app update: the idle check (required, added 2026-11-11)
+An app sitting still should do almost nothing. On Nov 11 the Card Board's number fitting was found re-triggering itself
+every frame, forever (even with the Board off screen): about 2,200 content changes a second. Nothing looked broken, but
+every tap and scroll was slower than the demo. Fixed in v52.15 (board.js fitAll: drops its own changes, skips when off screen).
+- Run `node tests/idle-check.js` (with `python3 -m http.server 8765` in app/) before pushing any app change.
+- It loads 300 entries and checks Entries and Board on a phone and a desktop: steady frames while idle, no code asking
+  for a frame over and over, no content changing over and over. It exits 1 and names the culprit on a problem.
+- Verified: it fails on the old Board code and passes on the fix.
+- When writing code that watches for changes (MutationObserver, ResizeObserver) and then changes the page in response,
+  make sure the response can't trigger the watcher again (takeRecords() after your own changes, or skip unchanged writes).
+
 ## Dec 1 launch checklist (Premium opens)
 Only once the NY sales tax Certificate of Authority has arrived.
 1. Stripe live mode: create the webhook event destination (Your account, Snapshot) to https://api.cardtab.app/stripe/webhook with: checkout.session.completed, customer.subscription.created/updated/deleted/paused/resumed, invoice.paid, invoice.payment_failed, customer.updated, payment_method.attached.
