@@ -2314,7 +2314,7 @@ html[data-theme="dark"] :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdr
 
 /* v51.5 sign-in screen: the website's near-black in dark mode, and a soft cranberry glow behind the card. The glow shares the
    card's grid cell, so it's always centered on the card (even when Create account makes it taller). Still, not animated. */
-.auth{overflow:clip;isolation:isolate}
+.auth{overflow:clip;isolation:isolate;grid-template-columns:minmax(0,1fr)}   /* v52.23: the glow is wider than a phone; it must not set the column width (it pushed the sign-in card off to the right) */
 .auth>.auth-card{grid-area:1/1}
 .auth-glow{grid-area:1/1;align-self:stretch;justify-self:center;width:min(1000px,190vw);position:relative;z-index:-1;pointer-events:none}
 .auth-glow::before{content:"";position:absolute;left:0;right:0;top:50%;aspect-ratio:1/.85;transform:translateY(-50%);border-radius:50%;
@@ -2396,3 +2396,15 @@ html[data-theme="dark"] :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdr
 /* v52.14 phones: a quiet press shade the instant a closed entry is touched (the gray tap flash is off), so a tap answers right away */
 @media(hover:none){.ct-demo .ct-row:not(.expanded):has(.ct-row-toggle:active){background-image:linear-gradient(color-mix(in srgb,var(--ct-text) 6%,transparent),color-mix(in srgb,var(--ct-text) 6%,transparent))}}
 
+
+/* v52.23 in-app browser note on the sign-in screen (Instagram, Facebook, TikTok…) */
+.ia-note{display:grid;gap:6px;margin:4px 0 14px;padding:13px 14px;border-radius:14px;background:color-mix(in srgb,var(--brand) 9%,transparent);border:1px solid color-mix(in srgb,var(--brand) 22%,transparent);font-size:13.5px;line-height:1.45}
+.ia-note b{font-weight:800}.ia-note>span{color:var(--muted);font-weight:600}
+.ia-btns{display:flex;gap:8px;margin-top:4px}
+.ia-btns button{flex:1;min-width:0;border:0;border-radius:10px;padding:10px 8px;font:inherit;font-weight:800;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ia-open{background:var(--brand);color:#fff}.ia-copy{background:var(--card,#fff);color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
+.ia-steps{margin:2px 0 0;font-size:12.5px;color:var(--text)}
+.ia-g{opacity:.55}
+.ia-pulse{animation:iaPulse .6s ease}
+@keyframes iaPulse{30%{transform:scale(1.02)}60%{transform:scale(.995)}}
+@media(prefers-reduced-motion:reduce){.ia-pulse{animation:none}}
