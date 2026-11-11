@@ -1553,10 +1553,17 @@ const MONEY=/^([+−-]?)\$([\d,]+)(\.\d\d)?$/;
 const kmb=(sg,d)=>{const v=Number(d.replace(/,/g,''));return v<1000?null:sg+'$'+(v>=1e6?(v/1e6).toFixed(v<1e7?1:0).replace(/\.0$/,'')+'M':(v/1e3).toFixed(v<1e4?1:0).replace(/\.0$/,'')+'K')};
 const cut=n=>n.scrollWidth>n.clientWidth+1;
 function fitShort(root){root.querySelectorAll('[data-short]').forEach(n=>{if(n.dataset.full==null)n.dataset.full=n.innerHTML;n.innerHTML=n.dataset.full;if(cut(n))n.innerHTML=n.dataset.short});
-  root.querySelectorAll('.num,.bn,b,strong').forEach(n=>{if(n.children.length)return;if(n._ctRising)return;/* v50.88: counting in (js/rise.js) — leave it */if(n.dataset.amt==null){if(!MONEY.test(n.textContent.trim()))return;n.dataset.amt=n.textContent.trim()}
-    const full=n.dataset.amt,m=full.match(MONEY),isBn=n.classList.contains('bn'),mx=isBn?parseFloat(getComputedStyle(n).getPropertyValue('--mx'))||34:0;
-    // a big number shrinks its type to fit; past about a tenth smaller it shortens instead, so big numbers stay big
-    const set=t=>{if(n.textContent!==t)n.textContent=t;if(isBn)n.style.setProperty('--len',Math.max(4,t.length))},bad=()=>isBn?parseFloat(getComputedStyle(n).fontSize)<mx*.9:cut(n);
+  /* v52.18: big numbers (.bn) are sized by a formula, min(--mx, 100cqi / (len × .6)), so whether an amount fits is worked
+     out from one round of measuring instead of write-then-read per number (that forced the page's styles to be worked out
+     again for every number: ~370ms on a slowed phone when adding an entry with a big Board on All time). Same results. */
+  const all=[...root.querySelectorAll('.num,.bn,b,strong')].filter(n=>{if(n.children.length||n._ctRising)return false;/* v50.88: counting in (js/rise.js) — leave it */if(n.dataset.amt==null){if(!MONEY.test(n.textContent.trim()))return false;n.dataset.amt=n.textContent.trim()}return true});
+  const big=all.filter(n=>n.classList.contains('bn')).map(n=>{const mx=parseFloat(getComputedStyle(n).getPropertyValue('--mx'))||34;let c=n.parentElement;while(c&&c!==document.body&&getComputedStyle(c).containerType==='normal')c=c.parentElement;
+    let W=Infinity;if(c&&c!==document.body){const cs=getComputedStyle(c);W=c.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)}return {n,mx,W}});
+  big.forEach(({n,mx,W})=>{const full=n.dataset.amt,m=full.match(MONEY);const opts=[full];if(m&&m[3])opts.push(m[1]+'$'+m[2]);const k=m&&kmb(m[1],m[2]);if(k)opts.push(k);
+    const t=opts.find(o=>W/(Math.max(4,o.length)*.6)>=mx*.9)||opts[opts.length-1];if(n.textContent!==t)n.textContent=t;n.style.setProperty('--len',Math.max(4,t.length));if(t===full)n.removeAttribute('title');else n.title=full});
+  all.filter(n=>!n.classList.contains('bn')).forEach(n=>{
+    const full=n.dataset.amt,m=full.match(MONEY);
+    const set=t=>{if(n.textContent!==t)n.textContent=t},bad=()=>cut(n);
     set(full);n.removeAttribute('title');if(!bad())return;
     if(m[3]){set(m[1]+'$'+m[2]);n.title=full;if(!bad())return}const k=kmb(m[1],m[2]);if(k){set(k);n.title=full}})}
 function fitW(w){const wb=w.querySelector(':scope>.wb');if(!wb)return;fitShort(wb);

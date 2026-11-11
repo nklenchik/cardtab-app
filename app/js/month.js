@@ -249,13 +249,15 @@
     $('sb-spent').textContent = sp.textContent; $('sb-profit').textContent = pr.textContent;
     bar.querySelector('.sb-profit').classList.toggle('neg', pr.parentElement.classList.contains('ct-negative'));
     const tile = sp.parentElement, b = S.budget(), bud = $('sb-bud'), ln = tile.querySelector('.ct-line');
-    const fill = parseFloat(getComputedStyle(tile).getPropertyValue('--fill')) || 0;
+    // v52.18: read straight off the tile (home.js sets it there); asking for the computed value forced the whole page's
+    // styles to be worked out mid-update, ~300ms on a slowed phone after adding an entry to a big collection
+    const fill = parseFloat(tile.style.getPropertyValue('--fill')) || 0;
     bud.hidden = !b || !monthOfVal(sel.value);
     bud.dataset.bud = tile.dataset.bud || 'ok';
     bud.querySelector('em').style.transform = 'scaleX(' + fill + ')';
     bud.querySelector('span').textContent = ln ? ln.textContent.replace(/^(On track|Getting close) · /, '') : '';
   }
-  new MutationObserver(() => syncBar()).observe(stats, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'data-bud'] });
+  let sbQ = 0; new MutationObserver(() => { if (!sbQ) sbQ = requestAnimationFrame(() => { sbQ = 0; syncBar(); }); }).observe(stats, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['style', 'data-bud'] });
 
   let shown = false, statsGone = false;
   const keepOpen = () => document.activeElement === q || !!q.value;
