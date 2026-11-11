@@ -64,7 +64,7 @@
     const n = document.createElement('span'); n.className = 'pmlb in'; n.textContent = t; w.appendChild(n); void n.offsetWidth; n.classList.remove('in'); cur.classList.add('out'); setTimeout(() => cur.remove(), 420); }
   function cta(slide) { const g = $('pm-go'), pms = $('pms'), fine = pms && pms.querySelector('.pmfine'); if (!g) return;
     g.disabled = closed(); g.classList.toggle('pm-soon', closed());
-    label(g, closed() ? 'Premium opens ' + (status.opens || 'soon') : 'Continue · ' + dollars(priceOf(pick)) + (pick === 'year' ? ' a year' : ' a month'), slide);
+    label(g, closed() ? 'Premium opens ' + (status.opens || 'soon') : 'Continue · ' + dollars(priceOf(pick)) + (pick === 'year' ? '/year' : '/month'), slide);
     if (fine) fine.textContent = closed() ? (offer() ? 'You’re in early, so the founders price is yours. Upgrade by Jan 31.' : 'Premium isn’t open yet.') : 'Renews automatically. Cancel anytime in Settings.'; }
   // the sheet lives in the Card Board files, which load later: paint the picker whenever it opens
   new MutationObserver(() => { const pms = $('pms'); if (pms && pms.open && !pms._ctPlans) { pms._ctPlans = true; pick = 'year'; planPicker(); if (!status) load().then(planPicker); }
@@ -92,7 +92,7 @@
   async function checkout(iv) {
     if (closed()) { cta(); return; }
     iv = iv === 'month' ? 'month' : 'year';
-    const d = ckDialog(); $('ck-sub').textContent = (iv === 'year' ? 'Yearly' : 'Monthly') + ' · ' + dollars(priceOf(iv)) + (iv === 'year' ? ' a year' : ' a month') + (offer() ? ' · founding member' : '');
+    const d = ckDialog(); $('ck-sub').textContent = (iv === 'year' ? 'Yearly' : 'Monthly') + ' · ' + dollars(priceOf(iv)) + (iv === 'year' ? '/year' : '/month') + (offer() ? ' · founding member' : '');
     const w = $('ck-wait'); w.hidden = false; w.textContent = 'Opening secure checkout…'; w.classList.remove('err');
     d.showModal(); try { d.querySelector('.ck-p').focus({ preventScroll: true }); } catch (e) {}
     if (!REAL) { demoCheckout(iv); return; }
