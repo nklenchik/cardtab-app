@@ -98,7 +98,7 @@ export async function handleStats(env, req, out) {
     q('SELECT plan, COUNT(*) n FROM users WHERE 1=1' + notAdmin + ' GROUP BY plan', adm),
     q("SELECT date(created_at,'unixepoch') day, COUNT(*) n FROM users WHERE date(created_at,'unixepoch') BETWEEN ? AND ?" + notAdmin + (plan ? ' AND plan=?' : '') + ' GROUP BY day', [from, to, ...adm, ...(plan ? [plan] : [])]),
     q("SELECT COUNT(*) n FROM users WHERE date(created_at,'unixepoch') BETWEEN ? AND ?" + notAdmin + (plan ? ' AND plan=?' : ''), [pFrom, pTo, ...adm, ...(plan ? [plan] : [])]),
-    q('SELECT month, tin, tout FROM ask_spend ORDER BY month DESC LIMIT 1', []).catch(() => [])
+    q('SELECT month, tin, tout, n FROM ask_spend ORDER BY month DESC LIMIT 1', []).catch(() => [])
   ]);
   const byDay = rows => { const m = {}; rows.forEach(r => { (m[r.day] = m[r.day] || []).push(r); }); return m; };
   const series = (rows, a, len) => { const m = byDay(rows), outA = [], secs = []; for (let i = 0; i < len; i++) { const d = addDays(a, i), r = m[d] || []; outA.push(r.length); secs.push(median(r.map(x => x.secs))); } return { active: outA, secs }; };
