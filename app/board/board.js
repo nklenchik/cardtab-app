@@ -1556,7 +1556,7 @@ function fitShort(root){root.querySelectorAll('[data-short]').forEach(n=>{if(n.d
   root.querySelectorAll('.num,.bn,b,strong').forEach(n=>{if(n.children.length)return;if(n._ctRising)return;/* v50.88: counting in (js/rise.js) — leave it */if(n.dataset.amt==null){if(!MONEY.test(n.textContent.trim()))return;n.dataset.amt=n.textContent.trim()}
     const full=n.dataset.amt,m=full.match(MONEY),isBn=n.classList.contains('bn'),mx=isBn?parseFloat(getComputedStyle(n).getPropertyValue('--mx'))||34:0;
     // a big number shrinks its type to fit; past about a tenth smaller it shortens instead, so big numbers stay big
-    const set=t=>{n.textContent=t;if(isBn)n.style.setProperty('--len',Math.max(4,t.length))},bad=()=>isBn?parseFloat(getComputedStyle(n).fontSize)<mx*.9:cut(n);
+    const set=t=>{if(n.textContent!==t)n.textContent=t;if(isBn)n.style.setProperty('--len',Math.max(4,t.length))},bad=()=>isBn?parseFloat(getComputedStyle(n).fontSize)<mx*.9:cut(n);
     set(full);n.removeAttribute('title');if(!bad())return;
     if(m[3]){set(m[1]+'$'+m[2]);n.title=full;if(!bad())return}const k=kmb(m[1],m[2]);if(k){set(k);n.title=full}})}
 function fitW(w){const wb=w.querySelector(':scope>.wb');if(!wb)return;fitShort(wb);
@@ -1572,9 +1572,12 @@ function fitW(w){const wb=w.querySelector(':scope>.wb');if(!wb)return;fitShort(w
   for(const sel of FIT_DROP){const els=[...w.querySelectorAll(sel)].filter(e=>wb.contains(e)||sel.includes('.wh'));if(!els.length)continue;els.forEach(e=>e.classList.add('fh'));if(!spills(wb))return}
   w.classList.add('fsq')}
 let fitQ=0;
-function fitAll(){fitQ=0;const sim=$('simple');if(!sim||$('cb').classList.contains('dragging')||rz)return;sim.querySelectorAll(':scope>.w[data-id]').forEach(fitW)}
+// v52.15: fitting rewrites numbers to measure them; those rewrites used to count as "something changed" and start another
+// fit, every frame, forever (even with the Board off screen). Now the fit's own changes are dropped, and an off-screen Board waits.
+let fitMO=null;
+function fitAll(){fitQ=0;const sim=$('simple');if(!sim||$('cb').classList.contains('dragging')||rz)return;const cbx=sim.closest('.cbx');if(cbx&&cbx.classList.contains('off'))return;sim.querySelectorAll(':scope>.w[data-id]').forEach(fitW);if(fitMO)fitMO.takeRecords()}
 const fitSoon=()=>{if(!fitQ)fitQ=requestAnimationFrame(()=>requestAnimationFrame(fitAll))};
-(function(){const sim=$('simple');if(!sim)return;new MutationObserver(m=>{if(m.some(x=>x.type==='childList'&&!(x.target.closest&&x.target.closest('.floating'))))fitSoon()}).observe(sim,{childList:true,subtree:true});
+(function(){const sim=$('simple');if(!sim)return;fitMO=new MutationObserver(m=>{if(m.some(x=>x.type==='childList'&&!(x.target.closest&&x.target.closest('.floating'))))fitSoon()});fitMO.observe(sim,{childList:true,subtree:true});
   if(window.ResizeObserver){const ro=new ResizeObserver(fitSoon);ro.observe(sim);
     /* v50.4: also watch each widget's own box, so a widget that settles to a new height after Done, a resize or a range
        change is measured again (the board's outer size often doesn't change) */
