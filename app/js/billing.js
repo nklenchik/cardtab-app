@@ -53,14 +53,18 @@
     pill.replaceWith(box);
     // the small print goes under the button
     const go = $('pm-go'); if (go && !pms.querySelector('.pmfine')) go.insertAdjacentHTML('afterend', '<p class="pmfine"></p>');
-    box.addEventListener('click', e => { const b = e.target.closest('[data-iv]'); if (!b) return; pick = b.dataset.iv; box.querySelectorAll('[data-iv]').forEach(x => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-checked', String(on)); }); cta(); });
+    box.addEventListener('click', e => { const b = e.target.closest('[data-iv]'); if (!b) return; pick = b.dataset.iv; box.querySelectorAll('[data-iv]').forEach(x => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-checked', String(on)); }); box.classList.add('pmtouched'); cta(true); });
     cta();
   }
   // v50.72: before launch the button says when Premium opens and can't be pressed (admins can still check out)
   const closed = () => !!(status && status.open === false);
-  function cta() { const g = $('pm-go'), pms = $('pms'), fine = pms && pms.querySelector('.pmfine'); if (!g) return;
+  // v52.19: the button's words sit in a clipped line, so a new price can slide up in place of the old one
+  function label(g, t, slide) { const w = g.querySelector('.pmlbw'), cur = w && w.querySelector('.pmlb:not(.out)'); if (cur && cur.textContent === t) return;
+    if (!cur || !slide || matchMedia('(prefers-reduced-motion: reduce)').matches) { g.innerHTML = '<span class="pmlbw"><span class="pmlb"></span></span>'; g.querySelector('.pmlb').textContent = t; return; }
+    const n = document.createElement('span'); n.className = 'pmlb in'; n.textContent = t; w.appendChild(n); void n.offsetWidth; n.classList.remove('in'); cur.classList.add('out'); setTimeout(() => cur.remove(), 420); }
+  function cta(slide) { const g = $('pm-go'), pms = $('pms'), fine = pms && pms.querySelector('.pmfine'); if (!g) return;
     g.disabled = closed(); g.classList.toggle('pm-soon', closed());
-    g.textContent = closed() ? 'Premium opens ' + (status.opens || 'soon') : 'Continue · ' + dollars(priceOf(pick)) + (pick === 'year' ? ' a year' : ' a month');
+    label(g, closed() ? 'Premium opens ' + (status.opens || 'soon') : 'Continue · ' + dollars(priceOf(pick)) + (pick === 'year' ? ' a year' : ' a month'), slide);
     if (fine) fine.textContent = closed() ? (offer() ? 'You’re in early, so the founders price is yours. Upgrade by Jan 31.' : 'Premium isn’t open yet.') : 'Renews automatically. Cancel anytime in Settings.'; }
   // the sheet lives in the Card Board files, which load later: paint the picker whenever it opens
   new MutationObserver(() => { const pms = $('pms'); if (pms && pms.open && !pms._ctPlans) { pms._ctPlans = true; pick = 'year'; planPicker(); if (!status) load().then(planPicker); }

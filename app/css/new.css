@@ -2148,11 +2148,28 @@ img,.slab,.sl-well,.zm-slab{-webkit-touch-callout:none;-webkit-user-drag:none;us
 .pms .pmb:has(.pmplans) .pmf div{min-height:40px;padding:7px 10px;border-radius:12px;font-size:12.5px;gap:8px;line-height:1.2}
 .pms .pmb:has(.pmplans) .pmf svg{width:15px;height:15px}
 .pmplans{display:flex;flex-direction:column;gap:9px;margin-bottom:12px}
-.pmplan{all:unset;box-sizing:border-box;position:relative;display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:18px;background:var(--card);border:1.5px solid var(--line);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .18s ease,box-shadow .18s ease}
-.pmplan.on{border-color:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 16%,transparent)}
+.pmplan{all:unset;box-sizing:border-box;position:relative;display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:18px;background:var(--card);border:1.5px solid var(--line);cursor:pointer;-webkit-tap-highlight-color:transparent}
+/* v52.19: plan hovers. The selected outline and the hover edge are layers that fade (5), cards lift on hover (1), the empty circle previews a dot (2) */
+.pmplan::before,.pmplan::after{content:"";position:absolute;inset:-1.5px;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .3s ease}
+.pmplan::before{border:1.5px solid color-mix(in srgb,var(--muted) 50%,transparent);transition-duration:.2s}
+.pmplan::after{border:1.5px solid var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 16%,transparent),0 10px 26px -12px color-mix(in srgb,var(--brand) 55%,transparent)}
+.pmplan.on::after{opacity:1}.pmtag2{z-index:2}
 .pmplan:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
-.pmrad{width:20px;height:20px;border-radius:50%;border:2px solid color-mix(in srgb,var(--muted) 55%,transparent);flex:none;box-sizing:border-box;transition:border-width .18s ease,border-color .18s ease}
-.pmplan.on .pmrad{border:6px solid var(--brand)}
+.pmrad{width:20px;height:20px;border-radius:50%;border:2px solid color-mix(in srgb,var(--muted) 55%,transparent);flex:none;box-sizing:border-box;position:relative}
+.pmrad::before{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--brand);opacity:0;transition:opacity .25s ease}
+.pmrad::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--brand);transform:scale(0);transition:transform .3s cubic-bezier(.3,1.6,.5,1),opacity .2s ease}
+.pmplan.on .pmrad::before{opacity:1}.pmplan.on .pmrad::after{transform:scale(1);opacity:1}
+.pmplans.pmtouched .pmplan.on .pmrad::after{animation:pmpop .38s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pmpop{0%{transform:scale(.3)}100%{transform:scale(1)}}
+@media(hover:hover){.pmplan{transition:transform .28s cubic-bezier(.2,.75,.25,1)}.pmplan:hover,.pmplan.on{transform:translateY(-2px)}.pmplan:active{transform:translateY(-1px)}
+ .pmplan:hover::before{opacity:1}.pmplan:not(.on):hover .pmrad::after{transform:scale(.5);opacity:.45}
+ .pms .pmcta:not(.pm-soon):hover::after{opacity:1}}
+/* Continue: a faint glow on hover, and the price slides up to the new one when you switch plans (6) */
+.pms .pmcta{position:relative}
+.pms .pmcta::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .25s ease;box-shadow:0 0 0 4px color-mix(in srgb,var(--brand) 18%,transparent),0 10px 30px -6px color-mix(in srgb,var(--brand) 65%,transparent)}
+.pmlbw{position:relative;display:block;overflow:hidden;line-height:1.35}.pmlb{display:block;transition:transform .36s cubic-bezier(.2,.75,.25,1),opacity .26s ease}
+.pmlb.out{position:absolute;left:0;right:0;top:0;transform:translateY(-110%);opacity:0}.pmlb.in{transform:translateY(110%);opacity:0;transition:none}
+@media(prefers-reduced-motion:reduce){.pmplan,.pmplan::before,.pmplan::after,.pmrad::before,.pmrad::after,.pmlb,.pms .pmcta::after{transition:none!important;animation:none!important}}
 .pmpl{flex:1;min-width:0}.pmpl b{display:block;font-size:15.5px;font-weight:800;line-height:1.2}.pmpl small{display:block;margin-top:2px;font-size:12px;font-weight:650;color:var(--muted)}
 .pmpr{flex:none;text-align:right;white-space:nowrap}.pmpr s{font-size:12.5px;font-weight:700;color:var(--muted);margin-right:4px}.pmpr b{font-size:19px;font-weight:800;letter-spacing:-.01em}.pmpr em{font-style:normal;font-size:12px;font-weight:700;color:var(--muted)}
 .pmtag2{position:absolute;top:-9px;right:14px;background:#2f7a16;color:#fff;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:3px 8px;line-height:1.3}
