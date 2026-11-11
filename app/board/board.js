@@ -1350,9 +1350,9 @@ const GRADED_RX=/\b(psa|bgs|cgc|sgc|tag|ace|beckett|ags)\s*(10|[1-9])/i;
 const rawCard=e=>!e.grade&&!GRADED_RX.test(e.name||'');
 function artList(){const rows=(E||[]).filter(rawCard);let out=pick(rows.filter(e=>e.type==='purchase'));if(out.length<6){const have=new Set(out.map(a=>a.src));out=out.concat(pick(rows.filter(e=>e.type==='sale')).filter(a=>!have.has(a.src))).slice(0,6)}
   return out.length?out:(window.CTPremiumArt||[]).slice()}
-// v52.6: phone keeps the single card-art banner; desktop shows a still fan of three whole cards over a soft wash of their colors.
+// v52.6: phone keeps the single card-art banner; computers and tablets show a still fan of three whole cards over a soft wash of their colors.
 // Each time the window opens it's a different set of three (from up to 9: their own priciest raw buys, then sales, then the app's picks).
-const DESK=matchMedia('(min-width:900px) and (min-height:600px)');
+const DESK=matchMedia('(min-width:600px)');   // v52.7: computers and tablets at any zoom; real phones get the banner
 const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const cssUrl=s=>'url("'+new URL(s,document.baseURI).href.replace(/"/g,'%22')+'")';
 function fanList(){const per=e=>(e.amount||0)/Math.max(1,e.qty||1);

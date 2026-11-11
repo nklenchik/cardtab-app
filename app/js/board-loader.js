@@ -23,13 +23,13 @@
     { src: 'assets/card-art/dragonair-wall.webp', focus: { x: .5, y: .2 } }
   ];
   // v52.5: whole raw cards (never graded) for the Premium header's fan when the user has fewer than 3 raw cards with art
-  window.CTPremiumFan = ['charizard-ex', 'gengar-ex', 'pikachu-ex', 'greninja-ex', 'chi-yu-ex', 'articuno-ex', 'mega-gengar-ex', 'blastoise', 'houndoom']
+  window.CTPremiumFan = ['charizard-ex', 'gengar-ex', 'pikachu-ex', 'greninja-ex', 'chi-yu-ex', 'magby', 'mega-gengar-ex', 'blastoise', 'houndoom']
     .map(n => ({ src: 'assets/card-art/' + n + '.webp', sm: 'assets/card-art/' + n + '-sm.webp' }));
   let loading = null, opened = false;
   function load() {
     if (window.CTBoard) return Promise.resolve();
     if (loading) return loading;
-    const V = '52.6'; // bump when board files change, so phones don't keep an old copy
+    const V = '52.7'; // bump when board files change, so phones don't keep an old copy
     const css = new Promise((res, rej) => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'board/board.css?v=' + V; l.onload = res; l.onerror = rej; document.head.appendChild(l); });
     const js = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'board/board.js?v=' + V; s.async = true; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
     loading = Promise.all([css, js]).then(() => { sync(); if (window.CTBoard.prewarm) window.CTBoard.prewarm(); }).catch(e => { loading = null; throw e; });
