@@ -24,8 +24,8 @@
   function mount() {
     const form = document.querySelector('#view-auth .auth-form'); if (!form || document.getElementById('ia-note')) return;
     const n = document.createElement('div'); n.className = 'ia-note'; n.id = 'ia-note'; n.setAttribute('role', 'note');
-    n.innerHTML = '<b>You’re in ' + name + ' browser</b><span>Google sign-in only works in ' + (android ? 'Chrome' : ios ? 'Safari' : 'your phone’s browser') + '. The email link below works right here.</span>' +
-      '<div class="ia-btns"><button type="button" class="ia-open">Open in ' + (android ? 'Chrome' : ios ? 'Safari' : 'browser') + '</button><button type="button" class="ia-copy">Copy link</button></div>' +
+    n.innerHTML = '<b>You’re in ' + name + ' browser</b><span>Google sign-in only works in your phone’s browser. The email link below works right here.</span>' +
+      '<div class="ia-btns"><button type="button" class="ia-open">Open in browser</button><button type="button" class="ia-copy">Copy link</button></div>' +
       '<p class="ia-steps" id="ia-steps" hidden>If it didn’t open: tap <b>•••</b> (top or bottom corner) and choose <b>Open in browser</b>' + (ios ? ' or <b>Open in Safari</b>' : '') + '.</p>';
     form.parentNode.insertBefore(n, form);
     n.querySelector('.ia-open').addEventListener('click', openOutside);
