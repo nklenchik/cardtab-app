@@ -900,7 +900,7 @@ const NAME='Nick',SWATCH=['#a50e37','#c2410c','#b45309','#15803d','#0f766e','#1d
 let avatar=(()=>{try{return JSON.parse(localStorage.getItem('cb.avatar'))||{}}catch(e){return {}}})();
 function paintAvatar(){const c=avatar.color||SWATCH[0];['cb-av','cb-av2'].forEach(id=>{const el=$(id);if(!el)return;el.style.background=avatar.photo?'url('+avatar.photo+') center/cover':c;el.style.color=inkFor(c);el.textContent=avatar.photo?'':initial();el.classList.add('set')});$('cb-am-name').textContent=shownName();paintTitle()}
 // the board carries your first name: "Nick's Card Board" (usernames can take its place later)
-function paintTitle(){const f=(profile.first||'').trim(),t=viewing&&f?f+'’s Card Board':'Card Board';$('cbtn').textContent=t;document.title=t}
+function paintTitle(){const f=(profile.first||'').trim(),t=viewing&&f?f+'’s Card Board':'Card Board';$('cbtn').textContent=t}   /* v52.22: the board no longer renames the browser tab (it loads quietly in the background, so the app's tab read "Card Board") */
 function toast(msg){const t=$('cbtoast');t.textContent=msg;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2200)}
 // appearance
 function applyTheme(th){if($('cb-amenu').parentNode===mhost)setTimeout(mhVars,30);if(th==='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=th;try{localStorage.setItem('cb.theme',th)}catch(e){}
