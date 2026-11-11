@@ -648,6 +648,9 @@ every tap and scroll was slower than the demo. Fixed in v52.15 (board.js fitAll:
 - It loads 300 entries and checks Entries and Board on a phone and a desktop: steady frames while idle, no code asking
   for a frame over and over, no content changing over and over. It exits 1 and names the culprit on a problem.
 - Verified: it fails on the old Board code and passes on the fix.
+- v52.16 (same day): the desktop Stories slideshow was animating every frame even with Stories off screen (it runs in
+  its own frame and couldn't tell). It now pauses when the Stories panel (#csx) isn't showing. The idle check now covers
+  Stories and Entries-after-Stories across every frame, and fails on the old code.
 - When writing code that watches for changes (MutationObserver, ResizeObserver) and then changes the page in response,
   make sure the response can't trigger the watcher again (takeRecords() after your own changes, or skip unchanged writes).
 
