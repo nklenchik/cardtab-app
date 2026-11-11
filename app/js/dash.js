@@ -190,7 +190,7 @@
   const AI = p => '<svg class="ct-ai" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
   const ACTS = '<div class="ct-demo-actions ct-acts4">' +
     '<button type="button" data-act="edit">' + AI('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/>') + '<span class="ct-al">Edit</span></button>' +
-    '<button type="button" data-act="card" aria-label="Change card" title="Change card">' + AI('<path d="M7 7h11l-3-3M17 17H6l3 3"/>') + '<span class="ct-al">Change card</span></button>' +
+    '<button type="button" data-act="card" aria-label="Change card" title="Change card">' + AI('<path stroke-width="1.7" d="M5.6 6.7H14.1V3.8L20.9 9.2L14.1 14.6V12H9.8V9.1L3 14.5L9.8 19.9V17.3H17.4"/>') + '<span class="ct-al">Change card</span></button>' +
     '<button type="button" data-act="dup" aria-label="Duplicate" title="Duplicate">' + AI('<rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/>') + '<span class="ct-al">Duplicate</span></button>' +
     '<button type="button" data-act="del" aria-label="Delete" title="Delete">' + AI('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3"/>') + '<span class="ct-al">Delete</span></button></div>';
   function detailsHtml(t) {
