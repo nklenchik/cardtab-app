@@ -639,3 +639,13 @@ Tests: tools/t89-board-in-app.js, tools/t90-board-nav.js, tools/perf-board-in-ap
 ## v50.86 — Sign-in: no empty space after the keyboard hides
 - iPhone doesn't blur the box when the keyboard is dismissed, so the extra scroll room reserved for the keyboard stayed (a screenful of empty page). Now when the page grows back by more than 120px while a box is focused, the box is released: page glides to top, room removed.
 - Room is re-trimmed on every resize. Tested: keyboard up + scrolled to bottom, card ends 24px above the bottom edge; keyboard hidden, max scroll is the card's natural height only.
+
+## Dec 1 launch checklist (Premium opens)
+Only once the NY sales tax Certificate of Authority has arrived.
+1. Stripe live mode: create the webhook event destination (Your account, Snapshot) to https://api.cardtab.app/stripe/webhook with: checkout.session.completed, customer.subscription.created/updated/deleted/paused/resumed, invoice.paid, invoice.payment_failed, customer.updated, payment_method.attached.
+2. Cloudflare → card-tab-api → Settings → Runtime variables and secrets (NOT the Build section): replace STRIPE_SECRET_KEY (sk_live_…) and STRIPE_WEBHOOK_SECRET (live whsec_…), type Secret.
+3. Stripe live: turn on Stripe Tax; customer portal settings (cancel, switch plan, update card); emailed receipts on; logo and brand color; statement descriptor (e.g. CARDTAB).
+4. Claude: STRIPE_PUBLISHABLE_KEY → pk_live_… (public, can be pasted in chat), STRIPE_TAX = "on", BILLING_OPEN = "on" in api/wrangler.toml, push (deploys itself).
+5. Real purchase with your own card, check Premium switches on and the receipt arrives, then refund. Daily check should show "live key" and a recent payment notice.
+6. Monitoring: add a free UptimeRobot account (5-minute checks, phone push alerts): https://api.cardtab.app/auth/me expecting 401, and https://app.cardtab.app. Or tighten the GitHub outside check (.github/workflows/uptime.yml) to every 15 minutes.
+7. Founders announcement to early sign-ups.
