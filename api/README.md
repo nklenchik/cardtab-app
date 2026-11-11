@@ -16,3 +16,4 @@ Run `node test.mjs` for the offline tests.
 
 ## Deploys
 This Worker deploys itself: Cloudflare Workers Builds runs `npx wrangler deploy` from `api/` on every push to main that changes it. Tables are kept up to date by the Worker (src/schema.js), so no database commands are needed. Secrets are set in the Cloudflare dashboard (Settings → Variables and Secrets).
+Root directory for Workers Builds must be `api` (not the repo root), or the build publishes the repo as static files with no bindings.
