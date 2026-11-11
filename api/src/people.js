@@ -57,6 +57,13 @@ async function setAcct(env, uid, patch) {
 // v52.10: a message for the person, picked up by their app (POST /auth/notes) and shown in their notifications
 const note = (env, uid, title, body) => env.DB.prepare('INSERT INTO acct_note (id,uid,at,title,body,seen) VALUES (?,?,?,?,?,0)').bind(crypto.randomUUID(), uid, now(), title, body || '').run().catch(() => {});
 const day = t => new Date(t * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' });
+const dayY = t => new Date(t * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' });
+// the last second of a YYYY-MM-DD day in Eastern time (handles daylight saving); null if it isn't a real date
+const endOfDayET = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || '')); if (!m) return null; const y = +m[1], mo = +m[2], d = +m[3];
+  const chk = new Date(Date.UTC(y, mo - 1, d)); if (chk.getUTCFullYear() !== y || chk.getUTCMonth() !== mo - 1 || chk.getUTCDate() !== d) return null;
+  for (const off of [4, 5]) { const t = Date.UTC(y, mo - 1, d + 1, off, 0, 0); const h = +new Intl.DateTimeFormat('en-US', { hour: 'numeric', hourCycle: 'h23', timeZone: 'America/New_York' }).format(t);
+    if (h === 0) return Math.floor(t / 1000) - 1; }
+  return null; };
 // the person's app asks for new messages; each one is handed over once
 export async function takeNotes(env, uid) {
   try {
@@ -160,15 +167,27 @@ export async function handlePeople(env, req, path, out) {
       await ensureTable(env);
       const cur = (await rowOf(env, uid)) || {};
       if (b.on && cur.status && ACTIVE(cur.status) && !cur.gift) return out({ error: 'They already pay for Premium.' }, 400);
-      const days = Math.max(0, Math.min(3650, parseInt(b.days, 10) || 0));
+      // a gift runs for N days from now, or until the end of a chosen day (Eastern), or with no end
+      let endTs = null;
+      if (b.on && b.until) {
+        endTs = endOfDayET(b.until);
+        if (!endTs) return out({ error: 'Pick a valid date.' }, 400);
+        if (endTs <= now()) return out({ error: 'Pick a date in the future.' }, 400);
+        if (endTs > now() + 3650 * DAY) return out({ error: 'Pick a date within 10 years.' }, 400);
+      } else if (b.on) {
+        const days = Math.max(0, Math.min(3650, parseInt(b.days, 10) || 0));
+        endTs = days ? now() + days * DAY : null;
+      }
+      const days = endTs ? Math.max(1, Math.round((endTs - now()) / DAY)) : 0;
+      const when = endTs ? 'until ' + dayY(endTs) : 'with no end date';
       const r = await saveRow(env, uid, { gift: b.on ? 1 : 0 });
-      await setAcct(env, uid, { gift_until: b.on && days ? now() + days * DAY : null });
+      await setAcct(env, uid, { gift_until: endTs });
       await env.DB.prepare('UPDATE users SET plan=? WHERE id=?').bind(planOf(r), uid).run();
       // v52.11: a new gift also gets an email (changing an existing gift's length doesn't)
-      if (b.on && !cur.gift) { try { await sendMail(env, { to: u.email, replyTo: 'hello@cardtab.app', ...giftEmail({ name: u.name, until: days ? now() + days * DAY : null, appUrl: env.APP_URL || 'https://app.cardtab.app' }) }); } catch (e) { /* the notification still goes */ } }
-      if (b.on) await tell('You’ve been given Premium', 'A gift from Card Tab: Premium ' + (days ? 'for ' + days + ' days, until ' + day(now() + days * DAY) : 'with no end date') + '. Nothing to pay, and it won’t renew.');
+      if (b.on && !cur.gift) { try { await sendMail(env, { to: u.email, replyTo: 'hello@cardtab.app', ...giftEmail({ name: u.name, until: endTs, appUrl: env.APP_URL || 'https://app.cardtab.app' }) }); } catch (e) { /* the notification still goes */ } }
+      if (b.on) await tell('You’ve been given Premium', 'A gift from Card Tab: Premium ' + (endTs ? 'until ' + dayY(endTs) : 'with no end date') + '. Nothing to pay, and it won’t renew.');
       else if (cur.gift) await tell('Your Premium gift has ended', 'You’re back on Free. Everything you added is still here.');
-      return done(b.on ? 'Gift of Premium' + (days ? ' for ' + days + ' days' : ', no end date') : 'Gift turned off');
+      return done(b.on ? 'Gift of Premium ' + when : 'Gift turned off');
     }
     case 'entries': {
       const a = await acctOf(env, uid), m = ym(), had = a.bonus_month === m ? a.bonus_entries || 0 : 0;

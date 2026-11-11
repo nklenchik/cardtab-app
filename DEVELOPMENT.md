@@ -670,3 +670,8 @@ Only once the NY sales tax Certificate of Authority has arrived.
 5. Real purchase with your own card, check Premium switches on and the receipt arrives, then refund. Daily check should show "live key" and a recent payment notice.
 6. Monitoring: add a free UptimeRobot account (5-minute checks, phone push alerts): https://api.cardtab.app/auth/me expecting 401, and https://app.cardtab.app. Or tighten the GitHub outside check (.github/workflows/uptime.yml) to every 15 minutes.
 7. Founders announcement to early sign-ups.
+
+## Admin: gift Premium until a date
+- People → open an account → "Or until": pick a date and tap Gift. Premium runs through the end of that day (Eastern time) and the account returns to Free by itself (the daily sweep). The 7 days / 30 days / 1 year / No end date buttons still work.
+- The API accepts `until: "YYYY-MM-DD"` on the gift action (must be a real, future date within 10 years); handles daylight saving. The gift email and in-app notice say "until Jan 31, 2027".
+- The last date used is remembered in the browser for gifting the next tester the same day.
