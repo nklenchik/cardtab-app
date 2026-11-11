@@ -143,7 +143,7 @@ export function paymentEmail({ kind, graceUntil, appUrl, card, amount, interval 
 export function giftEmail({ name, until, appUrl }) {
   const first = String(name || '').trim().split(/\s+/)[0] || '';
   const subject = 'You’ve been given Card Tab Premium';
-  const when = until ? day(until) : '';
+  const when = until ? new Date(until * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' }) : '';
   const intro = until ? 'A gift from Card Tab: Premium is yours until ' + when + '. There’s nothing to pay, and it won’t renew.' : 'A gift from Card Tab: Premium is yours, with no end date. There’s nothing to pay.';
   const body = h1('You’ve been given Premium' + (first ? ', ' + esc(first) : '')) + lead(esc(intro)) +
     `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">` +
