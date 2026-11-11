@@ -205,7 +205,9 @@
   const amtText = t => t.type === 'sale' ? '+' + money(soldPref() ? t.amount : t.net) : '−' + money(t.amount);
   addEventListener('ct-amt', () => render());
   const subText = t => t.type === 'sale' ? money(t.net) + ' after fees' : t.type === 'refund' ? 'Refunded' : 'Paid';
-  const fullArt = img => { if (!img || img.tagName !== 'IMG' || img.dataset.loaded) return; img.dataset.loaded = 1; const u = img.dataset.full, pre = new Image(), t0 = performance.now(); pre.src = u; (pre.decode ? pre.decode() : new Promise((r, j) => { pre.onload = r; pre.onerror = j; })).then(() => setTimeout(() => { if (img.isConnected) img.src = u; }, Math.max(0, 380 - (performance.now() - t0)))).catch(() => { delete img.dataset.loaded; }); };
+  // v52.14: a picture already fetched and decoded ahead of time goes in at once; one still loading waits until the opening glide is done
+  const fullArt = img => { if (!img || img.tagName !== 'IMG' || img.dataset.loaded) return; img.dataset.loaded = 1; const u = img.dataset.full, pre = new Image(), t0 = performance.now(); pre.src = u;
+    const w = warmedU.get(u); if ((w && w.complete && w.naturalWidth) || (pre.complete && pre.naturalWidth)) { img.src = u; return; } (pre.decode ? pre.decode() : new Promise((r, j) => { pre.onload = r; pre.onerror = j; })).then(() => setTimeout(() => { if (img.isConnected) img.src = u; }, Math.max(0, 380 - (performance.now() - t0)))).catch(() => { delete img.dataset.loaded; }); };
   function setBtn(btn, open) { const t = S.get(btn.dataset.tx); if (!t) return; btn.setAttribute('aria-expanded', open); btn.setAttribute('aria-label', (open ? 'Collapse ' : 'Expand ') + t.name); btn.querySelector('.ct-row-chevron').textContent = open ? '−' : '+'; }
 
   // Open/close in place (v51.0: transform and opacity only, so it stays at 60 fps on phones).
@@ -443,6 +445,7 @@
     list.scrollTop = keepScroll;
     watchMore(list);
     fadeSync();
+    warmBig(list);
   }
   // Adds the next STEP entries once the end of the list is within about a screen and a half of the view
   function watchMore(list) {
@@ -459,6 +462,18 @@
     if (shown >= moreCtx.rows.length) { sent.remove(); if (moreIO) { moreIO.disconnect(); moreIO = null; } }
     else if (moreIO) { moreIO.unobserve(sent); moreIO.observe(sent); }   // still near the end: check again
     fadeSync();
+    warmBig(list);
+  }
+  // v52.14 the bigger picture an opened entry shows, fetched and decoded quietly for rows on (or near) the screen, so
+  // opening one on a phone shows it sharp right away (hover did this only with a mouse). Skipped with Data Saver on.
+  let warmIO = null; const warmedU = new Map();   // picture address -> the loaded picture
+  function warmOne(img) { const u = img.dataset.full; if (!u || img.dataset.warm || img.dataset.loaded || u === img.getAttribute('src') || warmedU.has(u)) return; img.dataset.warm = 1;
+    const w = new Image(); w.decoding = 'async'; w.src = u; warmedU.set(u, w); if (w.decode) w.decode().catch(() => {}); }
+  function warmBig(list) {
+    if (!('IntersectionObserver' in window) || (navigator.connection && navigator.connection.saveData)) return;
+    if (!warmIO) warmIO = new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting) return; warmIO.unobserve(e.target);
+      const go = () => warmOne(e.target); if (window.requestIdleCallback) requestIdleCallback(go, { timeout: 1500 }); else setTimeout(go, 300); }), { rootMargin: '300px 0px' });
+    list.querySelectorAll('img.ct-card-art[data-full]:not([data-warm]),.ct-slab-art img[data-full]:not([data-warm])').forEach(i => warmIO.observe(i));
   }
 
   // v51.9: Delete takes two taps. The first turns it into a red "Delete?" for 3 seconds; the second deletes (and Undo still
