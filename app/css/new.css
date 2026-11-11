@@ -2302,3 +2302,15 @@ html[data-theme="dark"] :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdr
   :root:not([data-theme="light"]) .auth-glow::before{background:radial-gradient(closest-side,color-mix(in srgb,#c7234f 18%,transparent),transparent)}}
 :root[data-theme="dark"] .auth{background:#141413}
 :root[data-theme="dark"] .auth-glow::before{background:radial-gradient(closest-side,color-mix(in srgb,#c7234f 18%,transparent),transparent)}
+
+/* v51.6 open entry buttons: icons only show on phones, where the row fits on one line */
+.ct-demo-actions .ct-ai{display:none;flex:none}
+@media(max-width:760px){
+ .ct-demo .ct-row .ct-pacts .ct-demo-actions.ct-acts4{display:flex!important;gap:10px;align-items:center}
+ .ct-demo .ct-row .ct-pacts .ct-demo-actions.ct-acts4 button{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px!important;min-width:0!important;margin:0!important;border-radius:999px!important;overflow:visible}
+ .ct-demo .ct-row .ct-pacts .ct-demo-actions.ct-acts4 .ct-ai{display:block}
+ .ct-demo .ct-row .ct-pacts .ct-demo-actions.ct-acts4 button[data-act="edit"]{flex:1 1 auto!important;font-size:15px!important;padding:0 18px!important}
+ .ct-demo .ct-row .ct-pacts .ct-demo-actions.ct-acts4 button:not([data-act="edit"]){flex:0 0 44px!important;width:44px;padding:0!important;border:1px solid var(--s-hair)!important;background:var(--s-card)!important}
+ .ct-demo .ct-row .ct-pacts .ct-demo-actions.ct-acts4 button:not([data-act="edit"]) .ct-al{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+ .ct-demo .ct-row .ct-pacts .ct-demo-actions.ct-acts4 button[data-act="del"]{color:var(--s-brand)!important}
+}

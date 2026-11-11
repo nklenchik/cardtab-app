@@ -185,7 +185,14 @@
   const condShort = c => c ? (COND[String(c).toLowerCase()] || c) : '';
   // v50.34: the card's state sits in a pill after its name: graded = filled (CGC 10 Pristine), raw = outline (NM, LP ...)
   const pillOf = t => (G && G.of(t)) ? G.chip(t) : t.condition ? '<span class="sl-chip sl-raw" title="' + esc(t.condition) + '">' + esc(condShort(t.condition)) + '</span>' : '';
-  const ACTS = '<div class="ct-demo-actions ct-acts4"><button type="button" data-act="edit">Edit</button><button type="button" data-act="card">Change card</button><button type="button" data-act="dup">Duplicate</button><button type="button" data-act="del">Delete</button></div>';
+  // v51.6: the open entry's buttons. On phones they sit on one line: Edit with its label, then Change card, Duplicate and
+  // Delete as round icons (their names stay for screen readers and show on hover). Desktop and the gallery keep full labels.
+  const AI = p => '<svg class="ct-ai" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
+  const ACTS = '<div class="ct-demo-actions ct-acts4">' +
+    '<button type="button" data-act="edit">' + AI('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/>') + '<span class="ct-al">Edit</span></button>' +
+    '<button type="button" data-act="card" aria-label="Change card" title="Change card">' + AI('<path d="M7 7h11l-3-3M17 17H6l3 3"/>') + '<span class="ct-al">Change card</span></button>' +
+    '<button type="button" data-act="dup" aria-label="Duplicate" title="Duplicate">' + AI('<rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/>') + '<span class="ct-al">Duplicate</span></button>' +
+    '<button type="button" data-act="del" aria-label="Delete" title="Delete">' + AI('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3"/>') + '<span class="ct-al">Delete</span></button></div>';
   function detailsHtml(t) {
     return '<div class="ct-open-actions"><div class="ct-row-expanded-info"><div class="ct-dtot"><i class="ct-mdash"></i><div class="ct-dtrow">' + ACTS + keptRow(t) + '</div></div>' + factsHtml(t) + '<div class="ct-pacts">' + ACTS + '</div></div></div>';
   }
