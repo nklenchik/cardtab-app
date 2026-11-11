@@ -542,18 +542,20 @@ function hcSample(){const C=[['App opens',1,'',184],['Card Board files load',1,'
   return {latest:{day:new Date().toISOString().slice(0,10),at:Date.now()/1000,ok:1,checks:C},history:Array.from({length:30},(_,i)=>({day:'',ok:i!==11,bad:i===11?1:0,warn:i===4?1:0}))}}
 // v52.3: one line on Overview with the latest daily check; tap it for Health
 async function hPill(){const b=document.getElementById('hpill');if(!b)return;b.onclick=()=>{st.tab=9;save();chrome();paint();scrollTo({top:0})};
- if(!HC){if(st.smp||!REAL)HC=hcSample();else{try{const r=await fetch(API+'/auth/admin/health',{credentials:'include'});HC=await r.json()}catch(e){HC={error:1}}}}
+ // v52.18: sample results are only kept while sample numbers are on (they used to stay after switching back to real ones)
+ const smpNow=!!(st.smp||!REAL);if(HC&&HC._smp!==smpNow)HC=null;
+ if(!HC){if(smpNow)HC=hcSample();else{try{const r=await fetch(API+'/auth/admin/health',{credentials:'include'});HC=await r.json()}catch(e){HC={error:1}}}HC._smp=smpNow}
  const el=document.getElementById('hpt'),L=HC&&HC.latest;if(!el)return;if(!L){el.textContent=HC&&HC.error?'Couldn’t load the daily check':'No daily check yet';return}
  const C=L.checks||[],bad=C.filter(c=>!c.ok).length,warn=C.filter(c=>c.ok&&c.warn).length;b.classList.toggle('b',!!bad);b.classList.toggle('w',!bad&&!!warn);
  el.innerHTML=(bad?bad+' check'+(bad>1?'s':'')+' failing':warn?'All '+C.length+' working · '+warn+' to look at':'All '+C.length+' checks passing')+' <small>· '+new Date((L.at||0)*1000).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</small>'}
-async function hcLoad(run){if(hcBusy)return;if(st.smp||!REAL){HC=hcSample();hcPaint();return}hcBusy=true;hcPaint();
-  try{const r=await fetch(API+'/auth/admin/health',{method:run?'POST':'GET',credentials:'include'});const j=await r.json();HC=run?{latest:Object.assign({day:new Date().toISOString().slice(0,10)},j),history:(HC&&HC.history)||[]}:j}catch(e){HC={error:1}}hcBusy=false;hcPaint()}
+async function hcLoad(run){if(hcBusy)return;if(st.smp||!REAL){HC=hcSample();HC._smp=true;hcPaint();return}hcBusy=true;hcPaint();
+  try{const r=await fetch(API+'/auth/admin/health',{method:run?'POST':'GET',credentials:'include'});const j=await r.json();HC=run?{latest:Object.assign({day:new Date().toISOString().slice(0,10)},j),history:(HC&&HC.history)||[]}:j}catch(e){HC={error:1}}HC._smp=false;hcBusy=false;hcPaint()}
 const HGRP=[['App & site',/^(app|board|share|site)$/,/App opens|Card Board files|Shared board|website/i],['Server',/^(db|art|backup|errors)$/,/Database|Card pictures|backup|errors/i],['Services',/^(lookup|google|email|ask|spend)$/,/Card search|Google|emails|Ask/i],['Payments',/^(stripe|webhook)$/,/Stripe|Payments/i]];
 function hcRow(c){return '<div class="hcr"><span class="hci">'+(c.ok?(c.warn?'🟡':'✅'):'❌')+'</span><span class="hct"><b>'+esc(c.name)+'</b>'+(c.note?'<small>'+esc(c.note)+'</small>':'')+(c.fix?'<em>Suggested fix: '+esc(c.fix)+'</em>':'')+'</span><span class="hcm">'+(c.ms?c.ms+' ms':'')+'</span></div>'}
 function hcGroups(C){const att=C.filter(c=>!c.ok||c.warn),ok=C.filter(c=>c.ok&&!c.warn),used=new Set();
  const gs=HGRP.map(([n,kr,nr])=>{const l=ok.filter(c=>!used.has(c)&&(c.key?kr.test(c.key):nr.test(c.name)));l.forEach(c=>used.add(c));return [n,l]}).filter(g=>g[1].length);const rest=ok.filter(c=>!used.has(c));if(rest.length)gs.push(['Other',rest]);
  return '<div class="hgrid">'+(att.length?'<div class="hg att"><h4>Needs a look · '+att.length+'</h4>'+att.map(hcRow).join('')+'</div>':'')+gs.map(([n,l])=>'<div class="hg"><h4>'+n+' · '+l.length+' passing</h4>'+l.map(hcRow).join('')+'</div>').join('')+'</div>'}
-function healthCard(){setTimeout(()=>{if(!HC)hcLoad();else hcPaint()},0);return '<div class="grid" style="margin-bottom:14px"><div class="card c12" id="hc"><h3>Daily check</h3><div class="sub">Every morning the server checks the basics and emails you the result</div><div class="empty">Loading…</div></div></div>'}
+function healthCard(){setTimeout(()=>{if(!HC||HC._smp!==!!(st.smp||!REAL))hcLoad();else hcPaint()},0);return '<div class="grid" style="margin-bottom:14px"><div class="card c12" id="hc"><h3>Daily check</h3><div class="sub">Every morning the server checks the basics and emails you the result</div><div class="empty">Loading…</div></div></div>'}
 function hcPaint(){const el=document.getElementById('hc');if(!el)return;const L=HC&&HC.latest,H=(HC&&HC.history)||[];
   let body='';if(!HC||hcBusy)body='<div class="empty">'+(hcBusy?'Checking…':'Loading…')+'</div>';else if(HC.error)body='<div class="empty">Couldn’t load the daily check</div>';else if(!L)body='<div class="empty">No check has run yet. The first one runs tomorrow morning, or run one now.</div>';
   else{const C=L.checks||[],bad=C.filter(c=>!c.ok).length,warn=C.filter(c=>c.ok&&c.warn).length;
