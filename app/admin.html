@@ -182,10 +182,12 @@ html.pdopen{overflow:hidden}
 @keyframes skHit{15%,65%{opacity:1}100%{opacity:0}}
 @media(max-width:600px){.skp{top:max(10px,env(safe-area-inset-top,0px));max-height:calc(100dvh - 24px - env(safe-area-inset-top,0px))}}
 @media(prefers-reduced-motion:reduce){.skp,.skbd,.skring,.skdots i{animation-duration:.01ms!important}}
-.navfab{display:none;position:fixed;z-index:32;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));width:54px;height:54px;border-radius:50%;border:0;background:var(--text);color:var(--page);place-items:center;box-shadow:0 10px 28px rgba(0,0,0,.28);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .2s ease}
+.navfab{display:none;position:fixed;z-index:32;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));width:54px;height:54px;border-radius:50%;border:0;background:var(--text);color:var(--page);place-items:center;box-shadow:0 10px 28px rgba(0,0,0,.28);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .8s cubic-bezier(.22,.61,.36,1),opacity .8s cubic-bezier(.22,.61,.36,1)}   /* comes back: same unhurried slide as the website's top bar */
 .navfab:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
-.navfab.away{transform:translateY(calc(100% + 30px));opacity:0;pointer-events:none}
-.navfab:active{transform:scale(.93)}
+.navfab.away{transform:translateY(calc(100% + 30px));opacity:0;pointer-events:none;transition:transform .8s cubic-bezier(.4,0,.2,1),opacity .7s cubic-bezier(.4,0,.2,1)}   /* goes away: a touch firmer, like the website */
+.navfab::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--page);opacity:0;transition:opacity .15s ease}
+.navfab:active::after{opacity:.14}
+@media (prefers-reduced-motion:reduce){.navfab,.navfab.away{transition-duration:.01s}}
 .navfab>span{grid-area:1/1;display:grid;place-items:center;transition:opacity .18s ease,transform .24s cubic-bezier(.2,.8,.2,1)}
 .navfab svg{width:22px;height:22px}
 .navfab .i2{opacity:0;transform:rotate(-90deg) scale(.6)}
