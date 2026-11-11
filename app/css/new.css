@@ -2365,9 +2365,9 @@ html[data-theme="dark"] :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdr
 /* v52.12 Premium on roomy desktop screens: the three cards break out above the window's top edge; the soft wash of
    their colors stays inside the window. Shorter screens and tablets keep the fan inside the header (above). */
 @media(min-width:900px) and (min-height:760px){
- #pms:has(.pmfanned){padding-top:70px}
+ #pms:has(.pmfanned){padding-top:46px}
  dialog.sheet.pms .awp.pmp:has(.pmfanned){overflow:visible!important;margin-top:40px}
- #pms .pmhero.pmfanned{--cw:124px;--ch:173px;--dx:74px;--ft:-96px;height:150px!important;overflow:visible;clip-path:none;border-radius:28px 28px 0 0}
+ #pms .pmhero.pmfanned{--cw:124px;--ch:173px;--dx:74px;--ft:-72px;height:150px!important;overflow:visible;clip-path:none;border-radius:28px 28px 0 0}
  #pms .pmhero.pmfanned::after{border-radius:28px 28px 0 0}
  #pms .pmhero.pmfanned .pmwash{clip-path:inset(40px 40px 0 40px round 28px 28px 0 0)}
  #pms .pmhero.pmfanned .pmc{box-shadow:0 22px 40px rgba(0,0,0,.5)}
