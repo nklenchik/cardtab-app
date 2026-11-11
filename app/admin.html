@@ -245,7 +245,7 @@ html.pdopen{overflow:hidden}
 .hg h4{margin:0 0 6px;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .hg .hcr{border-top:1px solid var(--hair);padding:10px 0}.hg .hcr:first-of-type{border-top:0}
 .hg.att{grid-column:1/-1;background:color-mix(in srgb,var(--bad) 9%,var(--card2))}
-@media(max-width:900px){.lay{grid-template-columns:1fr;gap:0}
+@media(max-width:900px){.lay{grid-template-columns:minmax(0,1fr);gap:0}.mainc{min-width:0}
  .side{position:fixed;z-index:30;top:auto;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom,0px));display:flex;justify-content:space-around;background:var(--card);border:1px solid var(--hair);border-radius:24px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
  .side button{flex:1;flex-direction:column;align-items:center;gap:3px;padding:8px 2px;border-radius:16px;font-size:11px}
  .side .nl{display:none}.side .ns{display:inline}
