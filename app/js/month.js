@@ -56,9 +56,22 @@
     if (p.from) return rangeText(p.from, p.to);
     return 'All time';
   }
+  // v52.9 Free: totals cover the last 3 months (this month and the two before). Every entry still shows in the list.
+  // By month, 7 days and 30 days work inside that window; This year, All time and Custom are Premium.
+  const free = () => !(S.plan && S.plan() === 'premium');
+  const freeMinM = () => shift(curKey(), -2), freeMinDay = () => freeMinM() + '-01';
+  const okFree = v => { const p = parse(v); if (p.kind === 'month') return p.m >= freeMinM() && p.m <= curKey(); if (p.kind === 'd7' || p.kind === 'd30') return p.from >= freeMinDay(); return false; };
+  const allowed = v => !free() || okFree(v);
+  const LOCK = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+  const premium = ctx => { if (window.CTPremiumOpen) window.CTPremiumOpen(ctx || 'range'); };
+  // Free at the oldest month (or range) it covers: the back arrow offers Premium instead of stepping
+  const atEdge = v => { if (!free()) return false; const p = parse(v || sel.value), n = stepped(p, -1, true); return !!n && !okFree(n); };
   const BTN = { month: 'Month', d7: '7 days', d30: '30 days', year: 'Year', all: 'All time', custom: 'Custom' };
   // one step back (-1) or forward (+1) by the range you're looking at, or null when there's nowhere to go
-  function stepped(p, dir) {
+  function stepped(p, dir, raw) {
+    const n = steppedRaw(p, dir); return raw || !n || allowed(n) ? n : null;
+  }
+  function steppedRaw(p, dir) {
     if (p.kind === 'month') { const n = shift(p.m, dir); return n > curKey() || n < earliestDay().slice(0, 7) ? null : 'm:' + n; }
     if (p.kind === 'year') { const y = p.y + dir; return y > +today().slice(0, 4) || y < +earliestDay().slice(0, 4) ? null : 'y:' + y; }
     if (p.from) {
@@ -80,6 +93,7 @@
     el.addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b || b.closest('.ms-pop')) return;
       if (b.classList.contains('ms-rng')) { togglePop('menu', el); return; }
+      if (b.classList.contains('ms-prev') && atEdge()) { premium('range'); return; }
       const n = stepped(parse(sel.value), b.classList.contains('ms-prev') ? -1 : 1); if (n) set(n);
     });
     inst.push(el);
@@ -103,9 +117,13 @@
   function openMenu() {
     const k = parse(sel.value).kind;
     const item = (id, t) => '<button type="button" role="menuitemradio" aria-checked="' + (k === id) + '" data-r="' + id + '"' + (k === id ? ' class="on"' : '') + '><span>' + t + '</span>' + (k === id ? CHECK : '') + '</button>';
-    const p = openPop('menu', item('month', 'By month') + item('d7', 'Last 7 days') + item('d30', 'Last 30 days') + item('year', 'This year') + item('all', 'All time') + '<hr>' + item('custom', 'Custom dates…'));
+    const lk = (id, t) => '<button type="button" role="menuitem" class="lockd" data-r="' + id + '" data-lock="1" aria-label="' + t + ', Premium"><span>' + t + '</span>' + LOCK + '</button>';
+    const p = openPop('menu', free()
+      ? item('month', 'By month') + item('d7', 'Last 7 days') + item('d30', 'Last 30 days') + '<div class="ms-prem">With Premium</div>' + lk('year', 'This year') + lk('all', 'All time') + lk('custom', 'Custom dates…')
+      : item('month', 'By month') + item('d7', 'Last 7 days') + item('d30', 'Last 30 days') + item('year', 'This year') + item('all', 'All time') + '<hr>' + item('custom', 'Custom dates…'));
     p.addEventListener('click', e => {
       const b = e.target.closest('[data-r]'); if (!b) return; const r = b.dataset.r, t = today();
+      if (b.dataset.lock) { closePop(); premium('range'); return; }
       if (r === 'custom') { openCal(); return; }
       closePop();
       set(r === 'month' ? 'm:' + curKey() : r === 'd7' ? 'r7:' + addDays(t, -6) + ':' + t : r === 'd30' ? 'r30:' + addDays(t, -29) + ':' + t : r === 'year' ? 'y:' + t.slice(0, 4) : 'all');
@@ -178,7 +196,9 @@
     const p = parse(sel.value), lab = el.querySelector('.ms-lab');
     const text = textOf(p, el.classList.contains('ms-mini') || NARROW.matches);   // narrow phones say "Nov 2026"
     el.classList.toggle('is-all', p.kind === 'all');
-    el.querySelector('.ms-prev').disabled = !stepped(p, -1);
+    const edge = atEdge(sel.value), pv = el.querySelector('.ms-prev');
+    pv.disabled = !edge && !stepped(p, -1); pv.classList.toggle('ms-lockd', edge);
+    pv.setAttribute('aria-label', edge ? 'Older months with Premium' : 'Back'); pv.title = edge ? 'Older months with Premium' : '';
     el.querySelector('.ms-next').disabled = !stepped(p, 1);
     const r = el.querySelector('.ms-rng'); if (r) { r.firstElementChild.textContent = BTN[p.kind]; r.classList.toggle('act', p.kind !== 'month'); }
     const old = lab.firstElementChild;
@@ -206,7 +226,9 @@
     if (p.kind === 'year') { const e = p.y + '-12-31'; return [p.y + '-01-01', e > today() ? today() : e]; } if (p.from) return [p.from, p.to]; return [earliestDay(), today()]; }
   // another switcher showing the same range (Board, the desktop toolbar)
   function make(cls) { const el = mk(cls || 'ms-main', true); paintStep(el, 0); return el; }
-  window.CTMonth = { set, get: () => sel.value, make, bounds, label: v => textOf(parse(v || sel.value)), isAll: v => parse(v || sel.value).kind === 'all', main };
+  // a Free account on a range it doesn't cover (after moving back from Premium, or an old saved range) goes to this month
+  function fitFree() { if (!allowed(sel.value)) set('m:' + curKey()); }
+  window.CTMonth = { set, get: () => sel.value, make, bounds, label: v => textOf(parse(v || sel.value)), isAll: v => parse(v || sel.value).kind === 'all', main, allowed, atEdge, fitFree };
 
   // ---------- desktop: the summary bar ----------
   const bar = document.createElement('div'); bar.className = 'ct-sumbar'; bar.setAttribute('aria-hidden', 'true');
@@ -286,6 +308,7 @@
   document.addEventListener('keydown', e => tabKey(e));
   window.CTTabKey = e => tabKey(e, true);   // Stories runs in its own frame and passes its keys up
 
-  S.on(() => paint(0));
+  S.on(() => { fitFree(); paint(0); });
   set(sel.value || 'm:' + curKey(), true);
+  if (!allowed(sel.value)) set('m:' + curKey(), true);
 })();

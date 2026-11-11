@@ -9,6 +9,7 @@
 const MODEL = 'claude-haiku-5-5';
 const PRICE = { in: 0.10 / 1e6, out: 0.50 / 1e6 }; // USD per token, prompts under 100k tokens (ours are far below)
 const n = (v, d) => { const x = Number(v); return Number.isFinite(x) && x >= 0 ? x : d; };
+import { acctOf, askBonus } from './people.js';
 export const askLimits = env => ({ free: n(env.ASK_FREE, 5), premium: n(env.ASK_PREMIUM, 50), usd: n(env.ASK_MONTH_USD, 25) });
 const month = (t = Date.now()) => new Date(t).toISOString().slice(0, 7);
 const resets = (t = Date.now()) => { const d = new Date(t); return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1)).toISOString().slice(0, 10); };
@@ -92,7 +93,7 @@ export async function handleAsk(env, req, me, out) {
   const key = String(env.ANTHROPIC_API_KEY || '').trim();
   // admins are told what's wrong with the key (never the key itself)
   if (!key) return out({ error: 'setup', detail: me.role === 'admin' ? (env.ANTHROPIC_API_KEY == null ? 'The server has no ANTHROPIC_API_KEY secret.' : 'The ANTHROPIC_API_KEY secret is there but empty. Set it again and paste the key at the prompt.') : undefined }, 503);
-  const L = askLimits(env), m = month(), plan = me.plan === 'premium' ? 'premium' : 'free', limit = L[plan], admin = me.role === 'admin';
+  const L = askLimits(env), m = month(), plan = me.plan === 'premium' ? 'premium' : 'free', limit = L[plan] + askBonus(await acctOf(env, me.id)), admin = me.role === 'admin';   // v52.9: plus any extra an admin gave this month
   const used = (await env.DB.prepare('SELECT n FROM ask_usage WHERE user_id=? AND month=?').bind(me.id, m).first() || {}).n || 0;
   const info = { limit, left: Math.max(0, limit - used), resets: resets(), plan };
   let b; try { b = await req.json(); } catch (e) { b = {}; }

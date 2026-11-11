@@ -52,6 +52,13 @@ await act({ id: fid, act: 'gift', on: true }); await giftSweep(env); assert.equa
 await act({ id: fid, act: 'entries' }); await act({ id: fid, act: 'entries' });
 p = await one(); assert.equal(p.month.limit, 60); assert.equal(p.month.bonus, 40);
 let me = await (await call('/auth/me', { cookie: fan.c })).json(); assert.deepEqual(me.user.bonus, { m, n: 40 });
+// exact numbers: 50 extra entries, then 0 takes them away; extra Ask questions raise the limit Ask itself uses
+await act({ id: fid, act: 'entries', n: 50 }); assert.equal((await one()).month.limit, 70);
+await act({ id: fid, act: 'entries', n: 0 }); assert.equal((await one()).month.limit, 20);
+me = await (await call('/auth/me', { cookie: fan.c })).json(); assert.equal(me.user.bonus, null);
+await act({ id: fid, act: 'askmore', n: 10 }); p = await one(); assert.equal(p.month.askLimit, 15); assert.equal(p.month.askBonus, 10);
+env.ANTHROPIC_API_KEY = 'k'; let ai = await (await call('/auth/ask', { method: 'POST', body: { check: true }, cookie: fan.c })).json(); assert.equal(ai.limit, 15); assert.equal(ai.left, 11);
+await act({ id: fid, act: 'askmore', n: 0 }); ai = await (await call('/auth/ask', { method: 'POST', body: { check: true }, cookie: fan.c })).json(); assert.equal(ai.limit, 5);
 // Ask reset
 await act({ id: fid, act: 'ask' }); assert.equal((await one()).month.ask, 0);
 

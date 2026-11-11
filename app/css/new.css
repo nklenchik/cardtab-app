@@ -678,6 +678,10 @@ dialog::backdrop,.bu-sheet::backdrop{background:var(--win-veil)!important;-webki
 .ms-menu button:focus-visible{background:var(--s-track)}@media(hover:hover){.ms-menu button:hover{background:var(--s-track)}}
 .ms-menu button.on{font-weight:800}.ms-menu button.on svg{color:var(--tab-on)}
 .ms-menu hr{border:0;border-top:1px solid var(--s-hair);margin:5px 6px}
+/* v52.9 Free: Premium ranges sit under a quiet label with a lock; at the oldest month the back arrow offers Premium */
+.ms-menu .ms-prem{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted,var(--ct-muted));padding:10px 12px 4px;margin-top:4px;border-top:1px solid var(--s-hair)}
+.ms-menu button.lockd{color:var(--muted,var(--ct-muted))}.ms-menu button.lockd svg{opacity:.8}
+.ct-mstep .ms-prev.ms-lockd{opacity:.45}
 .ms-cal{width:min(304px,calc(100vw - 32px));padding:14px}
 .mc-h{display:flex;align-items:center;justify-content:space-between}.mc-h b{font-size:14.5px;font-weight:800}
 .mc-h button{width:32px;height:32px;border-radius:50%;border:1px solid var(--s-hair);background:none;color:var(--ct-text);display:grid;place-items:center;cursor:pointer;padding:0}

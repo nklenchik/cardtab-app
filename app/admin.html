@@ -107,6 +107,8 @@ td.n,th.n{text-align:right}
 .pplr:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 .pdpl{display:inline-block;flex:none;font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:999px;background:var(--card2);color:var(--muted)}.pdpl.on{background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--brand)}
 .pdch{flex:none;color:var(--muted)}
+.pdw[hidden],.pdbd[hidden]{display:none!important}
+.pdx2{display:flex;align-items:center;gap:8px;margin:2px 0 14px}.pdx2 label{flex:1;font-size:12.5px;font-weight:700;color:var(--muted)}.pdx2 input{width:84px;height:36px;border-radius:10px;border:1px solid var(--hair);background:var(--page);color:inherit;font:inherit;font-size:14px;font-weight:800;text-align:center;padding:0 6px}.pdx2 .pdb{height:36px}
 .pdbd{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);animation:pdF .2s ease}
 .pdw{position:fixed;z-index:61;top:0;right:0;bottom:0;width:min(480px,100vw);overflow-y:auto;overscroll-behavior:contain;background:var(--page);border-left:1px solid var(--hair);box-shadow:-24px 0 60px rgba(0,0,0,.25);padding:26px 26px max(30px,env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;animation:pdIn .28s cubic-bezier(.2,.8,.2,1)}
 html.pdopen{overflow:hidden}
@@ -590,7 +592,7 @@ document.addEventListener('input',e=>{if(e.target&&e.target.id==='pplq'){clearTi
 // ---------- v52.8 one person: details and account tools (a side panel on desktop, a bottom sheet on phones) ----------
 let PD=null,PDbusy=false,PDmsg='',PDarm='',PDarmT=0;
 const SAMPLE_P={a:{id:'a',email:'jordan@example.com',name:'Jordan',joined:1793900000,lastSeen:Math.floor(Date.now()/1000)-7200,via:'Google',plan:'premium',gift:true,giftUntil:Math.floor(Date.now()/1000)+21*86400,paying:false,stripe:'',month:{entries:34,limit:null,bonus:0,ask:12,askLimit:50},totals:{entries:212,uploads:3},share:{live:true,views:48,since:1794000000},devices:[{name:'iPhone · Safari',since:Math.floor(Date.now()/1000)-86400*3},{name:'Mac · Chrome',since:Math.floor(Date.now()/1000)-86400*12}],suspended:false,uploadsOff:false,history:[{at:Math.floor(Date.now()/1000)-86400*9,what:'Gift of Premium for 30 days'}]},
- b:{id:'b',email:'sam.k@example.com',name:'Sam',joined:1794100000,lastSeen:Math.floor(Date.now()/1000)-86400,via:'Email',plan:'free',gift:false,giftUntil:null,paying:false,stripe:'',month:{entries:18,limit:20,bonus:0,ask:5,askLimit:5},totals:{entries:41,uploads:0},share:null,devices:[{name:'Android · Chrome',since:Math.floor(Date.now()/1000)-86400*2}],suspended:false,uploadsOff:false,history:[]},
+ b:{id:'b',email:'sam.k@example.com',name:'Sam',joined:1794100000,lastSeen:Math.floor(Date.now()/1000)-86400,via:'Email',plan:'free',gift:false,giftUntil:null,paying:false,stripe:'',month:{entries:18,limit:20,bonus:0,ask:5,askLimit:5,askBonus:0},totals:{entries:41,uploads:0},share:null,devices:[{name:'Android · Chrome',since:Math.floor(Date.now()/1000)-86400*2}],suspended:false,uploadsOff:false,history:[]},
  c:{id:'c',email:'alex@example.com',name:'',joined:1793500000,lastSeen:Math.floor(Date.now()/1000)-600,via:'Email',plan:'premium',gift:false,paying:true,interval:'year',founderPrice:true,status:'active',renews:Math.floor(Date.now()/1000)+300*86400,cancelAtEnd:false,stripe:'https://dashboard.stripe.com/test/customers/cus_sample',month:{entries:52,limit:null,bonus:0,ask:7,askLimit:50},totals:{entries:388,uploads:1},share:{live:false,views:5,since:1794000000},devices:[{name:'iPhone · Safari',since:Math.floor(Date.now()/1000)-86400}],suspended:false,uploadsOff:false,history:[{at:Math.floor(Date.now()/1000)-86400*20,what:'Upgraded to Premium'}]}};
 const pdSample=()=>!REAL||st.smp;
 const pdD=t=>t?new Date(t*1000).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
@@ -619,10 +621,12 @@ function pdPaint(){const w=document.getElementById('pdw');if(!w||w.hidden)return
  if(P.stripe)h+='<div class="pdacts"><a class="pdb" href="'+esc(P.stripe)+'" target="_blank" rel="noopener">Open in Stripe ↗</a></div>';
  h+='</section>';
  // this month
+ // v52.9: extra entries and Ask questions are typed numbers for this month (0 takes them away)
+ const xtra=(act,lab,val)=>'<form class="pdx2" data-pdnum="'+act+'"><label for="pdn-'+act+'">'+lab+'</label><input id="pdn-'+act+'" type="number" inputmode="numeric" min="0" max="10000" step="1" value="'+(val||0)+'"><button type="submit" class="pdb"'+(PDbusy?' disabled':'')+'>Save</button></form>';
  h+='<section class="pds"><h3>This month</h3>'+
-  pdRow('Entries',M.limit?M.entries+' of '+M.limit+(M.bonus?' <small>(+'+M.bonus+' from you)</small>':''):M.entries+' <small>· no limit</small>',P.plan==='premium'?'':pdBtn('entries','Give 20 more'))+(M.limit?meter(M.entries,M.limit):'')+
-  pdRow('Ask questions',M.ask+' of '+M.askLimit,M.ask?pdBtn('ask','Reset'):'')+meter(M.ask,M.askLimit)+
-  '<p class="pdn">Entries count from synced devices. Free resets on the 1st.</p></section>';
+  pdRow('Entries',M.limit?M.entries+' of '+M.limit+(M.bonus?' <small>(20 + '+M.bonus+' from you)</small>':''):M.entries+' <small>· no limit</small>')+(M.limit?meter(M.entries,M.limit)+xtra('entries','Extra entries',M.bonus):'')+
+  pdRow('Ask',M.ask+' of '+M.askLimit+(M.askBonus?' <small>('+(M.askLimit-M.askBonus)+' + '+M.askBonus+' from you)</small>':''),M.ask?pdBtn('ask','Reset used'):'')+meter(M.ask,M.askLimit)+xtra('askmore','Extra Ask questions',M.askBonus)+
+  '<p class="pdn">Extras are on top of their plan and last until the 1st. Set 0 to take them away. Entries count from synced devices.</p></section>';
  // activity
  const sh=P.share;
  h+='<section class="pds"><h3>Activity</h3>'+pdRow('Last active',pdAgo(P.lastSeen))+pdRow('Entries in all',(P.totals||{}).entries||0)+pdRow('Card photos uploaded',(P.totals||{}).uploads||0)+
@@ -652,7 +656,7 @@ async function pdAct(act,extra={}){
  if(act==='gift'){body.on=true}
  if(act==='uploads')body.on=PD.uploadsOff;
  if(act==='suspend')body.on=!PD.suspended;
- const said={gift:'Gift saved',giftoff:'Gift turned off',entries:'20 more entries for this month',ask:'Ask questions reset',signout:'Signed out everywhere',email:'Email changed',share:'Shared board link turned off',uploads:body.on?'Photo uploads allowed':'Photo uploads blocked',suspend:body.on?'Account paused':'Account unpaused',export:'Downloaded',delete:'Deleted'}[act];
+ const said={gift:'Gift saved',giftoff:'Gift turned off',entries:extra.n?extra.n+' extra entries this month':'Extra entries taken away',askmore:extra.n?extra.n+' extra Ask questions this month':'Extra Ask questions taken away',ask:'Ask questions reset',signout:'Signed out everywhere',email:'Email changed',share:'Shared board link turned off',uploads:body.on?'Photo uploads allowed':'Photo uploads blocked',suspend:body.on?'Account paused':'Account unpaused',export:'Downloaded',delete:'Deleted'}[act];
  if(pdSample()){pdSampleAct(body,act);PDmsg=said+' (sample)';pdPaint();return}
  PDbusy=true;pdPaint();
  try{const r=await fetch(API+'/auth/admin/people/act',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:JSON.stringify(body)});const j=await r.json();
@@ -663,7 +667,7 @@ async function pdAct(act,extra={}){
 function pdSave(data){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='card-tab-'+String((data.account||{}).email||'account').replace(/[^\w.-]+/g,'_')+'.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
 function pdSampleAct(b,act){const P=PD,t=Math.floor(Date.now()/1000),log=w=>P.history.unshift({at:t,what:w});
  if(b.act==='gift'){P.gift=!!b.on;P.plan=b.on?'premium':'free';P.giftUntil=b.on&&b.days?t+b.days*86400:null;if(P.plan==='premium'){P.month.limit=null;P.month.askLimit=50}else{P.month.limit=20;P.month.askLimit=5}log(b.on?'Gift of Premium'+(b.days?' for '+b.days+' days':', no end date'):'Gift turned off')}
- else if(act==='entries'){P.month.bonus+=20;P.month.limit+=20;log('20 more entries this month')}else if(act==='ask'){P.month.ask=0;log('Ask questions reset for this month')}
+ else if(act==='entries'){P.month.limit+=b.n-P.month.bonus;P.month.bonus=b.n;log(b.n?b.n+' extra entries this month':'Extra entries taken away')}else if(act==='askmore'){P.month.askLimit+=b.n-(P.month.askBonus||0);P.month.askBonus=b.n;log(b.n?b.n+' extra Ask questions this month':'Extra Ask questions taken away')}else if(act==='ask'){P.month.ask=0;log('Ask questions reset for this month')}
  else if(act==='signout'){P.devices=[];log('Signed out everywhere')}else if(act==='email'){P.email=b.email;log('Email changed')}else if(act==='share'){P.share.live=false;log('Shared board link turned off')}
  else if(act==='uploads'){P.uploadsOff=!b.on;log(b.on?'Photo uploads allowed':'Photo uploads blocked')}else if(act==='suspend'){P.suspended=!!b.on;if(b.on)P.devices=[];log(b.on?'Account paused':'Account unpaused')}
  else if(act==='export')pdSave({sample:true,account:{email:P.email},entries:[]});else if(act==='delete')PD={deleted:1,email:P.email}}
@@ -672,7 +676,7 @@ document.addEventListener('click',e=>{const pr=e.target.closest('[data-person]')
  const b=e.target.closest('#pdw [data-pact]');if(!b||PDbusy)return;const act=b.dataset.pact;
  if(act==='gift'){pdAct('gift',{days:+b.dataset.days});return}
  pdAct(act)});
-document.addEventListener('submit',e=>{if(!e.target.closest('[data-pdem]'))return;e.preventDefault();const v=(document.getElementById('pdemi').value||'').trim();if(!v||v===PD.email){PDmsg='Type their new email first';pdPaint();return}pdAct('email',{email:v})});
+document.addEventListener('submit',e=>{const nf=e.target.closest('[data-pdnum]');if(nf){e.preventDefault();const v=Math.max(0,Math.min(10000,parseInt(nf.querySelector('input').value,10)||0));pdAct(nf.dataset.pdnum,{n:v});return}if(!e.target.closest('[data-pdem]'))return;e.preventDefault();const v=(document.getElementById('pdemi').value||'').trim();if(!v||v===PD.email){PDmsg='Type their new email first';pdPaint();return}pdAct('email',{email:v})});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('pdw')&&!document.getElementById('pdw').hidden)pdClose()});
 function artCard(){setTimeout(()=>{if(!AQ)aqLoad();else aqPaint()},0);return '<div class="grid" style="margin-bottom:14px"><div class="card c12" id="aq"><h3>Card art to review</h3><div class="empty">Loading…</div></div></div>'}
 function aqPaint(){const el=document.getElementById('aq');if(!el)return;const L=(AQ&&AQ.items)||[],src=u=>/^https?:/.test(u)||!REAL||(AQ&&L[0]&&L[0].sample)?u:API+u;

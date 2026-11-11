@@ -1,6 +1,6 @@
 /* Card Tab dashboard (Drop 1). Same layout and behavior as the cardtab.app demo, wired to the device store.
-   Free: the four totals, the chart and platform fees cover this month (the chart shows the last 3 months);
-         every entry stays visible in the list, with all filters.
+   Free: the four totals, insights and platform fees follow the date range inside the last 3 months (v52.9; the chart
+         shows the last 3 months); every entry stays visible in the list, and search looks through every month.
    Premium: totals and insights for all time or any of the date ranges. */
 (function () {
   'use strict';
@@ -75,7 +75,9 @@
   };
 
   // ---------- data shaping (all in cents) ----------
-  function tileScope() { const all = S.all(); return premium() ? all.filter(t => inPeriod(t, $('ct-period').value)) : all.filter(t => t.date.startsWith(monthOf($('ct-period').value) || D.monthPrefix)); }
+  // v52.9: Free totals follow the range too, inside the last 3 months (the switcher keeps Free there); anything else falls back to this month
+  const freeOk = p => !!(window.CTMonth && window.CTMonth.allowed ? window.CTMonth.allowed(p) : monthOf(p));
+  function tileScope() { const all = S.all(), p = $('ct-period').value; return premium() || freeOk(p) ? all.filter(t => inPeriod(t, p)) : all.filter(t => t.date.startsWith(D.monthPrefix)); }
   function monthKeys(fromKey, toKey) { const out = []; let [y, m] = fromKey.split('-').map(Number); for (let i = 0; i < 400; i++) { const k = y + '-' + pad(m); out.push(k); if (k >= toKey) break; m++; if (m > 12) { m = 1; y++; } } return out; }
   function monthsData() {
     let list, keys;
@@ -112,9 +114,10 @@
     countTo($('ct-sales'), t.sales); countTo($('ct-after'), t.after); countTo($('ct-spent'), t.spent); countTo($('ct-profit'), t.profit);
     const tile = $('ct-profit').parentElement; tile.classList.toggle('ct-positive', t.profit >= 0); tile.classList.toggle('ct-negative', t.profit < 0);
     const note = $('app-scope'), p = $('ct-period').value;
-    note.hidden = premium() || !!monthOf(p) || !S.all().length;
-    if (!note.hidden) note.innerHTML = 'Totals show ' + esc(D.monthLabel) + ' · <button type="button" data-upgrade>All time with Premium</button>';
-    $('ct-ins-scope').textContent = premium() ? periodLabel(p) : 'This month';
+    const edge = !premium() && window.CTMonth && window.CTMonth.atEdge && window.CTMonth.atEdge(p);
+    note.hidden = premium() || !S.all().length || (freeOk(p) && !edge);
+    if (!note.hidden) note.innerHTML = freeOk(p) ? 'Free totals cover your last 3 months · <button type="button" data-upgrade>Older months with Premium</button>' : 'Totals show ' + esc(D.monthLabel) + ' · <button type="button" data-upgrade>All time with Premium</button>';
+    $('ct-ins-scope').textContent = premium() || freeOk(p) ? periodLabel(p) : 'This month';
     if (window.CTHome) window.CTHome.paint({ t, list: tileScope(), p, prem: premium() });
     if (window.CTMetrics) window.CTMetrics.paint(tileScope());
   }

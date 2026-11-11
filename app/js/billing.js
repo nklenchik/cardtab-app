@@ -154,7 +154,7 @@
       h += '<div class="amg">' + (s.cancelAtEnd ? R('portal', 'Renew Premium', 'Keep Premium after ' + dateOf(s.periodEnd)) : R('portal', '<span class="bl-red">Cancel Premium</span>', 'You keep Premium until ' + dateOf(s.periodEnd))) + '</div>';
     } else if (status.plan === 'premium') h = '<div class="amg bl-hero"><b>Premium</b><small>Turned on for this account.</small></div>';
     else {
-      h = '<div class="amg bl-hero"><b>Free</b><small>Up to 20 new entries a month, the last 3 months, and the starting Card Board.</small></div>' +
+      h = '<div class="amg bl-hero"><b>Free</b><small>Up to 20 new entries a month, totals and the starting Card Board for your last 3 months. Every entry stays in your list.</small></div>' +
         (offer() ? '<div class="amg bl-fnd"><b>Founding member price</b><small>$4 a month or $40 a year, locked in while you stay subscribed. Ends Jan 31, 2027.</small></div>' : '') +
         '<button type="button" class="bl-go" data-bl="upgrade">Get Premium</button>';
     }

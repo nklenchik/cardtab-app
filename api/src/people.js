@@ -2,7 +2,8 @@
    GET  /auth/admin/people/one?id=     one account: plan and its history, this month's use, devices, shared board, flags
    POST /auth/admin/people/act         { id, act, ... } one action:
         gift { on, days }       Premium as a gift, forever or for N days (switches back to Free on its own)
-        entries                 20 more Free entries this month
+        entries { n }           extra Free entries this month (a set number, 0 takes them away)
+        askmore { n }           extra Ask questions this month, on top of the plan's (a set number)
         ask                     this month's Ask questions back
         signout                 ends every session
         email { email }         changes the sign-in email
@@ -30,10 +31,12 @@ let ready = false;
 export async function ensureAcct(env) {
   if (ready) return;
   await env.DB.batch([
-    env.DB.prepare('CREATE TABLE IF NOT EXISTS acct ( user_id TEXT PRIMARY KEY, gift_until INTEGER, bonus_month TEXT, bonus_entries INTEGER NOT NULL DEFAULT 0, suspended INTEGER NOT NULL DEFAULT 0, no_upload INTEGER NOT NULL DEFAULT 0, updated INTEGER )'),
+    env.DB.prepare('CREATE TABLE IF NOT EXISTS acct ( user_id TEXT PRIMARY KEY, gift_until INTEGER, bonus_month TEXT, bonus_entries INTEGER NOT NULL DEFAULT 0, suspended INTEGER NOT NULL DEFAULT 0, no_upload INTEGER NOT NULL DEFAULT 0, updated INTEGER, ask_month TEXT, ask_bonus INTEGER NOT NULL DEFAULT 0 )'),
     env.DB.prepare('CREATE TABLE IF NOT EXISTS acct_log ( at INTEGER NOT NULL, uid TEXT NOT NULL, act TEXT NOT NULL, note TEXT )'),
     env.DB.prepare('CREATE INDEX IF NOT EXISTS acct_log_uid ON acct_log (uid, at)')
   ]);
+  // v52.9: extra Ask questions (tables made before that get the columns)
+  for (const c of ['ask_month TEXT', 'ask_bonus INTEGER NOT NULL DEFAULT 0']) { try { await env.DB.prepare('ALTER TABLE acct ADD COLUMN ' + c).run(); } catch (e) { /* already there */ } }
   ready = true;
 }
 // an account's flags ({} when there are none, or the table can't be read)
@@ -42,14 +45,16 @@ export async function acctOf(env, uid) {
 }
 async function setAcct(env, uid, patch) {
   const cur = await acctOf(env, uid);
-  const r = Object.assign({ gift_until: null, bonus_month: null, bonus_entries: 0, suspended: 0, no_upload: 0 }, cur, patch, { user_id: uid, updated: now() });
-  await env.DB.prepare('INSERT OR REPLACE INTO acct (user_id,gift_until,bonus_month,bonus_entries,suspended,no_upload,updated) VALUES (?,?,?,?,?,?,?)')
-    .bind(uid, r.gift_until, r.bonus_month, r.bonus_entries, r.suspended, r.no_upload, r.updated).run();
+  const r = Object.assign({ gift_until: null, bonus_month: null, bonus_entries: 0, suspended: 0, no_upload: 0, ask_month: null, ask_bonus: 0 }, cur, patch, { user_id: uid, updated: now() });
+  await env.DB.prepare('INSERT OR REPLACE INTO acct (user_id,gift_until,bonus_month,bonus_entries,suspended,no_upload,updated,ask_month,ask_bonus) VALUES (?,?,?,?,?,?,?,?,?)')
+    .bind(uid, r.gift_until, r.bonus_month, r.bonus_entries, r.suspended, r.no_upload, r.updated, r.ask_month, r.ask_bonus || 0).run();
   return r;
 }
 const log = (env, uid, act, note = '') => env.DB.prepare('INSERT INTO acct_log (at,uid,act,note) VALUES (?,?,?,?)').bind(now(), uid, act, note).run().catch(() => {});
 
 // extra Free entries for the app (only this month's count)
+// extra Ask questions this month (0 when none)
+export const askBonus = a => (a && a.ask_month === ym() && a.ask_bonus > 0 ? a.ask_bonus : 0);
 export const bonusOut = a => (a && a.bonus_month === ym() && a.bonus_entries > 0 ? { m: a.bonus_month, n: a.bonus_entries } : null);
 
 // a gift with an end date switches back on its own (called by the daily job)
@@ -108,7 +113,7 @@ async function details(env, uid) {
     id: u.id, email: u.email, name: u.name || '', joined: u.created_at, lastSeen: u.last_seen_at || null, via: u.google_sub ? 'Google' : 'Email',
     plan, gift: !!b.gift, giftUntil: b.gift ? (a.gift_until || null) : null, paying, interval: b.interval || null, founderPrice: !!b.founder,
     status: b.status || null, renews: b.period_end || null, cancelAtEnd: !!b.cancel_at_end, stripe: stripeUrl(env, b.customer),
-    month: { entries: ent.mo || 0, limit: plan === 'premium' ? null : 20 + ((bonusOut(a) || {}).n || 0), bonus: (bonusOut(a) || {}).n || 0, ask: ask.n || 0, askLimit: plan === 'premium' ? L.premium : L.free },
+    month: { entries: ent.mo || 0, limit: plan === 'premium' ? null : 20 + ((bonusOut(a) || {}).n || 0), bonus: (bonusOut(a) || {}).n || 0, ask: ask.n || 0, askLimit: (plan === 'premium' ? L.premium : L.free) + askBonus(a), askBonus: askBonus(a) },
     totals: { entries: ent.n || 0, uploads: ups.n || 0 },
     share: share.created ? { live: !!share.live && !(share.exp && share.exp < now()), views: share.views || 0, since: share.created } : null,
     devices: sess.map(s => ({ name: device(s.ua), since: s.created_at })),
@@ -139,9 +144,15 @@ export async function handlePeople(env, req, path, out) {
       return done(b.on ? 'Gift of Premium' + (days ? ' for ' + days + ' days' : ', no end date') : 'Gift turned off');
     }
     case 'entries': {
-      const a = await acctOf(env, uid), m = ym(), n = (a.bonus_month === m ? a.bonus_entries || 0 : 0) + BONUS_STEP;
+      const a = await acctOf(env, uid), m = ym(), had = a.bonus_month === m ? a.bonus_entries || 0 : 0;
+      const n = b.n == null ? had + BONUS_STEP : Math.max(0, Math.min(10000, parseInt(b.n, 10) || 0));
       await setAcct(env, uid, { bonus_month: m, bonus_entries: n });
-      return done(BONUS_STEP + ' more entries this month (' + (20 + n) + ' in all)');
+      return done(n ? n + ' extra entries this month (' + (20 + n) + ' in all)' : 'Extra entries taken away');
+    }
+    case 'askmore': {
+      const n = Math.max(0, Math.min(10000, parseInt(b.n, 10) || 0));
+      await setAcct(env, uid, { ask_month: ym(), ask_bonus: n });
+      return done(n ? n + ' extra Ask questions this month' : 'Extra Ask questions taken away');
     }
     case 'ask':
       await env.DB.prepare('DELETE FROM ask_usage WHERE user_id=? AND month=?').bind(uid, ym()).run();
