@@ -1,0 +1,32 @@
+# Outside check (v52.2): every 30 minutes, from GitHub (free), make sure the live app and its server answer.
+# The daily check runs inside the server, so if the server itself is gone (as on Nov 10, when a bad deploy replaced it)
+# that check can't run either. This one can. If anything fails, the run fails and GitHub emails you (Settings ->
+# Notifications -> Actions: "Failed workflows only"). It needs no secrets and only reads public pages.
+name: Outside check
+on:
+  schedule:
+    - cron: '7,37 * * * *'   # every 30 minutes
+  workflow_dispatch: {}
+permissions: {}
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: App, website and server answer
+        run: |
+          set -u
+          fail=0
+          try() {   # name, url, expected status, text that must appear (optional); one retry before calling it a failure
+            for n in 1 2; do
+              code=$(curl -s -o body.txt -w '%{http_code}' -m 20 -H 'user-agent: CardTab-OutsideCheck/1' "$2" || echo 000)
+              if [ "$code" = "$3" ] && { [ -z "${4:-}" ] || grep -q "$4" body.txt; }; then echo "ok    $1 ($code)"; return; fi
+              sleep 20
+            done
+            echo "::error::$1 failed: got $code from $2"; fail=1
+          }
+          try "App loads"                   https://app.cardtab.app/      200 "Card Tab"
+          try "Website loads"               https://cardtab.app/          200 "Card Tab"
+          try "Server answers (sign-in)"    https://api.cardtab.app/auth/me 401 '"user":null'
+          try "Server answers (tracking)"   https://api.cardtab.app/s/ev  204
+          exit $fail

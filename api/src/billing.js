@@ -180,6 +180,7 @@ export async function verifyStripe(secret, header, body, t0 = now()) {
 export async function handleWebhook(env, req) {
   const body = await req.text();
   if (!env.STRIPE_WEBHOOK_SECRET || !(await verifyStripe(env.STRIPE_WEBHOOK_SECRET, req.headers.get('stripe-signature'), body))) return new Response('bad signature', { status: 400 });
+  try { await env.DB.prepare("INSERT INTO meta (k,v) VALUES ('stripe_last',?) ON CONFLICT(k) DO UPDATE SET v=excluded.v").bind(String(now())).run(); } catch (e) {}   // v52.2: for the daily check
   const ev = JSON.parse(body), o = ev.data && ev.data.object; await ensureTable(env);
   try {
     if (ev.type === 'checkout.session.completed' && o.mode === 'subscription' && o.subscription) {
