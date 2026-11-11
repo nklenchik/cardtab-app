@@ -626,7 +626,7 @@ function pdPaint(){const w=document.getElementById('pdw');if(!w||w.hidden)return
  h+='<section class="pds"><h3>This month</h3>'+
   pdRow('Entries',M.limit?M.entries+' of '+M.limit+(M.bonus?' <small>(20 + '+M.bonus+' from you)</small>':''):M.entries+' <small>· no limit</small>')+(M.limit?meter(M.entries,M.limit)+xtra('entries','Extra entries',M.bonus):'')+
   pdRow('Ask',M.ask+' of '+M.askLimit+(M.askBonus?' <small>('+(M.askLimit-M.askBonus)+' + '+M.askBonus+' from you)</small>':''),M.ask?pdBtn('ask','Reset used'):'')+meter(M.ask,M.askLimit)+xtra('askmore','Extra Ask questions',M.askBonus)+
-  '<p class="pdn">Extras are on top of their plan and last until the 1st. Set 0 to take them away. Entries count from synced devices.</p></section>';
+  '<p class="pdn">Extras are on top of their plan and last until the 1st. Set 0 to take them away. Entries count from synced devices. Gifts, extras and resets send them a notification in the app.</p></section>';
  // activity
  const sh=P.share;
  h+='<section class="pds"><h3>Activity</h3>'+pdRow('Last active',pdAgo(P.lastSeen))+pdRow('Entries in all',(P.totals||{}).entries||0)+pdRow('Card photos uploaded',(P.totals||{}).uploads||0)+
@@ -663,7 +663,7 @@ async function pdAct(act,extra={}){
   if(!r.ok)throw new Error(j.error||'That didn’t work');
   if(act==='export')pdSave(j.data);
   if(j.deleted){PD={deleted:1,email:PD.email};pplLoad(PQ)}else{PD=j.person;if(['gift','giftoff','email'].includes(act))pplLoad(PQ)}
-  PDmsg=said}catch(e){PDmsg=e.message||'That didn’t work'}PDbusy=false;pdPaint()}
+  PDmsg=said+(j.told?' · They’ll get a notification':'')}catch(e){PDmsg=e.message||'That didn’t work'}PDbusy=false;pdPaint()}
 function pdSave(data){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='card-tab-'+String((data.account||{}).email||'account').replace(/[^\w.-]+/g,'_')+'.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
 function pdSampleAct(b,act){const P=PD,t=Math.floor(Date.now()/1000),log=w=>P.history.unshift({at:t,what:w});
  if(b.act==='gift'){P.gift=!!b.on;P.plan=b.on?'premium':'free';P.giftUntil=b.on&&b.days?t+b.days*86400:null;if(P.plan==='premium'){P.month.limit=null;P.month.askLimit=50}else{P.month.limit=20;P.month.askLimit=5}log(b.on?'Gift of Premium'+(b.days?' for '+b.days+' days':', no end date'):'Gift turned off')}

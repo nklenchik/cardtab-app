@@ -33,7 +33,9 @@ export async function ensureAcct(env) {
   await env.DB.batch([
     env.DB.prepare('CREATE TABLE IF NOT EXISTS acct ( user_id TEXT PRIMARY KEY, gift_until INTEGER, bonus_month TEXT, bonus_entries INTEGER NOT NULL DEFAULT 0, suspended INTEGER NOT NULL DEFAULT 0, no_upload INTEGER NOT NULL DEFAULT 0, updated INTEGER, ask_month TEXT, ask_bonus INTEGER NOT NULL DEFAULT 0 )'),
     env.DB.prepare('CREATE TABLE IF NOT EXISTS acct_log ( at INTEGER NOT NULL, uid TEXT NOT NULL, act TEXT NOT NULL, note TEXT )'),
-    env.DB.prepare('CREATE INDEX IF NOT EXISTS acct_log_uid ON acct_log (uid, at)')
+    env.DB.prepare('CREATE INDEX IF NOT EXISTS acct_log_uid ON acct_log (uid, at)'),
+    env.DB.prepare('CREATE TABLE IF NOT EXISTS acct_note ( id TEXT PRIMARY KEY, uid TEXT NOT NULL, at INTEGER NOT NULL, title TEXT NOT NULL, body TEXT, seen INTEGER NOT NULL DEFAULT 0 )'),
+    env.DB.prepare('CREATE INDEX IF NOT EXISTS acct_note_uid ON acct_note (uid, seen)')
   ]);
   // v52.9: extra Ask questions (tables made before that get the columns)
   for (const c of ['ask_month TEXT', 'ask_bonus INTEGER NOT NULL DEFAULT 0']) { try { await env.DB.prepare('ALTER TABLE acct ADD COLUMN ' + c).run(); } catch (e) { /* already there */ } }
@@ -49,6 +51,19 @@ async function setAcct(env, uid, patch) {
   await env.DB.prepare('INSERT OR REPLACE INTO acct (user_id,gift_until,bonus_month,bonus_entries,suspended,no_upload,updated,ask_month,ask_bonus) VALUES (?,?,?,?,?,?,?,?,?)')
     .bind(uid, r.gift_until, r.bonus_month, r.bonus_entries, r.suspended, r.no_upload, r.updated, r.ask_month, r.ask_bonus || 0).run();
   return r;
+}
+// v52.10: a message for the person, picked up by their app (POST /auth/notes) and shown in their notifications
+const note = (env, uid, title, body) => env.DB.prepare('INSERT INTO acct_note (id,uid,at,title,body,seen) VALUES (?,?,?,?,?,0)').bind(crypto.randomUUID(), uid, now(), title, body || '').run().catch(() => {});
+const day = t => new Date(t * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' });
+// the person's app asks for new messages; each one is handed over once
+export async function takeNotes(env, uid) {
+  try {
+    await ensureAcct(env);
+    const rows = (await env.DB.prepare('SELECT id,at,title,body FROM acct_note WHERE uid=? AND seen=0 ORDER BY at LIMIT 20').bind(uid).all()).results || [];
+    if (rows.length) await env.DB.batch(rows.map(r => env.DB.prepare('UPDATE acct_note SET seen=1 WHERE id=?').bind(r.id)));
+    await env.DB.prepare('DELETE FROM acct_note WHERE uid=? AND seen=1 AND at<?').bind(uid, now() - 90 * DAY).run().catch(() => {});
+    return rows;
+  } catch (e) { return []; }
 }
 const log = (env, uid, act, note = '') => env.DB.prepare('INSERT INTO acct_log (at,uid,act,note) VALUES (?,?,?,?)').bind(now(), uid, act, note).run().catch(() => {});
 
@@ -67,6 +82,7 @@ export async function giftSweep(env) {
       await env.DB.prepare('UPDATE users SET plan=? WHERE id=?').bind(planOf(r), x.user_id).run();
       await setAcct(env, x.user_id, { gift_until: null });
       await log(env, x.user_id, 'gift_end', 'Gift ended on its date');
+      await note(env, x.user_id, 'Your Premium gift has ended', 'You’re back on Free. Everything you added is still here.');
     }
     return rows.length;
   } catch (e) { return 0; }
@@ -87,7 +103,7 @@ export async function wipeAccount(env, uid, email) {
   for (const [t, c] of [['sessions', 'user_id'], ['an_active', 'uid'], ['an_feat', 'uid'], ['shares', 'uid'], ['an_user', 'uid'], ['ask_usage', 'user_id'], ['usage_user', 'user_id']]) st.push(env.DB.prepare(`DELETE FROM ${t} WHERE ${c}=?`).bind(uid));
   st.push(env.DB.prepare('DELETE FROM login_tokens WHERE email=?').bind(email), env.DB.prepare('DELETE FROM users WHERE id=?').bind(uid));
   await env.DB.batch(st);
-  for (const sql of ['DELETE FROM an_copy WHERE uid=?', 'DELETE FROM acct WHERE user_id=?', 'DELETE FROM acct_log WHERE uid=?'])
+  for (const sql of ['DELETE FROM an_copy WHERE uid=?', 'DELETE FROM acct WHERE user_id=?', 'DELETE FROM acct_log WHERE uid=?', 'DELETE FROM acct_note WHERE uid=?'])
     try { await env.DB.prepare(sql).bind(uid).run(); } catch (e) { /* a table not made yet */ }
 }
 
@@ -131,7 +147,10 @@ export async function handlePeople(env, req, path, out) {
   const b = await req.json().catch(() => ({}));
   const u = b.id ? await q1(env, 'SELECT * FROM users WHERE id=?', String(b.id)) : {};
   if (!u.id) return out({ error: 'No such account.' }, 404);
-  const uid = u.id, done = async note => { if (note) await log(env, uid, b.act, note); return out({ ok: true, person: await details(env, uid) }); };
+  // tell(title, body): the person gets a notification for this change
+  let told = false;
+  const tell = (title, body) => { told = true; return note(env, uid, title, body); };
+  const uid = u.id, done = async what => { if (what) await log(env, uid, b.act, what); return out({ ok: true, told, person: await details(env, uid) }); };
   switch (b.act) {
     case 'gift': {
       await ensureTable(env);
@@ -141,21 +160,27 @@ export async function handlePeople(env, req, path, out) {
       const r = await saveRow(env, uid, { gift: b.on ? 1 : 0 });
       await setAcct(env, uid, { gift_until: b.on && days ? now() + days * DAY : null });
       await env.DB.prepare('UPDATE users SET plan=? WHERE id=?').bind(planOf(r), uid).run();
+      if (b.on) await tell('You’ve been given Premium', 'A gift from Card Tab: Premium ' + (days ? 'for ' + days + ' days, until ' + day(now() + days * DAY) : 'with no end date') + '. Nothing to pay, and it won’t renew.');
+      else if (cur.gift) await tell('Your Premium gift has ended', 'You’re back on Free. Everything you added is still here.');
       return done(b.on ? 'Gift of Premium' + (days ? ' for ' + days + ' days' : ', no end date') : 'Gift turned off');
     }
     case 'entries': {
       const a = await acctOf(env, uid), m = ym(), had = a.bonus_month === m ? a.bonus_entries || 0 : 0;
       const n = b.n == null ? had + BONUS_STEP : Math.max(0, Math.min(10000, parseInt(b.n, 10) || 0));
       await setAcct(env, uid, { bonus_month: m, bonus_entries: n });
+      if (n > had) await tell('You have ' + n + ' extra entries this month', 'A gift from Card Tab: you can add up to ' + (20 + n) + ' entries this month. Extras end on the 1st.');
       return done(n ? n + ' extra entries this month (' + (20 + n) + ' in all)' : 'Extra entries taken away');
     }
     case 'askmore': {
       const n = Math.max(0, Math.min(10000, parseInt(b.n, 10) || 0));
+      const hadA = askBonus(await acctOf(env, uid));
       await setAcct(env, uid, { ask_month: ym(), ask_bonus: n });
+      if (n > hadA) await tell('You have ' + n + ' extra Ask questions this month', 'A gift from Card Tab, on top of your plan’s questions. Extras end on the 1st.');
       return done(n ? n + ' extra Ask questions this month' : 'Extra Ask questions taken away');
     }
     case 'ask':
       await env.DB.prepare('DELETE FROM ask_usage WHERE user_id=? AND month=?').bind(uid, ym()).run();
+      await tell('Your Ask questions are back', 'Your questions for this month have been reset. Ask away.');
       return done('Ask questions reset for this month');
     case 'signout':
       await env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(uid).run();
@@ -167,6 +192,7 @@ export async function handlePeople(env, req, path, out) {
       const taken = await q1(env, 'SELECT id FROM users WHERE email=?', e);
       if (taken.id) return out({ error: 'Another account already uses that email.' }, 400);
       await env.DB.batch([env.DB.prepare('UPDATE users SET email=? WHERE id=?').bind(e, uid), env.DB.prepare('DELETE FROM login_tokens WHERE email=?').bind(u.email)]);
+      await tell('Your sign-in email changed', 'You now sign in with ' + e + '. If you didn’t ask for this, email hello@cardtab.app.');
       return done('Email changed from ' + u.email + ' to ' + e);
     }
     case 'share':

@@ -32,7 +32,10 @@
     $('am-cd').hidden = !(Sess.REAL && session && session.role === 'admin');
     if (Sess.REAL && session && session.plan && S.plan && S.plan() !== session.plan) S.setPlan(session.plan);
     if (S.setBonus) S.setBonus(session && session.bonus);   // v52.8: extra Free entries from an admin
+    if (session && window.CTNotify && window.CTNotify.pull) window.CTNotify.pull(true);   // v52.10: messages from Card Tab
   }
+  // after a message from Card Tab (a gift, extras): who you are and your plan, fresh from the server
+  window.CTRecheck = () => { if (!Sess.REAL) return; Sess.check().then(c => { if (!c) return; $('am-dev').hidden = !(c.role === 'admin'); if (c.plan && S.plan && S.plan() !== c.plan) S.setPlan(c.plan); if (S.setBonus) S.setBonus(c.bonus); }).catch(() => {}); };
   function showAuth() {
     if (window.CTSync) window.CTSync.stop();
     if (window.CTArtFill) window.CTArtFill.stop();

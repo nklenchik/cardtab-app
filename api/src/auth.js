@@ -22,7 +22,7 @@ import { report } from './budget.js';
 import { catReport } from './catalog.js';
 import { signInEmail, sendMail, welcomeEmail } from './email.js';
 import { handleSync } from './sync.js';
-import { handlePeople, acctOf, bonusOut, wipeAccount } from './people.js';
+import { handlePeople, acctOf, bonusOut, wipeAccount, takeNotes } from './people.js';
 
 const DAY = 86400, SESSION_DAYS = 30, LINK_MIN = 15;
 const now = () => Math.floor(Date.now() / 1000);
@@ -168,6 +168,8 @@ export async function handleAuth(env, req, path) {
     await wipeAccount(env, me.id, me.email);   // v52.8: the same wipe the admin dashboard uses
     return out(env, req, { ok: true }, 200, { 'set-cookie': setCookie(env, 'ct_s', '', 0) });
   }
+  // v52.10 messages from Card Tab (an admin's gift, extras, resets), each handed over once
+  if (path === '/auth/notes' && req.method === 'POST') return out(env, req, { notes: await takeNotes(env, me.id) });
   // v52.8 admin account tools: one person's details and actions
   if (path === '/auth/admin/people/one' || path === '/auth/admin/people/act') {
     if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);

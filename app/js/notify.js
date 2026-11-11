@@ -76,6 +76,7 @@
     else if (it.kind === 'cardexp') { ic = 'card'; t = 'Your card expires soon'; p = 'The card ending ' + esc(it.last4 || '••••') + ' runs out ' + esc(it.when || 'next month') + '. Update it to keep Premium.'; acts = act('billing', 'Update card', 1); }
     else if (it.kind === 'renew') { ic = 'renew'; t = 'Premium renews ' + esc(it.when || 'soon'); p = 'Nothing to do. Change or cancel anytime in Plan and billing.'; }
     else if (it.kind === 'payfail') { ic = 'alert'; t = 'Your payment didn’t go through'; p = 'Update your card to keep Premium. We’ve emailed you too.'; acts = act('billing', 'Update card', 1); }
+    else if (it.kind === 'admin') { ic = 'star'; t = esc(it.title); p = esc(it.body); }   // v52.10: from Card Tab (a gift, extras, a reset)
     else if (it.kind === 'tip') { ic = 'star'; t = esc(it.title); p = esc(it.body); acts = act('premium', 'See Premium', 1) + act('notnow', 'Not now'); }
     return '<div class="ntf-it' + nw + (it.kind === 'payfail' ? ' urgent' : '') + '" data-nid="' + esc(it.id) + '"><div class="ntf-t"><span class="ntf-ic">' + svg(ic) + '</span><div class="ntf-tx"><b>' + t + '</b><p>' + p + '</p></div><span class="ntf-when">' + ago(it.ts) + '</span>' + (it.kind === 'payfail' ? '' : '<button type="button" class="ntf-x" data-act="x" data-id="' + esc(it.id) + '" aria-label="Dismiss">' + svg('x', 13) + '</button>') + '</div>' + (acts ? '<div class="ntf-acts">' + acts + '</div>' : '') + '</div>';
   }
@@ -250,5 +251,24 @@
 
   S.on(() => { paintDot(); if (dlg.open) paint(); checkTips(); });
   paintDot();
-  window.CTNotify = { open, close, unread, premiumTap, demo, clearDemo, paintDot, fix: e => fix.open(e), change: e => fix.change(e) };
+  // v52.10 messages from Card Tab: when an admin gives Premium, extra entries or Ask questions, or resets something,
+  // the server keeps a message; the app picks new ones up on start and when you come back to it (at most every 5 minutes)
+  let pulling = false, pulledAt = 0;
+  async function pull(force) {
+    const Sess = window.CTSession; if (!Sess || !Sess.REAL || !Sess.current() || pulling) return;
+    if (!force && now() - pulledAt < 5 * 6e4) return;
+    pulling = true; pulledAt = now();
+    try {
+      const j = await Sess.api('/auth/notes', {}), notes = (j && j.notes) || [];
+      if (notes.length) {
+        await save(s => { const have = new Set((s.items || []).map(x => x.id)); s.items = (s.items || []).concat(notes.filter(n => !have.has('adm:' + n.id)).map(n => ({ id: 'adm:' + n.id, kind: 'admin', cat: 'billing', ts: (n.at || 0) * 1000 || now(), title: n.title, body: n.body || '' }))); });
+        paintDot();
+        if (window.CTDash && window.CTDash.toast) window.CTDash.toast(notes.length > 1 ? notes.length + ' new notifications from Card Tab' : notes[0].title);
+        if (window.CTRecheck) window.CTRecheck();   // a gift changes the plan: ask the server again
+      }
+    } catch (e) { /* try again next time */ }
+    pulling = false;
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') pull(); });
+  window.CTNotify = { open, close, unread, premiumTap, demo, clearDemo, paintDot, pull, fix: e => fix.open(e), change: e => fix.change(e) };
 })();

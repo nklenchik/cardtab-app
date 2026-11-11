@@ -100,6 +100,19 @@ r = await act({ id: fid, act: 'delete' }); assert.equal((await r.json()).deleted
 for (const [t, c] of [['users', 'id'], ['entries', 'user_id'], ['sessions', 'user_id'], ['shares', 'uid'], ['acct', 'user_id'], ['ask_usage', 'user_id']]) assert.equal(sq.prepare(`SELECT COUNT(*) n FROM ${t} WHERE ${c}=?`).get(fid).n, 0, t);
 assert.equal((await call('/auth/admin/people/one?id=' + fid, { cookie: boss.c })).status, 404);
 
+// notifications: the person's app picks each message up once
+{ const g = await signIn('gifted@x.com'), gid = g.j.user.id;
+  await act({ id: gid, act: 'gift', on: true, days: 30 }); let r2 = await act({ id: gid, act: 'entries', n: 30 }); assert.equal((await r2.json()).told, true);
+  await act({ id: gid, act: 'askmore', n: 10 }); await act({ id: gid, act: 'signout' });
+  const g2 = await signIn('gifted@x.com');
+  let n1 = (await (await call('/auth/notes', { method: 'POST', cookie: g2.c })).json()).notes;
+  assert.deepEqual(n1.map(x => x.title), ['You’ve been given Premium', 'You have 30 extra entries this month', 'You have 10 extra Ask questions this month']);
+  assert.match(n1[0].body, /30 days, until/);
+  assert.equal((await (await call('/auth/notes', { method: 'POST', cookie: g2.c })).json()).notes.length, 0, 'handed over once');
+  r2 = await act({ id: gid, act: 'entries', n: 10 }); assert.equal((await r2.json()).told, false, 'fewer extras: no message');
+  sq.prepare('UPDATE acct SET gift_until=? WHERE user_id=?').run(Math.floor(Date.now() / 1000) - 5, gid); await giftSweep(env);
+  n1 = (await (await call('/auth/notes', { method: 'POST', cookie: g2.c })).json()).notes; assert.equal(n1[0].title, 'Your Premium gift has ended');
+  assert.equal((await call('/auth/notes', { method: 'POST' })).status, 401); }
 assert.equal(device('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/130 Safari/537.36'), 'Mac · Chrome');
 assert.equal(device('Mozilla/5.0 (Linux; Android 14) Chrome/130 Mobile Safari/537.36'), 'Android · Chrome');
 console.log('people tests ok');
