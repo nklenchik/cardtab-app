@@ -8,6 +8,8 @@
   const vAuth = $('view-auth'), vApp = $('view-app'), menu = $('app-menu'), av = $('app-avatar');
   let auth = null, whoName = '';
   const esc = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  // a menu button's title (keeps its small line underneath)
+  const lab = (b, t) => { const g = b.querySelector('.amgt'); if (g && g.firstChild && g.firstChild.nodeType === 3) g.firstChild.nodeValue = t; else b.textContent = t; };
   const PREM_PILL = '<span class="am-prem"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/></svg>Premium</span>';
 
   const displayName = s => s.name || (s.via === 'google' && s.email.endsWith('.local') ? 'You' : s.email.split('@')[0].replace(/[._+-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase()));
@@ -30,6 +32,7 @@
   function applyServer(session) {
     $('am-dev').hidden = !((session && session.role === 'admin') || (Sess.LOCAL_MODE && !PUBLIC_HOST));
     $('am-cd').hidden = !(Sess.REAL && session && session.role === 'admin');
+    document.querySelectorAll('[data-cd]').forEach(x => { x.hidden = $('am-cd').hidden; });   // the Card data label goes with it
     if (Sess.REAL && session && session.plan && S.plan && S.plan() !== session.plan) S.setPlan(session.plan);
     if (S.setBonus) S.setBonus(session && session.bonus);   // v52.8: extra Free entries from an admin
     if (session && window.CTNotify && window.CTNotify.pull) window.CTNotify.pull(true);   // v52.10: messages from Card Tab
@@ -73,22 +76,24 @@
 
   // ---------- Admin: card data use this billing month (JustTCG requests), loaded when the Admin section opens ----------
   const cdFmt = d => new Date(d + 'T12:00:00Z').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  $('am-dev').addEventListener('toggle', async () => {
-    if (!$('am-dev').open || $('am-cd').hidden) return;
+  // v52.26: Admin is its own page in the menu now; card data loads each time that page opens
+  const cdLoad = async () => {
+    if ($('am-cd').hidden) return;
     try { const r = await Sess.api('/auth/usage'), t = r.days[0] && r.days[0].day === new Date().toISOString().slice(0, 10) ? r.days[0] : { type: 0, fill: 0 };
       $('am-cd-v').textContent = r.month.toLocaleString() + ' of ' + r.limit.toLocaleString();
       $('am-cd-s').textContent = 'Resets ' + cdFmt(r.resets) + ' · today ' + r.today + ' (typing ' + t.type + ', art ' + t.fill + ') · today’s share ' + r.todayShare + ' · ' + r.savedPct + '% answered from saved lookups'
         + (r.cat ? ' · catalog fill ' + (r.cat.active ? 'on: today ' + r.cat.today.calls + ' requests, ' + r.cat.today.cards.toLocaleString() + ' cards, ' + r.cat.today.art + ' art' : 'starts in ' + r.cat.startsIn + ' days') + ' · saved ' + r.cat.cards.toLocaleString() + ' cards from ' + r.cat.setsDone + ' of ' + r.cat.sets + ' sets' : '');
     } catch (e) { $('am-cd-v').textContent = 'Couldn’t load'; $('am-cd-s').textContent = ''; }
-  });
+  };
+  { const pg = $('amp-admin'); if (pg) new MutationObserver(() => { if (!pg.hidden) cdLoad(); }).observe(pg, { attributes: true, attributeFilter: ['hidden'] }); }
 
   // ---------- Admin: fill missing card art now (past the daily share), with a report of what the card database returned ----------
   let artRep = [];
   $('am-artnow').addEventListener('click', async () => {
     const b = $('am-artnow'), r = $('am-art-r'); if (!window.CTArtFill || b.disabled) return;
-    b.disabled = true; b.textContent = 'Filling in card art…'; r.hidden = false; r.textContent = 'Checking every entry without art. This can take a few minutes; you can keep using the app.';
+    b.disabled = true; lab(b, 'Filling in card art…'); r.hidden = false; r.textContent = 'Checking every entry without art. This can take a few minutes; you can keep using the app.';
     const off = window.CTArtFill.onChange(pg => { if (pg.running && pg.total) r.textContent = pg.done + ' of ' + pg.total + ' cards checked, ' + pg.found + ' entries filled in' + (pg.waiting ? ' · the card database asked us to slow down, continuing in a few seconds' : ''); });
-    try { artRep = (await window.CTArtFill.force()) || []; } finally { off(); b.disabled = false; b.textContent = 'Fill missing card art now'; }
+    try { artRep = (await window.CTArtFill.force()) || []; } finally { off(); b.disabled = false; lab(b, 'Fill missing card art now'); }
     const c = k => artRep.filter(x => x.result === k).length;
     r.textContent = artRep.length ? 'Done: ' + c('filled') + ' filled, ' + c('unclear') + ' with several possible cards, ' + c('not found') + ' not found' + (c('lookup failed') ? ', ' + c('lookup failed') + ' lookups failed' : '') + (c('monthly limit reached') ? '. Stopped: this month’s card lookups are used up' : '') + '.' : 'Every entry already has art (or a card you picked).';
     $('am-art-copy').hidden = !artRep.length;
@@ -149,7 +154,7 @@
       n.hidden = !(u.warn || u.blocked);
       n.textContent = u.blocked ? 'You’ve used all 20 free entries. They reset on ' + u.resetsOn + '.' : 'You’re nearing your limit: ' + u.left + (u.left === 1 ? ' entry' : ' entries') + ' left this month.';
     }
-    menu.querySelectorAll('[data-plan]').forEach(b => b.classList.toggle('on', b.dataset.plan === u.plan));
+    menu.querySelectorAll('[data-plan]').forEach(b => { b.classList.toggle('on', b.dataset.plan === u.plan); b.setAttribute('aria-checked', String(b.dataset.plan === u.plan)); });
     // Import: Premium sees it from day one; Free only sees a Premium-tagged link later (see store.showImport)
     const im = $('am-import'); im.hidden = !S.showImport();
     im.querySelector('span').innerHTML = 'Import a spreadsheet' + (u.plan === 'premium' ? '' : ' <span class="af-lock">Premium</span>');
@@ -236,7 +241,7 @@
     else if (d === 'full') { await S._setUsage(20); Dash.toast('Usage set to 20 of 20'); }
     else if (d === 'usage0') { await S._setUsage(0); Dash.toast('Usage reset to 0'); }
     else if (d === 'days') { const t = new Date(); await S._setSigninDays([-2, -1, 0].map(i => S.ymd(new Date(t.getFullYear(), t.getMonth(), t.getDate() + i)))); Dash.toast('Counted as 3 sign-in days. The Import link shows on the first-run screen for Free.'); }
-    else if (d === 'clear') { if (b.dataset.armed) { delete b.dataset.armed; b.textContent = 'Clear all data'; closeMenu(); await S._clearAll(); Dash.toast('All entries cleared on this device'); } else { b.dataset.armed = 1; b.textContent = 'Tap again to clear everything'; setTimeout(() => { delete b.dataset.armed; b.textContent = 'Clear all data'; }, 4000); } }
+    else if (d === 'clear') { if (b.dataset.armed) { delete b.dataset.armed; lab(b, 'Clear all data'); closeMenu(); await S._clearAll(); Dash.toast('All entries cleared on this device'); } else { b.dataset.armed = 1; lab(b, 'Tap again to clear everything'); setTimeout(() => { delete b.dataset.armed; lab(b, 'Clear all data'); }, 4000); } }
   });
 
   // Sample entries for testing, dated around today so every view has something to show (art from the site demo)

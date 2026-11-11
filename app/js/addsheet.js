@@ -251,10 +251,9 @@
 
   // ---------- testing tool: a timing readout for opening Add New (Profile › testing tools). Shows where the wait goes on a real phone. ----------
   const diagOn = () => { try { return localStorage.getItem('ct.diag') === '1'; } catch (e) { return false; } };
-  const diagBtn = () => document.querySelector('[data-dev="diag"]');
-  const diagPaint = () => { const b = diagBtn(); if (b) b.textContent = 'Add New timing readout: ' + (diagOn() ? 'On' : 'Off'); };
+  const diagPaint = () => document.querySelectorAll('[data-dev="diag"]').forEach(b => b.setAttribute('aria-checked', String((b.dataset.v === '1') === diagOn())));   // v52.26: an Off / On switch in Admin
   diagPaint();
-  document.addEventListener('click', e => { if (!e.target.closest('[data-dev="diag"]')) return; e.stopPropagation(); try { localStorage.setItem('ct.diag', diagOn() ? '0' : '1'); } catch (er) {} diagPaint(); if (window.CTDash) window.CTDash.toast('Timing readout ' + (diagOn() ? 'on: tap + to see it' : 'off')); });
+  document.addEventListener('click', e => { const db = e.target.closest('[data-dev="diag"]'); if (!db) return; e.stopPropagation(); const want = db.dataset.v ? db.dataset.v === '1' : !diagOn(); if (want === diagOn()) return; try { localStorage.setItem('ct.diag', want ? '1' : '0'); } catch (er) {} diagPaint(); if (window.CTDash) window.CTDash.toast('Timing readout ' + (diagOn() ? 'on: tap + to see it' : 'off')); });
   let tTap = 0;
   document.addEventListener('pointerdown', e => { if (e.target.closest('#ct-fab,#ct-add')) tTap = performance.now(); }, true);
   const diag = { run(tOpen, tShown) {

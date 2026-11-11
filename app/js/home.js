@@ -258,12 +258,11 @@
   document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('.cbx #cb-av'); if (!a) return; const btn = a.closest('button') || a; e.preventDefault(); e.stopImmediatePropagation(); if (window.CTMenu) window.CTMenu.open(btn); }, true);
   // admin: show the first-time tips again
   // Admin: compare the two desktop page switches (fade is the default; slide is the phone's)
-  const fxBtn = () => document.querySelector('[data-dev="pagefx"]');
   const FX = ['glide', 'fade', 'slide'], FXN = { glide: 'Glide', fade: 'Fade', slide: 'Slide' };
   const fxNow = () => { try { const v = localStorage.getItem('ct.pagefx'); return FX.includes(v) ? v : 'glide'; } catch (e) { return 'glide'; } };
-  const fxPaint = () => { const b = fxBtn(); if (b) b.textContent = 'Desktop page switch: ' + FXN[fxNow()]; };
+  const fxPaint = () => document.querySelectorAll('[data-dev="pagefx"]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.v === fxNow())));   // v52.26: Glide / Fade / Slide in Admin
   fxPaint();
-  document.addEventListener('click', e => { if (!e.target.closest('[data-dev="pagefx"]')) return; e.stopPropagation(); const n = FX[(FX.indexOf(fxNow()) + 1) % FX.length]; try { localStorage.setItem('ct.pagefx', n); } catch (er) {} fxPaint(); if (window.CTDash) window.CTDash.toast('Desktop page switch: ' + FXN[n]); }, true);
+  document.addEventListener('click', e => { const fb = e.target.closest('[data-dev="pagefx"]'); if (!fb) return; e.stopPropagation(); const n = FX.includes(fb.dataset.v) ? fb.dataset.v : FX[(FX.indexOf(fxNow()) + 1) % FX.length]; if (n === fxNow()) return; try { localStorage.setItem('ct.pagefx', n); } catch (er) {} fxPaint(); if (window.CTDash) window.CTDash.toast('Desktop page switch: ' + FXN[n]); }, true);
   document.addEventListener('click', e => { if (!e.target.closest('[data-dev="tips"]')) return; try { localStorage.removeItem('cb.hint'); } catch (er) {} if (window.CTDash) window.CTDash.toast('First-time tips will show again'); });
 
 

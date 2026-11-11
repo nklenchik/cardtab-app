@@ -2449,3 +2449,22 @@ dialog.fbd.out{animation:fbOut .2s ease forwards}
 .pt-ring.on{opacity:1;animation:ptPulse 1.8s ease-in-out 3}
 @keyframes ptPulse{50%{opacity:.45}}
 @media(prefers-reduced-motion:reduce){.pt,.pt-ring{transition:none}.pt-ring.on{animation:none}}
+
+/* v52.26 Admin page in the menu (it used to be a dropdown that stretched the whole menu) */
+.app-menu.am .am-adm-go{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:10px;color:var(--text);text-decoration:none;font-weight:650;font-size:14px}
+@media(hover:hover){.app-menu.am .am-adm-go:hover{background:var(--am-hl)}}
+.app-menu.am .am-adm-go:focus-visible{background:var(--am-hl);outline:0}
+.app-menu.am .am-ext{margin-left:auto;color:var(--muted);font-weight:800}
+.app-menu.am #amp-admin .amr>span{display:flex;flex-direction:column;min-width:0}
+.app-menu.am #amp-admin .amr>b{font-size:13.5px;font-weight:800}
+.app-menu.am .am-cdnote{margin:0;padding:0 10px 8px;font-size:12px;font-weight:600;color:var(--muted);line-height:1.45}
+.app-menu.am .am-rep{margin:2px 10px 6px;padding:9px 11px;border-radius:12px;background:var(--am-hl,rgba(0,0,0,.05));font-size:12.5px;font-weight:600;line-height:1.45;color:var(--text)}
+.app-menu.am .amg button.am-copy{width:auto;margin:0 10px 8px;padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:800;background:var(--am-hl,rgba(0,0,0,.05))}
+.app-menu.am #amp-admin .am-danger{color:#c0392b}.app-menu.am #amp-admin .am-danger .am-sv{color:color-mix(in srgb,#c0392b 70%,var(--muted))}
+.app-menu.am #amp-admin .am-danger[data-armed]{background:color-mix(in srgb,#c0392b 12%,transparent)}
+.app-menu.am .am-dz{color:#c0392b}
+.app-menu.am #amp-admin .amr{gap:10px}
+.app-menu.am #amp-admin .amr .seg{flex:none;display:flex;width:auto!important;min-width:0!important;margin-left:auto}
+.app-menu.am #amp-admin .amr .seg button{white-space:nowrap}
+.app-menu.am #amp-admin #am-cd>button:not(.am-copy){font-weight:650;font-size:14px}
+@media(max-width:760px){.app-menu.am .am-cdnote{padding-left:16px;padding-right:16px}}
