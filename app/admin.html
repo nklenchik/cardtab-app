@@ -133,21 +133,102 @@ td.n,th.n{text-align:right}
 .xclose:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 @media(max-width:760px){.hd{position:relative;padding-right:48px}.hd .note{width:100%;order:9}.xclose{position:absolute;right:0;top:0}}
 </style>
+<style>
+/* v52.3 cleaner dashboard: one slim header, sections on the left (bottom bar on phones), one panel for dates and filters */
+.wrap{max-width:1440px;padding-block:0 72px}
+.hd2{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:18px 0;background:var(--page);border-bottom:1px solid var(--hair);margin-bottom:28px}
+.hd2 h1{margin:0;font-size:20px;letter-spacing:-.02em}.hd2 .sp{flex:1}
+.pernav{display:flex;align-items:center;gap:6px}
+.perb{display:inline-flex;align-items:center;gap:9px;height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--hair);background:var(--card);font-weight:800;font-size:13.5px;cursor:pointer;white-space:nowrap}
+.perb[aria-expanded=true]{border-color:var(--text)}
+.parr{width:40px;height:40px;border-radius:50%;border:1px solid var(--hair);background:var(--card);font-weight:800;font-size:18px;cursor:pointer;display:grid;place-items:center;padding:0;line-height:1}
+.parr[hidden]{display:none}.parr:disabled{opacity:.35;cursor:default}
+.smpban{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin:-12px 0 24px;padding:12px 16px;border-radius:14px;background:color-mix(in srgb,#e0a100 14%,transparent);color:#b07a00;font-weight:800;font-size:13px}
+.smpban button{border:0;background:transparent;color:inherit;font-weight:800;text-decoration:underline;cursor:pointer;padding:4px}
+.smpban[hidden]{display:none}
+.lay{display:grid;grid-template-columns:232px minmax(0,1fr);gap:40px;align-items:start}
+.side{position:sticky;top:104px;display:grid;gap:4px}
+.side button{all:unset;box-sizing:border-box;display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:14px;cursor:pointer;color:var(--muted)}
+.side button svg{flex:none;margin-top:1px}
+.side button b{display:block;font-size:14.5px;color:inherit}.side button small{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-top:3px;line-height:1.4}
+.side button[aria-current=page]{background:var(--card);color:var(--text);box-shadow:inset 0 0 0 1px var(--hair)}
+@media(hover:hover){.side button:hover{color:var(--text)}}
+.side .snote{font-size:12px;color:var(--muted);font-weight:600;line-height:1.5;padding:18px 14px 0}
+.phd{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:18px}
+.phd h2{margin:0;font-size:26px;letter-spacing:-.03em}
+.phd .range{margin:0}
+.tabs{gap:8px;margin-bottom:24px}
+.tabs:empty{display:none}
+.tabs button{padding:9px 16px;border-radius:999px;background:var(--card);box-shadow:inset 0 0 0 1px var(--hair)}
+.tabs button[aria-selected=true]{background:var(--text);color:var(--page);box-shadow:none}
+.mainc .kpis{gap:16px;margin-bottom:16px}.mainc .grid{gap:16px}.mainc .kpi{padding:20px 22px;gap:6px}.mainc .card{padding:22px}
+.mainc .card .sub{margin-bottom:16px}
+.priv{margin-top:32px}
+.hpill{display:flex;align-items:center;gap:12px;padding:16px 20px;margin-bottom:16px;border-radius:18px;background:var(--card);border:1px solid var(--hair);cursor:pointer;font-weight:800;text-align:left;width:100%}
+.hpill .hd0{width:10px;height:10px;border-radius:50%;background:var(--good);box-shadow:0 0 0 4px color-mix(in srgb,var(--good) 18%,transparent);flex:none}
+.hpill.w .hd0{background:#e0a100;box-shadow:0 0 0 4px rgba(224,161,0,.18)}.hpill.b .hd0{background:var(--bad);box-shadow:0 0 0 4px color-mix(in srgb,var(--bad) 18%,transparent)}
+.hpill small{color:var(--muted);font-weight:600}.hpill em{margin-left:auto;font-style:normal;color:var(--brand)}
+/* the dates and filters panel: a popover on computers, a bottom sheet on phones */
+.perbd{position:fixed;inset:0;z-index:40;background:transparent}
+.perp{position:fixed;z-index:41;top:76px;right:max(16px,calc((100vw - 1440px) / 2 + 16px));width:400px;max-height:calc(100vh - 96px);overflow:auto;background:var(--card);border:1px solid var(--hair);border-radius:22px;padding:22px;box-shadow:0 28px 70px rgba(0,0,0,.32);display:grid;gap:18px;animation:ppIn .22s cubic-bezier(.2,.8,.2,1)}
+.perp[hidden],.perbd[hidden]{display:none}
+@keyframes ppIn{from{opacity:0;transform:translateY(-6px) scale(.98)}}
+.perp .lab{font-size:11.5px;letter-spacing:.08em;color:var(--muted);font-weight:800;margin-bottom:10px;text-transform:uppercase}
+.perp .seg{display:flex}.perp .seg button{flex:1;padding:9px 6px}
+.pnv{display:flex;align-items:center;justify-content:space-between;gap:10px}.pnv b{font-size:16px}
+.calg{display:grid;grid-template-columns:repeat(7,1fr);row-gap:2px;text-align:center}
+.calg .dw{font-size:11px;color:var(--muted);font-weight:800;padding-bottom:6px}
+.calg button{all:unset;cursor:pointer;font-size:13px;font-weight:700;padding:8px 0;border-radius:0}
+.calg button:disabled{opacity:.3;cursor:default}
+.calg button.in{background:color-mix(in srgb,var(--brand) 18%,transparent)}
+.calg button.ed{background:var(--brand);color:#fff;border-radius:999px}
+.calg button.td:not(.ed){box-shadow:inset 0 0 0 1.5px var(--muted);border-radius:999px}
+.mog{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mog button,.qp button{border:1px solid var(--hair);background:var(--card2);border-radius:999px;padding:9px 12px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
+.mog button[aria-pressed=true]{background:var(--text);color:var(--page);border-color:transparent}.mog button:disabled{opacity:.35;cursor:default}
+.qp{display:flex;flex-wrap:wrap;gap:8px}
+.perp hr{border:0;border-top:1px solid var(--hair);margin:0}
+.tg{display:flex;justify-content:space-between;align-items:center;gap:14px;font-weight:800;cursor:pointer;background:none;border:0;padding:0;text-align:left;width:100%}
+.tg small{display:block;color:var(--muted);font-weight:600;font-size:12px;margin-top:2px}
+.tg .sw{width:42px;height:25px;flex:none}.tg .sw::after{width:21px;height:21px}
+.tg[aria-pressed=true] .sw{background:var(--brand)}.tg[aria-pressed=true] .sw::after{transform:translateX(17px)}
+.pbtns{display:flex;gap:10px}.pbtns button{flex:1;height:44px;border-radius:999px;border:1px solid var(--hair);background:var(--card2);font-weight:800;cursor:pointer}
+.pbtns .go{flex:2;background:var(--text);color:var(--page);border-color:transparent}
+.chint{font-size:12px;color:var(--muted);font-weight:700;text-align:center;margin-top:8px}
+/* health, grouped */
+.hgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:20px}
+.hg{background:var(--card2);border-radius:16px;padding:16px 18px}
+.hg h4{margin:0 0 6px;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.hg .hcr{border-top:1px solid var(--hair);padding:10px 0}.hg .hcr:first-of-type{border-top:0}
+.hg.att{grid-column:1/-1;background:color-mix(in srgb,var(--bad) 9%,var(--card2))}
+@media(max-width:900px){.lay{grid-template-columns:1fr;gap:0}
+ .side{position:fixed;z-index:30;top:auto;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom,0px));display:flex;justify-content:space-around;background:var(--card);border:1px solid var(--hair);border-radius:24px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+ .side button{flex:1;flex-direction:column;align-items:center;gap:3px;padding:8px 2px;border-radius:16px;font-size:11px}
+ .side button b{font-size:11px}.side button small,.side .snote{display:none}
+ .side button[aria-current=page]{box-shadow:none;background:var(--card2)}
+ .wrap{padding-bottom:120px}
+ .hgrid{grid-template-columns:1fr}}
+@media(max-width:760px){
+ .hd2{flex-wrap:wrap;gap:10px;padding:14px 0;margin-bottom:20px}.hd2 .lg{display:none}
+ .pernav{order:9;width:100%}.perb{flex:1;justify-content:center}
+ .hd2 .xclose{position:static}
+ .phd h2{font-size:22px}.phd .range{display:none}
+ .tabs{margin-bottom:18px}
+ .mainc .kpis{gap:10px}.mainc .kpi{padding:15px}.mainc .card{padding:18px}
+ .perbd{background:rgba(0,0,0,.5)}
+ .perp{top:auto;left:0;right:0;bottom:0;width:auto;max-height:88vh;border-radius:24px 24px 0 0;padding:14px 18px max(22px,env(safe-area-inset-bottom,0px));animation:ppUp .3s cubic-bezier(.2,.8,.2,1)}
+ .perp::before{content:"";width:40px;height:5px;border-radius:9px;background:var(--hair);justify-self:center;margin-bottom:-4px}
+}
+@media(max-width:760px){.hpill small{display:none}.hpill{padding:14px 16px}
+ #hc .hch{flex-direction:column;align-items:stretch;gap:14px}#hc .hch>div:last-child{display:grid!important;grid-template-columns:1fr 1fr;gap:8px}#hc .hch .chip{justify-content:center;white-space:nowrap;padding:8px 10px}}
+@keyframes ppUp{from{transform:translateY(100%)}}
+@media (prefers-reduced-motion:reduce){.perp{animation:none}}
+</style>
 <div class="wrap" id="app">
-<div class="hd"><span class="logo">C</span><h1>Card Tab Admin</h1><button type="button" class="chip smp" id="smp" aria-pressed="false" title="Show made-up numbers to see how the dashboard looks"><span class="sw"></span>Sample data</button><span class="tag" id="mode">Live</span><div class="seg" id="srcsw" role="tablist" aria-label="Show numbers for"></div><span class="sp"></span><span class="note">Your own devices are left out of every number</span><button type="button" class="xclose" id="xclose" aria-label="Close the dashboard" title="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-<div class="bar">
- <div class="seg wide" id="rng"></div>
- <div class="dd" id="rngdd"><button type="button" aria-haspopup="true" aria-expanded="false"><span></span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="mn" hidden role="menu"></div></div>
- <div class="cust" id="cust"><input type="date" id="cf" aria-label="From"><span>–</span><input type="date" id="ct" aria-label="To"></div>
- <button class="chip wide" id="cmp" aria-pressed="true"><span class="sw"></span>Compare to previous</button>
- <div class="seg wide" id="plan"></div>
- <div class="seg wide" id="dev"></div>
- <div class="dd" id="fdd"><button type="button" class="n" aria-haspopup="true" aria-expanded="false"><span>Filters</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="mn" hidden role="menu"></div></div>
- <span class="range" id="rlab"></span>
-</div>
-<div class="tabs" id="tabs" role="tablist"></div>
+<header class="hd2"><span class="logo">C</span><h1><span class="lg">Card Tab </span>Admin</h1><span class="sp"></span><div class="seg" id="srcsw" role="tablist" aria-label="Show numbers for"></div><div class="pernav"><button type="button" class="parr" id="pprev" aria-label="Earlier">‹</button><button type="button" class="perb" id="perb" aria-haspopup="dialog" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span id="perl"></span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="parr" id="pnext" aria-label="Later">›</button></div><button type="button" class="xclose" id="xclose" aria-label="Close the dashboard" title="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><span class="tag" id="mode" hidden>Live</span></header><div class="smpban" id="smpban" hidden><span>Showing sample numbers, not real data</span><button type="button" id="smpoff">Show real numbers</button></div><div class="lay"><nav class="side" id="side" aria-label="Sections"></nav><main class="mainc"><div class="phd"><h2 id="sech">Overview</h2><span class="range" id="rlab"></span></div><div class="tabs" id="tabs" role="tablist"></div>
 <div id="view"></div>
-<div class="priv" id="priv"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Counts only: no card names, prices, emails or typed text. People who switch off "Share anonymous usage" aren't counted. Daily counts are kept for two years.</div>
+<div class="priv" id="priv"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Counts only: no card names, prices, emails or typed text. People who switch off "Share anonymous usage" aren't counted. Daily counts are kept for two years.</div></main></div>
+<div class="perbd" id="perbd" hidden></div><div class="perp" id="perp" role="dialog" aria-label="Choose dates and filters" hidden></div>
 </div>
 <script src="js/premcopy.js?v=50.97"></script>
 <script>
@@ -155,12 +236,22 @@ const REAL=/(^|\.)cardtab\.app$/i.test(location.hostname),API='https://api.cardt
 const R=[['1','Today'],['7','7 days'],['30','30 days'],['90','90 days'],['ytd','This year'],['c','Custom']];
 const PLANS=[['all','Everyone'],['free','Free'],['premium','Premium']],DEVS=[['all','All devices'],['phone','Phone'],['desk','Desktop']];
 const TABS=['Overview','Features','Time & pages','Board','Stories','Premium','Sign-ups & upgrades','Ask','Collection','Health'];
-let st={r:'30',cmp:true,plan:'all',dev:'all',tab:0,cf:'',ct:'',src:'app',stab:0,smp:false},D=null,busy=0;
+let st={r:'30',pm:'p',at:'',cmp:true,plan:'all',dev:'all',tab:0,cf:'',ct:'',src:'app',stab:0,smp:false},D=null,busy=0;
 const STABS=['Overview','Sources','Pages & sections','Funnel','Who joins'];
 try{Object.assign(st,JSON.parse(localStorage.getItem('ct.admin')||'{}'))}catch(e){}
 const save=()=>{try{localStorage.setItem('ct.admin',JSON.stringify(st))}catch(e){}};
 const iso=t=>new Date(t.getTime()-t.getTimezoneOffset()*6e4).toISOString().slice(0,10);
-function range(){const t=new Date();let a=new Date(t),b=new Date(t);if(st.r==='c'&&st.cf&&st.ct)return [st.cf,st.ct];if(st.r==='ytd')a=new Date(t.getFullYear(),0,1);else if(st.r!=='c')a.setDate(t.getDate()-(+st.r-1));else a.setDate(t.getDate()-29);return [iso(a),iso(b)]}
+// v52.3: a period is a day, a week (Monday to Sunday), a month, a year, a custom range, or one of the quick picks (st.pm 'p')
+const D0=s=>new Date(s+'T12:00:00'),todayS=()=>iso(new Date());
+function anchor(){return st.at?D0(st.at):new Date()}
+function range(){const T=todayS(),cl=(a,b)=>{const x=iso(a),y=iso(b);return [x>T?T:x,y>T?T:y]},A=anchor();
+ if(st.pm==='d')return cl(A,A);
+ if(st.pm==='w'){const a=new Date(A);a.setDate(A.getDate()-((A.getDay()+6)%7));const b=new Date(a);b.setDate(a.getDate()+6);return cl(a,b)}
+ if(st.pm==='m')return cl(new Date(A.getFullYear(),A.getMonth(),1,12),new Date(A.getFullYear(),A.getMonth()+1,0,12));
+ if(st.pm==='y')return cl(new Date(A.getFullYear(),0,1,12),new Date(A.getFullYear(),11,31,12));
+ if(st.pm==='c'&&st.cf&&st.ct)return st.cf<=st.ct?[st.cf,st.ct]:[st.ct,st.cf];
+ return range0()}
+function range0(){const t=new Date();let a=new Date(t),b=new Date(t);if(st.r==='c'&&st.cf&&st.ct)return [st.cf,st.ct];if(st.r==='ytd')a=new Date(t.getFullYear(),0,1);else if(st.r!=='c')a.setDate(t.getDate()-(+st.r-1));else a.setDate(t.getDate()-29);return [iso(a),iso(b)]}
 const fmt=n=>{n=+n||0;return Math.abs(n)>=1e4?(n/1e3).toFixed(Math.abs(n)>=1e5?0:1)+'k':Math.round(n).toLocaleString()};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const cap=s=>{s=String(s||'—');return s.charAt(0).toUpperCase()+s.slice(1)};
@@ -300,23 +391,84 @@ function dd(id,label,groups){const w=document.getElementById(id),b=w.querySelect
  m.onclick=e=>{const x=e.target.closest('[data-k]');if(!x)return;if(x.dataset.k==='cmp')st.cmp=!st.cmp;else st[x.dataset.k]=x.dataset.v;closeDd();changed()}}
 const closeDd=()=>document.querySelectorAll('.dd .mn').forEach(m=>{m.hidden=true;m.previousElementSibling.setAttribute('aria-expanded','false')});
 document.addEventListener('click',closeDd);document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDd()});
-function chrome(){const pv=document.getElementById('priv');if(pv)pv.lastChild.textContent=st.src==='site'?'Website: no cookies and nothing kept in the browser. A visitor is a code that changes every day, so no one can be traced. Daily counts are kept for two years.':'Counts only: no card names, prices, emails or typed text. People who switch off "Share anonymous usage" aren\'t counted. Daily counts are kept for two years.';seg('srcsw',[['app','App'],['site','Website']],'src');seg('rng',R,'r');seg('plan',PLANS,'plan');seg('dev',DEVS,'dev');document.getElementById('plan').style.display=st.src==='site'?'none':'';
- dd('rngdd',(R.find(x=>x[0]===st.r)||R[2])[1],[['r',R]]);const fl=[st.plan!=='all'?PLANS.find(x=>x[0]===st.plan)[1]:'',st.dev!=='all'?DEVS.find(x=>x[0]===st.dev)[1]:''].filter(Boolean).join(' · ');dd('fdd',fl||'Filters',st.src==='site'?[['dev',DEVS]]:[['plan',PLANS],['dev',DEVS]]);
- const [a,b]=range();document.getElementById('cust').classList.toggle('on',st.r==='c');document.getElementById('cf').value=a;document.getElementById('ct').value=b;
- const f=s=>new Date(s+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:a.slice(0,4)!==b.slice(0,4)?'numeric':undefined});document.getElementById('rlab').textContent=a===b?f(a):f(a)+' – '+f(b);
- document.getElementById('cmp').setAttribute('aria-pressed',st.cmp);
- const TT=st.src==='site'?STABS:TABS,ti=st.src==='site'?st.stab:st.tab;document.getElementById('tabs').innerHTML=TT.map((t,i)=>'<button role="tab" aria-selected="'+(i===ti)+'" data-t="'+i+'">'+t+'</button>').join('')}
-function paint(){cid=0;const v=document.getElementById('view');if(!D){v.innerHTML='<div class="empty">Loading…</div>';return}v.innerHTML=D._site?siteViews()[st.stab]():views()[st.tab]();v.classList.remove('load')}
+const IC=p=>'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>';
+const ICS={ov:IC('<rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/>'),gr:IC('<path d="M4 19h16M6 15l4-4 3 3 5-6"/>'),en:IC('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>'),co:IC('<rect x="6" y="3" width="12" height="18" rx="2.5"/>'),he:IC('<path d="M3 12h4l2-5 4 10 2-5h6"/>'),so:IC('<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>'),pg:IC('<rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/>'),fu:IC('<path d="M4 5h16l-6 8v6l-4-2v-4z"/>'),wj:IC('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>')};
+// sections: [name, icon, view indexes (TABS / STABS), what's inside]
+const NAV={app:[['Overview','ov',[0],''],['Growth','gr',[6,5],'Sign-ups, upgrades, Premium'],['Engagement','en',[1,2,3,4,7],'Features, time, Board, Stories, Ask'],['Collection','co',[8],'Entries, games, platforms'],['Health','he',[9],'Checks, errors, art review']],
+  site:[['Overview','ov',[0],''],['Sources','so',[1],'Where visitors come from'],['Pages','pg',[2],'How far people read'],['Funnel','fu',[3],'Visit to sign-up'],['Who joins','wj',[4],'What sign-ups saw first']]};
+const SUBN={0:'Overview',1:'Features',2:'Time & pages',3:'Board',4:'Stories',5:'Premium',6:'Sign-ups & upgrades',7:'Ask',8:'Collection',9:'Health'};
+const curTab=()=>st.src==='site'?st.stab:st.tab;
+function secOf(){return NAV[st.src==='site'?'site':'app'].find(x=>x[2].includes(curTab()))||NAV.app[0]}
+const fmtD=(s,o)=>D0(s).toLocaleDateString('en-US',o);
+function perLabel(){const [a,b]=range(),T=todayS(),y=new Date(Date.now()-864e5);
+ if(st.pm==='d')return a===T?'Today':a===iso(y)?'Yesterday':fmtD(a,{weekday:'short',month:'short',day:'numeric'});
+ if(st.pm==='m')return fmtD(a,{month:'long',year:'numeric'});
+ if(st.pm==='y')return a.slice(0,4);
+ if(st.pm==='p'){const q=QP.find(x=>x[1]===st.r);if(q)return q[0]}
+ const sy=a.slice(0,4)!==b.slice(0,4),f=s=>fmtD(s,{month:'short',day:'numeric',year:sy?'numeric':undefined});
+ return a===b?f(a):a.slice(0,7)===b.slice(0,7)&&!sy?f(a)+' – '+(+b.slice(8)):f(a)+' – '+f(b)}
+function prevRange(){const [a,b]=range(),n=Math.round((D0(b)-D0(a))/864e5)+1,pb=D0(a);pb.setDate(pb.getDate()-1);const pa=new Date(pb);pa.setDate(pb.getDate()-(n-1));return [iso(pa),iso(pb)]}
+function chrome(){const pv=document.getElementById('priv');if(pv)pv.lastChild.textContent=st.src==='site'?'Website: no cookies and nothing kept in the browser. A visitor is a code that changes every day, so no one can be traced. Daily counts are kept for two years.':'Counts only: no card names, prices, emails or typed text. People who switch off "Share anonymous usage" aren\'t counted. Daily counts are kept for two years.';
+ seg('srcsw',[['app','App'],['site','Website']],'src');
+ const fl=[st.plan!=='all'&&st.src!=='site'?PLANS.find(x=>x[0]===st.plan)[1]:'',st.dev!=='all'?DEVS.find(x=>x[0]===st.dev)[1]:''].filter(Boolean);
+ document.getElementById('perl').textContent=[perLabel()].concat(st.cmp?['vs previous']:[],fl).join(' · ');
+ const step=['d','w','m','y'].includes(st.pm);document.getElementById('pprev').hidden=document.getElementById('pnext').hidden=!step;document.getElementById('pnext').disabled=range()[1]>=todayS();
+ const [a,b]=range(),sy=a.slice(0,4)!==b.slice(0,4),f=s=>fmtD(s,{month:'short',day:'numeric',year:sy?'numeric':undefined});
+ const [pa,pb]=prevRange();document.getElementById('rlab').textContent=(a===b?f(a):f(a)+' – '+f(b))+(st.cmp?'  vs  '+(pa===pb?f(pa):f(pa)+' – '+f(pb)):'');
+ const nav=NAV[st.src==='site'?'site':'app'],sec=secOf();
+ document.getElementById('side').innerHTML=nav.map((x,i)=>'<button type="button" data-sec="'+i+'"'+(x===sec?' aria-current="page"':'')+'>'+ICS[x[1]]+'<span><b>'+x[0]+'</b>'+(x[3]?'<small>'+x[3]+'</small>':'')+'</span></button>').join('')+'<div class="snote">Your own devices are left out of every number</div>';
+ document.getElementById('sech').textContent=sec[0];
+ document.getElementById('tabs').innerHTML=sec[2].length>1?sec[2].map(t=>'<button role="tab" aria-selected="'+(t===curTab())+'" data-t="'+t+'">'+(st.src==='site'?STABS[t]:SUBN[t])+'</button>').join(''):'';
+ if(!document.getElementById('perp').hidden)paintPer()}
+document.getElementById('side').onclick=e=>{const b=e.target.closest('[data-sec]');if(!b)return;const x=NAV[st.src==='site'?'site':'app'][+b.dataset.sec];st.last=st.last||{};const k=st.src+':'+x[0],t=x[2].includes(st.last[k])?st.last[k]:x[2][0];if(st.src==='site')st.stab=t;else st.tab=t;save();chrome();paint();scrollTo({top:0})};
+// ---------- the dates and filters panel ----------
+const QP=[['Today','t'],['Yesterday','y'],['Last 7 days','7'],['Last 30 days','30'],['Last 90 days','90'],['This year','ytd']];
+let PV={cm:null,pick:null};
+function openPer(){const p=document.getElementById('perp');PV.cm=null;PV.pick=null;paintPer();p.hidden=false;document.getElementById('perbd').hidden=false;document.getElementById('perb').setAttribute('aria-expanded','true')}
+function closePer(){document.getElementById('perp').hidden=true;document.getElementById('perbd').hidden=true;document.getElementById('perb').setAttribute('aria-expanded','false')}
+function stepPer(d){const A=anchor();if(st.pm==='d')A.setDate(A.getDate()+d);else if(st.pm==='w')A.setDate(A.getDate()+7*d);else if(st.pm==='m')A.setMonth(A.getMonth()+d,1);else if(st.pm==='y')A.setFullYear(A.getFullYear()+d,0,1);else return;if(iso(A)>todayS())return;st.at=iso(A);changed()}
+function calHTML(){const [a,b]=st.pm==='c'&&PV.pick?[PV.pick,PV.pick]:range(),T=todayS(),c=PV.cm||D0(st.pm==='c'?b:a);const y=c.getFullYear(),m=c.getMonth(),first=new Date(y,m,1,12),off=(first.getDay()+6)%7,n=new Date(y,m+1,0).getDate();
+ let h='<div class="pnv"><button type="button" class="parr" data-cal="-1" aria-label="Earlier month">‹</button><b>'+first.toLocaleDateString('en-US',{month:'long',year:'numeric'})+'</b><button type="button" class="parr" data-cal="1" aria-label="Later month"'+(iso(new Date(y,m+1,1,12))>T?' disabled':'')+'>›</button></div><div class="calg">'+['M','T','W','T','F','S','S'].map(x=>'<span class="dw">'+x+'</span>').join('')+'<span></span>'.repeat(off);
+ for(let d=1;d<=n;d++){const s=iso(new Date(y,m,d,12)),inr=s>=a&&s<=b,ed=s===a||s===b;h+='<button type="button" data-day="'+s+'" class="'+(ed?'ed':inr?'in':'')+(s===T?' td':'')+'"'+(s>T?' disabled':'')+'>'+d+'</button>'}
+ return h+'</div>'+(st.pm==='c'?'<div class="chint">'+(PV.pick?'Now tap the last day':'Tap the first day, then the last')+'</div>':'')}
+function paintPer(){const p=document.getElementById('perp'),T=todayS(),A=anchor(),M=[['d','Day'],['w','Week'],['m','Month'],['y','Year'],['c','Custom']];let body='';
+ if(st.pm==='m'){const yr=(PV.cm||A).getFullYear();body='<div class="pnv"><button type="button" class="parr" data-yr="-1" aria-label="Earlier year">‹</button><b>'+yr+'</b><button type="button" class="parr" data-yr="1" aria-label="Later year"'+(yr>=+T.slice(0,4)?' disabled':'')+'>›</button></div><div class="mog">'+Array.from({length:12},(_,i)=>{const s=iso(new Date(yr,i,1,12));return '<button type="button" data-mon="'+s+'" aria-pressed="'+(s.slice(0,7)===range()[0].slice(0,7))+'"'+(s>T?' disabled':'')+'>'+new Date(yr,i,1,12).toLocaleDateString('en-US',{month:'short'})+'</button>'}).join('')+'</div>'}
+ else if(st.pm==='y'){const ys=[];for(let y=+T.slice(0,4);y>=2025;y--)ys.push(y);body='<div class="mog">'+ys.map(y=>'<button type="button" data-yy="'+y+'" aria-pressed="'+(range()[0].slice(0,4)==String(y))+'">'+y+'</button>').join('')+'</div>'}
+ else if(st.pm==='p')body='<div class="chint" style="margin:0">Pick Day, Week, Month, Year or Custom above, or a quick pick below</div>';
+ else body=calHTML();
+ const [pa,pb]=prevRange(),f=s=>fmtD(s,{month:'short',day:'numeric'});
+ p.innerHTML='<div><div class="lab">Period</div><div class="seg" id="pmseg">'+M.map(([v,l])=>'<button type="button" data-pm="'+v+'" aria-pressed="'+(st.pm===v)+'">'+l+'</button>').join('')+'</div></div>'+body+
+  '<div><div class="lab">Quick picks</div><div class="qp">'+QP.map(([l,v])=>'<button type="button" data-qp="'+v+'">'+l+'</button>').join('')+'</div></div><hr>'+
+  '<button type="button" class="tg" id="cmp" aria-pressed="'+st.cmp+'"><span>Compare to the period before<small>'+(pa===pb?'vs '+fmtD(pa,{weekday:'long',month:'short',day:'numeric'}):'vs '+f(pa)+' – '+f(pb))+'</small></span><span class="sw"></span></button>'+
+  (st.src==='site'?'':'<div><div class="lab">Who</div><div class="seg" id="plan"></div></div>')+'<div><div class="lab">Device</div><div class="seg" id="dev"></div></div><hr>'+
+  '<button type="button" class="tg" id="smp" aria-pressed="'+!!st.smp+'"'+(REAL?'':' hidden')+'><span>Sample data<small>Made-up numbers to check the layout; a banner shows while it’s on</small></span><span class="sw"></span></button>'+
+  '<div class="pbtns"><button type="button" data-reset>Reset</button><button type="button" class="go" data-done>Done</button></div>';
+ if(st.src!=='site')seg('plan',PLANS,'plan');seg('dev',DEVS,'dev')}
+document.getElementById('perb').onclick=e=>{e.stopPropagation();document.getElementById('perp').hidden?openPer():closePer()};
+document.getElementById('perbd').onclick=closePer;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePer()});
+document.getElementById('pprev').onclick=()=>stepPer(-1);document.getElementById('pnext').onclick=()=>stepPer(1);
+document.getElementById('smpoff').onclick=()=>{st.smp=false;changed()};
+document.getElementById('perp').onclick=e=>{const t=e.target.closest('button');if(!t)return;const d=t.dataset,T=todayS();
+ if(d.pm){st.pm=d.pm;if(d.pm!=='c'&&!st.at)st.at=T;if(d.pm==='c'){const [a,b]=range();st.cf=a;st.ct=b}PV.cm=null;PV.pick=null;changed();return}
+ if(d.cal){const c=PV.cm||D0(st.pm==='c'?range()[1]:range()[0]);PV.cm=new Date(c.getFullYear(),c.getMonth()+ +d.cal,1,12);paintPer();return}
+ if(d.yr){const c=PV.cm||anchor();PV.cm=new Date(c.getFullYear()+ +d.yr,0,1,12);paintPer();return}
+ if(d.day){if(st.pm==='c'){if(!PV.pick){PV.pick=d.day;paintPer();return}st.cf=PV.pick;st.ct=d.day;PV.pick=null;changed();return}st.at=d.day;changed();return}
+ if(d.mon){st.at=d.mon;changed();return}
+ if(d.yy){st.at=d.yy+'-01-01';changed();return}
+ if(d.qp){if(d.qp==='t'||d.qp==='y'){st.pm='d';st.at=d.qp==='t'?T:iso(new Date(Date.now()-864e5))}else{st.pm='p';st.r=d.qp}PV.cm=null;changed();return}
+ if(t.id==='cmp'){st.cmp=!st.cmp;changed();return}
+ if(t.id==='smp'){st.smp=!st.smp;changed();return}
+ if('reset' in d){Object.assign(st,{pm:'p',r:'30',at:'',cmp:true,plan:'all',dev:'all'});PV.cm=null;changed();return}
+ if('done' in d){closePer();return}}
+function paint(){cid=0;const v=document.getElementById('view');if(!D){v.innerHTML='<div class="empty">Loading…</div>';return}v.innerHTML=(!D._site&&st.tab===0?'<button type="button" class="hpill" id="hpill"><span class="hd0"></span><span id="hpt">Checking the daily check…</span><em>Health →</em></button>':'')+(D._site?siteViews()[st.stab]():views()[st.tab]());if(!D._site&&st.tab===0)hPill();v.classList.remove('load')}
 async function load(){const [a,b]=range(),tk=++busy;document.getElementById('view').classList.add('load');
  const site=st.src==='site',qs='?from='+a+'&to='+b+(!site&&st.plan!=='all'?'&plan='+st.plan:'')+(st.dev!=='all'?'&dev='+st.dev:'');
- try{let j;const useS=st.smp||!REAL;document.getElementById('mode').textContent=useS?'Sample numbers':'Live';document.getElementById('mode').classList.toggle('smpon',useS);document.getElementById('smp').setAttribute('aria-pressed',useS);document.getElementById('smp').hidden=!REAL;if(!useS){const r=await fetch(API+(site?'/auth/admin/site':'/auth/admin/stats')+qs,{credentials:'include'});if(r.status===401)return gate('Sign in to Card Tab first','Then come back to this page.','<a href="/">Open Card Tab</a>');if(r.status===403)return gate('Admins only','This page is for the Card Tab team.','');j=await r.json()}else{j=site?siteSample(a,b):sample(a,b)}
+ try{let j;const useS=st.smp||!REAL;document.getElementById('mode').textContent=useS?'Sample numbers':'Live';document.getElementById('mode').classList.toggle('smpon',useS);document.getElementById('smpban').hidden=!useS;const sb=document.getElementById('smpoff');if(sb)sb.hidden=!REAL;if(!useS){const r=await fetch(API+(site?'/auth/admin/site':'/auth/admin/stats')+qs,{credentials:'include'});if(r.status===401)return gate('Sign in to Card Tab first','Then come back to this page.','<a href="/">Open Card Tab</a>');if(r.status===403)return gate('Admins only','This page is for the Card Tab team.','');j=await r.json()}else{j=site?siteSample(a,b):sample(a,b)}
   if(tk!==busy)return;if(site)j._site=1;D=j;paint()}catch(e){document.getElementById('view').innerHTML='<div class="empty">Couldn’t load the numbers. Check the connection and try again.</div>'}}
 function gate(h,p,a){document.getElementById('app').innerHTML='<div class="gate"><h2>'+h+'</h2><p>'+p+'</p>'+a+'</div>'}
 function changed(){save();chrome();D=null;paint();load()}
-document.getElementById('tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){if(st.src==='site')st.stab=+b.dataset.t;else st.tab=+b.dataset.t;save();chrome();paint()}};
-document.getElementById('cmp').onclick=()=>{st.cmp=!st.cmp;changed()};
-document.getElementById('smp').onclick=()=>{st.smp=!st.smp;changed()};
-['cf','ct'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{st.cf=document.getElementById('cf').value;st.ct=document.getElementById('ct').value;if(st.cf&&st.ct)changed()}));
+document.getElementById('tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){if(st.src==='site')st.stab=+b.dataset.t;else st.tab=+b.dataset.t;st.last=st.last||{};st.last[st.src+':'+secOf()[0]]=+b.dataset.t;save();chrome();paint()}};
 // preview copies (not on cardtab.app) show sample numbers so the layout can be checked
 function sample(a,b){const n=Math.round((new Date(b)-new Date(a))/864e5)+1,r=i=>{const x=Math.sin(i*99.7)*1e4;return x-Math.floor(x)},k={all:1,free:.8,premium:.2}[st.plan]*{all:1,phone:.68,desk:.32}[st.dev],m=Math.max(1,n/30)*k;
  const ser=(base,s)=>Array.from({length:n},(_,i)=>Math.round(base*k*(.85+r(s+i)*.3)*(1+.3*i/n)));const E=[],add=(e,d,v,mult,vv)=>E.push({ev:e,dim:d,n:Math.round(v*m*(mult||1)),v:vv?Math.round(vv*m):0});
@@ -338,14 +490,25 @@ document.getElementById('xclose').onclick=()=>{try{window.close()}catch(e){}setT
 let HC=null,hcBusy=false;
 function hcSample(){const C=[['App opens',1,'',184],['Card Board files load',1,'',92],['Shared board page',1,'',140],['cardtab.app website',1,'',121],['Database',1,'1,692 accounts',18],['Card pictures',1,'storage answering',35],['Sign-in emails can send',1,'sender set up',0],['Google sign-in set up',1,'',0],['Card search set up',1,'',0],['Ask can reach the AI',1,'',612],['Ask spending this month',1,'$11.40 of $25 (46%)',9],['App errors yesterday',1,'3 (TypeError board.js ×2, Promise rejection ×1)',7]].map(([name,ok,note,ms])=>({name,ok:!!ok,note,ms,warn:false,fix:''}));
   return {latest:{day:new Date().toISOString().slice(0,10),at:Date.now()/1000,ok:1,checks:C},history:Array.from({length:30},(_,i)=>({day:'',ok:i!==11,bad:i===11?1:0,warn:i===4?1:0}))}}
+// v52.3: one line on Overview with the latest daily check; tap it for Health
+async function hPill(){const b=document.getElementById('hpill');if(!b)return;b.onclick=()=>{st.tab=9;save();chrome();paint();scrollTo({top:0})};
+ if(!HC){if(st.smp||!REAL)HC=hcSample();else{try{const r=await fetch(API+'/auth/admin/health',{credentials:'include'});HC=await r.json()}catch(e){HC={error:1}}}}
+ const el=document.getElementById('hpt'),L=HC&&HC.latest;if(!el)return;if(!L){el.textContent=HC&&HC.error?'Couldn’t load the daily check':'No daily check yet';return}
+ const C=L.checks||[],bad=C.filter(c=>!c.ok).length,warn=C.filter(c=>c.ok&&c.warn).length;b.classList.toggle('b',!!bad);b.classList.toggle('w',!bad&&!!warn);
+ el.innerHTML=(bad?bad+' check'+(bad>1?'s':'')+' failing':warn?'All '+C.length+' working · '+warn+' to look at':'All '+C.length+' checks passing')+' <small>· '+new Date((L.at||0)*1000).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</small>'}
 async function hcLoad(run){if(hcBusy)return;if(st.smp||!REAL){HC=hcSample();hcPaint();return}hcBusy=true;hcPaint();
   try{const r=await fetch(API+'/auth/admin/health',{method:run?'POST':'GET',credentials:'include'});const j=await r.json();HC=run?{latest:Object.assign({day:new Date().toISOString().slice(0,10)},j),history:(HC&&HC.history)||[]}:j}catch(e){HC={error:1}}hcBusy=false;hcPaint()}
+const HGRP=[['App & site',/^(app|board|share|site)$/,/App opens|Card Board files|Shared board|website/i],['Server',/^(db|art|backup|errors)$/,/Database|Card pictures|backup|errors/i],['Services',/^(lookup|google|email|ask|spend)$/,/Card search|Google|emails|Ask/i],['Payments',/^(stripe|webhook)$/,/Stripe|Payments/i]];
+function hcRow(c){return '<div class="hcr"><span class="hci">'+(c.ok?(c.warn?'🟡':'✅'):'❌')+'</span><span class="hct"><b>'+esc(c.name)+'</b>'+(c.note?'<small>'+esc(c.note)+'</small>':'')+(c.fix?'<em>Suggested fix: '+esc(c.fix)+'</em>':'')+'</span><span class="hcm">'+(c.ms?c.ms+' ms':'')+'</span></div>'}
+function hcGroups(C){const att=C.filter(c=>!c.ok||c.warn),ok=C.filter(c=>c.ok&&!c.warn),used=new Set();
+ const gs=HGRP.map(([n,kr,nr])=>{const l=ok.filter(c=>!used.has(c)&&(c.key?kr.test(c.key):nr.test(c.name)));l.forEach(c=>used.add(c));return [n,l]}).filter(g=>g[1].length);const rest=ok.filter(c=>!used.has(c));if(rest.length)gs.push(['Other',rest]);
+ return '<div class="hgrid">'+(att.length?'<div class="hg att"><h4>Needs a look · '+att.length+'</h4>'+att.map(hcRow).join('')+'</div>':'')+gs.map(([n,l])=>'<div class="hg"><h4>'+n+' · '+l.length+' passing</h4>'+l.map(hcRow).join('')+'</div>').join('')+'</div>'}
 function healthCard(){setTimeout(()=>{if(!HC)hcLoad();else hcPaint()},0);return '<div class="grid" style="margin-bottom:14px"><div class="card c12" id="hc"><h3>Daily check</h3><div class="sub">Every morning the server checks the basics and emails you the result</div><div class="empty">Loading…</div></div></div>'}
 function hcPaint(){const el=document.getElementById('hc');if(!el)return;const L=HC&&HC.latest,H=(HC&&HC.history)||[];
   let body='';if(!HC||hcBusy)body='<div class="empty">'+(hcBusy?'Checking…':'Loading…')+'</div>';else if(HC.error)body='<div class="empty">Couldn’t load the daily check</div>';else if(!L)body='<div class="empty">No check has run yet. The first one runs tomorrow morning, or run one now.</div>';
   else{const C=L.checks||[],bad=C.filter(c=>!c.ok).length,warn=C.filter(c=>c.ok&&c.warn).length;
     body='<div class="hcsum '+(bad?'dn':warn?'fl':'up')+'">'+(bad?bad+' problem'+(bad>1?'s':''):warn?'Everything works · '+warn+' to look at':'Everything passed')+'<small> · '+new Date((L.at||0)*1000).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</small></div>'+
-      '<div class="hclist">'+C.map(c=>'<div class="hcr"><span class="hci">'+(c.ok?(c.warn?'🟡':'✅'):'❌')+'</span><span class="hct"><b>'+esc(c.name)+'</b>'+(c.note?'<small>'+esc(c.note)+'</small>':'')+(c.fix?'<em>Suggested fix: '+esc(c.fix)+'</em>':'')+'</span><span class="hcm">'+(c.ms?c.ms+' ms':'')+'</span></div>').join('')+'</div>'+
+      hcGroups(C)+
       (H.length?'<div class="hchist" title="Last 30 days, newest on the right">'+H.slice().reverse().map(h=>'<i class="'+(!h.ok?'b':h.warn?'w':'g')+'" title="'+esc(h.day||'')+'"></i>').join('')+'</div>':'')}
   el.innerHTML='<div class="hch"><div><h3>Daily check</h3><div class="sub">Every morning the server checks the basics and emails you the result</div></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="chip" id="bkdl">Download backup</button><button type="button" class="chip" id="hcrun"'+(hcBusy?' disabled':'')+'>Run check now</button></div></div>'+body;
   const b=document.getElementById('hcrun');if(b)b.onclick=()=>hcLoad(true);
