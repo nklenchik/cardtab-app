@@ -1470,13 +1470,13 @@ window.cbSyncPlan();
  // the tip
  const K='cb.hint';let st={};try{st=JSON.parse(localStorage.getItem(K))||{}}catch(e){}const save=()=>{try{localStorage.setItem(K,JSON.stringify(st))}catch(e){}};
  const tip=document.createElement('div');tip.className='cbhint';tip.setAttribute('role','status');
- tip.innerHTML='<div class="ht"><i aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V6.5a1.5 1.5 0 0 1 3 0V11"/><path d="M12 10.5V9a1.5 1.5 0 0 1 3 0v2"/><path d="M15 11a1.5 1.5 0 0 1 3 0v3.5a5.5 5.5 0 0 1-5.5 5.5h-.8a5 5 0 0 1-3.9-1.9L5 14.5a1.5 1.5 0 0 1 2.3-1.9L9 14.5"/></svg></i><span>Press and hold any widget to move or resize it.</span></div><div class="ha"><button type="button" class="h1">Don\'t show again</button><button type="button" class="h2">Got it</button></div>';
+ tip.innerHTML='<div class="ht"><i aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V6.5a1.5 1.5 0 0 1 3 0V11"/><path d="M12 10.5V9a1.5 1.5 0 0 1 3 0v2"/><path d="M15 11a1.5 1.5 0 0 1 3 0v3.5a5.5 5.5 0 0 1-5.5 5.5h-.8a5 5 0 0 1-3.9-1.9L5 14.5a1.5 1.5 0 0 1 2.3-1.9L9 14.5"/></svg></i><span>Press and hold any widget to move or resize it.</span></div><div class="ha"><button type="button" class="h1">Don\'t show tips</button><button type="button" class="h2">Got it</button></div>';
  cbx.appendChild(tip);
- const hide=()=>tip.classList.remove('on');
+ const hide=()=>{tip.classList.remove('on');if(window.CTPageTips)window.CTPageTips.end('board',!!st.used)};
  tip.querySelector('.h2').addEventListener('click',()=>{hide();buzz('tap')});
- tip.querySelector('.h1').addEventListener('click',()=>{st.off=1;save();hide();buzz('tap')});
+ tip.querySelector('.h1').addEventListener('click',()=>{st.off=1;save();if(window.CTPageTips)window.CTPageTips.offAll();hide();buzz('tap')});
  let shownThisOpen=false;
- const maybe=()=>{if(!phone.matches||st.off||st.used||(st.n||0)>=3||cbx.classList.contains('off')||edit.classList.contains('on'))return;if(window.CTTips&&!window.CTTips.can('hold'))return;if(window.CTTips)window.CTTips.mark('hold');st.n=(st.n||0)+1;save();shownThisOpen=true;setTimeout(()=>{if(!cbx.classList.contains('off')&&!edit.classList.contains('on'))tip.classList.add('on')},calm.matches?0:900)};
+ const maybe=()=>{if(!phone.matches||st.off||st.used||(st.n||0)>=3||cbx.classList.contains('off')||edit.classList.contains('on'))return;if(window.CTPageTips){if(!window.CTPageTips.allow('board'))return;window.CTPageTips.begin('board')}   /* v52.25: one tip at a time, across the app; "Don't show tips" turns this one off too */st.n=(st.n||0)+1;save();shownThisOpen=true;setTimeout(()=>{if(!cbx.classList.contains('off')&&!edit.classList.contains('on'))tip.classList.add('on')},calm.matches?0:900)};
  new MutationObserver(()=>{const open=!cbx.classList.contains('off');if(open&&!shownThisOpen)maybe();if(!open){shownThisOpen=false;hide()}}).observe(cbx,{attributes:true,attributeFilter:['class']});
  // once you've edited, you know the trick: the tip retires; editing also swaps the top icons for the floating Done
  new MutationObserver(()=>{const on=edit.classList.contains('on');cbx.classList.toggle('cbediting',on&&phone.matches);if(on){hide();if(!st.used){st.used=1;save()}}requestAnimationFrame(place)}).observe(edit,{attributes:true,attributeFilter:['class']});

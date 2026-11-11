@@ -12,7 +12,8 @@
   const PH = () => matchMedia('(max-width:760px)').matches, kind = () => PH() ? 'phone' : 'desk';
   // the same on every device
   const WIDE = ['cb.theme', 'ct.amt', 'ct.qm', 'cb.compare', 'cs.theme', 'cs.bg', 'ct.f.ct-sort',
-    'cb.layout.v4', 'cb.layout.phone.v2', 'cb.layout.v4.free', 'cb.layout.phone.v2.free', 'cb.custom', 'cb.ly.cur.desk', 'cb.ly.cur.phone'];
+    'cb.layout.v4', 'cb.layout.phone.v2', 'cb.layout.v4.free', 'cb.layout.phone.v2.free', 'cb.custom', 'cb.ly.cur.desk', 'cb.ly.cur.phone',
+    'ct.tips', 'cb.hint'];   // v52.25: which first-time tips you've seen (or turned off) follow the account
   // one for phones, one for computers
   const PER = ['ct.view', 'ct.open', 'ct.filter', 'ct.gsize'];
   const DEFAULTS = { desk: { 'ct.view': 'gallery' }, phone: { 'ct.view': 'list' } };

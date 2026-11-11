@@ -2433,3 +2433,19 @@ dialog.fbd.out{animation:fbOut .2s ease forwards}
 @media(max-width:600px){dialog.fbd{margin:auto 0 0;width:100%;max-width:100%;border-radius:24px 24px 0 0;max-height:92dvh;animation-name:fbUp}dialog.fbd.out{animation-name:fbDown}.fbp{padding:20px 18px max(22px,env(safe-area-inset-bottom,0px))}}
 @keyframes fbUp{from{transform:translateY(100%)}}@keyframes fbDown{to{transform:translateY(100%)}}
 @media(prefers-reduced-motion:reduce){dialog.fbd,dialog.fbd.out{animation:none}}
+
+/* v52.25 first-time tips: a small card beside the thing it's about, with a soft ring around that thing */
+.pt{position:fixed;z-index:9001;left:14px;top:0;width:min(360px,calc(100vw - 28px));box-sizing:border-box;display:flex;flex-direction:column;gap:10px;padding:14px 14px 12px 16px;border-radius:20px;background:color-mix(in srgb,var(--card,#fff) 94%,transparent);-webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3);border:1px solid var(--win-edge,var(--line));box-shadow:0 16px 36px -14px rgba(0,0,0,.35);opacity:0;transform:translateY(8px);pointer-events:none;transition:opacity .3s ease,transform .4s cubic-bezier(.22,.61,.36,1)}
+.pt.on{opacity:1;transform:none;pointer-events:auto}
+.pt.free{left:50%;top:auto;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px)}.pt.free.on{transform:translate(-50%,0)}   /* a tip with nothing to point at sits at the bottom */
+@media(max-width:760px){.pt.free{bottom:calc(96px + env(safe-area-inset-bottom,0px))}}   /* above the phone's tab bar */
+.pt-t{display:flex;align-items:center;gap:12px;font-size:14px;font-weight:700;color:var(--text);line-height:1.35}
+.pt-t i{flex:none;width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:var(--tab-onbg,rgba(176,18,61,.14));color:var(--tab-on,#b0123d);font-style:normal}
+.pt-a{display:flex;justify-content:flex-end;gap:8px}
+.pt-a button{height:34px;padding:0 14px;border-radius:999px;border:0;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+.pt-off{background:none;color:var(--muted)}.pt-ok{background:var(--text);color:var(--card,#fff)}
+.pt-a button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.pt-ring{position:fixed;z-index:9000;left:0;top:0;pointer-events:none;box-shadow:0 0 0 2px var(--brand),0 0 0 7px color-mix(in srgb,var(--brand) 18%,transparent);opacity:0;transition:opacity .3s ease}
+.pt-ring.on{opacity:1;animation:ptPulse 1.8s ease-in-out 3}
+@keyframes ptPulse{50%{opacity:.45}}
+@media(prefers-reduced-motion:reduce){.pt,.pt-ring{transition:none}.pt-ring.on{animation:none}}
