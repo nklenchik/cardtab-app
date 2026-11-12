@@ -2472,3 +2472,6 @@ dialog.fbd.out{animation:fbOut .2s ease forwards}
 .app-menu.am #amp-admin .amr .seg button{white-space:nowrap}
 .app-menu.am #amp-admin #am-cd>button:not(.am-copy){font-weight:650;font-size:14px}
 @media(max-width:760px){.app-menu.am .am-cdnote{padding-left:16px;padding-right:16px}}
+
+/* v52.31 admin alerts at the top of the admin's own Notifications */
+.ntf-gl .adm-tag{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:99px;font-size:10px;letter-spacing:.06em;color:var(--s-brand,#a50e37);background:color-mix(in srgb,var(--s-brand,#a50e37) 13%,transparent);vertical-align:1px}

@@ -2,6 +2,7 @@ import { handleBilling, cancelForDelete } from './billing.js';
 import { handleAdminAsk } from './adminask.js';
 import { handleFeedback } from './feedback.js';
 import { handleHealth } from './health.js';
+import { handleAlerts } from './alerts.js';
 import { handleShare } from './share.js';
 import { handleEvents, handleStats, handleSiteStats } from './analytics.js';
 import { handleAsk } from './ask.js';
@@ -192,6 +193,7 @@ export async function handleAuth(env, req, path) {
     if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);
     return handleAdminAsk(env, req, (body, status = 200) => out(env, req, body, status));
   }
+  if (path.startsWith('/auth/admin/alerts')) return handleAlerts(env, req, path, isAdmin(env, me.email), (body, status = 200) => out(env, req, body, status));   // v52.31
   if (path === '/auth/admin/health') {
     if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);
     return handleHealth(env, req, (body, status = 200) => out(env, req, body, status));

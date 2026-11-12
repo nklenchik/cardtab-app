@@ -17,6 +17,7 @@
    Public:
      POST /stripe/webhook             Stripe's events, signature checked */
 import { sendMail, paymentEmail } from './email.js';
+import { raiseAlert } from './alerts.js';
 
 export const FOUNDER_JOIN_BEFORE = Date.parse('2027-01-01T00:00:00-05:00') / 1000;
 export const FOUNDER_UPGRADE_BY = Date.parse('2027-02-01T00:00:00-05:00') / 1000;   // through the end of Jan 31, Eastern
@@ -191,6 +192,7 @@ export async function handleWebhook(env, req) {
       await syncSubscription(env, ev.type.endsWith('deleted') ? o : await getSub(env, o.id));
     } else if ((ev.type === 'invoice.payment_failed' || ev.type === 'invoice.paid') && (o.subscription || (o.parent && o.parent.subscription_details && o.parent.subscription_details.subscription))) {
       await syncSubscription(env, await getSub(env, o.subscription || o.parent.subscription_details.subscription));
+      if (ev.type === 'invoice.payment_failed') await raiseAlert(env, { key: 'pay:' + (o.id || ev.id), grp: 'now', kind: 'r', icon: 'c', title: 'A Premium payment failed', sub: (o.customer_email || 'A subscriber') + ' · $' + ((o.amount_due || 0) / 100).toFixed(2) + ' · Stripe retries on its own', go: 'billing', mail: true });   // v52.31
     } else if (ev.type === 'payment_method.attached' || ev.type === 'customer.updated') {
       const cus = o.customer || o.id, uid = cus && (await uidForCustomer(env, cus)), r = uid && (await rowOf(env, uid));
       if (r && r.sub) await syncSubscription(env, await getSub(env, r.sub), uid);

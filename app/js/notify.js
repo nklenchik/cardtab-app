@@ -45,7 +45,31 @@
       .filter(it => it.kind !== 'tip' || S.plan() === 'free')
       .sort((a, b) => b.ts - a.ts);
   }
-  const unread = () => { const r = st().read || {}; return all().filter(it => !r[it.id] && it.kind !== 'fixed').length; };
+  const unread = () => { const r = st().read || {}; return all().filter(it => !r[it.id] && it.kind !== 'fixed').length + ADM.length; };
+
+  // ---------- v52.31 admin alerts: only on the admin's own account. The same list as the admin dashboard's bell, kept on the
+  // server until marked done (Done here clears it there too). They count toward the dot until they're done. ----------
+  let ADM = [];
+  const CS = () => window.CTSession;
+  const isAdm = () => { try { const c = CS(), s = c && c.get(); return !!(s && s.role === 'admin' && (c.REAL || localStorage.getItem('ct.alerts.sample') === '1')); } catch (e) { return false; } };
+  const ADM_IC = { x: 'alert', g: 'renew', m: 'bell', p: 'search', c: 'card' };
+  async function admLoad() {
+    if (!isAdm()) { if (ADM.length) { ADM = []; paintDot(); } return; }
+    const c = CS();
+    if (!c.REAL) { if (!ADM.length && !admLoad.done) { const t = Math.floor(Date.now() / 1000); ADM = [{ id: 'a1', grp: 'now', kind: 'r', icon: 'x', title: 'Payments (Stripe) key works failed', sub: 'Stripe refused the key (401)', go: 'health', at: t - 720 }, { id: 'a3', grp: 'you', kind: 'b', icon: 'm', title: 'New bug report: “Can’t find Shimmering Skies”', sub: 'From a tester · Entries', go: 'feedback:s1', at: t - 86400 }]; admLoad.done = 1; } }
+    else { try { const r = await fetch(c.API + '/auth/admin/alerts', { credentials: 'include' }); if (!r.ok) return; const j = await r.json(); ADM = (j.items || []).filter(a => !admGone.has(a.id)); } catch (e) { return; } }
+    paintDot(); if (dlg.open && view === 'list') paint();
+  }
+  const admGone = new Set();
+  function admHtml() {
+    if (!ADM.length) return '';
+    const row = a => '<div class="ntf-it new adm-it' + (a.grp === 'now' ? ' urgent' : '') + '" data-aid="' + esc(a.id) + '"><div class="ntf-t"><span class="ntf-ic">' + svg(ADM_IC[a.icon] || 'alert') + '</span><div class="ntf-tx"><b>' + esc(a.title) + '</b><p>' + esc(a.sub || '') + '</p></div><span class="ntf-when">' + ago(a.at * 1000) + '</span></div>' +
+      '<div class="ntf-acts"><button type="button" class="ntf-btn p" data-act="ago" data-id="' + esc(a.id) + '">Open</button><button type="button" class="ntf-btn" data-act="adone" data-id="' + esc(a.id) + '">Done</button></div></div>';
+    const n = ADM.filter(a => a.grp === 'now'), y = ADM.filter(a => a.grp !== 'now'), tag = ' <span class="adm-tag">Admin</span>';
+    return (n.length ? '<div class="ntf-gl">Needs attention now' + tag + '</div>' + n.map(row).join('') : '') + (y.length ? '<div class="ntf-gl">Waiting on you' + (n.length ? '' : tag) + '</div>' + y.map(row).join('') : '');
+  }
+  setTimeout(admLoad, 1500); setInterval(() => { if (!document.hidden) admLoad(); }, 180000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) admLoad(); });
 
   // ---------- the dot and the menu count ----------
   function paintDot() {
@@ -82,10 +106,11 @@
   }
   function renderList() {
     const list = all(), r = st().read || {}, p = prefs();
+    if (!list.length && ADM.length) return admHtml();
     if (!list.length) return '<div class="ntf-empty">' + svg('bell', 26) + '<b>You’re all caught up</b><p>' + (p.all ? 'Cards that need a look and account news show up here.' : 'Notifications are off. Payment problems still show here.') + '</p></div>';
     const by = {}; list.forEach(it => { const g = it.kind === 'payfail' ? 'billing' : it.cat; (by[g] = by[g] || []).push(it); });
     const n = list.filter(it => it.kind !== 'payfail').length;
-    return ['billing', 'cards', 'tips'].filter(g => by[g]).map(g => '<div class="ntf-gl">' + GROUP[g] + '</div>' + by[g].map(it => itemHtml(it, r[it.id])).join('')).join('') +
+    return admHtml() + ['billing', 'cards', 'tips'].filter(g => by[g]).map(g => '<div class="ntf-gl">' + GROUP[g] + '</div>' + by[g].map(it => itemHtml(it, r[it.id])).join('')).join('') +
       (n > 1 ? '<button type="button" class="ntf-clear" data-act="clearall">Clear all</button>' : '');
   }
   const sw = (k, on, label, sub, dis) => '<div class="ntf-sr"><div><b>' + label + '</b><span>' + sub + '</span></div><button type="button" class="swt" role="switch" data-pref="' + k + '" aria-checked="' + on + '" aria-label="' + label + '"' + (dis ? ' disabled' : '') + '><i></i></button></div>';
@@ -117,6 +142,7 @@
   async function open(v) {
     view = v === 'settings' || v === 'plats' ? v : 'list'; paint(); dlg.showModal(); { const f = dlg.querySelector('.ntf-form'); if (f) { f.tabIndex = -1; f.focus({ preventScroll: true }); } }
     // opening the list counts as seeing what's there: the dot clears, the "new" marks stay until next time
+    if (view === 'list') admLoad();
     if (view === 'list') { const ids = all().map(it => it.id); await save(s => { s.read = s.read || {}; ids.forEach(id => { s.read[id] = 1; }); }); }
   }
   function close() { if (dlg.open) dlg.close(); }
@@ -152,6 +178,11 @@
     if (t && !t.disabled) { const k = t.dataset.pref, v = t.getAttribute('aria-checked') !== 'true'; window.ctBuzz && window.ctBuzz(); await save(s => { s.prefs = Object.assign({}, DEF, s.prefs, { [k]: v }); }); paint(); return; }
     const b = e.target.closest('[data-act]'); if (!b) return;
     const id = b.dataset.id, act = b.dataset.act, it = all().find(x => x.id === id);
+    if (act === 'adone') { const el = b.closest('.ntf-it'); admGone.add(id); el.style.transition = 'transform .28s cubic-bezier(.4,0,.2,1), opacity .22s ease'; el.style.transform = 'translateX(110%)'; el.style.opacity = '0';
+      setTimeout(() => { ADM = ADM.filter(a => a.id !== id); paint(); paintDot(); }, 260);
+      const c = CS(); if (c && c.REAL) { try { await fetch(c.API + '/auth/admin/alerts/done', { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id }) }); } catch (er) {} }
+      return; }
+    if (act === 'ago') { close(); window.open('/admin.html#al=' + encodeURIComponent(id), '_blank', 'noopener'); return; }
     if (act === 'x' && it) { window.ctBuzz && window.ctBuzz(); await dismissOut(b.closest('.ntf-it'), [it]); return; }
     if (act === 'clearall') { const its = all().filter(x => x.kind !== 'payfail'); await dismissOut([...dlg.querySelectorAll('.ntf-it:not(.urgent)')], its); return; }
     if (act === 'fix' && it) { close(); setTimeout(() => fix.open(it.entry), 280); return; }

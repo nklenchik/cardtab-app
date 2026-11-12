@@ -8,6 +8,7 @@
 //   admin review queue.
 import { currentUser, isAdmin } from './auth.js';
 import { acctOf } from './people.js';
+import { raiseAlert, resolveAlert } from './alerts.js';
 
 const SIZES = { detail: { maxW: 700, maxH: 1000, maxB: 600 * 1024 }, list: { maxW: 260, maxH: 380, maxB: 160 * 1024 } };
 const SHARE_MIN_W = 600, PER_DAY = 40;
@@ -132,6 +133,7 @@ export async function handleArt(env, req, path, cors, ctx) {
         const ok = chk.ok && !had, reason = chk.ok ? (had ? 'This card already has shared art' : '') : chk.reason;
         await env.DB.prepare('INSERT INTO art_uploads (id,user_id,card_id,name,w,h,status,reason,seen,created) VALUES (?,?,?,?,?,?,?,?,?,?)').bind(id, me.id, card.id, full || name, files.detail.info.w, files.detail.info.h, ok ? 'approved' : 'pending', reason, chk.seen || '', now()).run();
         if (ok) await publish(env, card.id, me.id, id);
+        else await raiseAlert(env, { key: 'art:' + id, grp: 'you', kind: 'b', icon: 'p', title: 'Card photo to review: ' + (full || name).slice(0, 60), sub: reason || 'The automatic check couldn’t confirm it', go: 'art' });   // v52.31
         share = { status: ok ? 'shared' : 'review' };
       }
     }
@@ -158,6 +160,7 @@ export async function handleArt(env, req, path, cors, ctx) {
       if (!row) return J(env, cors, { error: 'not found' }, 404);
       if (b.action === 'approve') { await publish(env, row.card_id, row.user_id, row.id); await env.DB.prepare("UPDATE art_uploads SET status='approved' WHERE id=?").bind(row.id).run(); }
       else await env.DB.prepare("UPDATE art_uploads SET status='rejected' WHERE id=?").bind(row.id).run();
+      await resolveAlert(env, 'art:' + row.id);
       return J(env, cors, { ok: true });
     }
   }

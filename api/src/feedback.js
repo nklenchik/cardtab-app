@@ -6,6 +6,7 @@
    feedbackDigest(env): once a day (with the morning health check) admins get one email listing what came in since the last one.
    Screenshots are kept in the ART bucket under fb/ and removed with the message's account. */
 import { sendMail } from './email.js';
+import { raiseAlert, resolveAlert } from './alerts.js';
 
 const now = () => Math.floor(Date.now() / 1000);
 const KINDS = ['bug', 'idea', 'other'];
@@ -50,6 +51,8 @@ export async function handleFeedback(env, req, me, path, admin, out) {
       if (env.ART) { shot = 'fb/' + id + '.' + p.ext; await env.ART.put(shot, p.u8, { httpMetadata: { contentType: p.type, cacheControl: 'private, max-age=86400' } }); } }
     await env.DB.prepare('INSERT INTO feedback (id,uid,email,name,kind,msg,page,dev,ver,shot,at,status,mailed) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,0)')
       .bind(id, me.id, me.email || '', me.name || '', kind, msg, clip(b.page, 80), device(req.headers.get('user-agent')), clip(b.ver, 20), shot, now(), 'new').run();
+    await raiseAlert(env, { key: 'feedback:' + id, grp: 'you', kind: 'b', icon: 'm', title: (kind === 'bug' ? 'New bug report' : kind === 'idea' ? 'New idea' : 'New feedback') + ': “' + (msg.length > 70 ? msg.slice(0, 68) + '…' : msg) + '”',
+      sub: 'From ' + (me.name || me.email || 'someone') + (b.page ? ' · ' + clip(b.page, 40) : '') + (shot ? ' · with a screenshot' : ''), go: 'feedback:' + id });   // v52.31
     return out({ ok: true });
   }
   if (!path.startsWith('/auth/admin/feedback')) return null;
@@ -68,10 +71,11 @@ export async function handleFeedback(env, req, me, path, admin, out) {
   if (path === '/auth/admin/feedback/act' && req.method === 'POST') {
     const b = await req.json().catch(() => ({}));
     const f = await env.DB.prepare('SELECT * FROM feedback WHERE id=?').bind(String(b.id || '')).first(); if (!f) return out({ error: 'Not found.' }, 404);
-    if (b.act === 'handled' || b.act === 'new') { await env.DB.prepare('UPDATE feedback SET status=? WHERE id=?').bind(b.act, f.id).run(); return out({ ok: true }); }
+    if (b.act === 'handled' || b.act === 'new') { await env.DB.prepare('UPDATE feedback SET status=? WHERE id=?').bind(b.act, f.id).run(); if (b.act === 'handled') await resolveAlert(env, 'feedback:' + f.id); return out({ ok: true }); }
     if (b.act === 'reply') {
       const text = clip(b.text, 2000); if (text.length < 2) return out({ error: 'Write a reply first.' }, 400);
       await env.DB.prepare("UPDATE feedback SET reply=?, replied_at=?, status='handled' WHERE id=?").bind(text, now(), f.id).run();
+      await resolveAlert(env, 'feedback:' + f.id);
       // the person sees it in the app (the same notices as gifts), with what they sent for context
       const was = f.msg.length > 90 ? f.msg.slice(0, 88) + '…' : f.msg;
       await env.DB.prepare('INSERT INTO acct_note (id,uid,at,title,body,seen) VALUES (?,?,?,?,?,0)').bind(crypto.randomUUID(), f.uid, now(), 'Card Tab replied to your feedback', text + '\n\nYou wrote: “' + was + '”').run().catch(() => {});

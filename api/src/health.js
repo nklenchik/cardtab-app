@@ -2,6 +2,7 @@
 // About a dozen small requests in all (the app and site pages, the database, picture storage, one tiny AI question) and
 // a few database reads. Nothing is changed or fixed automatically: problems come with a suggested fix to approve.
 import { sendMail } from './email.js';
+import { alertsFromHealth } from './alerts.js';
 
 const now = () => Math.floor(Date.now() / 1000);
 const day = (t = Date.now()) => new Date(t).toISOString().slice(0, 10);
@@ -127,6 +128,7 @@ export async function runHealth(env, { send = true } = {}) {
     return { ok: true, warn: n >= 25, note: n ? n + ' (' + rows.map(r => r.dim + ' ×' + r.n).join(', ') + ')' : 'none' };
   }), 'Errors went up. Send this report to Claude to look into the files named here.');
 
+  await alertsFromHealth(env, C);   // v52.31: anything failing or needing a look waits in the admin's alerts until it's marked done
   let P = null; try { P = await people(env); } catch (e) {}
   const bad = C.filter(c => !c.ok), warn = C.filter(c => c.ok && c.warn), ok = !bad.length;
   try { await env.DB.prepare('INSERT INTO health (day, at, ok, n_bad, n_warn, checks) VALUES (?,?,?,?,?,?) ON CONFLICT(day) DO UPDATE SET at=excluded.at, ok=excluded.ok, n_bad=excluded.n_bad, n_warn=excluded.n_warn, checks=excluded.checks').bind(day(), now(), ok ? 1 : 0, bad.length, warn.length, JSON.stringify(C)).run(); } catch (e) {}
