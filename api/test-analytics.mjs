@@ -57,6 +57,9 @@ assert.deepEqual(sq.prepare('SELECT src FROM an_site_vis ORDER BY src').all().ma
 assert.equal(sq.prepare("SELECT SUM(n) n FROM an_site WHERE ev='pv'").get().n, 3);
 let w = await (await call('/auth/admin/site', { cookie: boss })).json();
 assert.equal(w.visitors.at(-1), 2); assert.equal(w.events.find(x => x.ev === 'join').n, 1); assert.equal(w.countries[0].dim, 'US');
+// v52.46 browser and operating system per visitor
+assert.equal(w.browsers.length >= 1 && w.systems.length >= 1, true, JSON.stringify([w.browsers, w.systems]));
+assert.equal(w.systems.reduce((t, r) => t + r.n, 0), w.visitors.at(-1), 'every visitor has an operating system');
 w = await (await call('/auth/admin/site?dev=desk', { cookie: boss })).json(); assert.equal(w.visitors.at(-1), 1);
 assert.equal((await call('/auth/admin/site', { cookie: a })).status, 403);
 // ---- v50.4: features, upgrades, where people came from ----

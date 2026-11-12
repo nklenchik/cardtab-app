@@ -177,6 +177,17 @@ export async function cleanupAnalytics(env) {
 const SITE_ORIGINS = /^https:\/\/(www\.)?cardtab\.app$|^https:\/\/[a-z0-9-]+\.cardtab-site\.pages\.dev$/;
 const SITE_EV = new Set(['pv', 'sec', 'demo', 'cta', 'scroll', 'join', 'out', 'join_src', 'join_sec', 'join_demo', 'join_scroll']);
 const hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+// v52.46 browser and operating system, read from the browser's own description of itself (nothing extra is sent)
+export function browserOf(ua) {
+  return /Instagram/.test(ua) ? 'Instagram app' : /FBAN|FBAV|FB_IAB/.test(ua) ? 'Facebook app' : /musical_ly|TikTok|BytedanceWebview/.test(ua) ? 'TikTok app' : /Snapchat/.test(ua) ? 'Snapchat app'
+    : /Edg(e|A|iOS)?\//.test(ua) ? 'Edge' : /SamsungBrowser/.test(ua) ? 'Samsung Internet' : /OPR\/|Opera/.test(ua) ? 'Opera' : /DuckDuckGo/.test(ua) ? 'DuckDuckGo'
+    : /Firefox|FxiOS/.test(ua) ? 'Firefox' : /Chrome|CriOS|Chromium/.test(ua) ? 'Chrome' : /Safari/.test(ua) && /Version\//.test(ua) ? 'Safari' : /AppleWebKit/.test(ua) && /iPhone|iPad/.test(ua) ? 'Safari' : 'Other';
+}
+export function osOf(ua) {
+  return /iPhone|iPod/.test(ua) ? 'iOS' : /iPad/.test(ua) ? 'iPadOS' : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows' : /CrOS/.test(ua) ? 'ChromeOS' : /Mac OS X|Macintosh/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : 'Other';
+}
+let siteCols = false;
+async function ensureSiteCols(env) { if (siteCols) return; for (const c of ['br', 'os']) { try { await env.DB.prepare('ALTER TABLE an_site_vis ADD COLUMN ' + c + " TEXT DEFAULT ''").run(); } catch (e) { /* already there */ } } siteCols = true; }
 function srcOf(ref, utm) {
   if (utm) return clean(utm).toLowerCase();
   let h = ''; try { h = new URL(ref).hostname.replace(/^www\./, ''); } catch (e) { return 'direct'; }
@@ -204,7 +215,8 @@ export async function handleSiteEvent(env, req) {
   const sum = new Map();
   for (const x of (Array.isArray(b.ev) ? b.ev.slice(0, 60) : [])) { if (!x || !SITE_EV.has(x.e)) continue; const dd = x.e === 'join_src' ? src : clean(x.d); const k = x.e + '\u0001' + dd; const c = sum.get(k) || { e: x.e, d: dd, n: 0 }; c.n += 1; sum.set(k, c); }
   const st = [...sum.values()].map(r => env.DB.prepare('INSERT INTO an_site (day,ev,dim,dev,n) VALUES (?,?,?,?,?) ON CONFLICT(day,ev,dim,dev) DO UPDATE SET n=n+excluded.n').bind(d, r.e, r.d, dev, r.n));
-  st.push(env.DB.prepare('INSERT INTO an_site_vis (day,vh,dev,src,cc) VALUES (?,?,?,?,?) ON CONFLICT(day,vh) DO NOTHING').bind(d, vh, dev, src, cc));
+  await ensureSiteCols(env);
+  st.push(env.DB.prepare('INSERT INTO an_site_vis (day,vh,dev,src,cc,br,os) VALUES (?,?,?,?,?,?,?) ON CONFLICT(day,vh) DO NOTHING').bind(d, vh, dev, src, cc, browserOf(ua), osOf(ua)));
   await env.DB.batch(st);
   return new Response(null, { status: 204, headers: hdr });
 }
@@ -219,7 +231,8 @@ export async function handleSiteStats(env, req, out) {
   const w = (a, b) => [' WHERE day BETWEEN ? AND ?' + (dev ? ' AND dev=?' : ''), dev ? [a, b, dev] : [a, b]];
   const q = async (sql, p) => (await env.DB.prepare(sql).bind(...p).all()).results || [];
   const [w1, p1] = w(from, to), [w0, p0] = w(pFrom, pTo), adm = admins(env), notAdmin = adm.length ? ' AND lower(email) NOT IN (' + adm.map(() => '?').join(',') + ')' : '';
-  const [vis, visPrev, src, srcPrev, cc, ev, evPrev, evDay, signups, signPrev] = await Promise.all([
+  await ensureSiteCols(env);
+  const [vis, visPrev, src, srcPrev, cc, ev, evPrev, evDay, signups, signPrev, br, brPrev, os, osPrev] = await Promise.all([
     q('SELECT day, COUNT(*) n FROM an_site_vis' + w1 + ' GROUP BY day', p1),
     q('SELECT day, COUNT(*) n FROM an_site_vis' + w0 + ' GROUP BY day', p0),
     q('SELECT src dim, COUNT(*) n FROM an_site_vis' + w1 + ' GROUP BY src', p1),
@@ -229,9 +242,11 @@ export async function handleSiteStats(env, req, out) {
     q('SELECT ev, dim, SUM(n) n FROM an_site' + w0 + ' GROUP BY ev, dim', p0),
     q("SELECT day, ev, SUM(n) n FROM an_site" + w1 + " AND ev IN ('pv','join') GROUP BY day, ev", p1),
     q("SELECT COUNT(*) n FROM users WHERE date(created_at,'unixepoch') BETWEEN ? AND ?" + notAdmin, [from, to, ...adm]),
-    q("SELECT COUNT(*) n FROM users WHERE date(created_at,'unixepoch') BETWEEN ? AND ?" + notAdmin, [pFrom, pTo, ...adm])
+    q("SELECT COUNT(*) n FROM users WHERE date(created_at,'unixepoch') BETWEEN ? AND ?" + notAdmin, [pFrom, pTo, ...adm]),
+    q("SELECT br dim, COUNT(*) n FROM an_site_vis" + w1 + " AND br <> '' GROUP BY br", p1), q("SELECT br dim, COUNT(*) n FROM an_site_vis" + w0 + " AND br <> '' GROUP BY br", p0),
+    q("SELECT os dim, COUNT(*) n FROM an_site_vis" + w1 + " AND os <> '' GROUP BY os", p1), q("SELECT os dim, COUNT(*) n FROM an_site_vis" + w0 + " AND os <> '' GROUP BY os", p0)
   ]);
   const fill = (rows, a) => { const m = Object.fromEntries(rows.map(r => [r.day, r.n])); return Array.from({ length: n }, (_, i) => m[addDays(a, i)] || 0); };
   return out({ from, to, pFrom, pTo, days: n, dev: dev || 'all', visitors: fill(vis, from), visitorsPrev: fill(visPrev, pFrom), sources: src, sourcesPrev: srcPrev, countries: cc,
-    events: ev, eventsPrev: evPrev, eventsByDay: evDay, appSignups: (signups[0] || {}).n || 0, appSignupsPrev: (signPrev[0] || {}).n || 0 });
+    events: ev, eventsPrev: evPrev, eventsByDay: evDay, browsers: br, browsersPrev: brPrev, systems: os, systemsPrev: osPrev, appSignups: (signups[0] || {}).n || 0, appSignupsPrev: (signPrev[0] || {}).n || 0 });
 }

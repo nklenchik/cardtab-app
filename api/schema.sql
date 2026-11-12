@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS an_active ( day TEXT NOT NULL, uid TEXT NOT NULL, pla
 CREATE INDEX IF NOT EXISTS an_active_uid ON an_active (uid);
 -- v50.1 website visits (cardtab.app): no cookies; a visitor is a code that changes every day (an_salt is deleted nightly)
 CREATE TABLE IF NOT EXISTS an_site ( day TEXT NOT NULL, ev TEXT NOT NULL, dim TEXT NOT NULL DEFAULT '', dev TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day, ev, dim, dev) );
-CREATE TABLE IF NOT EXISTS an_site_vis ( day TEXT NOT NULL, vh TEXT NOT NULL, dev TEXT NOT NULL, src TEXT NOT NULL, cc TEXT NOT NULL, PRIMARY KEY (day, vh) );
+CREATE TABLE IF NOT EXISTS an_site_vis ( day TEXT NOT NULL, vh TEXT NOT NULL, dev TEXT NOT NULL, src TEXT NOT NULL, cc TEXT NOT NULL, br TEXT DEFAULT '', os TEXT DEFAULT '', PRIMARY KEY (day, vh) );
 CREATE TABLE IF NOT EXISTS an_salt ( day TEXT PRIMARY KEY, salt TEXT NOT NULL );
 -- v50.4 features and upgrades: which features each person touched each day (no content, just the feature's name), and one
 -- small row per person: first day seen, plan then and now, the last Premium screen they saw, the day they went Premium,
