@@ -2522,4 +2522,4 @@ html.ct-locked body{overflow:hidden}
 .app-menu.am .am-lockr.amth>.seg{width:calc(100% - 30px)}
 /* v52.47 the Admin row in the profile menu (admins only): its icon in Card Tab's cranberry (darker on light, lighter on dark)
    so it stands apart from the everyday settings */
-.app-menu.am .am-adm-go .mi,.app-menu.am .am-adm-go:hover .mi{color:var(--brand-text,#a50e37)}
+.app-menu.am .am-adm-go .mi,.app-menu.am .am-adm-go:hover .mi,.app-menu.am [data-amp=admin] .mi,.app-menu.am .amg [data-amp=admin]:hover .mi{color:var(--brand-text,#a50e37)}
