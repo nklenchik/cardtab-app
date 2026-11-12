@@ -4,6 +4,8 @@
      "we found your card" (sent by the card service later); a note when a card was fixed.
    - Account and billing ("billing"): renewal coming up, card about to expire (sent by payments later).
      A failed payment ("payfail") always shows, even with notifications off, and is emailed too, plus one reminder email.
+   - Monthly update ("monthly", Free only, v52.37): on the first visit of a new month, one notice with this month's free
+     entries, how many new stories there are, and last month's numbers. The reset happens either way; the switch only hides it.
    - Tips and offers ("tips", Free only): close to the entry limit month after month, or tapping Premium features often.
      At most one every two weeks, and none for a month after one is dismissed.
    Every fix is a suggestion the person confirms. Nothing here ever changes an amount. */
@@ -15,7 +17,7 @@
   const $ = id => document.getElementById(id);
   const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const DAY = 864e5, now = () => Date.now();
-  const DEF = { all: true, cards: true, billing: true, tips: true, emailOff: false };
+  const DEF = { all: true, cards: true, billing: true, monthly: true, tips: true, emailOff: false };
   const st = () => Object.assign({ prefs: {}, read: {}, items: [], tips: {} }, S.meta('notif') || {});
   const prefs = () => Object.assign({}, DEF, st().prefs);
   async function save(fn) { const s = st(); fn(s); await S.setMeta('notif', s); }
@@ -29,6 +31,7 @@
     renew: '<path d="M4 12a8 8 0 0114-5.3L20 9M20 4v5h-5M20 12a8 8 0 01-14 5.3L4 15M4 20v-5h5"/>',
     star: '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.9 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>',
     bell: '<path d="M6 9a6 6 0 1112 0c0 5 2 6.5 2 6.5H4S6 14 6 9z"/><path d="M10 19a2 2 0 004 0"/>',
+    cal: '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
     gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>'
   };
   const svg = (k, w) => '<svg width="' + (w || 16) + '" height="' + (w || 16) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + IC[k] + '</svg>';
@@ -42,7 +45,7 @@
     S.all().filter(e => e.unmatched && !hid['um:' + e.id]).forEach(e => out.push({ id: 'um:' + e.id, kind: 'unmatched', cat: 'cards', ts: Date.parse(e.createdAt) || now(), entry: e }));
     (s.items || []).forEach(it => out.push(it));
     return out.filter(it => it.kind === 'payfail' || (p.all && p[it.cat] !== false))
-      .filter(it => it.kind !== 'tip' || S.plan() === 'free')
+      .filter(it => (it.kind !== 'tip' && it.kind !== 'monthly') || S.plan() === 'free')
       .sort((a, b) => b.ts - a.ts);
   }
   const unread = () => { const r = st().read || {}; return all().filter(it => !r[it.id] && it.kind !== 'fixed').length + ADM.length; };
@@ -89,7 +92,7 @@
     '<div class="ntf-body" id="ntf-body"></div></div>';
   document.body.appendChild(dlg);
   let view = 'list';
-  const GROUP = { cards: 'Your cards', billing: 'Account and billing', tips: 'Tips and offers' };
+  const GROUP = { cards: 'Your cards', billing: 'Account and billing', monthly: 'Your month', tips: 'Tips and offers' };
 
   function itemHtml(it, read) {
     const nw = read ? '' : ' new', act = (a, label, p) => '<button type="button" class="ntf-btn' + (p ? ' p' : '') + '" data-act="' + a + '" data-id="' + esc(it.id) + '">' + label + '</button>';
@@ -101,6 +104,7 @@
     else if (it.kind === 'renew') { ic = 'renew'; t = 'Premium renews ' + esc(it.when || 'soon'); p = 'Nothing to do. Change or cancel anytime in Plan and billing.'; }
     else if (it.kind === 'payfail') { ic = 'alert'; t = 'Your payment didn’t go through'; p = 'Update your card to keep Premium. We’ve emailed you too.'; acts = act('billing', 'Update card', 1); }
     else if (it.kind === 'admin') { ic = 'star'; t = esc(it.title); p = esc(it.body); }   // v52.10: from Card Tab (a gift, extras, a reset)
+    else if (it.kind === 'monthly') { ic = 'cal'; t = esc(it.title); p = esc(it.body); acts = (it.stories ? act('stories', 'See Stories', 1) : '') + act('dismiss', 'Got it'); }
     else if (it.kind === 'tip') { ic = 'star'; t = esc(it.title); p = esc(it.body); acts = act('premium', 'See Premium', 1) + act('notnow', 'Not now'); }
     return '<div class="ntf-it' + nw + (it.kind === 'payfail' ? ' urgent' : '') + '" data-nid="' + esc(it.id) + '"><div class="ntf-t"><span class="ntf-ic">' + svg(ic) + '</span><div class="ntf-tx"><b>' + t + '</b><p>' + p + '</p></div><span class="ntf-when">' + ago(it.ts) + '</span>' + (it.kind === 'payfail' ? '' : '<button type="button" class="ntf-x" data-act="x" data-id="' + esc(it.id) + '" aria-label="Dismiss">' + svg('x', 13) + '</button>') + '</div>' + (acts ? '<div class="ntf-acts">' + acts + '</div>' : '') + '</div>';
   }
@@ -110,7 +114,7 @@
     if (!list.length) return '<div class="ntf-empty">' + svg('bell', 26) + '<b>You’re all caught up</b><p>' + (p.all ? 'Cards that need a look and account news show up here.' : 'Notifications are off. Payment problems still show here.') + '</p></div>';
     const by = {}; list.forEach(it => { const g = it.kind === 'payfail' ? 'billing' : it.cat; (by[g] = by[g] || []).push(it); });
     const n = list.filter(it => it.kind !== 'payfail').length;
-    return admHtml() + ['billing', 'cards', 'tips'].filter(g => by[g]).map(g => '<div class="ntf-gl">' + GROUP[g] + '</div>' + by[g].map(it => itemHtml(it, r[it.id])).join('')).join('') +
+    return admHtml() + ['billing', 'monthly', 'cards', 'tips'].filter(g => by[g]).map(g => '<div class="ntf-gl">' + GROUP[g] + '</div>' + by[g].map(it => itemHtml(it, r[it.id])).join('')).join('') +
       (n > 1 ? '<button type="button" class="ntf-clear" data-act="clearall">Clear all</button>' : '');
   }
   const sw = (k, on, label, sub, dis) => '<div class="ntf-sr"><div><b>' + label + '</b><span>' + sub + '</span></div><button type="button" class="swt" role="switch" data-pref="' + k + '" aria-checked="' + on + '" aria-label="' + label + '"' + (dis ? ' disabled' : '') + '><i></i></button></div>';
@@ -120,6 +124,7 @@
       '<div class="ntf-set' + (off ? ' dim' : '') + '">' +
       sw('cards', p.cards, 'Your cards', 'Cards that weren’t matched, and matches we find later', off) +
       sw('billing', p.billing, 'Account and billing', 'Renewals and cards about to expire', off) +
+      (S.plan() === 'free' ? sw('monthly', p.monthly, 'Monthly update', 'Your new entries, new stories and last month’s numbers', off) : '') +
       sw('tips', p.tips, 'Tips and offers', 'Now and then, at most every two weeks', off) + '</div>' +
       '<p class="ntf-fine">A failed payment always shows here, so Premium never ends without you knowing.</p>' +
       '<div class="ntf-gl">Email</div><div class="ntf-set">' + sw('emailOff', p.emailOff, 'Unsubscribe from all emails', 'No tips, news or reminders by email') + '</div>' +
@@ -190,6 +195,7 @@
     if (act === 'dismiss') { await save(s => { s.items = (s.items || []).filter(x => x.id !== id); }); paint(); return; }
     if (act === 'found' && it) { const e2 = S.get(it.entryId); if (e2) { await S.matchCard(e2.id, { name: it.card }); } await save(s => { s.items = (s.items || []).filter(x => x.id !== id); }); toast('Entry updated. The amount didn’t change.', true); paint(); return; }
     if (act === 'notnow') { await save(s => { s.items = (s.items || []).filter(x => x.id !== id); s.tips = Object.assign({}, s.tips, { dismissed: now() }); }); paint(); return; }
+    if (act === 'stories') { await save(s => { s.items = (s.items || []).filter(x => x.id !== id); }); close(); setTimeout(() => { const t = [...document.querySelectorAll('.ct-tbar button, .ct-tabs button')].find(x => x.offsetParent && /stories/i.test(x.textContent)); if (t) t.click(); }, 280); return; }
     if (act === 'premium') { close(); window.CTDash && window.CTDash.upgradeNote(); return; }
     if (act === 'billing') { close(); if (window.CTBilling) window.CTBilling.portal(); return; }
   });
@@ -265,6 +271,39 @@
     checking = false;
   }
 
+  // ---------- v52.37 Free: the monthly update ----------
+  // Once a month, on the first visit of a new month. The first month someone is seen (just signed up, or this version is
+  // new to them) only remembers the month, so nobody gets a notice about a month they never had.
+  const ymOf = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  // how many stories rotate in this month: the same pick Stories makes (board.js rotMode/rotSeed), 3 or 2 of the 4 free ones
+  function newStories() {
+    try {
+      const ss = window.CTSession && window.CTSession.current(), em = (ss && ss.email) || '', base = [...em].reduce((x, c) => (x * 31 + c.charCodeAt(0)) >>> 0, 7);
+      const d = new Date(), m = d.getFullYear() * 12 + d.getMonth() + 1;
+      let x = (base ^ Math.imul(m, 2654435761)) >>> 0; x ^= x >>> 15; x = Math.imul(x, 2246822519) >>> 0; x ^= x >>> 13; x = Math.imul(x, 3266489917) >>> 0; x ^= x >>> 16;
+      return (x >>> 0) % 2 === 1 ? 2 : 3;
+    } catch (e) { return 0; }
+  }
+  let mChecking = false;
+  async function checkMonthly(force) {
+    if (mChecking || S.plan() !== 'free') return;
+    if (!force && performance.now() < 5000) { clearTimeout(checkMonthly.t); checkMonthly.t = setTimeout(checkMonthly, 5200 - performance.now()); return; }   // after the start-up sync, so extra entries from Card Tab are counted
+    const s = st(), key = ymOf(new Date());
+    if (!force && s.month === key) return;
+    mChecking = true;
+    try {
+      if (!force && !s.month) { await save(x => { x.month = key; }); return; }
+      const p = prefs(), d = new Date(), prev = new Date(d.getFullYear(), d.getMonth() - 1, 1), pk = ymOf(prev), pname = prev.toLocaleString('en-US', { month: 'long' }), name = d.toLocaleString('en-US', { month: 'long' });
+      const L = S.usage().limit, ns = newStories(), last = S.all().filter(e => String(e.date).slice(0, 7) === pk), t = S.totals(last);
+      const money = c => (c < 0 ? '−' : '+') + '$' + Math.round(Math.abs(c) / 100).toLocaleString('en-US');
+      const bits = ['Your free entries are back to ' + L + (ns ? ', and there are ' + ns + ' new stories to try.' : '.')];
+      if (last.length) bits.push('In ' + pname + ' you added ' + last.length + (last.length === 1 ? ' entry' : ' entries') + ' and made ' + money(t.profit) + '.');
+      await save(x => { x.month = key; if (!(p.all && p.monthly)) return;
+        x.items = (x.items || []).filter(i => i.kind !== 'monthly').concat([{ id: 'mon:' + key, kind: 'monthly', cat: 'monthly', ts: now(), title: name + ' is here: ' + L + ' new entries', body: bits.join(' '), stories: ns > 0 }]);
+        if (x.read) delete x.read['mon:' + key]; });
+    } finally { mChecking = false; }
+  }
+
   // ---------- testing tools: sample notices (payments and the card service send these for real later) ----------
   async function demo() {
     const um = S.all().find(e => e.unmatched), t = now(), d = new Date(t + 27 * DAY);
@@ -273,6 +312,7 @@
         { id: 'demo:renew', kind: 'renew', cat: 'billing', ts: t - 6 * DAY, when: d.toLocaleString('en-US', { month: 'short', day: 'numeric' }) },
         { id: 'demo:exp', kind: 'cardexp', cat: 'billing', ts: t - 3 * DAY, last4: '4242', when: 'next month' },
         { id: 'demo:fail', kind: 'payfail', cat: 'billing', ts: t - 60 * 6e4 },
+        { id: 'demo:mon', kind: 'monthly', cat: 'monthly', ts: t - 2 * 6e4, title: new Date().toLocaleString('en-US', { month: 'long' }) + ' is here: 20 new entries', body: 'Your free entries are back to 20, and there are 3 new stories to try. Last month you added 18 entries and made +$412.', stories: true },
         { id: 'demo:tip', kind: 'tip', cat: 'tips', ts: t - 5 * 36e5, title: 'You’ve been close to your 20 free entries three months running', body: 'Premium has no monthly limit, plus every date range on Card Board and Stories.' }
       ].concat(um ? [{ id: 'demo:found', kind: 'found', cat: 'cards', ts: t - 2 * 36e5, entryId: um.id, typed: um.name, card: 'Charizard ex - 199/165 - SV: Scarlet & Violet 151' }] : []));
       s.read = {};
@@ -280,8 +320,8 @@
   }
   async function clearDemo() { await save(s => { s.items = []; s.read = {}; s.tips = {}; }); }
 
-  S.on(() => { paintDot(); if (dlg.open) paint(); checkTips(); }, true);
-  paintDot();
+  S.on(() => { paintDot(); if (dlg.open) paint(); checkTips(); checkMonthly(); }, true);
+  paintDot(); checkMonthly();
   // v52.10 messages from Card Tab: when an admin gives Premium, extra entries or Ask questions, or resets something,
   // the server keeps a message; the app picks new ones up on start and when you come back to it (at most every 5 minutes)
   let pulling = false, pulledAt = 0;
@@ -301,5 +341,5 @@
     pulling = false;
   }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') pull(); });
-  window.CTNotify = { open, close, unread, premiumTap, demo, clearDemo, paintDot, pull, fix: e => fix.open(e), change: e => fix.change(e) };
+  window.CTNotify = { open, close, unread, premiumTap, demo, clearDemo, paintDot, pull, monthly: () => checkMonthly(true), fix: e => fix.open(e), change: e => fix.change(e) };
 })();

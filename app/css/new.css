@@ -1374,6 +1374,16 @@ body>.qm-pop.qm-side{width:270px;padding:8px;border-radius:18px;transform-origin
 .ntf-it.urgent .ntf-ic{background:var(--ntf-dot);color:#fff}
 .ntf-typo{text-decoration:underline wavy color-mix(in srgb,var(--ntf-dot) 70%,transparent);text-underline-offset:3px;color:var(--text)}
 .ntf-acts{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0 41px}
+/* v52.37: every notification uses the full width: the icon, title, time and × share the top line; the words and the buttons
+   below run the whole width of the card, and the buttons sit side by side */
+.ntf-it{display:grid;grid-template-columns:30px minmax(0,1fr) auto auto;column-gap:11px;align-items:start}
+.ntf-it>.ntf-t,.ntf-it>.ntf-t>.ntf-tx{display:contents}
+.ntf-it .ntf-ic{grid-row:1;grid-column:1}.ntf-it .ntf-tx>b{grid-row:1;grid-column:2;padding-top:5px}
+.ntf-it .ntf-when{grid-row:1;grid-column:3;padding:7px 0 0}.ntf-it .ntf-x{grid-row:1;grid-column:4;margin:1px -6px 0 -4px}
+.ntf-it .ntf-tx>p{grid-row:2;grid-column:1/-1;margin:8px 0 0}
+.ntf-it>.ntf-acts{grid-row:3;grid-column:1/-1;margin:12px 0 0}
+.ntf-it>:not(.ntf-t):not(.ntf-acts){grid-column:1/-1}
+.ntf-acts>.ntf-btn{flex:none;white-space:nowrap}
 .ntf-btn{font:800 12.5px Manrope,system-ui,sans-serif;border-radius:999px;padding:7px 13px;border:1px solid var(--s-hair);background:transparent;color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
 .ntf-btn:active{transform:scale(.96)}
 .ntf-btn.p{background:#c2163f;border-color:#c2163f;color:#fff}

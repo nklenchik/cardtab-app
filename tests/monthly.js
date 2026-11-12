@@ -1,0 +1,26 @@
+// v52.37 Free monthly update: first month only remembers; a new month adds one notice; it's replaced, not stacked;
+// the switch hides it; Premium never gets it. node tests/monthly.js
+const { chromium, devices } = require('playwright');
+(async () => { const b = await chromium.launch(); const out = []; const ok = (c, m) => out.push((c ? 'PASS ' : 'FAIL ') + m);
+ const ctx = await b.newContext({ ...devices['iPhone SE'], viewport: { width: 320, height: 700 } }); const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
+ await p.goto('http://localhost:8765/index.html'); await p.evaluate(() => { localStorage.setItem('ct.session', JSON.stringify({ email: 'mon@x.test', via: 'email', at: Date.now(), exp: Date.now() + 864e5 })); localStorage.setItem('ct.tips', JSON.stringify({ off: 1 })); });
+ await p.reload(); await p.waitForTimeout(1200);
+ await p.evaluate(async () => { await CTStore.setPlan('free'); document.querySelector('[data-dev=sample]').click(); }); await p.waitForTimeout(6500);
+ const items = () => p.evaluate(() => ((CTStore.meta('notif') || {}).items || []).filter(i => i.kind === 'monthly'));
+ const month = () => p.evaluate(() => (CTStore.meta('notif') || {}).month);
+ ok((await items()).length === 0 && !!(await month()), 'first month: remembered, no notice (' + await month() + ')');
+ await p.evaluate(async () => { const n = Object.assign({}, CTStore.meta('notif')); n.month = '2026-01'; await CTStore.setMeta('notif', n); }); await p.waitForTimeout(800);
+ let it = await items(); ok(it.length === 1, 'new month: one notice: ' + (it[0] && it[0].title) + ' | ' + (it[0] && it[0].body));
+ await p.evaluate(async () => { const n = Object.assign({}, CTStore.meta('notif')); n.month = '2026-02'; await CTStore.setMeta('notif', n); }); await p.waitForTimeout(800);
+ ok((await items()).length === 1, 'next month replaces it (still one)');
+ await p.evaluate(() => CTNotify.open()); await p.waitForTimeout(700);
+ const geo = await p.evaluate(() => { const el = document.querySelector('.ntf-it[data-nid^="mon:"]'); const bs = [...el.querySelectorAll('.ntf-btn')].map(x => x.getBoundingClientRect()); const pr = el.querySelector('.ntf-tx>p').getBoundingClientRect(), r = el.getBoundingClientRect(); return { oneLine: bs.length < 2 || Math.abs(bs[0].top - bs[1].top) < 2, pw: Math.round(pr.width), cw: Math.round(r.width) }; });
+ ok(geo.oneLine, 'buttons on one line at 320'); ok(geo.pw > geo.cw - 40, 'text uses the width: ' + geo.pw + ' of ' + geo.cw);
+ await p.screenshot({ path: 'tests/out-qa/monthly-320.png' });
+ await p.click('.ntf-gear'); await p.waitForTimeout(500); ok(await p.locator('[data-pref=monthly]').count() === 1, 'Free sees the Monthly update switch');
+ await p.click('[data-pref=monthly]'); await p.waitForTimeout(400);
+ await p.evaluate(async () => { const n = Object.assign({}, CTStore.meta('notif')); n.month = '2026-03'; n.items = []; await CTStore.setMeta('notif', n); }); await p.waitForTimeout(800);
+ ok((await items()).length === 0 && (await month()) !== '2026-03', 'switch off: month still moves on, no notice');
+ await p.evaluate(async () => { await CTStore.setPlan('premium'); const n = Object.assign({}, CTStore.meta('notif')); n.month = '2026-04'; n.prefs = Object.assign({}, n.prefs, { monthly: true }); await CTStore.setMeta('notif', n); }); await p.waitForTimeout(800);
+ ok((await items()).length === 0, 'Premium: no notice'); ok(errs.length === 0, 'no page errors ' + errs.join(' | '));
+ console.log(out.join('\n')); await b.close(); })();
