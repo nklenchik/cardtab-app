@@ -394,19 +394,23 @@
   S.on(() => { if (gp.open) paintGP(); });
 
   // Older entries aren't built until you scroll toward them, so the page stays light (sheets open faster, filters redraw faster)
-  function render() {
+  // v52.33: each entry's searchable text, worked out once per version of the entry (entries are replaced when they change)
+  const qText = new WeakMap(), hay = t => { let h = qText.get(t); if (h == null) { h = (t.name + ' ' + t.platform + ' ' + t.note).toLowerCase(); qText.set(t, h); } return h; };
+  function render(listOnly) {
+    // listOnly: typing in search only changes which entries show; the totals and chart don't depend on it
+    if (listOnly !== true) listOnly = false;
     dates();
     const all = S.all(), empty = !all.length;
     $('app-first-wrap').hidden = !empty; $('app-grid').classList.toggle('is-empty', empty); root.querySelector('.ct-demo-right:not(.app-first-wrap)').hidden = empty;
-    limits(); firstRun(); askPanel(); platformsSelect();
+    if (!listOnly) { limits(); firstRun(); askPanel(); platformsSelect(); }
     $('ct-type').value = type;
     const q = $('ct-search').value.trim().toLowerCase(), platform = $('ct-platform').value, period = $('ct-period').value, sort = $('ct-sort').value;
-    let rows = all.filter(t => (type === 'all' || t.type === type) && (platform === 'all' || t.platform === platform) && (!q || (t.name + ' ' + t.platform + ' ' + t.note).toLowerCase().includes(q)) && (q || inPeriod(t, period)));   // search always looks through every month
-    { const base = all.filter(t => (platform === 'all' || t.platform === platform) && (!q || (t.name + ' ' + t.platform + ' ' + t.note).toLowerCase().includes(q)) && (q || inPeriod(t, period)));
+    let rows = all.filter(t => (type === 'all' || t.type === type) && (platform === 'all' || t.platform === platform) && (!q || hay(t).includes(q)) && (q || inPeriod(t, period)));   // search always looks through every month
+    { const base = all.filter(t => (platform === 'all' || t.platform === platform) && (!q || hay(t).includes(q)) && (q || inPeriod(t, period)));
       const n = { all: base.length, sale: 0, purchase: 0, refund: 0 }; base.forEach(t => { n[t.type] = (n[t.type] || 0) + 1; });
       fbar.querySelectorAll('[data-fb]').forEach(c => { const k = c.dataset.fb; c.querySelector('em').textContent = n[k] ? n[k] : ''; c.classList.toggle('on', k === type); c.setAttribute('aria-pressed', String(k === type)); }); }
-    rows.sort((a, b) => sort === 'high' ? b.amount - a.amount : sort === 'old' ? a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt) : b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
-    stats(); chart();
+    if (sort !== 'new') rows.sort((a, b) => sort === 'high' ? b.amount - a.amount : sort === 'old' ? a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt) : b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+    if (!listOnly) { stats(); chart(); }
     if (empty) return;
     const listFiltered = !!(q || type !== 'all' || platform !== 'all'), ft = S.totals(rows);
     const nw = x => '<span class="ct-nw">' + x + '</span>';
@@ -606,7 +610,7 @@
   // v52.17: typing in search redraws once you pause (about a tenth of a second), not on every letter; clearing is instant
   let qT = 0;
   ['ct-search', 'ct-platform', 'ct-period', 'ct-sort'].forEach(id => $(id).addEventListener(id === 'ct-search' ? 'input' : 'change', e => {
-    if (id === 'ct-search' && e.isTrusted && $(id).value) { clearTimeout(qT); qT = setTimeout(() => { expanded = null; render(); }, 110); return; }
+    if (id === 'ct-search' && e.isTrusted && $(id).value) { clearTimeout(qT); qT = setTimeout(() => { expanded = null; render(true); }, 110); return; }
     clearTimeout(qT); expanded = null; if (id === 'ct-period' || id === 'ct-sort') pref.set(id, $(id).value); render();
   }));
   $$('[data-ct-view]').forEach(b => b.addEventListener('click', () => {

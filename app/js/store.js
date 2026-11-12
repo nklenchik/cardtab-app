@@ -64,7 +64,11 @@
   // ---------- the store ----------
   const listeners = new Set();
   let db = null, chan = null, account = null, persistent = true;
-  let entries = new Map();          // id -> entry (including soft-deleted)
+  // v52.33: the sorted list is kept until an entry changes (sorting thousands of entries on every read was the top hotspot)
+  let sorted = null, lastMeta = '';
+  class EMap extends Map { set(k, v) { sorted = null; return super.set(k, v); } delete(k) { sorted = null; return super.delete(k); } clear() { sorted = null; return super.clear(); } }
+  const byNewest = (a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0);
+  let entries = new EMap();          // id -> entry (including soft-deleted)
   let meta = {};                    // k -> value
   const undoStack = [];             // [{label, run}]
 
@@ -82,10 +86,10 @@
     await rawMeta(k, v);
     if (SYNC_META.includes(k)) { const mt = Object.assign({}, meta._mt, { [k]: t || new Date().toISOString() }), md = Object.assign({}, meta._md); if (fromSync) delete md[k]; else md[k] = 1; await rawMeta('_mt', mt); await rawMeta('_md', md); }
   }
-  function changed(reason) { emit(reason); if (chan) chan.postMessage({ reason }); }
+  function changed(reason) { sorted = null; emit(reason); if (chan) chan.postMessage({ reason }); }
 
   async function loadAll() {
-    entries = new Map(); meta = {};
+    entries = new EMap(); sorted = null; meta = {};
     if (!db) return;
     const tx = db.transaction(['entries', 'meta']);
     const [es, ms] = await Promise.all([reqP(tx.objectStore('entries').getAll()), reqP(tx.objectStore('meta').getAll())]);
@@ -189,11 +193,11 @@
       const name = dbName; this.close(); dbName = null;
       if (name && 'indexedDB' in window) await new Promise(res => { const r = indexedDB.deleteDatabase(name); r.onsuccess = r.onerror = r.onblocked = () => res(); });
     },
-    close() { if (chan) chan.close(); chan = null; if (db) db.close(); db = null; entries = new Map(); meta = {}; undoStack.length = 0; },
+    close() { if (chan) chan.close(); chan = null; if (db) db.close(); db = null; entries = new EMap(); sorted = null; meta = {}; undoStack.length = 0; },
 
     on(fn, all) { if (all) fn._all = 1; listeners.add(fn); return () => listeners.delete(fn); },
 
-    all() { return [...entries.values()].filter(e => !e.deleted).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt)); },
+    all() { if (!sorted) sorted = [...entries.values()].filter(e => !e.deleted).sort(byNewest); return sorted.slice(); },
     get(id) { const e = entries.get(id); return e && !e.deleted ? clone(e) : null; },
     // Platforms used in entries, most used first (for filters)
     platforms() { const s = new Map(); this.all().forEach(e => { if (e.platform) s.set(e.platform, (s.get(e.platform) || 0) + 1); }); return [...s.entries()].sort((a, b) => b[1] - a[1]).map(x => x[0]); },
@@ -309,7 +313,8 @@
 
     // ---------- small per-account settings (notifications and the like) ----------
     meta(k) { const v = meta[k]; return v == null ? null : clone(v); },
-    async setMeta(k, v) { await putMeta(k, v); changed(k === 'notif' ? 'notif' : 'meta'); },
+    async setMeta(k, v) { await putMeta(k, v); lastMeta = k; changed(k === 'notif' ? 'notif' : 'meta'); lastMeta = ''; },
+    get lastMetaKey() { return lastMeta; },   // v52.33: which setting a 'meta' change was about (read inside a listener)
     // Unmatched cards: Fix sets the card's name and art (never the amounts); Leave keeps it as typed. One Undo puts it back.
     async matchCard(id, patch) {
       const cur = entries.get(id); if (!cur || cur.deleted) return null;

@@ -232,13 +232,21 @@
     if (tbHidden ? dy > 0 : dy < 0) { tbY = y; return; }   // still going the same way: keep the anchor with the scroll
     if (!tbHidden && dy > 30) { tbSet(true); tbY = y; } else if (tbHidden && dy < -20) { tbSet(false); tbY = y; }
   }
+  // v52.33: every size and position is read first, then the styles are written, and only when they change, so a scroll
+  // frame never makes the browser work out the layout twice
+  let lastBg = '', lastK = '';
   function frost() {
-    fk = false; sh.style.setProperty('--sh-bg', Math.max(0, Math.min(1, (scrollOf(cur) - 3) / 18)).toFixed(3)); /* v42.11: no frost until really scrolled (a Home Screen app can sit a pixel or two off the top) */ tbScroll();
+    fk = false;
+    const onQ = PH() && search && cur === 'entries', qr = onQ ? search.getBoundingClientRect() : null, hb = onQ ? sh.getBoundingClientRect().bottom : 0;
+    const bg = Math.max(0, Math.min(1, (scrollOf(cur) - 3) / 18)).toFixed(3); /* v42.11: no frost until really scrolled (a Home Screen app can sit a pixel or two off the top) */
+    tbScroll();
+    if (bg !== lastBg) { lastBg = bg; sh.style.setProperty('--sh-bg', bg); }
     // phones, Entries: the search icon fades in as the big search bar slides up under the header
-    if (PH() && search && cur === 'entries') { const r = search.getBoundingClientRect(), hb = sh.getBoundingClientRect().bottom; const raw = (hb - r.top) / Math.max(1, r.height);
+    if (onQ) { const raw = (hb - qr.top) / Math.max(1, qr.height);
       // v42.10: a small dead zone, so the last few pixels of a scroll (or iPhone's bounce) never leave a faint icon behind
-      const k = Math.max(0, Math.min(1, (raw - .15) / .8)); qBtn.style.setProperty('--k', k.toFixed(3)); qBtn.style.pointerEvents = k > .6 ? 'auto' : 'none'; qBtn.style.visibility = k > 0 ? '' : 'hidden'; }
-    else if (qBtn.style.visibility !== 'hidden') { qBtn.style.setProperty('--k', '0'); qBtn.style.visibility = 'hidden'; qBtn.style.pointerEvents = 'none'; }
+      const k = Math.max(0, Math.min(1, (raw - .15) / .8)), ks = k.toFixed(3);
+      if (ks !== lastK) { lastK = ks; qBtn.style.setProperty('--k', ks); qBtn.style.pointerEvents = k > .6 ? 'auto' : 'none'; qBtn.style.visibility = k > 0 ? '' : 'hidden'; } }
+    else if (qBtn.style.visibility !== 'hidden') { lastK = '0.000'; qBtn.style.setProperty('--k', '0'); qBtn.style.visibility = 'hidden'; qBtn.style.pointerEvents = 'none'; }
     // v50.52: once the big search bar is mostly back in view, the header search hands over to it (same text, one bar at a time)
     if (sh.classList.contains('q-on') && PH() && search && cur === 'entries' && +qBtn.style.getPropertyValue('--k') < .35) {
       const had = document.activeElement === fq; sh.classList.remove('q-on'); fq.blur(); if (had) $('ct-search').focus({ preventScroll: true }); }

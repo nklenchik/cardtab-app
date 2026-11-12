@@ -507,9 +507,10 @@ function fitRows(){const cb=$('cb'),sim=$('simple');if(units()<4){cb.style.remov
   const top0=tbB+qh,room=cbx.clientHeight-top0-28-2*rg;
   let g=48;while(g>24&&(room-g)/4<140)g-=4;const h=Math.max(128,Math.min(168,Math.floor((room-g)/4)));// v43: the first four rows fit (one row of numbers and two-row widgets under it)
   cb.style.setProperty('--topgap',g+'px');cb.style.setProperty('--rowh',h+'px');cb.classList.toggle('rowtight',h<150)}
+const MKW='<button type="button" class="mkw szS" id="mkw"><span class="pl" aria-hidden="true">+</span><b>Make it yours</b><small>Add, resize and move widgets</small></button>';
 function render(animate){
   fitBudget();fitRows();const before=animate?rects():null,ctx=ctxNow();hideTip();
-  $('simple').innerHTML=layout.map(w=>widgetHTML(w,ctx)).join('')+(!editing&&!customized()&&!viewing?'<button type="button" class="mkw szS" id="mkw"><span class="pl" aria-hidden="true">+</span><b>Make it yours</b><small>Add, resize and move widgets</small></button>':'');$('addw').hidden=!editing;
+  $('simple').innerHTML=layout.map(w=>widgetHTML(w,ctx)).join('')+(!editing&&!customized()&&!viewing?MKW:'');$('addw').hidden=!editing;
   $('cb').classList.toggle('editing',editing);wire($('simple'),ctx);markEdges();
   if(before)flip(before)}
 function grow(){const cb=$('cb');if(calm.matches)return;cb.classList.add('grow');void cb.offsetWidth;requestAnimationFrame(()=>requestAnimationFrame(()=>cb.classList.remove('grow')))}
@@ -589,7 +590,13 @@ document.addEventListener('click',e=>{if(!e.target.closest('.perwrap')&&!e.targe
 
 // ---------- customize ----------
 const DONE_UNUSED=0;const EDIT_I='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',DONE_I='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.8l4 3.9L18.5 7.8"/></svg>';
-function setEditing(on){if(on){buzz('tap');(window.requestIdleCallback||(f=>setTimeout(f,120)))(prebuildAdd,{timeout:600})}editing=on;$('cb-edit').innerHTML=(on?DONE_I:EDIT_I)+'<span>'+(on?'Done':'Edit')+'</span>';$('cb-edit').classList.toggle('on',on);$('editfoot').hidden=!on;render(true)}
+function setEditing(on){if(on){buzz('tap');/* v52.33: the Add widgets gallery is built after edit mode has finished sliding in, in a quiet moment */setTimeout(()=>{if(editing)(window.requestIdleCallback||(f=>setTimeout(f,120)))(()=>{if(editing)prebuildAdd()},{timeout:2000})},700)}editing=on;$('cb-edit').innerHTML=(on?DONE_I:EDIT_I)+'<span>'+(on?'Done':'Edit')+'</span>';$('cb-edit').classList.toggle('on',on);$('editfoot').hidden=!on;
+  /* v52.33: the widgets' own markup is the same in and out of edit mode, so switching only changes the edit controls and
+     lets the widgets glide to their new places, instead of rebuilding every widget and chart (a 150-550ms stall on phones) */
+  const sim=$('simple');if(!sim||!sim.querySelector('.w[data-id]')){render(true);return}
+  hideTip();const before=rects(),mk=$('mkw');
+  if(on){if(mk)mk.remove()}else if(!mk&&!customized()&&!viewing)sim.insertAdjacentHTML('beforeend',MKW);
+  $('addw').hidden=!on;$('cb').classList.toggle('editing',on);flip(before);if(!on)shareSoon()}
 $('cb-edit').addEventListener('click',()=>setEditing(!editing));
 // reset asks first, and sits far from Done
 const rs=$('rs');$('cb-reset').addEventListener('click',()=>{buzz('tap');rs.showModal()});
@@ -1496,7 +1503,8 @@ window.cbSyncPlan();
  new MutationObserver(()=>{if(tip.classList.contains('on'))show();else clear()}).observe(tip,{attributes:true,attributeFilter:['class']});
 })();
 // v34.1: warm Stories up in idle time (Premium), so the first slide into it never waits on loading
-;(()=>{const s=$('cb-stories');if(!s)return;const warm=()=>{s.dispatchEvent(new Event('focus'))};(window.requestIdleCallback||(f=>setTimeout(f,2500)))(warm,{timeout:5000})})();
+/* v52.33: Stories gets ready a few seconds after the board does, in a quiet moment, so the two never block the phone back to back at startup */
+;(()=>{const s=$('cb-stories');if(!s)return;const ric=window.requestIdleCallback||(f=>setTimeout(f,300));const warm=()=>{if(document.hidden||document.querySelector('dialog[open]')){setTimeout(()=>ric(warm,{timeout:8000}),2000);return}s.dispatchEvent(new Event('focus'))};setTimeout(()=>ric(warm,{timeout:8000}),4000)})();
 // v34.2: the profile editor can open from the app's menu on any page (the board stays closed underneath if it was),
 // and every avatar in the app follows what you save here
 ;(()=>{const av=$('av');if(!av)return;
@@ -1916,7 +1924,9 @@ if(window.CTNav){navPush=(k,fn)=>window.CTNav.push('cb:'+k,fn);navDone=k=>{if(!n
 // Card Stories reads the same entries as the board
 window.cbEntries=()=>E;
 window.cbDataVer=window.cbDataVer||1;  // the board starts with current entries; refresh() bumps this whenever they change
-const syncStories=()=>{try{const f=document.querySelector('#csx iframe');if(f&&f.contentWindow&&f.contentWindow.csSync)f.contentWindow.csSync()}catch(e){}};
+/* v52.33: Stories redraws right away only while it's on screen; otherwise once things are quiet (or when it opens, if that comes first) */
+let ssT=0;const syncStories=()=>{const f=document.querySelector('#csx iframe');if(!f)return;const now=()=>{try{if(f.__ver===window.cbDataVer)return;if(f.contentWindow&&f.contentWindow.csSync){f.contentWindow.csSync();f.__ver=window.cbDataVer}}catch(e){}};
+  const x=$('csx');if(x&&x.classList.contains('in')){now();return}clearTimeout(ssT);ssT=setTimeout(()=>(window.requestIdleCallback||(g=>setTimeout(g,50)))(now,{timeout:4000}),900)};
 // v42.25: draw the board ahead of time, quietly, while you're on Entries (it's hidden and off to the side), so the first
 // visit slides in without a hitch. Redrawn the same way after your entries change.
 let warmT=0;function warm(){clearTimeout(warmT);warmT=setTimeout(()=>{(window.requestIdleCallback||(f=>f()))(()=>{if(!shown&&!ready&&document.visibilityState==='visible'&&(!window.CTPage||CTPage.cur==='entries')){render(false);ready=true}},{timeout:3000})},1200)}
