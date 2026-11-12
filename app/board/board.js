@@ -143,6 +143,7 @@ function featBody(ctx,s,w){const m=FEAT[w.metric]?w.metric:'win',F=FEAT[m],L=car
 // ---- Best sellers: a podium of the top three, shown as the top halves of the cards ----
 function bestBody(ctx,s,w){const L=cardWins(cardStats(ctx)).filter(c=>c.g>0).sort((a,b)=>b.g-a.g),n=s==='S'?1:s==='M'||s==='B'?2:3,top=L.slice(0,n);
   if(!top.length)return '<p class="eg">No card bought and sold in this period yet.</p>';
+  if(s==='S'){const c=top[0];return '<div class="xs drill"'+dd({t:c.e.name,sub:'Every entry for this card',card:c.k})+' role="button" tabindex="0">'+cardImg(c,'xsart','thumb')+'<div><small class="prk">#1</small><div class="cq">'+bn(ksigned(c.g),'g',26)+'</div><b class="nm">'+esc(nameOf(c))+'</b></div></div>'}   // v52.36
   const order=top.length===3?[top[1],top[0],top[2]]:top;
   return '<div class="pod n'+top.length+'">'+order.map(c=>{const r=top.indexOf(c)+1;return '<div class="pc r'+r+' drill"'+dd({t:c.e.name,sub:'Every entry for this card',card:c.k})+' role="button" tabindex="0"><div class="pcrop">'+cardImg(c,'pimg','card')+'</div><small class="prk">#'+r+'</small><b class="pnm">'+esc(nameOf(c))+'</b><span class="pv num">'+ksigned(c.g)+'</span></div>'}).join('')+'</div>'}
 // ---- Priciest card: the card and its details ----
@@ -200,9 +201,9 @@ const DEFAULT_FREE=[['profit','S'],['sales','S'],['after','S'],['spent','S'],['m
 let FREEMODE=cbFree();const defL=()=>FREEMODE?DEFAULT_FREE:DEFAULT;
 // v43: widget families, and the two sizes each can use (like single-number widgets on marketing dashboards)
 const FAMILY={profit:'num',sales:'num',spent:'num',fees:'num',after:'num',budget:'num',win:'card',feat:'card',pricey:'card',glance:'list',where:'list',kept:'list',best:'list',sell:'list',month:'chart'};
-const FAM_SIZES={num:['S','M'],card:['S','L'],list:['M','L'],chart:['B','X']};
+const FAM_SIZES={num:['S','M','L'],card:['S','M','L'],list:['S','M','L'],chart:['S','M','L','B','X']};   // v52.36: every family gets Small, Wide and Large
 // phones (v43.1): one grid row is one short number tile, so lists and charts need two rows (Large) to be readable
-const PH_SIZES={num:['S','M'],card:['S','M','L'],list:['L'],chart:['L']};
+const PH_SIZES={num:['S','M','L'],card:['S','M','L'],list:['S','M','L'],chart:['S','M','L']};
 // v51: six more widgets (their layouts are in board19)
 const NEWK={
   bd:{t:'Breakdown',s:'Breakdown',d:'Pick what to measure and how to split it: spending by game, profit by set, sales by platform…',fam:'list',cat:'list'},
@@ -368,6 +369,8 @@ const row=(inner,detail,_open,drill,open=false)=>'<div class="r" '+(open?'data-r
 
 // v37: At a glance, the same quick numbers as Entries (and the same picks), for the board's period and platform
 NEWW.glance=function(ctx,s){const rows=window.CTMetrics&&CTMetrics.rows?CTMetrics.rows(ctx.inP):[];if(!rows.length)return '<p class="eg">Nothing in this period yet.</p>';
+  if(s==='S'){const r=rows[0];return '<div class="kS glS"><small class="cap gll">'+esc(r.label)+'</small><div class="cq">'+bn(esc(r.value),r.green?'g':'',28)+'</div><small class="cap">'+esc(maskNames()&&r.art?'A card from your collection':r.title)+'</small></div>'}   // v52.36
+  if(s==='M'&&phone.matches)return '<div class="glP">'+rows.slice(0,2).map(r=>'<div><small class="gll">'+esc(r.label)+'</small><div class="cq">'+bn(esc(r.value),r.green?'g':'',24)+'</div></div>').join('')+'</div>';   // v52.36
   const n={S:2,M:2,B:3,L:5,X:6}[s]||3,cls=s==='B'?' gl3':s==='X'?' gl2':'';
   return '<div class="gl'+cls+'">'+rows.slice(0,n).map(r=>'<div class="glr'+(r.art?' gla':'')+'">'+(r.art&&!maskNames()?'<div class="glbg" data-meta="'+esc(r.meta||'')+'" style="background-image:url(\''+esc(r.art)+'\')"></div>':(r.icon?'<span class="glic">'+r.icon+'</span>':'<span class="glic ct-cardph" aria-hidden="true"></span>'))+
     '<div class="gltx"><small>'+esc(r.label)+'</small><em>'+esc(maskNames()&&r.art?'A card from your collection':r.title)+'</em></div><div class="glv"><b class="num'+(r.green?' g':'')+'">'+hideMoney(esc(r.value))+'</b>'+(r.sub?'<span>'+hideMoney(esc(r.sub))+'</span>':'')+'</div></div>').join('')+'</div>'};
@@ -390,7 +393,7 @@ function body(k,ctx,s,w){
     if(!b)return '<p class="eg">No purchases yet.</p>';
     const rows=[['Bought',b,100,'var(--cb-gry)','Spent '+kshort(spent)+' · about '+kshort(spent/b)+' each'],['Sold',sd,Math.min(100,sd/b*100),'var(--cb-pos)','Made back '+kshort(made)+(sd?' · about '+kshort(made/sd)+' each':'')],['Refunded',r,Math.max(r?2:0,r/b*100),'var(--cb-neg)',r+' returned · '+(r/b*100).toFixed(1)+'% of cards bought']];
     const TY={Bought:'purchase',Sold:'sale',Refunded:'refund'};const prs=open=>rows.map(([l,n,wd,c,d])=>'<div class="pr" '+(open?'data-row':'data-tipd="'+esc(d)+'"'+dd({t:l,a:'0000-01-01',b:ctx.b,types:[TY[l]]}))+'><div class="t"><span>'+l+'</span><span>'+cnt(n,'card','cards')+'</span></div><div class="bar"><i style="width:'+wd.toFixed(1)+'%;background:'+c+'"></i></div><div class="d">'+esc(d)+(open?' <button type="button" class="seeent"'+dd({t:l,sub:'Up to '+dLong(ctx.b),a:'0000-01-01',b:ctx.b,types:[TY[l]]})+'>See entries ›</button>':'')+'</div></div>').join('');
-    const hero='<div class="cq">'+bn(pct+'%','g',s==='S'?44:64)+'</div><small class="cap">of the cards you’ve bought have sold</small>';
+    const hero='<div class="cq">'+bn(pct+'%','g',s==='S'?44:phone.matches&&s==='M'?40:64)+'</div><small class="cap">of the cards you’ve bought have sold</small>';
     if(s==='S')return '<div class="sS"><div class="cq">'+bn(pct+'%','g',44)+'</div><small class="cap">of cards sold</small><div class="prog"><div class="bar"><i style="width:'+pct+'%"></i></div><small>'+sd+' of '+b+'</small></div></div>';
     /* v50.14: wide-short sizes show one bar split into sold, refunded and not sold yet, with the three counts under it (each
        with its detail on hover and its entries on tap), so nothing has to be hidden to fit */
@@ -403,7 +406,7 @@ function body(k,ctx,s,w){
     if(!rows.length)return '<p class="eg">No purchases in this period.</p>';
     const pc=x=>Math.round(x.v/Math.max(1,t.spent)*100)+'% of spend',det=x=>cnt(x.n,'card','cards')+' · about '+kshort(x.v/x.n)+' each';
     const list=(m,open)=>'<div class="lr">'+rows.slice(0,m).map(x=>row(chip(x.k)+'<span class="n">'+esc(x.k)+'<small>'+pc(x)+'</small></span><span class="v">'+kshort(x.v)+'</span>',det(x),open,{t:'Bought on '+x.k,a:ctx.a,b:ctx.b,types:['purchase'],plat:x.k})).join('')+'</div>';
-    if(s==='S'){const x=rows[0];return '<div class="wS"><div class="who">'+chip(x.k)+'<b>'+esc(x.k)+'</b></div><div class="cq">'+bn(kshort(x.v),'',30)+'</div><small class="cap">'+pc(x)+'</small>'+shareBar(rows,t.spent)+'</div>'}
+    if(s==='S'){const x=rows[0];return '<div class="wS"><div class="cq">'+bn(kshort(x.v),'',30)+'</div><small class="wcap">'+chip(x.k)+'<b>'+esc(x.k)+'</b><span>'+pc(x)+'</span></small>'+shareBar(rows,t.spent)+'</div>'}   // v52.36
     if(s==='M')return list(3,false);
     if(s==='B')return '<div class="split wide"><div class="hz"><small class="cap">Spent across '+cnt(rows.length,'platform','platforms')+'</small><div class="cq">'+bn(money(t.spent),'',36)+'</div>'+shareBar(rows,t.spent)+'</div>'+list(3,false)+'</div>';
     if(s==='L')return '<div class="col">'+shareBar(rows,t.spent)+list(5,true)+'</div>';
@@ -413,7 +416,7 @@ function body(k,ctx,s,w){
     if(!rows.length)return '<p class="eg">No sales in this period.</p>';
     const det=x=>kshort(x.f)+' in fees and shipping on '+cnt(x.n,'sale','sales');
     const list=(m,open,cls)=>'<div class="lr kl '+(cls||'')+'">'+rows.slice(0,m).map(x=>row(chip(x.k)+'<span class="n">'+esc(x.k)+'<small><i class="kb2"><b style="width:'+(x.pct/mx*100).toFixed(1)+'%;background:'+segCol(x.k)+'"></b></i></small></span><span class="v">'+x.pct.toFixed(1)+'%</span>',det(x),open,{t:'Sold on '+x.k,a:ctx.a,b:ctx.b,types:['sale'],plat:x.k,fees:true})).join('')+'</div>';
-    if(s==='S'){const x=rows[0];return '<div class="wS"><div class="who">'+chip(x.k)+'<b>'+esc(x.k)+'</b></div><div class="cq">'+bn(x.pct.toFixed(1)+'%','',34)+'</div><small class="cap">of each '+esc(x.k)+' sale</small></div>'}
+    if(s==='S'){const x=rows[0];return '<div class="wS"><div class="cq">'+bn(x.pct.toFixed(1)+'%','',30)+'</div><small class="wcap">'+chip(x.k)+'<b>'+esc(x.k)+'</b><span>of each sale</span></small></div>'}   // v52.36
     if(s==='M')return list(3,false);
     // Banner and Extra large match "Where you buy": the overall number on the left, the platforms listed on the right
     const allS=rows.reduce((a2,x)=>a2+g[x.k].s,0),allF=rows.reduce((a2,x)=>a2+x.f,0),sum=fz=>'<div class="hz"><small class="cap">Platforms kept, on average</small><div class="cq">'+bn((allS?allF/allS*100:0).toFixed(1)+'%','',fz)+'</div><small class="cap">'+kshort(allF)+' of '+kshort(allS)+' in sales</small></div>';
@@ -1545,7 +1548,7 @@ NEWW.best=function(ctx,s,w){
 ['win','pricey'].forEach(k=>{const f=NEWW[k];NEWW[k]=(ctx,s,w)=>f(ctx,phone.matches&&s==='M'?'S':s,w)});
 const FIT_ROWS=[['.xalso:not(.bestl) .xar','.xalso:not(.bestl)'],['.alsoup .mr','.alsoup'],['.bestl .xar',null,1],['.lr>.r',null,1],['.gl>.glr',null,1],['.st>.pr',null,1],['.pod>.pc.r3'],['.pod>.pc.r2']];
 // in order: repeated details first; a number widget gives up its little trend line before anything else; the big number stays
-const FIT_DROP=['.k-pricey .xl','.cap','.kspk','.k-budget .cv','.k-feat .fpc','.k-feat .fl','.k-feat>.wh .ttl','.k-month .msum','.k-month svg text','.xm','.k-tied .skey','.chips','.msum','.facts','.xpc','.shb'];
+const FIT_DROP=['.k-pricey .xl','.xs .prk','.cap','.kspk','.k-budget .cv','.k-feat .fpc','.k-feat .fl','.k-feat>.wh .ttl','.k-month .msum','.k-month svg text','.xm','.k-tied .skey','.chips','.msum','.facts','.xpc','.shb','.k-sell .skey'];
 // something is cut off when it reaches past the widget's edge, is squeezed shorter than its own text, or (on the full-art
 // widgets, where the words sit on the picture) runs up under the widget's title
 function spills(wb){const R=wb.getBoundingClientRect();if(!R.height)return false;if(wb.scrollHeight>wb.clientHeight+4)return true;// (long names that run wide are shortened with … by their own styles, so only height counts)
@@ -1875,7 +1878,8 @@ function hitBody(ctx,s){const R=saleResults(ctx);if(!R.length)return '<p class="
   const hero='<div class="cq">'+bn(pc+'%',pc>=50?'g':'r',s==='S'?30:s==='M'?40:48)+'</div>';
   if(s==='S')return '<div class="kS">'+hero+'<div class="cap tsl" data-short="'+won+' of '+R.length+' won">'+won+' of '+R.length+' sales made money</div></div>';
   const line=(l,r)=>'<div class="r" data-tipd="'+esc(r.e.name+' · bought for '+kshort(r.cost)+', sold for '+kshort(r.got))+'"><span class="n">'+l+'<small>'+esc(r.e.name)+'</small></span><span class="v '+(r.made>=0?'up':'dn')+'">'+ksh(r.made)+'</span></div>';
-  return '<div class="split"><div class="hz">'+hero+'<small class="cap" data-short="'+won+' of '+R.length+' won">'+won+' of '+R.length+' sales made money</small></div><div class="lr hitl">'+line('Best',best)+(R.length>1?line('Worst',worst):'')+'</div></div>'}
+  const hz='<div class="hz">'+hero+'<small class="cap" data-short="'+won+' of '+R.length+' won">'+won+' of '+R.length+' sales made money</small></div>',ls='<div class="lr hitl">'+line('Best',best)+(R.length>1?line('Worst',worst):'')+'</div>';
+  return s==='L'?'<div class="col">'+hz+ls+'</div>':'<div class="split">'+hz+ls+'</div>'}
 
 // ---------- Time to sell ----------
 function ttsBody(ctx,s){const R=saleResults(ctx);if(!R.length)return '<p class="eg">No sales with a known buy date in these dates.</p>';
@@ -1885,7 +1889,7 @@ function ttsBody(ctx,s){const R=saleResults(ctx);if(!R.length)return '<p class="
   const hero='<div class="cq">'+bn(cnt(md,'day','days'),'',s==='S'?30:s==='M'?40:48)+'</div>';
   if(s==='S')return '<div class="kS">'+hero+'<div class="cap tsl"'+(games.length>1?' data-short="'+esc(esc(short(games[0].g)))+' &lt;b&gt;'+games[0].d+'&lt;/b&gt;"':'')+'>'+(games.length>1?games.slice(0,3).map(x=>esc(short(x.g))+' <b>'+x.d+'</b>').join(' · '):'typical time from buying to selling')+'</div></div>';
   const mx=Math.max(...games.map(x=>x.d),1);
-  return '<div class="split"><div class="hz">'+hero+'<small class="cap">typical time to sell · '+cnt(R.length,'sale','sales')+'</small></div><div class="lr kl tts">'+games.slice(0,3).map((x,i)=>'<div class="r" data-tipd="'+esc(x.g+': usually '+cnt(x.d,'day','days')+' · '+cnt(x.n,'sale','sales'))+'"><span class="n">'+esc(short(x.g))+'<small><i class="kb2"><b style="width:'+Math.max(4,x.d/mx*100).toFixed(1)+'%;background:'+colN(x.g,i)+'"></b></i></small></span><span class="v">'+x.d+'d</span></div>').join('')+'</div></div>'}
+  return '<div class="'+(s==='L'?'col':'split')+'"><div class="hz">'+hero+'<small class="cap">typical time to sell · '+cnt(R.length,'sale','sales')+'</small></div><div class="lr kl tts">'+games.slice(0,s==='L'?5:3).map((x,i)=>'<div class="r" data-tipd="'+esc(x.g+': usually '+cnt(x.d,'day','days')+' · '+cnt(x.n,'sale','sales'))+'"><span class="n">'+esc(short(x.g))+'<small><i class="kb2"><b style="width:'+Math.max(4,x.d/mx*100).toFixed(1)+'%;background:'+colN(x.g,i)+'"></b></i></small></span><span class="v">'+x.d+'d</span></div>').join('')+'</div></div>'}
 
 // ---------- In vs out ----------
 function inoutBody(ctx,s){const data=ctx.mt.map(x=>{const t=totals(x.list);return {k:x.k,n:x.n,s:x.s,l:x.l,a:t.spent,b:t.after,on:x.list.length>0}});

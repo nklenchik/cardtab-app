@@ -2254,3 +2254,21 @@ dialog.sheet.closing::backdrop,dialog.drawer.closing::backdrop{animation:bdOut .
  #aw.closing .awp{animation:sheetOut .24s cubic-bezier(.4,0,1,1) both}
 }
 @media(prefers-reduced-motion:reduce){dialog.sheet.closing::backdrop,dialog.drawer.closing::backdrop,#aw[open] .awp,#aw.closing .awp{animation:none!important}}
+
+/* v52.36: every widget at Small, Wide and Large. Captions never get squashed under the next thing: when there isn't room for
+   one, the fit check drops it instead (see FIT_DROP in board.js) */
+.cbx #cb .wb .cap{flex-shrink:0}
+.cbx #cb .glS .gll{margin:-2px 0 2px}
+.cbx #cb .xs .prk{display:block;font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.02em}
+.cbx #cb .wcap{display:flex;align-items:center;gap:6px;min-width:0;font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap;flex-shrink:0;margin-top:2px}
+.cbx #cb .wcap b{color:var(--text);font-weight:800}
+.cbx #cb .wcap span{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cbx #cb .wcap .ch{width:18px;height:18px;border-radius:6px;font-size:10px;flex:none}
+.cbx #cb .glP{display:grid;grid-template-columns:1fr 1fr;gap:14px;flex:1;min-height:0;align-items:end}
+.cbx #cb .glP>div{min-width:0;container-type:inline-size}
+.cbx #cb .glP .gll{display:block;line-height:1.15;font-size:11.5px;font-weight:700;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* a card widget at Wide on a phone (one short row): the picture is as tall as the row, the amount and name sit on one line */
+@media (max-width:600px){.cbx #cb .eM .xs .xsart{height:100%;width:auto;max-width:none}
+ .cbx #cb .eM .xs>div{display:flex;align-items:baseline;gap:10px;min-width:0;flex:1}
+ .cbx #cb .eM .xs>div .cq{flex:0 0 54%;min-width:0}.cbx #cb .eM .xs>div .nm{flex:1;min-width:0}}
+.cbx #cb .eM .fill>.cv{min-height:0}   /* a phone's Wide row is shorter than the usual chart minimum: the chart draws to fit it */
