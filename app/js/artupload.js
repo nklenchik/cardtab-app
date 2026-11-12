@@ -51,7 +51,7 @@
       const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(im, 0, 0, w, h);
       URL.revokeObjectURL(url); src = c; srcData = null; ang = 0; $('au-ang').value = 0; $('au-angv').textContent = '0°';
       $('au-crop').hidden = false; $('au-save').hidden = true;
-      if (!d.open) { d.showModal(); document.documentElement.classList.add('au-open'); }
+      if (!d.open) { d.showModal(); document.documentElement.classList.add('au-open'); d.tabIndex = -1; d.style.outline = 'none'; try { d.focus({ preventScroll: true }); } catch (er) {} }   // no focus ring on Cancel when it opens
       quad = startQuad(); layout();
     };
     im.onerror = () => { URL.revokeObjectURL(url); toast('That photo couldn’t be opened. Try a JPEG or PNG.'); };
@@ -96,13 +96,13 @@
       let hi = -1, best = 34; P.forEach((p, i) => { const dd = Math.hypot(p[0] - x, p[1] - y); if (dd < best) { best = dd; hi = i; } });
       if (hi < 0 && !inside(P, x, y)) return;
       e.preventDefault(); try { st.setPointerCapture(e.pointerId); } catch (er) {}
-      drag = { hi, x, y, q0: quad.map(p => p.slice()), r };
+      drag = { hi, x, y, q0: quad.map(p => p.slice()), r }; if (hi >= 0) d.querySelectorAll('.au-h')[hi].classList.add('on');
     });
     st.addEventListener('pointermove', e => { if (!drag) return; const x = e.clientX - drag.r.left, y = e.clientY - drag.r.top;
       if (drag.hi >= 0) quad[drag.hi] = toS(x, y);
       else { const dx = (x - drag.x) / view.k, dy = (y - drag.y) / view.k; quad = drag.q0.map(([a, b]) => clampPt([a + dx, b + dy])); }
       paint(); });
-    const up = () => { drag = null; }; st.addEventListener('pointerup', up); st.addEventListener('pointercancel', up);
+    const up = () => { drag = null; d.querySelectorAll('.au-h.on').forEach(h => h.classList.remove('on')); }; st.addEventListener('pointerup', up); st.addEventListener('pointercancel', up);
   }
   function inside(P, x, y) { let c = false; for (let i = 0, j = 3; i < 4; j = i++) { const [xi, yi] = P[i], [xj, yj] = P[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; }
 
