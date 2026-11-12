@@ -1,3 +1,4 @@
+import { ensureAudience, campaigns, bestUsers, tag } from './audience.js';
 // In-house analytics (v50). The app sends small batches of counts ("widget_add: featured", "page_time: board, 42s");
 // the server adds them into one row per day per count, and keeps a list of who was active each day (for active people,
 // time in the app and coming-back numbers). No card names, prices, emails or typed text ever arrive here.
@@ -27,14 +28,15 @@ export async function handleEvents(env, req, me, out) {
   for (const x of evs) { if (!x || !EV_OK.test(x.e)) continue; const f = featOf(x.e, clean(x.d)); if (f) feats.add(f); if (x.e === 'prem_open') lastPrem = clean(x.d); if (x.e === 'journey') journey = String(x.d || '').slice(0, 300); }
   feats.forEach(f => ex.push(env.DB.prepare('INSERT OR IGNORE INTO an_feat (day,uid,feat,plan,dev) VALUES (?,?,?,?,?)').bind(d, me.id, f, plan, dev)));
   try {
+    await ensureAudience(env);
     const u = await env.DB.prepare('SELECT plan, up_day, src FROM an_user WHERE uid=?').bind(me.id).first();
     const J = parseJourney(journey);
-    if (!u) ex.push(env.DB.prepare('INSERT OR IGNORE INTO an_user (uid,first_day,plan0,plan,last_prem,src,sec,demo) VALUES (?,?,?,?,?,?,?,?)').bind(me.id, d, plan, plan, lastPrem || null, J ? J.src : null, J ? J.sec : null, J ? J.demo : null));
+    if (!u) ex.push(env.DB.prepare('INSERT OR IGNORE INTO an_user (uid,first_day,plan0,plan,last_prem,src,sec,demo,camp,ad) VALUES (?,?,?,?,?,?,?,?,?,?)').bind(me.id, d, plan, plan, lastPrem || null, J ? J.src : null, J ? J.sec : null, J ? J.demo : null, J ? J.camp : null, J ? J.ad : null));
     else {
       if (u.plan !== 'premium' && plan === 'premium' && !u.up_day) ex.push(env.DB.prepare('UPDATE an_user SET up_day=?, up_ctx=COALESCE(?, last_prem, ?) WHERE uid=?').bind(d, lastPrem || null, 'not seen', me.id));
       if (lastPrem) ex.push(env.DB.prepare('UPDATE an_user SET last_prem=? WHERE uid=?').bind(lastPrem, me.id));
       if (u.plan !== plan) ex.push(env.DB.prepare('UPDATE an_user SET plan=? WHERE uid=?').bind(plan, me.id));
-      if (J && !u.src) ex.push(env.DB.prepare('UPDATE an_user SET src=?, sec=?, demo=? WHERE uid=?').bind(J.src, J.sec, J.demo, me.id));
+      if (J && !u.src) ex.push(env.DB.prepare('UPDATE an_user SET src=?, sec=?, demo=?, camp=?, ad=? WHERE uid=?').bind(J.src, J.sec, J.demo, J.camp, J.ad, me.id));
     }
     if (J && (!u || !u.src)) { ex.push(env.DB.prepare('INSERT INTO an_day (day,ev,dim,plan,dev,n,v) VALUES (?,?,?,?,?,1,0) ON CONFLICT(day,ev,dim,plan,dev) DO UPDATE SET n=n+1').bind(d, 'signup_src', J.src, plan, dev)); }
   } catch (e) { /* the new tables aren't there until schema.sql is run again: counting carries on without them */ }
@@ -68,10 +70,10 @@ function featOf(e, d) {
 }
 // what the website showed someone before they opened the app: "source~section.section~demo.demo"
 function parseJourney(j) {
-  if (!j) return null; const [src, sec, demo] = String(j).split('~');
+  if (!j) return null; const [src, sec, demo, camp, ad] = String(j).split('~');
   const list = s => (s || '').split('.').map(x => x.replace(/[^a-z0-9-]/gi, '').slice(0, 24).toLowerCase()).filter(Boolean).slice(0, 16).join('.');
   const S = String(src || 'direct').replace(/[^a-z0-9 .-]/gi, '').slice(0, 32).toLowerCase() || 'direct';
-  return { src: S, sec: list(sec) || null, demo: list(demo) || null };
+  return { src: S, sec: list(sec) || null, demo: list(demo) || null, camp: tag(camp) || null, ad: tag(ad) || null };   // v52.43 campaign and ad (utm_campaign / utm_content)
 }
 
 // ---------- the admin dashboard's numbers ----------
@@ -155,7 +157,7 @@ export async function handleStats(env, req, out) {
     members: Object.fromEntries(members.map(r => [r.plan || 'free', r.n])),
     signups: signups, signupsPrev: (signPrev[0] || {}).n || 0,
     cohorts, askSpend: spend[0] || null, eventsToday: (evToday[0] || {}).n || 0,
-    askCap: +(env.ASK_MONTH_USD || 25), passkeys: Object.entries(pkm).map(([kind, n]) => ({ kind, n })), geo: { countries: geoCc, us: geoUs, members: (geoAll[0] || {}).n || 0 }, ...v504
+    askCap: +(env.ASK_MONTH_USD || 25), passkeys: Object.entries(pkm).map(([kind, n]) => ({ kind, n })), campaigns: await campaigns(env, from, to), best: await bestUsers(env), geo: { countries: geoCc, us: geoUs, members: (geoAll[0] || {}).n || 0 }, ...v504
   });
 }
 

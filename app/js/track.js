@@ -59,6 +59,8 @@
   // v50.4 ---------------------------------------------------------------------------------------------------------------
   // What the website showed someone before they opened the app (cardtab.app adds ?ctj=source~sections~demos to its links to
   // the app). Kept on this device until they're signed in, sent once, then forgotten. Used only as counts on our dashboard.
+  // v52.43: an ad that links straight to the app (utm_source / utm_campaign / utm_content) is kept the same way
+  try { const u = new URL(location.href), P = u.searchParams; if (!P.get('ctj') && P.get('utm_source')) { const c = x => (P.get(x) || '').replace(/~/g, ' ').slice(0, 40); P.set('ctj', c('utm_source') + '~~~' + c('utm_campaign') + '~' + c('utm_content')); ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach(k => P.delete(k)); history.replaceState(history.state, '', u.pathname + '?' + P + u.hash); } } catch (e) {}
   try { const u = new URL(location.href), j = u.searchParams.get('ctj'); if (j) { localStorage.setItem('ct.j', JSON.stringify({ j: j.slice(0, 300), t: Date.now() })); u.searchParams.delete('ctj'); history.replaceState(history.state, '', u.pathname + (u.search || '') + u.hash); } } catch (e) {}
   function sendJourney() { try { const o = JSON.parse(localStorage.getItem('ct.j') || 'null'); if (!o) return; if (Date.now() - o.t > 30 * 864e5) { localStorage.removeItem('ct.j'); return; } const s = Sess() && Sess().get(); if (!s) return; if (on()) ev('journey', o.j); localStorage.removeItem('ct.j'); } catch (e) {} }
   // the moments that can lead to Premium: running out of free entries, and every Upgrade button (named by where it sits)

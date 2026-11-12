@@ -39,8 +39,11 @@ async function appStats(env, a) {
     events: evMap(s.events), eventsPrev: evMap(s.eventsPrev),
     featureReach: s.reach, upgradesInPeriod: s.upgraders, avgDaysToUpgrade: Math.round(s.upDays || 0), upgradeTriggers: s.upCtx,
     signupSources: s.signupSrc, cohorts: s.cohorts,
+    // v52.43 the newer parts: Face ID / Touch ID / fingerprint sign-in set up now (by method), where members are (country, US
+    // states; approximate), campaigns and ads from tagged links (with typed spend), and best users (Premium vs Free, all time)
+    biometricSetUpNow: s.passkeys, whereMembersAre: s.geo, campaigns: s.campaigns, bestUsers: s.best,
     askSpendThisMonth: sp ? { month: sp.month, questions: sp.n, usd: Math.round(usd * 100) / 100, capUsd: s.askCap } : null,
-    note: 'events: page_view (dim = page), entry_add (purchase/sale), entry_game, entry_platform, ask, story_play, widget_add, prem_open (dim = what opened it), prem_tap, upgrade, error. Admins are never counted.'
+    note: 'events: page_view (dim = page), entry_add (purchase/sale), entry_game, entry_platform, ask, story_play, widget_add, prem_open (dim = what opened it), prem_tap, upgrade, error; pk_on, pk_signin, pk_off (Face ID / Touch ID / fingerprint sign-in, dim = how they unlock), lock_on, lock_off, lock_ask (dim = Always / 5 min / 15 min), lock_open (the Face ID lock). bestUsers: for each group, n people and counts per value in each dimension (game, sells = where they sell, buys = where they buy, kind = sellers or collectors, activity = entries in the last 30 days, device, country code); compare shares (count / n) between premium and free. campaigns.rows: camp, ad, src, n joined, prem0 started on Premium, up upgraded later; campaigns.spend: what each campaign cost in USD. Admins are never counted.'
   };
 }
 async function siteStats(env, a) {
@@ -106,11 +109,15 @@ async function runTool(env, name, a) {
   } catch (e) { console.log('admin ask tool', name, e.message); return { error: 'Couldn’t read that just now.' }; }
   return { error: 'Unknown tool.' };
 }
-const RULES = (view, spots, t) => 'You answer the owner of Card Tab (a trading card profit tracker) about their admin dashboard: how the app and website are doing, and about individual accounts. ' +
+const RULES = (view, spots, t, places) => 'You answer the owner of Card Tab (a trading card profit tracker) about their admin dashboard: how the app and website are doing, and about individual accounts. ' +
   'Get every number from the tools; never guess or make one up, and never do sums the tools didn\'t give you unless they are simple (adding two numbers, a percentage). If a tool has no data, say so. ' +
   'Answer in one to four short sentences of plain language, no tables or headings, no markdown. Use $ for money. Say dates like "Nov 3". ' +
   'When a question names no dates, use the range they are looking at; if none, the last 30 days. Today is ' + t + '. ' +
   (view && view.label ? 'They are looking at: ' + String(view.label).slice(0, 80) + (isDay(view.from) ? ' (' + view.from + ' to ' + (isDay(view.to) ? view.to : t) + ')' : '') + '. ' : '') +
+  'If they ask where something is or how to do something in the dashboard, answer from this, not the tools: the left side has App sections Overview, People, Growth (Sign-ups & upgrades, Audience, Premium), Engagement (Features, Time & pages, Board, Stories, Ask), Collection, Health, Feedback, and a Website switch at the top. ' +
+  'To give Premium as a gift, extra entries or Ask questions, reset limits, pause or delete an account: People, search the email, open the person. Reply to feedback: Feedback. Review shared card photos and the daily health check: Health. Tag an ad link and type what a campaign cost: Growth › Audience. Alerts: the bell at the top. Plan, device, compare and dates: the controls at the top. ' +
+  'Search (the same box they type in) also jumps straight to any card, row or setting. They may type short searches instead of full questions (like "face id", "texas", "campaign cost"): answer what they most likely want to know with the numbers, and SHOW the card. ' +
+  (places && places.length ? 'Where each card is: ' + places.join(' | ') + '. ' : '') +
   (spots && spots.length ? 'If one or two dashboard cards show what you answered, end with a final line "SHOW: " and their exact names separated by "; ", chosen only from this list: ' + spots.join(' | ') + '. Otherwise leave that line out.' : '');
 
 export async function handleAdminAsk(env, req, out) {
@@ -120,6 +127,7 @@ export async function handleAdminAsk(env, req, out) {
   const m = month(), L = askLimits(env);
   const sp = await env.DB.prepare('SELECT tin, tout FROM ask_spend WHERE month=?').bind(m).first() || { tin: 0, tout: 0 };
   if (sp.tin * ASK_PRICE.in + sp.tout * ASK_PRICE.out >= L.usd) return out({ error: 'cap', detail: 'This month’s Ask spending cap ($' + L.usd + ') has been reached.' }, 503);
+  const places = (Array.isArray(b.places) ? b.places : []).map(s => String(s).replace(/[|\n]/g, ' ').trim().slice(0, 110)).filter(Boolean).slice(0, 220);
   const spots = (Array.isArray(b.spots) ? b.spots : []).map(s => String(s).replace(/[|;\n]/g, ' ').trim().slice(0, 70)).filter(Boolean).slice(0, 160);
   const turns = (Array.isArray(b.turns) ? b.turns : []).filter(x => x && (x.role === 'user' || x.role === 'assistant') && typeof x.content === 'string').slice(-8).map(x => ({ role: x.role, content: x.content.slice(0, 2000) }));
   while (turns.length && turns[0].role !== 'user') turns.shift();
@@ -127,7 +135,7 @@ export async function handleAdminAsk(env, req, out) {
   let tin = 0, tout = 0, text = '';
   try {
     for (let step = 0; step < 6; step++) {
-      const res = await claudeCall(env, { model: ASK_MODEL, max_tokens: 700, system: RULES(b.view, spots, today()), tools: TOOLS, messages });
+      const res = await claudeCall(env, { model: ASK_MODEL, max_tokens: 700, system: RULES(b.view, spots, today(), places), tools: TOOLS, messages });
       tin += (res.usage && res.usage.input_tokens) || 0; tout += (res.usage && res.usage.output_tokens) || 0;
       const uses = (res.content || []).filter(c => c.type === 'tool_use');
       text = (res.content || []).filter(c => c.type === 'text').map(c => c.text).join('').trim();

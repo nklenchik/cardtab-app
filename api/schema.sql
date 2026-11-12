@@ -58,7 +58,9 @@ CREATE TABLE IF NOT EXISTS an_salt ( day TEXT PRIMARY KEY, salt TEXT NOT NULL );
 -- and what the website showed them before they opened the app. Removed with the account; feature days kept two years.
 CREATE TABLE IF NOT EXISTS an_feat ( day TEXT NOT NULL, uid TEXT NOT NULL, feat TEXT NOT NULL, plan TEXT NOT NULL, dev TEXT NOT NULL, PRIMARY KEY (day, uid, feat) );
 CREATE INDEX IF NOT EXISTS an_feat_uid ON an_feat (uid);
-CREATE TABLE IF NOT EXISTS an_user ( uid TEXT PRIMARY KEY, first_day TEXT NOT NULL, plan0 TEXT NOT NULL, plan TEXT NOT NULL, up_day TEXT, up_ctx TEXT, last_prem TEXT, src TEXT, sec TEXT, demo TEXT );
+CREATE TABLE IF NOT EXISTS an_user ( uid TEXT PRIMARY KEY, first_day TEXT NOT NULL, plan0 TEXT NOT NULL, plan TEXT NOT NULL, up_day TEXT, up_ctx TEXT, last_prem TEXT, src TEXT, sec TEXT, demo TEXT, camp TEXT, ad TEXT );
+-- v52.43 what each ad campaign cost (typed in the admin dashboard)
+CREATE TABLE IF NOT EXISTS ad_spend ( camp TEXT PRIMARY KEY, usd REAL NOT NULL, at INTEGER );
 -- v50.95 Premium copy test: each person's last-shown Premium sheet copy ("b2:1.4.6.7.9.16" = headline b2 with bullets 1,4,6,7,9,16),
 -- and the copy that was showing when they bought Premium (the day and which plan). Removed with the account.
 CREATE TABLE IF NOT EXISTS an_copy ( uid TEXT PRIMARY KEY, last TEXT, last_day TEXT, buy_day TEXT, buy TEXT, buy_iv TEXT );
