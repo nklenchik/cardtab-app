@@ -137,6 +137,13 @@ export async function handleStats(env, req, out) {
   const bySrc = {}; srcRows.forEach(r => { const o = bySrc[r.src] = bySrc[r.src] || { dim: r.src, n: 0, free: 0, premium: 0, upgraded: 0 }; o.n++; o[r.plan0 === 'premium' ? 'premium' : 'free']++; if (r.up_day) o.upgraded++; });
   const v504 = { reach, reachPrev, upgraders: (upg[0] || {}).n || 0, upDays: (upg[0] || {}).days || 0, upFeat: upgFeat, freeBase: (baseN[0] || {}).n || 0, freeFeat: baseFeat, upCtx,
     signupSrc: Object.values(bySrc).sort((a, b) => b.n - a.n), signupSec: tally(srcRows, 'sec'), signupDemo: tally(srcRows, 'demo'), signupKnown: srcRows.filter(r => r.src !== 'not known').length, signupAll: srcRows.length, join: joinSec, copyBuys, copyDays };
+  // v52.42 where members are: approximate country, and state for the US (admins left out; follows the plan filter)
+  const gPlan = plan ? ' AND u.plan=?' : '', gNA = notAdmin.replace(/lower\(email\)/, 'lower(u.email)'), gArgs = [...adm, ...(plan ? [plan] : [])];
+  const [geoCc, geoUs, geoAll] = await Promise.all([
+    safe(q('SELECT g.cc, COUNT(*) n FROM geo g JOIN users u ON u.id = g.user_id WHERE 1=1' + gNA + gPlan + ' GROUP BY g.cc ORDER BY n DESC LIMIT 40', gArgs)),
+    safe(q("SELECT g.region, COUNT(*) n FROM geo g JOIN users u ON u.id = g.user_id WHERE g.cc = 'US' AND g.region <> ''" + gNA + gPlan + ' GROUP BY g.region ORDER BY n DESC LIMIT 60', gArgs)),
+    safe(q('SELECT COUNT(*) n FROM users u WHERE 1=1' + gNA + gPlan, gArgs))
+  ]);
   // v52.40 people with Face ID / Touch ID / fingerprint sign-in set up right now, by method (admins left out)
   const pkNow = await safe(q("SELECT p.kind, COUNT(DISTINCT p.user_id) n FROM passkeys p JOIN users u ON u.id = p.user_id WHERE 1=1" + notAdmin.replace(/lower\(email\)/, 'lower(u.email)') + ' GROUP BY p.kind', adm));
   const KN = { 'Face ID': 'Face ID · iPhone', 'Face ID or Touch ID': 'Face or Touch ID · iPad', 'Touch ID': 'Touch ID · Mac', 'fingerprint or face': 'Fingerprint or face · Android', 'Windows Hello': 'Windows Hello' }, pkm = {};
@@ -148,7 +155,7 @@ export async function handleStats(env, req, out) {
     members: Object.fromEntries(members.map(r => [r.plan || 'free', r.n])),
     signups: signups, signupsPrev: (signPrev[0] || {}).n || 0,
     cohorts, askSpend: spend[0] || null, eventsToday: (evToday[0] || {}).n || 0,
-    askCap: +(env.ASK_MONTH_USD || 25), passkeys: Object.entries(pkm).map(([kind, n]) => ({ kind, n })), ...v504
+    askCap: +(env.ASK_MONTH_USD || 25), passkeys: Object.entries(pkm).map(([kind, n]) => ({ kind, n })), geo: { countries: geoCc, us: geoUs, members: (geoAll[0] || {}).n || 0 }, ...v504
   });
 }
 

@@ -7,6 +7,7 @@ import { handleShare } from './share.js';
 import { handleEvents, handleStats, handleSiteStats } from './analytics.js';
 import { handleAsk } from './ask.js';
 import { handlePasskey } from './passkey.js';
+import { noteGeo } from './geo.js';
 /* Card Tab sign-in: Google, or an emailed link + 6-digit code. No passwords.
    A session is a random token in an HttpOnly cookie on .cardtab.app (good for 30 days); only its SHA-256 is stored.
    Link tokens and codes are single use, last 15 minutes, and are stored only as hashes. Admins are the emails in
@@ -72,6 +73,7 @@ async function upsertUser(env, email, extra = {}) {
 async function newSession(env, req, u) {
   const tok = rand(32), t = now();
   await env.DB.prepare('INSERT INTO sessions (id,user_id,created_at,expires_at,ua) VALUES (?,?,?,?,?)').bind(await sha(tok), u.id, t, t + SESSION_DAYS * DAY, (req.headers.get('user-agent') || '').slice(0, 160)).run();
+  await noteGeo(env, req, u.id);   // v52.42 approximate country and state (see geo.js)
   return setCookie(env, 'ct_s', tok, SESSION_DAYS * DAY);
 }
 export async function currentUser(env, req) {
@@ -160,7 +162,7 @@ export async function handleAuth(env, req, path) {
   });
   if (path === '/auth/me') {
     if (!me) return out(env, req, { user: null }, 401);
-    if (now() - (me.last_seen_at || 0) > 3600) await env.DB.prepare('UPDATE users SET last_seen_at=? WHERE id=?').bind(now(), me.id).run();
+    if (now() - (me.last_seen_at || 0) > 3600) { await env.DB.prepare('UPDATE users SET last_seen_at=? WHERE id=?').bind(now(), me.id).run(); await noteGeo(env, req, me.id); }
     return out(env, req, { user: Object.assign(userOut(env, me), { bonus: bonusOut(await acctOf(env, me.id)) }) });   // v52.8: extra Free entries an admin gave this month
   }
   if (path === '/auth/logout' && req.method === 'POST') {

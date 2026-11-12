@@ -1,3 +1,4 @@
+import { geoFor } from './geo.js';
 /* People (v52.8): the admin dashboard's account tools. Admins only (checked by the caller).
    GET  /auth/admin/people/one?id=     one account: plan and its history, this month's use, devices, shared board, flags
    POST /auth/admin/people/act         { id, act, ... } one action:
@@ -113,7 +114,7 @@ export async function wipeAccount(env, uid, email) {
   for (const [t, c] of [['sessions', 'user_id'], ['an_active', 'uid'], ['an_feat', 'uid'], ['shares', 'uid'], ['an_user', 'uid'], ['ask_usage', 'user_id'], ['usage_user', 'user_id']]) st.push(env.DB.prepare(`DELETE FROM ${t} WHERE ${c}=?`).bind(uid));
   st.push(env.DB.prepare('DELETE FROM login_tokens WHERE email=?').bind(email), env.DB.prepare('DELETE FROM users WHERE id=?').bind(uid));
   await env.DB.batch(st);
-  for (const sql of ['DELETE FROM passkeys WHERE user_id=?', 'DELETE FROM an_copy WHERE uid=?', 'DELETE FROM acct WHERE user_id=?', 'DELETE FROM acct_log WHERE uid=?', 'DELETE FROM acct_note WHERE uid=?'])
+  for (const sql of ['DELETE FROM geo WHERE user_id=?', 'DELETE FROM passkeys WHERE user_id=?', 'DELETE FROM an_copy WHERE uid=?', 'DELETE FROM acct WHERE user_id=?', 'DELETE FROM acct_log WHERE uid=?', 'DELETE FROM acct_note WHERE uid=?'])
     try { await env.DB.prepare(sql).bind(uid).run(); } catch (e) { /* a table not made yet */ }
 }
 
@@ -144,6 +145,7 @@ async function details(env, uid) {
     totals: { entries: ent.n || 0, uploads: ups.n || 0 },
     share: share.created ? { live: !!share.live && !(share.exp && share.exp < now()), views: share.views || 0, since: share.created } : null,
     devices: sess.map(s => ({ name: device(s.ua), since: s.created_at })),
+    place: await geoFor(env, uid),   // v52.42 approximate country and state
     suspended: !!a.suspended, uploadsOff: !!a.no_upload, history: hist
   };
 }
