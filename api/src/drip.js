@@ -102,7 +102,7 @@ export async function dripRun(env, t = Date.now(), opt = {}) {
     for (const u of users) {
       if (sent >= MAX_RUN) break;
       const log = await q('SELECT id, step, sent_at, unsub_at FROM email_log WHERE uid=?', u.id);
-      if (log.some(r => !r.id.startsWith('x') && r.sent_at > T - 20 * 3600)) continue;   // at most one a day
+      if (log.some(r => !r.id.startsWith('x') && r.step !== 'w0' && r.sent_at > T - 20 * 3600)) continue;   // at most one a day
       const step = dueStep(u.created_at, t, u.tz, new Set(log.filter(r => r.step).map(r => r.step))); if (!step) continue;
       const [acct] = await q('SELECT suspended FROM acct WHERE user_id=?', u.id); if (acct && acct.suspended) continue;
       const [gift] = await q('SELECT gift FROM billing WHERE user_id=? AND gift=1', u.id); if (gift) continue;
@@ -137,6 +137,13 @@ export async function dripRun(env, t = Date.now(), opt = {}) {
 // a step we decided not to send (so it isn't looked at again); no id is ever emailed for it
 async function mark(env, uid, step, variant, T) {
   try { await env.DB.prepare('INSERT INTO email_log (id,uid,flow,step,variant,sent_at) VALUES (?,?,?,?,?,?)').bind('x' + rid().slice(1), uid, 'free14', step, variant, T).run(); } catch (e) {}
+}
+
+// the welcome email (sent at sign-up by auth.js): a tracked button and open image, logged as step w0
+export function welcomeLinks(env) {
+  const id = rid(), api = env.API_URL || 'https://api.cardtab.app';
+  return { links: { go: k => api + '/e/c/' + id + '?to=' + k, pixel: api + '/e/o/' + id + '.gif' },
+    async log(uid) { try { await ensureDrip(env); await env.DB.prepare('INSERT INTO email_log (id,uid,flow,step,variant,sent_at) VALUES (?,?,?,?,?,?)').bind(id, uid, 'free14', 'w0', null, now()).run(); } catch (e) {} } };
 }
 
 // ---------- the links in the emails: /e/o/<id>.gif, /e/c/<id>?to=, /e/u/<id> ----------
@@ -202,18 +209,20 @@ export async function emailStats(env, from, to) {
   const did = r => {
     const A = after[r.uid]; if (!A) return false; const t0 = r.sent_at, d0 = dayOf(t0), ent = type => A.ents.some(e => (!type || e.t === type) && e.c && Date.parse(e.c) / 1000 > t0), feat = f => !!(A.feats[f] && A.feats[f] >= d0);
     if (r.step === 'd1') return ent();
+    if (r.step === 'w0') return ent();
     if (r.step === 'd13') return !!(A.up && A.up >= t0 && A.up <= t0 + 14 * 86400);
     return { start: () => ent(), sale: () => ent('sale'), budget: () => A.bud > t0, home: () => feat('home_screen'), board: () => feat('board'), stories: () => feat('stories_watch'), ask: () => feat('ask') }[r.variant || 'board']();
   };
   const sent = rows.filter(r => !r.id.startsWith('x'));
   const agg = list => ({ sent: list.length, opened: list.filter(r => r.opened_at).length, clicked: list.filter(r => r.clicked_at).length, unsub: list.filter(r => r.unsub_at).length, did: list.filter(did).length });
+  const w = sent.filter(r => r.step === 'w0'), welcome = { id: 'w0', name: 'Welcome', when: 'Right after sign-up', ...agg(w) };
   const steps = STEPS.map(s => ({ id: s.id, name: s.name, when: s.when, skipped: rows.filter(r => r.step === s.id && r.id.startsWith('x')).length, ...agg(sent.filter(r => r.step === s.id)) }));
   const TL = { start: 'Add a first card', sale: 'Log a sale', budget: 'Set a budget', home: 'Add to Home Screen', board: 'Try the Card Board', stories: 'Play a Card Story', ask: 'Ask a question' };
   const tips = Object.keys(TIPS).map(k => ({ tip: k, title: TL[k] || TIPS[k].title, ...agg(sent.filter(r => r.step === 'd7' && r.variant === k)) })).filter(x => x.sent);
   const byDay = {}; sent.forEach(r => { const d = dayOf(r.sent_at); byDay[d] = (byDay[d] || 0) + 1; });
   const adm = admins(env), joined = (await q('SELECT email FROM users WHERE created_at BETWEEN ? AND ?', a, b)).filter(u => !adm.includes(String(u.email).toLowerCase())).length;
   const offNow = (await q("SELECT COUNT(*) n FROM user_meta WHERE k='notif' AND json_extract(v,'$.prefs.emailOff') = 1"))[0];
-  return { total: agg(sent), steps, tips, byDay, joined, offNow: (offNow && offNow.n) || 0, hour: SEND_HOUR, paused: env.DRIP === 'off' };
+  return { total: agg(sent), welcome, steps, tips, byDay, joined, offNow: (offNow && offNow.n) || 0, hour: SEND_HOUR, paused: env.DRIP === 'off' };
 }
 
 // one person's emails, newest first (People → a person)

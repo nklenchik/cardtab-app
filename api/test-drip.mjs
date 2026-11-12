@@ -33,6 +33,9 @@ await signIn('old@x.com'); ago('old@x.com', 30);
 await signIn('off@x.com'); ago('off@x.com', 2);
 sq.prepare("INSERT INTO user_meta (user_id,k,v,updated_at,seq) VALUES (?,?,?,?,1)").run(uid('off@x.com'), 'notif', JSON.stringify({ prefs: { emailOff: true } }), new Date(NOW).toISOString());
 
+// the welcome email is tracked too (open image + tracked button), logged as w0
+assert.equal(sq.prepare("SELECT COUNT(*) n FROM email_log WHERE step='w0'").get().n, 9);
+{ mails.length = 0; await signIn('w@x.com'); ago('w@x.com', 30); const w = mails.find(m => m.subject === 'Welcome to Card Tab'); assert.match(w.html, /e\/o\/[0-9a-f]{32}\.gif/); assert.match(w.html, /e\/c\/[0-9a-f]{32}\?to=app/); assert.ok(!/Stop these emails/.test(w.html)); }
 // pure helpers
 assert.deepEqual(localOf(NOW, 'America/Los_Angeles'), { date: '2026-11-20', hour: 7 });
 assert.equal(localOf(NOW, 'Not/AZone').hour, 10);   // unknown zone: Eastern
@@ -86,6 +89,7 @@ const st = await (await call('/auth/admin/stats?from=2026-11-01&to=2026-11-30', 
 assert.ok(st.emails.total.sent >= 4, JSON.stringify(st.emails.total));
 const d1 = st.emails.steps.find(s => s.id === 'd1'); assert.equal(d1.skipped, 1); assert.equal(d1.clicked, 1); assert.equal(d1.unsub, 1);
 assert.ok(st.emails.tips.some(t => t.tip === 'sale'));
+assert.ok(st.emails.welcome && st.emails.welcome.sent >= 1, JSON.stringify(st.emails.welcome));
 const one = (await (await call('/auth/admin/people/one?id=' + uid('two@x.com'), { cookie: boss })).json()).person;
 assert.equal(one.emails[0].step, 'd13');
 // pause switch

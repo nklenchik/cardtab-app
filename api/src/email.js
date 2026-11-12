@@ -93,7 +93,7 @@ export function premiumLine({ open, opens, joinedAt, t = Date.now() }) {
   return { html: `<b style="color:#a50e37">Want more?</b> ${perks} $6 a month or $60 a year.`, text: `Want more? ${perks} $6 a month or $60 a year.` };
 }
 
-export function welcomeEmail({ name, appUrl, open, opens, joinedAt, t }) {
+export function welcomeEmail({ name, appUrl, open, opens, joinedAt, t, links }) {
   const first = String(name || '').trim().split(/\s+/)[0] || '';
   const subject = 'Welcome to Card Tab';
   const pl = premiumLine({ open, opens, joinedAt, t });
@@ -103,15 +103,16 @@ export function welcomeEmail({ name, appUrl, open, opens, joinedAt, t }) {
     tip(1, 'Add your first card.', 'Tap <b style="color:#1a1918">+</b>, type the card\'s name, pick it from the list and enter the price. The art fills in on its own.') +
     tip(2, 'See your numbers on the Board.', 'Profit, spending, fees and your biggest win, all in one place.') +
     tip(3, 'Put Card Tab on your Home Screen.', 'It opens full screen, like an app. On iPhone, tap Share, then Add to Home Screen.', true) + `</table>` +
-    button(appUrl + '/', 'Open Card Tab') +
-    `<div style="margin:22px 0 0;padding:14px 16px;background:#f9f0f2;border-radius:14px;font-size:13.5px;line-height:1.5;color:#55524c">${pl.html}</div>`;
+    button(links ? links.go('app') : appUrl + '/', 'Open Card Tab') +
+    `<div style="margin:22px 0 0;padding:14px 16px;background:#f9f0f2;border-radius:14px;font-size:13.5px;line-height:1.5;color:#55524c">${pl.html}</div>` +
+    (links && links.pixel ? `<img src="${esc(links.pixel)}" width="1" height="1" alt="" style="display:block;border:0;width:1px;height:1px">` : '');
   const html = shell({ title: subject, preheader: 'Three quick ways to get started.', body, foot: 'Questions or ideas? Just reply to this email. It comes straight to us.',
     note: 'You\'re getting this because you created a Card Tab account. It\'s the only welcome email we send.' });
   const text = `Welcome to Card Tab${first ? ', ' + first : ''}\n\nCard Tab keeps track of the cards you buy and sell, and does the math for you. Here's how to get started.\n\n` +
     `1. Add your first card. Tap +, type the card's name, pick it from the list and enter the price. The art fills in on its own.\n` +
     `2. See your numbers on the Board. Profit, spending, fees and your biggest win, all in one place.\n` +
     `3. Put Card Tab on your Home Screen. It opens full screen, like an app. On iPhone, tap Share, then Add to Home Screen.\n\n` +
-    `Open Card Tab: ${appUrl}/\n\n${pl.text}\n\nQuestions or ideas? Just reply to this email.\n\nCard Tab · cardtab.app`;
+    `Open Card Tab: ${links ? links.go('app') : appUrl + '/'}\n\n${pl.text}\n\nQuestions or ideas? Just reply to this email.\n\nCard Tab · cardtab.app`;
   return { subject, html, text };
 }
 
