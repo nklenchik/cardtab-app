@@ -6,6 +6,7 @@ import { handleAlerts } from './alerts.js';
 import { handleShare } from './share.js';
 import { handleEvents, handleStats, handleSiteStats } from './analytics.js';
 import { handleAsk } from './ask.js';
+import { handlePasskey } from './passkey.js';
 /* Card Tab sign-in: Google, or an emailed link + 6-digit code. No passwords.
    A session is a random token in an HttpOnly cookie on .cardtab.app (good for 30 days); only its SHA-256 is stored.
    Link tokens and codes are single use, last 15 minutes, and are stored only as hashes. Admins are the emails in
@@ -20,7 +21,8 @@ import { handleAsk } from './ask.js';
    POST /auth/logout-all    end every session for this account (Sign out of all devices)
    POST /auth/delete        delete the account and every session
    POST /auth/plan {plan}   admins only: switch your own plan for testing
-   POST /auth/sync          send and receive entries and settings (see sync.js) */
+   POST /auth/sync          send and receive entries and settings (see sync.js)
+   /auth/passkey/… and /auth/passkeys   Face ID / Touch ID sign-in (see passkey.js) */
 import { report } from './budget.js';
 import { catReport } from './catalog.js';
 import { signInEmail, sendMail, welcomeEmail } from './email.js';
@@ -149,6 +151,13 @@ export async function handleAuth(env, req, path) {
   if (path === '/auth/email/start' && req.method === 'POST') return emailStart(env, req);
   if (path === '/auth/email/verify' && req.method === 'POST') return emailVerify(env, req);
   const me = await currentUser(env, req);
+  if (path.startsWith('/auth/passkey')) return handlePasskey(env, req, path, me, (body, status = 200) => out(env, req, body, status), async uid => {
+    const u = await env.DB.prepare('SELECT * FROM users WHERE id=?').bind(uid).first();
+    if (!u) return out(env, req, { error: 'This passkey isn’t on a Card Tab account anymore.' }, 400);
+    if ((await acctOf(env, u.id)).suspended) return out(env, req, { error: PAUSED }, 403);
+    const c = await newSession(env, req, u);
+    return out(env, req, { user: Object.assign(userOut(env, u), { bonus: bonusOut(await acctOf(env, u.id)) }), isNew: false }, 200, { 'set-cookie': c });
+  });
   if (path === '/auth/me') {
     if (!me) return out(env, req, { user: null }, 401);
     if (now() - (me.last_seen_at || 0) > 3600) await env.DB.prepare('UPDATE users SET last_seen_at=? WHERE id=?').bind(now(), me.id).run();

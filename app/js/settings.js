@@ -52,7 +52,7 @@
     sv('data', S.showImport() ? 'Import, export, taxes' : 'Export, taxes');
     sv('help', 'Contact, privacy, terms');
     const mine = S.customPlatforms().length; sv('plats', mine ? mine + ' of your own' : 'Add your own');
-    const via = $('am-via'); if (via) via.textContent = (sess.via === 'google' ? 'Google' : 'Email link') + (sess.email ? ' · ' + sess.email : '');
+    const via = $('am-via'); if (via) via.textContent = (sess.via === 'google' ? 'Google' : sess.via === 'passkey' ? (window.CTPasskey ? window.CTPasskey.kindName() : 'Passkey') : 'Email link') + (sess.email ? ' · ' + sess.email : '');
     const v = $('am-ver'); if (v) v.textContent = 'Card Tab ' + ((document.querySelector('script[src*="settings.js"]') || {}).src || '').replace(/.*v=/, '');
   }
 
@@ -103,7 +103,7 @@
     if (id === 'display') { pdev = window.CTPrefs ? window.CTPrefs.kind() : 'desk'; paintDev(); }
     if (id === 'display') { $('am-slabs').setAttribute('aria-checked', String(S.meta('slabs') !== false)); $('am-hideamt').setAttribute('aria-checked', String(get('ct.hideamt', '0') === '1')); }
     if (id === 'display') { const r = $('am-rboard'); r.classList.remove('confirm'); $('am-rboard-s').textContent = 'Back to the starting widgets for your plan'; }
-    if (id === 'account') { const o = $('am-outall'); o.classList.remove('confirm'); $('am-outall-s').textContent = 'Your phone, computer and anywhere else'; }
+    if (id === 'account') { if (window.CTPasskey) { window.CTPasskey.reset(); window.CTPasskey.paint(); } const o = $('am-outall'); o.classList.remove('confirm'); $('am-outall-s').textContent = 'Your phone, computer and anywhere else'; }
   }
   // ---------- phones and computers each keep their own: opens to, list or grid, show first ----------
   let pdev = 'desk';

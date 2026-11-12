@@ -110,6 +110,12 @@
       if (LOCAL_MODE) { const v = email.value.trim(); onSignedIn(Session.signIn({ email: valid(v) ? v : 'you@cardtab.local', name: '', via: 'google', role: 'admin' }), mode === 'up'); return; }
       location.href = API + '/auth/google/start?mode=' + mode;
     });
+    // v52.38: Sign in with Face ID / Touch ID, only on a device that has turned it on (Settings → Account)
+    { const pkb = $('.auth-pk'); if (pkb && window.CTPasskey) { window.CTPasskey.prepButton(pkb);
+      pkb.addEventListener('click', async () => { showErr(''); pkb.disabled = true;
+        try { const j = await window.CTPasskey.signIn(); onSignedIn(Session.fromUser(j.user, 'passkey'), false); }
+        catch (e) { const m = window.CTPasskey.friendly(e); if (m) showErr(m); }
+        finally { pkb.disabled = false; } }); } }
     $('#auth-local').hidden = !LOCAL_MODE;
     // The marketing site links here with ?signup to open on Create account
     // Phones: when you tap the email (or code) box, the page glides ONCE to put that box about 60px below the top of what's visible,

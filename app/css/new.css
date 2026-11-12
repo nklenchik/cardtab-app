@@ -2495,3 +2495,12 @@ dialog.fbd.out{animation:fbOut .2s ease forwards}
 .ct-demo #ct-rows>.ct-row:not(.expanded){content-visibility:auto;contain-intrinsic-block-size:auto 92px}
 .ct-demo #ct-rows>.ct-tile{content-visibility:auto;contain-intrinsic-block-size:auto 340px}
 .ct-demo #ct-rows>.ct-month{content-visibility:auto;contain-intrinsic-block-size:auto 44px}
+/* v52.38 Sign in with Face ID / Touch ID: a quiet second button under Google (only on a device that turned it on) */
+.auth-form .auth-pk{margin-top:10px}
+.auth-form .auth-pk[hidden]{display:none}
+.auth-form .auth-pk:disabled{opacity:.6}
+.app-menu.am .am-pkr .amgt{flex:1;min-width:0}
+.app-menu.am .amg button.am-pkx{flex:none;width:auto;display:inline-flex;justify-content:center;gap:0;font:800 12.5px Manrope,system-ui,sans-serif;border:1px solid var(--win-edge,rgba(40,30,20,.12));background:transparent;color:var(--muted,#77736d);border-radius:999px;padding:5px 11px;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.app-menu.am .amg button.am-pkx:active{transform:scale(.96)}
+.app-menu.am .amg button.am-pkx.confirm{background:#d0263f;border-color:#d0263f;color:#fff}
+.am-pknote{margin:2px 12px 8px 42px;font-size:12px;font-weight:650;color:var(--muted,#77736d)}
