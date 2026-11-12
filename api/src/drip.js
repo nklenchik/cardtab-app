@@ -1,6 +1,6 @@
 /* First-two-weeks emails for Free members (v52.49). Three short emails, each sent once, around 10am in the person's own
    time zone (from Cloudflare when they sign in or open the app; Eastern when not known):
-   - d1  "Add your first card": the day after sign-up, only if they still have no entries
+   - d1  "Add your first card": two days after sign-up (v52.50; the welcome email covers day 0), only if they still have no entries
    - d7  one tip picked from what they've done (log a sale, set a budget, Home Screen, Card Board, Stories, Ask)
    - d13 their first two weeks in numbers, plus what Premium adds (skipped with no entries)
    Never to Premium members, gifted or paused accounts, admins, or anyone who switched emails off (Notifications → Email,
@@ -16,7 +16,7 @@ import { ensureGeo } from './geo.js';
 const now = () => Math.floor(Date.now() / 1000);
 const DEF_TZ = 'America/New_York', SEND_HOUR = 10, MAX_RUN = 40;
 export const STEPS = [
-  { id: 'd1', day: 1, last: 3, name: 'Day 1 · First card', when: 'If no entries yet' },
+  { id: 'd1', day: 2, last: 4, name: 'Day 2 · First card', when: 'If no entries yet' },
   { id: 'd7', day: 7, last: 10, name: 'Day 7 · One tip', when: 'Picked from what they’ve done' },
   { id: 'd13', day: 13, last: 17, name: 'Day 13 · Two weeks', when: 'Summary and Premium' }
 ];

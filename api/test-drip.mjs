@@ -22,15 +22,15 @@ const ago = (e, days) => sq.prepare('UPDATE users SET created_at=? WHERE email=?
 let n = 0; const entry = (e, type, extra = {}) => { const d = { id: 'e' + (++n), type, name: 'Card ' + n, amount: 1000, net: type === 'sale' ? 850 : null, platform: 'eBay', createdAt: new Date(NOW - 86400e3).toISOString(), ...extra };
   sq.prepare('INSERT INTO entries (user_id,id,data,updated_at,deleted,seq) VALUES (?,?,?,?,0,?)').run(uid(e), d.id, JSON.stringify(d), d.createdAt, n); };
 
-const a = await signIn('day1@x.com'); ago('day1@x.com', 1);
-await signIn('started@x.com'); ago('started@x.com', 1); entry('started@x.com', 'purchase');
-await signIn('prem@x.com'); ago('prem@x.com', 1); sq.prepare("UPDATE users SET plan='premium' WHERE email='prem@x.com'").run();
-const boss = await signIn('boss@x.com'); ago('boss@x.com', 1);
-await signIn('la@x.com', { country: 'US', region: 'California', timezone: 'America/Los_Angeles' }); ago('la@x.com', 1);
+const a = await signIn('day1@x.com'); ago('day1@x.com', 2);
+await signIn('started@x.com'); ago('started@x.com', 2); entry('started@x.com', 'purchase');
+await signIn('prem@x.com'); ago('prem@x.com', 2); sq.prepare("UPDATE users SET plan='premium' WHERE email='prem@x.com'").run();
+const boss = await signIn('boss@x.com'); ago('boss@x.com', 2);
+await signIn('la@x.com', { country: 'US', region: 'California', timezone: 'America/Los_Angeles' }); ago('la@x.com', 2);
 await signIn('wk@x.com'); ago('wk@x.com', 7); entry('wk@x.com', 'purchase'); entry('wk@x.com', 'purchase');
 await signIn('two@x.com'); ago('two@x.com', 13); entry('two@x.com', 'purchase', { amount: 2000 }); entry('two@x.com', 'sale', { name: 'Pikachu ex', net: 6000 }); entry('two@x.com', 'sale', { net: 900, platform: 'TCGplayer' });
 await signIn('old@x.com'); ago('old@x.com', 30);
-await signIn('off@x.com'); ago('off@x.com', 1);
+await signIn('off@x.com'); ago('off@x.com', 2);
 sq.prepare("INSERT INTO user_meta (user_id,k,v,updated_at,seq) VALUES (?,?,?,?,1)").run(uid('off@x.com'), 'notif', JSON.stringify({ prefs: { emailOff: true } }), new Date(NOW).toISOString());
 
 // pure helpers
