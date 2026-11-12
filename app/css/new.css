@@ -1920,7 +1920,8 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 @media(max-width:760px){
  .ct-tbar button svg{width:27px;height:27px;flex:none}
  .ct-tbar button span{height:30px!important}
- .ct-tbar button{font-size:11px!important;gap:1px!important}
+ .ct-tbar button{font-size:11px!important;gap:0!important}
+ .ct-tbar button span{align-items:end}   /* v52.30 the icon sits a little closer to its label */
  html.tb-web .ct-tbar button span svg{transition:transform var(--tbd,.8s) var(--tbe,ease)}
  html.tb-mini .ct-tbar button span svg{transform:scale(.85)}
  html.tb-web .ct-tbar button span::before{inset:-6px -13px}
