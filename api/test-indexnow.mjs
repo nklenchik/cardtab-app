@@ -1,0 +1,20 @@
+// IndexNow (v52.45): first run sends every page; later runs only new or changed ones; once an hour; a failed ping retries.
+import { DatabaseSync } from 'node:sqlite';
+import assert from 'node:assert';
+import { indexNow } from './src/indexnow.js';
+const sq = new DatabaseSync(':memory:');
+const stmt = (sql) => { const o = { sql, args: [], bind(...a) { o.args = a; return o; }, async first() { return sq.prepare(sql).get(...o.args) || null; }, async run() { sq.prepare(sql).run(...o.args); return {}; } }; return o; };
+const env = { DB: { prepare: stmt } };
+let sitemap = '', sent = [], status = 200;
+globalThis.fetch = async (url, o) => { if (String(url).endsWith('sitemap.xml')) return new Response(sitemap); const b = JSON.parse(o.body); assert.equal(b.host, 'cardtab.app'); assert.match(b.keyLocation, /^https:\/\/cardtab\.app\/[0-9a-f]{32}\.txt$/); sent.push(b.urlList); return new Response('', { status }); };
+const sm = pages => '<urlset>' + pages.map(([u, d]) => `<url>\n<loc>https://cardtab.app/${u}</loc>\n<lastmod>${d}</lastmod>\n</url>`).join('') + '</urlset>';
+const H = h => Date.UTC(2026, 10, 12, h);
+sitemap = sm([['', '2026-11-11'], ['tools', '2026-11-12']]);
+await indexNow(env, H(10)); assert.deepEqual(sent.pop(), ['https://cardtab.app/', 'https://cardtab.app/tools']);
+await indexNow(env, H(10) + 6e5); assert.equal(sent.length, 0, 'once an hour');
+await indexNow(env, H(11)); assert.equal(sent.length, 0, 'nothing changed');
+sitemap = sm([['', '2026-11-11'], ['tools', '2026-11-13'], ['card-budget-planner', '2026-11-13']]); status = 500;
+await indexNow(env, H(12)); assert.deepEqual(sent.pop(), ['https://cardtab.app/tools', 'https://cardtab.app/card-budget-planner']);
+status = 200; await indexNow(env, H(13)); assert.deepEqual(sent.pop(), ['https://cardtab.app/tools', 'https://cardtab.app/card-budget-planner'], 'retried after a failure');
+await indexNow(env, H(14)); assert.equal(sent.length, 0);
+console.log('indexnow tests passed');
