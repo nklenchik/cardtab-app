@@ -2478,3 +2478,10 @@ dialog.fbd.out{animation:fbOut .2s ease forwards}
 
 /* v52.31 admin alerts at the top of the admin's own Notifications */
 .ntf-gl .adm-tag{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:99px;font-size:10px;letter-spacing:.06em;color:var(--s-brand,#a50e37);background:color-mix(in srgb,var(--s-brand,#a50e37) 13%,transparent);vertical-align:1px}
+
+/* v52.34 long lists: entries that are off screen skip their styling, layout and painting until they come near the screen.
+   Each keeps a placeholder height (and remembers its real one once seen), so scrolling and the scrollbar stay steady.
+   An open entry always renders in full. */
+.ct-demo #ct-rows>.ct-row:not(.expanded){content-visibility:auto;contain-intrinsic-block-size:auto 92px}
+.ct-demo #ct-rows>.ct-tile{content-visibility:auto;contain-intrinsic-block-size:auto 340px}
+.ct-demo #ct-rows>.ct-month{content-visibility:auto;contain-intrinsic-block-size:auto 44px}

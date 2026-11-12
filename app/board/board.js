@@ -1700,7 +1700,7 @@ if(lyd){
   lyd.addEventListener('keydown',e=>{if(e.key==='Escape'&&(lyMenuFor||!$('ly-ask').hidden)){e.preventDefault();e.stopPropagation();lyMenuClose();$('ly-ask').hidden=true;lyPending=null}},true);
   lyd.addEventListener('close',()=>{lyMenuClose();lyHoverHide()});
   addEventListener('resize',()=>{if(lyd.open){placeLy(document.querySelector('.ct-shell .sh-lay'));lyMenuClose();lyHoverHide()}});
-  if(window.CTStore)CTStore.on(r=>{if(lyd.open&&(r==='meta'||r==='remote')&&!lyd.querySelector('.lyin'))lyPaint()})}
+  if(window.CTStore)CTStore.on(r=>{if(lyd.open&&(r==='meta'||r==='prefs'||r==='remote')&&!lyd.querySelector('.lyin'))lyPaint()},true)}
 // phones: press and hold a layout for Rename, Update and Delete
 const lyPress={t:0,fired:false,xy:null};
 if(lyd){lyd.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')return;const b=e.target.closest('.lyb');if(!b)return;lyPress.fired=false;lyPress.xy=[e.clientX,e.clientY];clearTimeout(lyPress.t);

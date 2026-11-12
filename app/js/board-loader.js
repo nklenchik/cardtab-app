@@ -29,7 +29,7 @@
   function load() {
     if (window.CTBoard) return Promise.resolve();
     if (loading) return loading;
-    const V = '52.33'; // bump when board files change, so phones don't keep an old copy
+    const V = '52.34'; // bump when board files change, so phones don't keep an old copy
     const css = new Promise((res, rej) => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'board/board.css?v=' + V; l.onload = res; l.onerror = rej; document.head.appendChild(l); });
     const js = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'board/board.js?v=' + V; s.async = true; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
     loading = Promise.all([css, js]).then(() => { sync(); wrapOpen(); if (window.CTBoard.prewarm) window.CTBoard.prewarm(); }).catch(e => { loading = null; throw e; });
@@ -57,7 +57,7 @@
     ['CTAskOpen', 'CTPremiumOpen', 'CTProfileOpen'].forEach(k => { const f = window[k]; if (typeof f === 'function' && !f._fl) { const g = function () { flush(); return f.apply(this, arguments); }; g._fl = 1; window[k] = g; } }); }
   S.on(r => {
     if (!window.CTBoard) return;
-    if (r === 'meta' && S.lastMetaKey === 'prefs') return;   // display choices (like a Stories theme) are applied where they're made; nothing to recount
+    if (r === 'prefs') return;   // display choices (like a Stories theme) are applied where they're made; nothing to recount
     if (onScreen()) { pend = false; clearTimeout(pt); window.CTBoard.refresh(); return; }
     pend = true; clearTimeout(pt);
     pt = setTimeout(() => (window.requestIdleCallback || (f => setTimeout(f, 50)))(flush, { timeout: 3000 }), 600);

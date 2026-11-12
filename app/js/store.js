@@ -74,7 +74,9 @@
 
   // v52.17: 'notif' (notifications read/cleared) only reaches listeners that asked for every change (sync, notifications);
   // before, marking notifications read redrew the entries list, Board, Stories, budget and home behind the window
-  const QUIET = new Set(['notif']);
+  // v52.34: 'prefs' is the account's copy of display choices this browser already applied (Board layout, sort, themes);
+  // saving that copy doesn't need the Entries list, charts, budget and Board to redraw. Sync still hears it.
+  const QUIET = new Set(['notif', 'prefs']);
   function emit(reason) { const q = QUIET.has(reason); listeners.forEach(fn => { if (q && !fn._all) return; try { fn(reason); } catch (e) { console.error(e); } }); }
 
   // _d = changed here and not yet sent to the account (sync); copies that came from another device are saved without it
@@ -313,7 +315,7 @@
 
     // ---------- small per-account settings (notifications and the like) ----------
     meta(k) { const v = meta[k]; return v == null ? null : clone(v); },
-    async setMeta(k, v) { await putMeta(k, v); lastMeta = k; changed(k === 'notif' ? 'notif' : 'meta'); lastMeta = ''; },
+    async setMeta(k, v) { await putMeta(k, v); lastMeta = k; changed(k === 'notif' ? 'notif' : k === 'prefs' ? 'prefs' : 'meta'); lastMeta = ''; },
     get lastMetaKey() { return lastMeta; },   // v52.33: which setting a 'meta' change was about (read inside a listener)
     // Unmatched cards: Fix sets the card's name and art (never the amounts); Leave keeps it as typed. One Undo puts it back.
     async matchCard(id, patch) {

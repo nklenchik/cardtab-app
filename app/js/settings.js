@@ -226,5 +226,5 @@
   new MutationObserver(() => { if (menu.hidden && qIn.value) { qIn.value = ''; search(); } }).observe(menu, { attributes: true, attributeFilter: ['hidden'] });
 
   applySharing();
-  S.on(r => { if (r === 'remote' || r === 'meta') { if (r === 'remote') applySharing(); if (!menu.hidden) paint(); } });
+  S.on(r => { if (r === 'remote' || r === 'meta' || r === 'prefs') { if (r === 'remote') applySharing(); if (!menu.hidden) paint(); } }, true);
 })();
