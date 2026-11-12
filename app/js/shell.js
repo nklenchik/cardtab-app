@@ -167,6 +167,19 @@
     if (moving) { moving.forEach(a => a.finish()); }
     if (from === to || !ORDER.hasOwnProperty(to)) { cur = to; setPage(to, false); placeAll(); if (done) done(); return; }
     const dir = ORDER[to] > ORDER[from] ? 1 : -1, w = W(), ms = calm() ? 0 : (PH() ? 460 : 560);
+    if (to === 'stories' && hookFrame) { setTimeout(hookFrame, 60); setTimeout(hookFrame, 600); }
+    // v52.59 (swipe test) finishing a swipe back: carry on from where the finger let go, at its speed
+    const rs = resume; resume = null;
+    if (rs && rs.from === from && Date.now() - rs.t < 800 && dir < 0 && window.CTMotion && !calm()) {
+      cur = to; setPage(to, true); const H = document.documentElement; H.classList.add('pg-moving');
+      Object.keys(ORDER).forEach(p => { if (p !== from && p !== to) layerOf(p).forEach(el => { el.style.transform = tx(restX(p, to)); }); });
+      const F = layerOf(from)[0], T = layerOf(to);
+      let ended = false; const fin = () => { if (ended) return; ended = true; if (moving === stub) moving = null; H.classList.remove('pg-moving'); placeAll(); if (done) done(); };
+      const g = window.CTMotion.glide({ el: F, axis: 'x', tf: x => tx(x), from: rs.x, to: w, v: Math.max(0, rs.v), k: 420, c: 41, with: T.map(el => ({ el, prop: 'transform', map: x => tx(x - w) })), done: fin });
+      // another switch arriving mid-slide finishes this one first (the way move() always has)
+      const stub = [{ finish() { g.stop(); fin(); } }]; moving = stub;
+      return;
+    }
     cur = to; setPage(to, true);
     const H = document.documentElement; H.classList.add('pg-moving');
     // pages not in the slide go straight to where they'll rest (always off screen, so you never see them move)
@@ -182,7 +195,56 @@
     anims.forEach(a => a.pause()); requestAnimationFrame(() => anims.forEach(a => { if (a.playState === 'paused') a.play(); }));
     Promise.all(anims.map(a => a.finished)).then(end, end); setTimeout(end, ms + 400);
   }
-  window.CTPage = { move, place: placeAll, get cur() { return cur; } };
+  let resume = null, hookFrame = null;
+  window.CTPage = { move, place: placeAll, get cur() { return cur; }, get moving() { return !!moving; } };
+
+  // ---------- v52.59 swipe test: swipe right on the Board to go back to Entries, on Stories to go back to the Board ----------
+  // Off for everyone unless switched on for this device: open the app once with ?swipe=1 (and ?swipe=0 to switch it off).
+  // The page follows the finger with the one it's going back to beside it; let go past the middle or with a flick and it
+  // finishes (the normal way back runs, so everything else works as before), otherwise it springs back.
+  (() => {
+    try { const q = new URLSearchParams(location.search).get('swipe'); if (q === '1') localStorage.setItem('ct.swipe', '1'); if (q === '0') localStorage.removeItem('ct.swipe'); } catch (e) {}
+    let on = false; try { on = localStorage.getItem('ct.swipe') === '1'; } catch (e) {}
+    if (!on || !window.CTMotion) return;
+    const M = window.CTMotion, H = document.documentElement;
+    const NO = 'svg,canvas,input,textarea,select,button,a,[data-noswipe],.grip,.cb-menu,.sheetw,.pl,dialog';
+    const blocked = (t, doc) => {
+      if (document.querySelector('dialog[open]') || (document.getElementById('app-menu') && !document.getElementById('app-menu').hidden)) return true;
+      if (H.classList.contains('mbd-on') || document.querySelector('#cb.editing,#cb.viewing')) return true;
+      if (doc !== document && doc.querySelector('.sheetw:not([hidden]),.pl.on,.pl:not([hidden]).open')) return true;
+      for (let el = t; el && el !== doc.body; el = el.parentElement) { if (el.matches && el.matches(NO)) return true; const cs = doc.defaultView.getComputedStyle(el); if (/(auto|scroll)/.test(cs.overflowX) && el.scrollWidth > el.clientWidth + 1) return true; }
+      return false;
+    };
+    let s = null;
+    const start = (e, doc) => {
+      s = null; if (moving || e.touches.length !== 1) return; const page = cur; if (page !== 'board' && page !== 'stories') return;
+      const t = e.touches[0]; if (t.clientX < 18) return;   // the browser's own edge swipe
+      if (doc === document && !(e.target.closest && e.target.closest('.cbx'))) return;
+      if (blocked(e.target, doc)) return;
+      s = { page, to: page === 'board' ? 'entries' : 'board', x0: t.clientX, y0: t.clientY, lock: '', tr: M.tracker() }; s.tr.add(t.clientX);
+    };
+    const moveT = e => {
+      if (!s) return; const t = e.touches[0], dx = t.clientX - s.x0, dy = t.clientY - s.y0;
+      if (!s.lock) { if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return; s.lock = dx > 0 && Math.abs(dx) > Math.abs(dy) * 1.3 ? 'x' : 'y'; if (s.lock !== 'x') { s = null; return; } s.x0 = t.clientX; H.classList.add('pg-moving'); }
+      if (e.cancelable) e.preventDefault(); s.tr.add(t.clientX);
+      let x = t.clientX - s.x0; if (x < 0) x = -M.rubber(-x, 30); s.x = x;
+      const w = W(); layerOf(s.page).forEach(el => { el.style.transform = tx(x); }); layerOf(s.to).forEach(el => { el.style.transform = tx(x - w); });
+    };
+    const end = () => {
+      if (!s) return; const c = s; s = null; if (c.lock !== 'x') return; const v = c.tr.v(), w = W(), x = c.x || 0;
+      if (v > 450 || (x > w * 0.4 && v > -250)) { resume = { from: c.page, x, v, t: Date.now() }; if (window.CTTabGo) window.CTTabGo(c.to);
+        // if the way back didn't run (busy), put the pages back where they belong
+        setTimeout(() => { if (resume && resume.from === c.page) { resume = null; H.classList.remove('pg-moving'); placeAll(); } }, 800); return; }
+      const F = layerOf(c.page)[0], T = layerOf(c.to);
+      M.glide({ el: F, axis: 'x', tf: x => tx(x), from: x, to: 0, v: Math.min(0, v), k: 420, c: 41, with: T.map(el => ({ el, prop: 'transform', map: x => tx(x - w) })), done: () => { H.classList.remove('pg-moving'); placeAll(); } });
+    };
+    const hook = doc => { if (!doc || doc.__ctSwipe) return; doc.__ctSwipe = true;
+      doc.addEventListener('touchstart', e => start(e, doc), { passive: true }); doc.addEventListener('touchmove', moveT, { passive: false });
+      doc.addEventListener('touchend', end, { passive: true }); doc.addEventListener('touchcancel', end, { passive: true }); };
+    hook(document); hookFrame = () => hook(frameDoc());
+    // Stories lives in its own frame: hook it whenever it's (re)loaded
+    setInterval(() => { const d = frameDoc(); if (d && d.body) hook(d); }, 1500);
+  })();
   addEventListener('resize', () => { vw = 0; geo.clear(); if (!moving) placeAll(); syncPill(false); });
 
   // ---------- the frosted background, from the page you're on ----------
