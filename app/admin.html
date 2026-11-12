@@ -252,6 +252,13 @@ html{touch-action:pan-x pan-y}
 .alflash{animation:alFlash 1.6s ease}
 @keyframes alFlash{0%,100%{box-shadow:0 0 0 0 transparent}20%,60%{box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 55%,transparent)}}
 @media (prefers-reduced-motion:reduce){.alp,.albd,.alp .ali{transition-duration:.01s}.alflash{animation:none}}
+.bio .bio-k{margin:14px 0 16px}.bio .bio-k .kpi{background:transparent}
+.bio-more{margin-top:14px;border-top:1px solid var(--line,rgba(0,0,0,.08));padding-top:12px}
+.bio-more summary{cursor:pointer;font-weight:800;font-size:13.5px;list-style:none;display:inline-flex;align-items:center;gap:6px}
+.bio-more summary::-webkit-details-marker{display:none}.bio-more summary::after{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translateY(-2px);transition:transform .2s}
+.bio-more[open] summary::after{transform:rotate(225deg) translateY(-1px)}
+.bio-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:18px 26px;margin-top:14px}
+.bio-d h4{margin:0;font-size:14px}.bio-d .sub{margin-bottom:8px}
 </style></head><body><div class="wrap">
 </head><body>
 <style>
@@ -507,15 +514,21 @@ function views(){const E=D.events,P=st.cmp?D.eventsPrev:null,PP=D.eventsPrev,L=d
   return '<div class="kpis">'+kpi('People active in this period',ppl,pplP)+kpi('Most used',top&&top.n?top.p:0,null,v=>top&&top.n?Math.round(v)+'% · '+esc(top.l):'—')+kpi('Rarely used (under 10%)',low.length,null,v=>v+' of '+rows.length)+kpi('Ran out of free entries',R.entry_limit||0,RP.entry_limit||0)+'</div><div class="grid">'+
   card('c8','How many people use each feature','Share of everyone active in these dates who used it at least once'+(st.cmp?' (change in points vs the previous period)':''),ppl?'<div class="list fr">'+tbl+'</div>':'<div class="empty">No one was active in these dates</div>')+
   card('c4','What gets skipped','Used by fewer than 1 in 10 active people',low.length?'<div class="list">'+low.map(r=>'<div class="row"><span>'+esc(r.l)+'</span><b>'+Math.round(r.p)+'%</b></div>').join('')+'</div><p class="hint">Worth asking: is it hard to find, or not wanted? Time on each page is under Time &amp; pages.</p>':'<div class="empty">Every feature reaches at least 1 in 10 people</div>')+BIO()+'</div>'};
- // v52.40 Face ID, Touch ID and fingerprint: who has it set up now (by method), and what people did with it in these dates
- const BIO=()=>{const now=Object.fromEntries((D.passkeys||[]).map(r=>[r.kind,r.n])),tot=Object.values(now).reduce((a,b)=>a+b,0),PK=x=>byDim(E,x),PKp=x=>P?byDim(P,x):null;
-  return card('c6','Face ID, Touch ID and fingerprint: set up now','People with sign-in turned on today, by how they unlock'+(D.members?' · '+fmt(tot)+' of '+fmt((D.members.free||0)+(D.members.premium||0))+' members':''),list(now,null,'var(--s1)'))+
-   card('c6','Signed in with it','Sign-ins in these dates, by how they unlock',list(PK('pk_signin'),PKp('pk_signin'),'var(--s2)'))+
-   card('c4','Turned on','Sign-in turned on in these dates',list(PK('pk_on'),PKp('pk_on'),'var(--s4)'))+
-   card('c4','Face ID lock turned on','“Require … to open”, by how they unlock',list(PK('lock_on'),PKp('lock_on'),'var(--s5)'))+
-   card('c4','Lock: ask again','What people picked',list(PK('lock_ask'),PKp('lock_ask'),'var(--s3)'))+
-   card('c6','Lock: unlocks','Times the app was unlocked, by how they unlock',list(PK('lock_open'),PKp('lock_open'),'var(--s4)'))+
-   card('c6','Turned off','Sign-in removed and lock turned off',list(Object.assign({},...Object.entries(PK('pk_off')).map(([k,v])=>({['Sign-in · '+k]:v})),...Object.entries(PK('lock_off')).map(([k,v])=>({['Lock · '+k]:v}))),null,'var(--s3)'))};
+ // v52.41 Face ID, Touch ID and fingerprint: one card. The headline numbers and who has it set up, with the rest a tap away.
+ const BIO=()=>{const now=Object.fromEntries((D.passkeys||[]).map(r=>[r.kind,r.n])),tot=Object.values(now).reduce((a,b)=>a+b,0),mem=D.members?(D.members.free||0)+(D.members.premium||0):0,PK=x=>byDim(E,x),PKp=x=>P?byDim(P,x):null,sum=o=>Object.values(o||{}).reduce((a,b)=>a+b,0),R=fm(D.reach),RP=fm(D.reachPrev);
+  const offs=Object.assign({},...Object.entries(PK('pk_off')).map(([k,v])=>({['Sign-in · '+k]:v})),...Object.entries(PK('lock_off')).map(([k,v])=>({['Lock · '+k]:v})));
+  const mini=(h,sub,body)=>'<div class="bio-d"><h4>'+h+'</h4><div class="sub">'+sub+'</div>'+body+'</div>';
+  return '<div class="card c12 bio"><h3>Face ID, Touch ID and fingerprint</h3><div class="sub">Sign-in and the lock, by how people unlock</div>'+
+   '<div class="kpis bio-k">'+kpi('Set up now',tot,null,v=>fmt(v)+(mem?'<small class="nn" style="display:block;margin-top:2px">'+(v/mem*100).toFixed(1)+'% of members</small>':''))+kpi('Sign-ins with it',sum(PK('pk_signin')),PKp('pk_signin')?sum(PKp('pk_signin')):null)+kpi('People using the lock',R.applock||0,RP.applock||0)+kpi('Turned off',sum(offs))+'</div>'+
+   list(now,null,'var(--s1)')+
+   '<details class="bio-more"><summary>More details</summary><div class="bio-g">'+
+    mini('Signed in with it','Sign-ins in these dates',list(PK('pk_signin'),PKp('pk_signin'),'var(--s2)'))+
+    mini('Turned on','Sign-in turned on in these dates',list(PK('pk_on'),PKp('pk_on'),'var(--s4)'))+
+    mini('Lock turned on','“Require … to open”',list(PK('lock_on'),PKp('lock_on'),'var(--s5)'))+
+    mini('Lock: ask again','What people picked',list(PK('lock_ask'),PKp('lock_ask'),'var(--s3)'))+
+    mini('Lock: unlocks','Times the app was unlocked',list(PK('lock_open'),PKp('lock_open'),'var(--s4)'))+
+    mini('Turned off','Sign-in removed and lock turned off',list(offs,null,'var(--s3)'))+
+   '</div></details></div>'};
  // v50.4: Sign-ups & upgrades — where new members came from, and what upgraders had already used while on Free
  const UPG=()=>{const UF=fm(D.upFeat),FF=fm(D.freeFeat),U=D.upgraders||0,B=D.freeBase||0,rows=FEATS.map(([k,l])=>({l,u:pct(UF[k]||0,U),f:pct(FF[k]||0,B)})).filter(r=>r.u||r.f).map(r=>Object.assign(r,{x:r.f?r.u/r.f:r.u?99:0})).sort((a,b)=>b.x-a.x||b.u-a.u);
   const lift=x=>x>=99?'only upgraders':x?x.toFixed(1)+'×':'—',ctx=Object.fromEntries((D.upCtx||[]).map(r=>[r.dim||'not seen',r.n])),src=D.signupSrc||[];
