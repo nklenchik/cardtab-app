@@ -36,13 +36,20 @@
     zone.addEventListener('touchmove', e => {
       if (!s) return; const x = e.touches[0].clientX, y = e.touches[0].clientY, dx = x - s.x0, dy = y - s.y0;
       if (!s.decided) {
-        if (Math.abs(dx) < 7 && Math.abs(dy) < 7) return;
+        // v52.54 until it knows which way you're going, it keeps the page from starting its own scroll or bounce when the
+        // sheet could be the thing moving (the top bar, or a list already at its top being pulled down). Once the browser
+        // starts scrolling it can't be stopped, and the sheet would lag and fight the finger.
+        const top0 = !s.sc || s.sc.scrollTop <= 0;
+        if ((s.head || (top0 && dy > 0)) && e.cancelable) e.preventDefault();
+        if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
         s.decided = true;
         if (Math.abs(dx) > Math.abs(dy)) { s = null; return; }                    // sideways: chips, carousels
         const top = !s.sc || s.sc.scrollTop <= 0;
         s.drag = s.head || (dy > 0 && top);
         if (!s.drag) { s = null; return; }
-        s.y0 = y; s.sheet.getAnimations().forEach(a => { if (a.id === 'ct-drag') a.cancel(); });
+        // v52.54 the distance already moved counts, so the sheet sits exactly where the finger is (it used to trail it by the
+        // few pixels it took to decide)
+        s.sheet.getAnimations().forEach(a => { if (a.id === 'ct-drag') a.cancel(); });
         // v52.52 still opening: pick it up from where it is right now, not where it's headed
         s.base = M ? Math.max(0, M.at(s.sheet, win)[1]) : 0;
         // v51.1: 'important', so an opening animation that is itself !important (the profile menu's) can't hold the sheet in place
