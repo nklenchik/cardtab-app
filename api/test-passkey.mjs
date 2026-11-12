@@ -74,6 +74,14 @@ r = (await login()).res; assert.equal(r.status, 400); assert.match((await r.json
 o = await (await call('/auth/passkey/reg/start', { method: 'POST', body: {}, cookie: fan })).json();
 await call('/auth/passkey/reg/finish', { method: 'POST', body: { ...reg(o.challenge), authenticatorData: b64u(await authData({ attested: true })) }, cookie: fan });
 assert.equal(sq.prepare('SELECT COUNT(*) n FROM passkeys').get().n, 1);
+// counting: the admin dashboard sees who has it set up now, by method, and what people did with it
+await call('/auth/ev', { method: 'POST', cookie: fan, body: { dev: 'phone', ev: [{ e: 'pk_signin', d: 'Face ID · iPhone' }, { e: 'lock_on', d: 'Face ID · iPhone' }, { e: 'lock_ask', d: '15 min' }, { e: 'lock_open', d: 'Face ID · iPhone' }] } });
+const boss = await signIn('boss@x.com');
+const st = await (await call('/auth/admin/stats', { cookie: boss })).json();
+assert.deepEqual(st.passkeys, [{ kind: 'Face ID · iPhone', n: 1 }], JSON.stringify(st.passkeys));
+const evn = (e, d) => (st.events.find(r => r.ev === e && r.dim === d) || {}).n;
+assert.equal(evn('pk_signin', 'Face ID · iPhone'), 1); assert.equal(evn('lock_ask', '15 min'), 1);
+assert.ok(st.reach.some(r => r.feat === 'passkey') && st.reach.some(r => r.feat === 'applock'), 'feature reach includes Face ID sign-in and the lock');
 await call('/auth/delete', { method: 'POST', body: {}, cookie: fan });
 assert.equal(sq.prepare('SELECT COUNT(*) n FROM passkeys').get().n, 0);
 console.log('passkey tests passed');

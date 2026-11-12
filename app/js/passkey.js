@@ -17,6 +17,9 @@
     : /Windows NT/.test(ua) ? { label: 'Windows PC', kind: 'Windows Hello', sec: 'Windows Hello' } : null;
   const apple = !!dev;   // (any device we can name: Apple, Android, Windows)
   const cap = t => t ? t[0].toUpperCase() + t.slice(1) : t;
+  // v52.40 counting (Admin → Features): which way people unlock. Names match the admin dashboard's "set up now" list.
+  const METHOD = !dev ? 'Other' : dev.label === 'iPhone' ? 'Face ID · iPhone' : dev.label === 'iPad' ? 'Face or Touch ID · iPad' : dev.label === 'Mac' ? 'Touch ID · Mac' : dev.label === 'Android phone' ? 'Fingerprint or face · Android' : 'Windows Hello';
+  const count = (e, d) => { try { window.CTTrack && window.CTTrack.ev(e, d || METHOD); } catch (er) {} };
   const can = !!(Sess && Sess.REAL && window.PublicKeyCredential && navigator.credentials && window.AuthenticatorAttestationResponse && 'getPublicKey' in AuthenticatorAttestationResponse.prototype);
   let platform = null;   // does this device have Face ID / Touch ID ready (checked once)
   const ready = async () => { if (!can) return false; if (platform == null) { try { platform = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(); } catch (e) { platform = false; } } return platform; };
@@ -34,7 +37,7 @@
       attestation: 'none', excludeCredentials: (o.exclude || []).map(id => ({ type: 'public-key', id: u2b(id) })), timeout: o.timeout } });
     const r = c.response;
     await api('/auth/passkey/reg/finish', { id: c.id, clientDataJSON: b2u(r.clientDataJSON), authenticatorData: b2u(r.getAuthenticatorData()), publicKey: b2u(r.getPublicKey()), alg: r.getPublicKeyAlgorithm(), label: dev ? dev.label : 'This device', kind: dev ? dev.kind : 'Passkey' });
-    setFlag({ id: c.id, kind: dev ? dev.kind : 'passkey' });
+    setFlag({ id: c.id, kind: dev ? dev.kind : 'passkey' }); count('pk_on');
     return c.id;
   }
   async function signIn() { try { return await signIn1(); } catch (e) { if (/isn’t on a Card Tab account/.test(e.message || '')) { setFlag(null); const b = document.querySelector('.auth-pk'); if (b) b.hidden = true; } throw e; } }
@@ -43,7 +46,7 @@
     const c = await navigator.credentials.get({ publicKey: { challenge: u2b(o.challenge), rpId: o.rpId, userVerification: 'required', timeout: o.timeout } });
     const r = c.response;
     const j = await api('/auth/passkey/login/finish', { id: c.id, clientDataJSON: b2u(r.clientDataJSON), authenticatorData: b2u(r.authenticatorData), signature: b2u(r.signature), userHandle: r.userHandle ? b2u(r.userHandle) : '' });
-    const f = flag(); setFlag({ id: c.id, kind: (f && f.id === c.id && f.kind) || (dev ? dev.kind : 'passkey') });
+    const f = flag(); setFlag({ id: c.id, kind: (f && f.id === c.id && f.kind) || (dev ? dev.kind : 'passkey') }); setTimeout(() => count('pk_signin'), 1500);   // after the session is saved, so it's counted
     return j;
   }
 
@@ -87,7 +90,7 @@
     if (x && !busy) { e.stopPropagation();
       if (!x.classList.contains('confirm')) { x.classList.add('confirm'); x.textContent = 'Tap to remove'; setTimeout(() => { if (x.isConnected) { x.classList.remove('confirm'); x.textContent = 'Remove'; } }, 3500); return; }
       busy = true; x.textContent = 'Removing…';
-      try { await api('/auth/passkeys/remove', { id: x.dataset.pkx }); const f = flag(); if (f && f.id === x.dataset.pkx) { setFlag(null); setLock(null); } items = null; note = ''; }
+      try { await api('/auth/passkeys/remove', { id: x.dataset.pkx }); const f = flag(); count('pk_off'); if (f && f.id === x.dataset.pkx) { if (lockPref().on) count('lock_off'); setFlag(null); setLock(null); } items = null; note = ''; }
       catch (er) { note = friendly(er); }
       busy = false; paint(); }
   });
@@ -123,7 +126,7 @@
   }
   async function unlock(auto) {
     if (asking) return; asking = true; const err = lockEl && lockEl.querySelector('[data-lk=err]');
-    try { await check(); document.documentElement.classList.remove('ct-locked'); try { localStorage.removeItem(AWAY); } catch (e) {} }
+    try { await check(); count('lock_open'); document.documentElement.classList.remove('ct-locked'); try { localStorage.removeItem(AWAY); } catch (e) {} }
     catch (e) { if (!auto && err && e.name !== 'NotAllowedError') { err.textContent = friendly(e) || 'That didn’t work. Try again.'; err.hidden = false; } }
     finally { asking = false; }
   }
@@ -152,10 +155,10 @@
   document.addEventListener('click', async e => {
     const sw = e.target.closest('#am-lock'), t = e.target.closest('[data-lockt]');
     if (sw && !busy) { e.stopPropagation(); const on = sw.getAttribute('aria-checked') !== 'true';
-      if (on) { busy = true; note = ''; try { await check(); setLock({ on: true, after: lockPref().after }); try { localStorage.removeItem(AWAY); } catch (er) {} } catch (er) { note = friendly(er); } busy = false; }
-      else setLock(null);
+      if (on) { busy = true; note = ''; try { await check(); setLock({ on: true, after: lockPref().after }); count('lock_on'); try { localStorage.removeItem(AWAY); } catch (er) {} } catch (er) { note = friendly(er); } busy = false; }
+      else { setLock(null); count('lock_off'); }
       setTimeout(paint); return; }   // after this tap is handled, so the menu still sees the tap as inside it
-    if (t) { e.stopPropagation(); setLock({ on: true, after: +t.dataset.lockt }); setTimeout(paint); }
+    if (t) { e.stopPropagation(); setLock({ on: true, after: +t.dataset.lockt }); count('lock_ask', { 0: 'Always', 300: '5 min', 900: '15 min' }[+t.dataset.lockt]); setTimeout(paint); }
   });
 
   window.CTPasskey = { can, apple, ready, add, signIn, prepButton, paint, reset() { items = null; note = ''; }, kindName, friendly };

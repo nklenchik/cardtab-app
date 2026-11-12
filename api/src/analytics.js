@@ -61,6 +61,8 @@ function featOf(e, d) {
     case 'limit': return 'entry_limit';
     case 'range': return d === 'all time' || d === 'year' ? 'long_range' : null;
     case 'export': return 'export';
+    case 'pk_on': case 'pk_signin': return 'passkey';
+    case 'lock_on': case 'lock_open': return 'applock';
     default: return null;
   }
 }
@@ -135,6 +137,10 @@ export async function handleStats(env, req, out) {
   const bySrc = {}; srcRows.forEach(r => { const o = bySrc[r.src] = bySrc[r.src] || { dim: r.src, n: 0, free: 0, premium: 0, upgraded: 0 }; o.n++; o[r.plan0 === 'premium' ? 'premium' : 'free']++; if (r.up_day) o.upgraded++; });
   const v504 = { reach, reachPrev, upgraders: (upg[0] || {}).n || 0, upDays: (upg[0] || {}).days || 0, upFeat: upgFeat, freeBase: (baseN[0] || {}).n || 0, freeFeat: baseFeat, upCtx,
     signupSrc: Object.values(bySrc).sort((a, b) => b.n - a.n), signupSec: tally(srcRows, 'sec'), signupDemo: tally(srcRows, 'demo'), signupKnown: srcRows.filter(r => r.src !== 'not known').length, signupAll: srcRows.length, join: joinSec, copyBuys, copyDays };
+  // v52.40 people with Face ID / Touch ID / fingerprint sign-in set up right now, by method (admins left out)
+  const pkNow = await safe(q("SELECT p.kind, COUNT(DISTINCT p.user_id) n FROM passkeys p JOIN users u ON u.id = p.user_id WHERE 1=1" + notAdmin.replace(/lower\(email\)/, 'lower(u.email)') + ' GROUP BY p.kind', adm));
+  const KN = { 'Face ID': 'Face ID · iPhone', 'Face ID or Touch ID': 'Face or Touch ID · iPad', 'Touch ID': 'Touch ID · Mac', 'fingerprint or face': 'Fingerprint or face · Android', 'Windows Hello': 'Windows Hello' }, pkm = {};
+  pkNow.forEach(r => { const k = KN[r.kind] || r.kind || 'Other'; pkm[k] = (pkm[k] || 0) + r.n; });
   return out({
     from, to, pFrom, pTo, days: n, plan: plan || 'all', dev: dev || 'all',
     active: cur.active, activePrev: prev.active, secs: cur.secs, secsPrev: prev.secs, people, peoplePrev,
@@ -142,7 +148,7 @@ export async function handleStats(env, req, out) {
     members: Object.fromEntries(members.map(r => [r.plan || 'free', r.n])),
     signups: signups, signupsPrev: (signPrev[0] || {}).n || 0,
     cohorts, askSpend: spend[0] || null, eventsToday: (evToday[0] || {}).n || 0,
-    askCap: +(env.ASK_MONTH_USD || 25), ...v504
+    askCap: +(env.ASK_MONTH_USD || 25), passkeys: Object.entries(pkm).map(([kind, n]) => ({ kind, n })), ...v504
   });
 }
 
