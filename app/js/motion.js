@@ -21,8 +21,22 @@
   // - tracker(): the finger's speed over the last ~80ms (px per second).
   // - rubber(): past an edge it gives a little, more and more stiffly.
   const calmQ = matchMedia('(prefers-reduced-motion: reduce)');
+  // v52.57 Low Power Mode: iPhone holds web pages to 30 frames a second there. The app checks its own frame rate now and
+  // then (a few blank frames, when it opens or comes back to the screen, and every 20 seconds while it's showing), and at
+  // 30 the springs get gentler: same shape, about 1.5x as long, so each drawn step is about two thirds the size.
+  let low = false;
+  function probe() {
+    if (document.hidden) return; const ts = []; const f = t => { ts.push(t); if (ts.length < 16) requestAnimationFrame(f); else {
+      const d = ts.slice(1).map((t, i) => t - ts[i]).sort((a, b) => a - b), med = d[d.length >> 1];
+      low = med > 24 && med < 80; document.documentElement.classList.toggle('ct-lowfps', low); } };
+    requestAnimationFrame(f);
+  }
+  setTimeout(probe, 2500); setInterval(probe, 20000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(probe, 300); });
+  // same damping (k and c scale together), just slower
+  const tune = (k, c) => low ? [k * 0.45, c * 0.67] : [k, c];
   function spring(o) {
-    const w = o.win || window, k = o.k || 380, c = o.c || 39, to = o.to;
+    const w = o.win || window, [k, c] = tune(o.k || 380, o.c || 39), to = o.to;
     let x = o.from, v = o.v || 0, last = 0, id = 0, live = true;
     if (calmQ.matches) { o.set(to); o.done && o.done(); return { stop: () => to, get live() { return false; } }; }
     const tick = now => { if (!live) return; const dt = last ? Math.min(0.034, (now - last) / 1000) : 1 / 60; last = now;
@@ -46,7 +60,7 @@
       return spring({ win: w, from: o.from, to: o.to, v: o.v, k: o.k, c: o.c, set: x => { el.style.transform = o.tf(x); (o.with ? [].concat(o.with) : []).forEach(f => { if (f && f.el) f.el.style[f.prop] = f.map(x); }); }, done: o.done });
     }
     // trace the spring once (1ms steps), in units of the whole distance
-    const k = o.k || 380, c = o.c || 39; let x = 0, v = (o.v || 0) / d, t = 0; const pts = [0];
+    const [k, c] = tune(o.k || 380, o.c || 39); let x = 0, v = (o.v || 0) / d, t = 0; const pts = [0];
     while (t < 2000) { for (let i = 0; i < 1; i++) { const a = -k * (x - 1) - c * v; v += a * 0.001; x += v * 0.001; } t++; pts.push(x); if (Math.abs((x - 1) * d) < 0.4 && Math.abs(v * d) < 14) break; }
     const n = Math.min(80, pts.length - 1), ease = 'linear(' + Array.from({ length: n + 1 }, (_, i) => { const j = Math.round(i / n * (pts.length - 1)); return (Math.round((i === n ? 1 : pts[j]) * 10000) / 10000) + ' ' + (Math.round(j / (pts.length - 1) * 10000) / 100) + '%'; }).join(', ') + ')';
     const dur = pts.length - 1;
@@ -61,7 +75,7 @@
   }
   // where an element sits right now (its transform, mid-animation included): [x, y]
   const at = (el, w) => { const t = (w || window).getComputedStyle(el).transform; if (!t || t === 'none') return [0, 0]; const m = t.match(/matrix(3d)?\(([^)]+)\)/); if (!m) return [0, 0]; const n = m[2].split(',').map(Number); return m[1] ? [n[12], n[13]] : [n[4], n[5]]; };
-  window.CTMotion = { spring, glide, tracker, rubber, at };
+  window.CTMotion = { spring, glide, tracker, rubber, at, probe, get low() { return low; } };
 
   const calm = matchMedia('(prefers-reduced-motion: reduce)'), phone = matchMedia('(max-width:760px)');
   ['as', 'ed', 'imp', 'ntf', 'fix', 'dela'].forEach(id => {
