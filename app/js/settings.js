@@ -62,11 +62,20 @@
   // and on touch screens follow the finger back: swipe right anywhere on a page. Reduced motion keeps the plain fade.
   const M = window.CTMotion, live = () => M && !calm.matches;
   const off = pg => (pg.offsetWidth || menu.clientWidth || 360) * 1.04;
-  const setX = (pg, x) => { pg.style.transform = 'translate3d(' + x + 'px,0,0)'; };
+  // v52.56 depth, the way iPhone apps move between pages: the menu underneath slides a little to the left and dims as the
+  // page covers it (and comes back as the page leaves, following the finger on a swipe back)
+  const shade = document.createElement('div'); shade.className = 'amp-shade'; shade.hidden = true; menu.appendChild(shade);
+  const unders = () => [...menu.children].filter(c => !c.classList.contains('amp') && c !== shade && !c.hidden);
+  const cl = v => Math.max(0, Math.min(1, v));
+  const depthOf = (pg, w) => { const L = unders(); return [...L.map(el => ({ el, prop: 'transform', map: x => 'translate3d(' + Math.round(-(1 - cl(x / w)) * 0.3 * w * 10) / 10 + 'px,0,0)' })), { el: shade, prop: 'opacity', map: x => String(Math.round((1 - cl(x / w)) * 0.16 * 1000) / 1000) }]; };
+  const depthAt = (pg, x) => { const w = off(pg); depthOf(pg, w).forEach(f => { f.el.style[f.prop] = f.map(x); }); };
+  const depthClear = () => { unders().forEach(el => { el.style.transform = ''; }); shade.style.opacity = ''; shade.hidden = true; };
+  const setX = (pg, x) => { pg.style.transform = 'translate3d(' + x + 'px,0,0)'; depthAt(pg, x); };
   const rest = pg => { pg.style.transform = ''; pg.style.transition = ''; };
   function slide(pg, from, to, v, done) {
     if (pg._sp) pg._sp.stop(); pg.style.transition = 'none'; pg._to = to;
-    pg._sp = M.glide({ el: pg, axis: 'x', tf: x => 'translate3d(' + x + 'px,0,0)', from, to, v, k: 420, c: 41, done: () => { pg._sp = null; done && done(); } });
+    // v52.56 quicker to arrive (most of the way in ~150ms, settled by ~300ms), with no long slow finish
+    pg._sp = M.glide({ el: pg, axis: 'x', tf: x => 'translate3d(' + x + 'px,0,0)', from, to, v, k: 640, c: 50, with: depthOf(pg, off(pg)), done: () => { pg._sp = null; done && done(); } });
   }
   const xOf = pg => pg._sp && pg._sp.live ? pg._sp.stop() : (pg.style.transform ? M.at(pg)[0] : null);
   function openPage(id, byKey) {
@@ -76,6 +85,7 @@
     // v52.55 the menu keeps its place: the page opens over whatever part of the menu is showing (it used to jump the menu
     // back to the top first, which showed as a jolt behind the page), and back returns to the same spot
     const st = menu.scrollTop; pg.style.top = st + 'px'; pg.style.bottom = -st + 'px';
+    if (live()) { shade.style.top = st + 'px'; shade.style.height = menu.clientHeight + 'px'; shade.hidden = false; }
     pg.hidden = false; if (was == null) pg.scrollTop = 0; cur = pg;
     if (live()) { const from = was == null ? off(pg) : was; setX(pg, from); pg.style.transition = 'none'; pg.getBoundingClientRect(); menu.classList.add('am-in'); pg.classList.add('on'); slide(pg, from, 0, 0, () => rest(pg)); }
     else { pg.getBoundingClientRect(); menu.classList.add('am-in'); pg.classList.add('on'); }
@@ -86,7 +96,7 @@
   function closePage(fromPop, instant, v) {
     if (!cur) return; const pg = cur; cur = null;
     if (!fromPop && window.CTNav) window.CTNav.done('amp');
-    const fin = () => { if (!pg.classList.contains('on')) { pg.hidden = true; pg.style.top = pg.style.bottom = ''; } rest(pg); menu.classList.remove('am-snap'); };
+    const fin = () => { if (!pg.classList.contains('on')) { pg.hidden = true; pg.style.top = pg.style.bottom = ''; if (!cur) depthClear(); } rest(pg); menu.classList.remove('am-snap'); };
     if (instant) { if (pg._sp) { pg._sp.stop(); pg._sp = null; } pg.style.transition = 'none'; menu.classList.add('am-snap'); }
     if (!instant && live()) { const from = xOf(pg); slide(pg, from == null ? 0 : from, off(pg), v || 0, () => { menu.classList.remove('am-in'); fin(); }); pg.classList.remove('on'); }
     else { menu.classList.remove('am-in'); pg.classList.remove('on'); if (instant || calm.matches) fin(); else setTimeout(fin, 320); }
@@ -110,10 +120,10 @@
     const end = () => {
       if (!s) return; const c = s; s = null; if (c.lock !== 'x') return; const v = c.tr.v(), x = M.at(c.pg)[0], w = off(c.pg);
       // caught and let go without moving: it carries on where it was going
-      if (c.heading != null && c.moved < 6) { if (c.heading > 0 && cur === c.pg) closePage(false, false, 0); else if (c.heading > 0) slide(c.pg, x, w, 0, () => { c.pg.hidden = true; rest(c.pg); menu.classList.remove('am-in'); }); else slide(c.pg, x, 0, 0, () => rest(c.pg)); return; }
+      if (c.heading != null && c.moved < 6) { if (c.heading > 0 && cur === c.pg) closePage(false, false, 0); else if (c.heading > 0) slide(c.pg, x, w, 0, () => { c.pg.hidden = true; c.pg.style.top = c.pg.style.bottom = ''; rest(c.pg); menu.classList.remove('am-in'); if (!cur) depthClear(); }); else slide(c.pg, x, 0, 0, () => rest(c.pg)); return; }
       const away = v > 450 || (x > w * 0.45 && v > -250);
       if (away && cur === c.pg) closePage(false, false, Math.max(0, v));
-      else if (away) slide(c.pg, x, w, Math.max(0, v), () => { c.pg.hidden = true; rest(c.pg); menu.classList.remove('am-in'); });
+      else if (away) slide(c.pg, x, w, Math.max(0, v), () => { c.pg.hidden = true; c.pg.style.top = c.pg.style.bottom = ''; rest(c.pg); menu.classList.remove('am-in'); if (!cur) depthClear(); });
       else { if (cur !== c.pg) { if (cur) closePage(false, true); cur = c.pg; c.pg.classList.add('on'); menu.classList.add('am-in'); if (window.CTNav) window.CTNav.push('amp', () => closePage(true)); }   // caught on its way out and pulled back
         slide(c.pg, x, 0, Math.min(0, v), () => rest(c.pg)); }
     };

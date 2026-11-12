@@ -43,7 +43,7 @@
   function glide(o) {
     const w = o.win || window, el = o.el, d = o.to - o.from;
     if (calmQ.matches || !el.animate || !curveOK(w) || Math.abs(d) < 0.5) {
-      return spring({ win: w, from: o.from, to: o.to, v: o.v, k: o.k, c: o.c, set: x => { el.style.transform = o.tf(x); if (o.also) o.also(x); }, done: o.done });
+      return spring({ win: w, from: o.from, to: o.to, v: o.v, k: o.k, c: o.c, set: x => { el.style.transform = o.tf(x); (o.with ? [].concat(o.with) : []).forEach(f => { if (f && f.el) f.el.style[f.prop] = f.map(x); }); }, done: o.done });
     }
     // trace the spring once (1ms steps), in units of the whole distance
     const k = o.k || 380, c = o.c || 39; let x = 0, v = (o.v || 0) / d, t = 0; const pts = [0];
@@ -52,11 +52,12 @@
     const dur = pts.length - 1;
     el.style.transform = o.tf(o.to);
     const an = el.animate([{ transform: o.tf(o.from) }, { transform: o.tf(o.to) }], { duration: dur, easing: ease });
-    const an2 = o.with ? o.with.el.animate([{ [o.with.prop]: o.with.map(o.from) }, { [o.with.prop]: o.with.map(o.to) }], { duration: dur, easing: ease }) : null;
-    if (o.with) o.with.el.style[o.with.prop] = o.with.map(o.to);
+    // followers (a backdrop's dim, the layer underneath) move on the same curve
+    const fol = (o.with ? [].concat(o.with) : []).filter(f => f && f.el);
+    const an2s = fol.map(f => { const a = f.el.animate([{ [f.prop]: f.map(o.from) }, { [f.prop]: f.map(o.to) }], { duration: dur, easing: ease }); f.el.style[f.prop] = f.map(o.to); return a; });
     let live = true;
-    an.onfinish = () => { if (!live) return; live = false; an.cancel(); if (an2) an2.cancel(); o.done && o.done(); };
-    return { get live() { return live; }, stop() { if (!live) return o.to; live = false; const p = at(el, w)[o.axis === 'y' ? 1 : 0]; an.cancel(); if (an2) an2.cancel(); el.style.transform = o.tf(p); if (o.with) o.with.el.style[o.with.prop] = o.with.map(p); return p; } };
+    an.onfinish = () => { if (!live) return; live = false; an.cancel(); an2s.forEach(a => a.cancel()); o.done && o.done(); };
+    return { get live() { return live; }, stop() { if (!live) return o.to; live = false; const p = at(el, w)[o.axis === 'y' ? 1 : 0]; an.cancel(); an2s.forEach(a => a.cancel()); el.style.transform = o.tf(p); fol.forEach(f => { f.el.style[f.prop] = f.map(p); }); return p; } };
   }
   // where an element sits right now (its transform, mid-animation included): [x, y]
   const at = (el, w) => { const t = (w || window).getComputedStyle(el).transform; if (!t || t === 'none') return [0, 0]; const m = t.match(/matrix(3d)?\(([^)]+)\)/); if (!m) return [0, 0]; const n = m[2].split(',').map(Number); return m[1] ? [n[12], n[13]] : [n[4], n[5]]; };

@@ -2527,3 +2527,4 @@ html.ct-locked body{overflow:hidden}
 
 /* v52.55 the classes above (ct-noapp, mbd-on, first-on) replace :has() checks on the whole page, which were re-run on
    every change and made each window's first frame slower; main.js keeps them in step */
+.app-menu.am>.amp-shade{position:absolute;left:0;right:0;z-index:2;background:#000;opacity:0;pointer-events:none;border-radius:inherit;will-change:opacity}   /* v52.56 dims the menu as a settings page covers it */
