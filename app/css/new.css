@@ -2047,6 +2047,10 @@ dialog::backdrop,.bu-sheet::backdrop,dialog.sheet::backdrop,dialog.drawer::backd
 #fix .fix-up i{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:none;background:color-mix(in srgb,var(--accent,#a50e37) 12%,transparent);color:var(--accent,#a50e37)}
 #fix .fix-up b{display:block;font-size:15px;font-weight:800}#fix .fix-up small{display:block;font-size:12.5px;color:var(--ct-muted);font-weight:600;margin-top:1px}
 @media(hover:hover){#fix .fix-up:hover{border-color:var(--ct-muted)}}
+/* a long list scrolls inside its own area, so the upload button and the no-art link stay below it instead of on top of it */
+#fix .ntf-form>*{flex-shrink:0}
+#fix #fix-res{flex:1 1 auto;min-height:120px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;border-radius:16px}
+#fix #fix-res .ntf-lst{margin-top:0}
 dialog.au{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:0;border:0;background:transparent;color:inherit;overflow:hidden}
 dialog.au::backdrop{background:rgba(8,7,6,.6)}
 .au-crop{position:absolute;inset:0;background:#141312;color:#fff;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
