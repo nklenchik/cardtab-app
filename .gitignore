@@ -7,3 +7,4 @@ tests/out-phone/
 tests/tests/
 tests/out-qa/
 __pycache__/
+out-qa/
