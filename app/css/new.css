@@ -2397,8 +2397,7 @@ html[data-theme="dark"] :is(dialog,dialog.sheet,dialog.drawer,.bu-sheet)::backdr
  #pms .pmhero.pmfanned+.pmb{margin-top:-6px!important}
  #pms .pmhero.pmfanned+.pmb>h2{text-align:center}
 }
-/* v52.14 phones: a quiet press shade the instant a closed entry is touched (the gray tap flash is off), so a tap answers right away */
-@media(hover:none){.ct-demo .ct-row:not(.expanded):has(.ct-row-toggle:active){background-image:linear-gradient(color-mix(in srgb,var(--ct-text) 6%,transparent),color-mix(in srgb,var(--ct-text) 6%,transparent))}}
+/* v52.28 no press shade on entries (light or dark): on iPhone it could stay on after the tap, and the gray tap flash stays off too */
 
 
 /* v52.23 in-app browser note on the sign-in screen (Instagram, Facebook, TikTok…) */
