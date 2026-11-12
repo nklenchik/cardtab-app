@@ -11,7 +11,7 @@
   const put = v => { try { localStorage.setItem(K, JSON.stringify(v)); } catch (e) {} };
   const calm = matchMedia('(prefers-reduced-motion: reduce)');
   const tap = () => matchMedia('(hover:hover) and (pointer:fine)').matches ? 'Click' : 'Tap';   // the right word for a mouse or a finger
-  let cur = null, shownThisVisit = 0;
+  let cur = null, shownThisVisit = 0, active = null;   // active: closes the tip on screen
   const busy = () => !!document.querySelector('dialog[open]') || (document.getElementById('app-menu') && !document.getElementById('app-menu').hidden) || !!document.querySelector('.sk:not([hidden]), .pdw:not([hidden])');
   const T = window.CTPageTips = {
     off: () => !!get().off,
@@ -22,7 +22,8 @@
     end(id, retire) { if (cur === id) cur = null; if (retire) { const s = get(); s.seen = Object.assign({}, s.seen, { [id]: 1 }); put(s); } },
     offAll() { const s = get(); s.off = 1; put(s); cur = null; },
     reset() { put({}); try { localStorage.removeItem('cb.hint'); } catch (e) {} },
-    get visits() { return shownThisVisit; }
+    get visits() { return shownThisVisit; },
+    get current() { return cur; }
   };
   const ICON = {
     tap: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V6.5a1.5 1.5 0 0 1 3 0V11"/><path d="M12 10.5V9a1.5 1.5 0 0 1 3 0v2"/><path d="M15 11a1.5 1.5 0 0 1 3 0v3.5a5.5 5.5 0 0 1-5.5 5.5h-.8a5 5 0 0 1-3.9-1.9L5 14.5a1.5 1.5 0 0 1 2.3-1.9L9 14.5"/></svg>',
@@ -46,7 +47,7 @@
       const below = r.bottom + 14 + th < H - 12, top = below ? r.bottom + 14 : Math.max(12, r.top - th - 14);
       tip.style.left = left + 'px'; tip.style.top = top + 'px'; tip.style.bottom = 'auto'; };
     const onMove = () => { if (!raf) raf = requestAnimationFrame(place); };
-    const finish = retire => { if (!tip.isConnected) return; T.end(id, retire); tip.classList.remove('on'); if (ring) ring.classList.remove('on');
+    const finish = retire => { if (!tip.isConnected) return; if (active === finish) active = null; T.end(id, retire); tip.classList.remove('on'); if (ring) ring.classList.remove('on');
       removeEventListener('scroll', onMove, true); removeEventListener('resize', onMove); document.removeEventListener('click', onDone, true);
       setTimeout(() => { tip.remove(); if (ring) ring.remove(); }, calm.matches ? 0 : 320); };
     const onDone = e => { if (o.done && e.target.closest(o.done)) finish(true); };
@@ -54,7 +55,7 @@
     tip.querySelector('.pt-off').onclick = () => { T.offAll(); finish(false); };
     addEventListener('scroll', onMove, { passive: true, capture: true }); addEventListener('resize', onMove); document.addEventListener('click', onDone, true);
     place(); requestAnimationFrame(() => { tip.classList.add('on'); if (ring) ring.classList.add('on'); });
-    o.close = finish; return true;
+    o.close = finish; active = finish; return true;
   }
   T.show = show;
 
@@ -76,11 +77,17 @@
       }
     }, calm.matches ? 400 : 1300);
   }
+  // each tip belongs to its page: leaving the page puts it away (not retired), and coming back brings it again
+  function sync() { const x = document.getElementById('csx'), st = !!(x && x.classList.contains('in'));
+    if (((cur === 'entries' || cur === 'ask') && !onEntries()) || (cur === 'stories' && !st)) { if (active) active(false); }
+    const c = document.querySelector('.cbx'); if (cur === 'board' && (st || !c || c.classList.contains('off'))) { const h = document.querySelector('.cbhint.on'); if (h) h.classList.remove('on'); cur = null; }   // the Board's own tip (board.js)
+    if (!cur) check(); }   // check waits for the page to settle and only shows on Entries
+  document.addEventListener('click', e => { if (e.target.closest('[data-tab], [data-go]')) setTimeout(sync, 450); }, true);
   // Stories: when the Stories page slides in
   function watchStories() {
     const x = document.getElementById('csx'); if (!x) return setTimeout(watchStories, 400);
     let was = false;
-    const look = () => { const on = x.classList.contains('in');
+    const look = () => { const on = x.classList.contains('in'); sync();
       if (on && cur === 'board') { const h = document.querySelector('.cbhint.on'); if (h) h.classList.remove('on'); cur = null; }   // the Board's tip, left underneath Stories, steps aside
       if (on && !was) setTimeout(() => { if (x.classList.contains('in')) show('stories', { icon: 'play', text: tap() + ' a story to play it. ' + tap() + ' right or left to move through it, and hold to pause.' }); }, calm.matches ? 300 : 1100); was = on; };
     new MutationObserver(look).observe(x, { attributes: true, attributeFilter: ['class'] }); look();   // also if Stories was already open when the page loaded its files
