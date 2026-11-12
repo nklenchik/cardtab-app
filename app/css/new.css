@@ -2504,3 +2504,19 @@ dialog.fbd.out{animation:fbOut .2s ease forwards}
 .app-menu.am .amg button.am-pkx:active{transform:scale(.96)}
 .app-menu.am .amg button.am-pkx.confirm{background:#d0263f;border-color:#d0263f;color:#fff}
 .am-pknote{margin:2px 12px 8px 42px;font-size:12px;font-weight:650;color:var(--muted,#77736d)}
+/* v52.39 Require Face ID to open: the app sits blurred behind a simple lock screen */
+#ct-lock{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;text-align:center;
+  padding:max(24px,env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-right,0px)) max(24px,env(safe-area-inset-bottom,0px)) max(24px,env(safe-area-inset-left,0px));
+  background:color-mix(in srgb,var(--bg,#f7f6f2) 78%,transparent);-webkit-backdrop-filter:blur(22px) saturate(1.1);backdrop-filter:blur(22px) saturate(1.1);color:var(--text)}
+html.ct-locked body{overflow:hidden}
+#ct-lock .lk-in{max-width:320px}
+#ct-lock .lk-logo img{display:block;width:64px;height:64px;border-radius:17px;margin:0 auto 16px;box-shadow:0 10px 24px -10px rgba(165,14,55,.55)}
+#ct-lock h2{margin:0;font:800 22px/1.2 Manrope,system-ui,sans-serif;letter-spacing:-.02em}
+#ct-lock p{margin:6px 0 20px;color:var(--muted,#77736d);font-weight:600;font-size:14.5px}
+#ct-lock .lk-go{display:inline-flex;align-items:center;gap:9px;border:0;border-radius:999px;padding:12px 20px;font:800 15px Manrope,system-ui,sans-serif;background:#c2163f;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s}
+#ct-lock .lk-go:active{transform:scale(.96)}
+#ct-lock .lk-err{margin:12px 0 0;color:#d0263f;font-size:13px}
+#ct-lock .lk-out{display:block;margin:16px auto 0;border:0;background:none;color:var(--muted,#77736d);font:700 13px Manrope,system-ui,sans-serif;cursor:pointer;padding:6px 10px}
+.app-menu.am .am-lockr .seg{flex:none}
+.app-menu.am .am-lockr.amth>.amgt,.app-menu.am .am-lockr.amth>.seg{margin-left:30px}
+.app-menu.am .am-lockr.amth>.seg{width:calc(100% - 30px)}

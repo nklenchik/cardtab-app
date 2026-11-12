@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <script>/* the pages.dev address is only for Cloudflare; people use app.cardtab.app */if(/\.pages\.dev$/i.test(location.hostname))location.replace("https://app.cardtab.app"+location.pathname+location.search);</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script>/* v52.39 Require Face ID to open: cover the app before it draws (passkey.js decides if it really asks) */try{var _l=JSON.parse(localStorage.getItem('ct.lock')||'null');if(_l&&_l.on&&localStorage.getItem('ct.pk')&&localStorage.getItem('ct.session'))document.documentElement.classList.add('ct-locked')}catch(e){}</script>
+<style>html:not(.ct-locked) #ct-lock{display:none}</style>
 <script>/* iPhone/iPad: stop the page zooming in when a field or dropdown with small text is tapped. Pinch-zoom still works there (iOS ignores this for pinching). */
 if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) document.querySelector('meta[name=viewport]').setAttribute('content', 'width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover');</script>
 <title>Card Tab</title>
@@ -29,9 +31,10 @@ if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIn
 <link rel="stylesheet" href="css/app.css?v=50.86">
 <link rel="stylesheet" href="css/addsheet.css?v=50.86">
 <link rel="stylesheet" href="css/soft.css?v=50.86">
-<link rel="stylesheet" href="css/new.css?v=52.38">
+<link rel="stylesheet" href="css/new.css?v=52.39">
 </head>
 <body class="ct-demo">
+<div id="ct-lock" role="dialog" aria-modal="true" aria-label="Card Tab is locked"><div class="lk-in"><div class="lk-logo" aria-hidden="true"><img src="apple-touch-icon.png" alt="" width="64" height="64"></div><h2>Card Tab is locked</h2><p data-lk="sub">Use Face ID to open it.</p><button type="button" class="lk-go" data-lk="go"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M9 9v1.5M15 9v1.5M12 9v4h-1M9.5 16c1.4 1 3.6 1 5 0"/></svg><span>Unlock</span></button><p class="lk-err" data-lk="err" role="alert" hidden></p><button type="button" class="lk-out" data-lk="out">Sign out instead</button></div></div>
 
 <!-- ============ Sign in ============ -->
 <main id="view-auth" class="auth" hidden>
@@ -304,7 +307,7 @@ if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIn
 <script src="js/feedback.js?v=52.23"></script>
 <script src="js/tips.js?v=52.27"></script>
 <script src="js/auth.js?v=52.38"></script>
-<script src="js/passkey.js?v=52.38"></script>
+<script src="js/passkey.js?v=52.39"></script>
 <script src="js/sync.js?v=52.17"></script>
 <script>/* Live card lookups and real art come from our Worker, which only answers app.cardtab.app. Anywhere else (test copies) uses the built-in sample catalog. */window.CARDTAB_API=/(^|\.)cardtab\.app$/i.test(location.hostname)?"https://api.cardtab.app":"";</script>
 <script src="js/parser.js?v=50.86"></script>
