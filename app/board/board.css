@@ -12,7 +12,7 @@
 #cb{--soft:var(--brand-soft);--btext:var(--brand-text);--pos:var(--green);--g1:var(--text);--g2:var(--cb-gry);--g3:var(--cb-gry2);--cb-alt:#f6f5f0;--cb-trk:#f3f1ea;--cb-trk2:#efede5;--cb-hl:#efede5;--cb-mut2:#9a988f;--cb-gry:#cfcdc2;--cb-gry2:#e3e1d8;--cb-dot:#d9d6cb;--cb-neg:#e0536f;--cb-pos:#7dbb57;--cb-bl:#1765a5;--cb-fnbg:#fde6df;--cb-fn:#c24a35;--cb-blbg:#e4eefa;--cb-ink:#1d1d1b;--cb-inkbg:#eceae2;--cb-crbg:#fbe3ea;--cb-cr:#a50e37;max-width:none}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #cb{--cb-alt:#1b1b1a;--cb-trk:#343431;--cb-trk2:#2b2b29;--cb-hl:#3a3a37;--cb-mut2:#8a897f;--cb-gry:#5d5c56;--cb-gry2:#57564f;--cb-dot:#4a4944;--cb-neg:#ef6b86;--cb-pos:#6cb83a;--cb-bl:#7ab4e6;--cb-fnbg:#4f2a22;--cb-fn:#f08a74;--cb-blbg:#1f4468;--cb-ink:#f1efe8;--cb-inkbg:#4a4944;--cb-crbg:#5c2234;--cb-cr:#f27a9a}}
 :root[data-theme="dark"] #cb{--cb-alt:#1b1b1a;--cb-trk:#343431;--cb-trk2:#2b2b29;--cb-hl:#3a3a37;--cb-mut2:#8a897f;--cb-gry:#5d5c56;--cb-gry2:#57564f;--cb-dot:#4a4944;--cb-neg:#ef6b86;--cb-pos:#6cb83a;--cb-bl:#7ab4e6;--cb-fnbg:#4f2a22;--cb-fn:#f08a74;--cb-blbg:#1f4468;--cb-ink:#f1efe8;--cb-inkbg:#4a4944;--cb-crbg:#5c2234;--cb-cr:#f27a9a}
-#cb *{box-sizing:border-box}
+
 #cb .app{max-width:1360px;margin:0 auto;padding:0 28px 48px}
 #cb .top{display:flex;align-items:center;gap:28px;padding:20px 0;border-bottom:1px solid var(--line);margin-bottom:26px}
 #cb .logo{font-weight:800;font-size:19px;letter-spacing:-.03em}
@@ -39,7 +39,7 @@
 #cb .sw:after{content:"";position:absolute;right:3px;top:3px;width:18px;height:18px;border-radius:50%;background:var(--card)}
 #cb .th{flex:none;width:38px;height:53px;border-radius:6px;overflow:hidden;background:#222;box-shadow:0 4px 9px rgba(0,0,0,.18);display:block}
 #cb .th img{width:100%;height:100%;object-fit:cover;display:block}
-#cb *{box-sizing:border-box}
+
 #cb .app{max-width:1360px;margin:0 auto;padding:0 28px 48px}
 #cb .top{display:flex;align-items:center;gap:28px;padding:20px 0;border-bottom:1px solid var(--line);margin-bottom:26px}
 #cb .logo{font-weight:800;font-size:19px;letter-spacing:-.03em}
@@ -2217,7 +2217,7 @@ dialog .entlist .emh:not(:first-child){margin-top:14px}
 .tip.on{opacity:1}
 .note{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--text);color:var(--bg);border-radius:999px;padding:8px 14px;font-size:12px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 
-.cbroot,.cbroot *,.cbroot *::before,.cbroot *::after{box-sizing:border-box}
+.cbroot,.cbroot *::before,.cbroot *::after{box-sizing:border-box}
 .cbroot{color:var(--text);font-family:var(--font);font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
 .cbroot button{font:inherit;color:inherit;cursor:pointer}
 .cbroot button:focus-visible,.cbroot select:focus-visible{outline:2px solid #5b9fe3;outline-offset:2px}

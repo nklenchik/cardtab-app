@@ -66,14 +66,17 @@
   const rest = pg => { pg.style.transform = ''; pg.style.transition = ''; };
   function slide(pg, from, to, v, done) {
     if (pg._sp) pg._sp.stop(); pg.style.transition = 'none'; pg._to = to;
-    pg._sp = M.spring({ from, to, v, k: 420, c: 41, set: x => setX(pg, x), done: () => { pg._sp = null; done && done(); } });
+    pg._sp = M.glide({ el: pg, axis: 'x', tf: x => 'translate3d(' + x + 'px,0,0)', from, to, v, k: 420, c: 41, done: () => { pg._sp = null; done && done(); } });
   }
   const xOf = pg => pg._sp && pg._sp.live ? pg._sp.stop() : (pg.style.transform ? M.at(pg)[0] : null);
   function openPage(id, byKey) {
     const pg = $('amp-' + id); if (!pg || cur === pg) return;
     const was = pg.hidden ? null : (live() ? xOf(pg) : null);   // coming back while it's still sliding out: from right there
     fill(id); paint();
-    menu.scrollTop = 0; pg.hidden = false; if (was == null) pg.scrollTop = 0; cur = pg;
+    // v52.55 the menu keeps its place: the page opens over whatever part of the menu is showing (it used to jump the menu
+    // back to the top first, which showed as a jolt behind the page), and back returns to the same spot
+    const st = menu.scrollTop; pg.style.top = st + 'px'; pg.style.bottom = -st + 'px';
+    pg.hidden = false; if (was == null) pg.scrollTop = 0; cur = pg;
     if (live()) { const from = was == null ? off(pg) : was; setX(pg, from); pg.style.transition = 'none'; pg.getBoundingClientRect(); menu.classList.add('am-in'); pg.classList.add('on'); slide(pg, from, 0, 0, () => rest(pg)); }
     else { pg.getBoundingClientRect(); menu.classList.add('am-in'); pg.classList.add('on'); }
     if (window.CTNav) window.CTNav.push('amp', () => closePage(true));
@@ -83,7 +86,7 @@
   function closePage(fromPop, instant, v) {
     if (!cur) return; const pg = cur; cur = null;
     if (!fromPop && window.CTNav) window.CTNav.done('amp');
-    const fin = () => { if (!pg.classList.contains('on')) pg.hidden = true; rest(pg); menu.classList.remove('am-snap'); };
+    const fin = () => { if (!pg.classList.contains('on')) { pg.hidden = true; pg.style.top = pg.style.bottom = ''; } rest(pg); menu.classList.remove('am-snap'); };
     if (instant) { if (pg._sp) { pg._sp.stop(); pg._sp = null; } pg.style.transition = 'none'; menu.classList.add('am-snap'); }
     if (!instant && live()) { const from = xOf(pg); slide(pg, from == null ? 0 : from, off(pg), v || 0, () => { menu.classList.remove('am-in'); fin(); }); pg.classList.remove('on'); }
     else { menu.classList.remove('am-in'); pg.classList.remove('on'); if (instant || calm.matches) fin(); else setTimeout(fin, 320); }

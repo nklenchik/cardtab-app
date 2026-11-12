@@ -415,7 +415,7 @@ dialog::backdrop,.bu-sheet::backdrop{background:var(--win-veil)!important;-webki
  .app-menu.am{z-index:57!important;max-height:calc(100dvh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))!important;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 }
 /* while one of Card Board's menus is open on a phone, the bar tucks behind the board so the board's dim covers it too */
-@media(max-width:760px){html:has(#mbd.on) .ct-tbar{z-index:45}}
+@media(max-width:760px){html.mbd-on .ct-tbar{z-index:45}}
 /* v33.9: one profile menu on every page: it sits above Card Board and Stories, and has an "On this page" section */
 .app-menu.am{z-index:97!important}.am-bd{z-index:96!important}
 .app-menu.am .am-sub{padding:8px 12px 2px;font-size:11.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ct-muted)}
@@ -505,7 +505,7 @@ dialog::backdrop,.bu-sheet::backdrop{background:var(--win-veil)!important;-webki
 /* a new account: "Add your first card" sits above the tiles, so the room for the bottom bar goes under the tiles instead */
 @media(max-width:760px){
  #app-first-wrap.ct-demo-right{padding-bottom:0!important;margin-bottom:16px}
- #app-grid:has(#app-first-wrap:not([hidden])) .ct-demo-left{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important}
+ #app-grid.first-on .ct-demo-left{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important}
 }
 /* v34.6 desktop: Entries · Board · Stories as a centered switcher (the desktop twin of the phone's bottom bar):
    bigger, in the middle of the header, the page you're on lifted as a card. Same look on Board and Stories. */
@@ -1130,7 +1130,7 @@ html.cs-modal .csx{z-index:120!important}
 .ct-gp .ct-pacts,.ct-gp .ct-dtot{display:none}
 @media(min-width:761px){.ct-demo .ct-row .ct-row-line{display:block!important;overflow:hidden;text-overflow:ellipsis}.ct-demo .ct-row .ct-row-line .ct-dot{vertical-align:1px;margin-right:7px}}
 /* the sign-in page has no app header (nothing to switch to before you are in) */
-body:has(#view-app[hidden]) .ct-shell,body:has(#view-app[hidden]) .ct-tbar,body:has(#view-app[hidden]) #ct-fab{display:none!important}
+html.ct-noapp .ct-shell,html.ct-noapp .ct-tbar,html.ct-noapp #ct-fab{display:none!important}
 
 /* ===== v37.4: phone rows, closed (option A): the name gets the whole width (up to two lines); under it the date line
    on the left and the amount on the right. "After fees" lives in the open row, where You kept says it. ===== */
@@ -1825,14 +1825,14 @@ html[data-fab="widget"] .ct-fab .fi-add{opacity:1;transform:rotate(180deg)}
 /* ===== v48.2 phones: the tab bar and the round button live in one layer (.ct-dock) that slides away as a whole while
    scrolling down, so the two can never drift apart or jitter against each other on iPhone ===== */
 #view-app[hidden]~.ct-dock{display:none}
-body:has(#view-app[hidden]) .ct-dock{display:none!important}
+html.ct-noapp .ct-dock{display:none!important}
 @media(max-width:760px){
  .ct-dock{position:fixed;left:0;right:0;bottom:0;height:0;z-index:92;transform:translate3d(0,0,0);will-change:transform;transition:transform .8s cubic-bezier(.22,.61,.36,1)}
  html.tb-away .ct-dock{transform:translate3d(0,calc(100% + 96px + env(safe-area-inset-bottom,0px)),0);transition:transform .6s cubic-bezier(.4,0,.2,1)}
  html.tb-away .ct-dock .ct-tbar,html.tb-away .ct-dock .ct-fab,.ct-dock .ct-tbar{transform:none!important;will-change:auto!important}
  .ct-dock .ct-tbar,.ct-dock .ct-fab{transition-property:background-color,opacity,box-shadow,color!important}
  .ct-dock .ct-fab:active{transform:scale(.92)!important;transition:transform .18s cubic-bezier(.2,.8,.2,1)!important}
- html:has(#mbd.on) .ct-dock{z-index:45}
+ html.mbd-on .ct-dock{z-index:45}
 }
 @media(prefers-reduced-motion:reduce){.ct-dock{transition-duration:.01s!important}}
 
@@ -2524,3 +2524,6 @@ html.ct-locked body{overflow:hidden}
    so it stands apart from the everyday settings */
 .app-menu.am .am-adm-go .mi,.app-menu.am .am-adm-go:hover .mi,.app-menu.am [data-amp=admin] .mi,.app-menu.am .amg [data-amp=admin]:hover .mi{color:var(--brand-text,#a50e37)}
 .app-menu.am .amp .amg>button:active,.app-menu.am .amp .amg>.amr:active{background:var(--am-hl);transition:none}   /* v52.52 rows in settings pages light up on touch */
+
+/* v52.55 the classes above (ct-noapp, mbd-on, first-on) replace :has() checks on the whole page, which were re-run on
+   every change and made each window's first frame slower; main.js keeps them in step */

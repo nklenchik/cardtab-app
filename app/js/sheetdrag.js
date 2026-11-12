@@ -21,6 +21,9 @@
     const scrollerOf = (t, stop) => { for (let el = t; el && el !== stop.parentElement; el = el.parentElement) { const cs = win.getComputedStyle(el); if (/(auto|scroll)/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 1) return el; } return null; };
     const set = (sheet, y, h) => { sheet.style.transform = y ? 'translate3d(0,' + y + 'px,0)' : ''; if (o.backdrop) o.backdrop.style.opacity = y > 0 ? String(Math.max(0, 1 - y / (h || (s ? s.h : 600)))) : ''; };
     const freeze = sheet => { sheet.style.setProperty('transition', 'none', 'important'); sheet.style.setProperty('animation', 'none', 'important'); };
+    // v52.55 release motion is handed to the browser (CTMotion.glide), so it stays smooth even if the app is busy
+    const glideY = (c, from, to, v, k, cc, done) => M.glide({ win, el: c.sheet, axis: 'y', tf: y => 'translate3d(0,' + y + 'px,0)', from, to, v, k, c: cc, done,
+      with: o.backdrop ? { el: o.backdrop, prop: 'opacity', map: y => String(Math.max(0, Math.min(1, 1 - y / c.h))) } : null });
     zone.addEventListener('touchstart', e => {
       s = null; if (e.touches.length !== 1 || (o.on && !o.on())) return;
       const t = e.target; if (t.closest && t.closest(NODRAG)) return;
@@ -77,13 +80,13 @@
         };
         if (calm() || !M) { fin(); return; }
         // slides the rest of the way at the speed it was flicked (a spring that's already moving, no fixed timing)
-        c.sheet._ctSpring = M.spring({ win, from: c.dy, to: c.h + 40, v: Math.max(v, 900), k: 260, c: 30, set: y => set(c.sheet, y, c.h), done: () => { c.sheet._ctSpring = null; fin(); } }); c.sheet._ctSpring.closing = true;
+        c.sheet._ctSpring = glideY(c, c.dy, c.h + 40, Math.max(v, 900), 260, 30, () => { c.sheet._ctSpring = null; fin(); }); c.sheet._ctSpring.closing = true;
         return;
       }
       // back into place: a spring that starts with the finger's speed, so a flick up settles naturally
       const later = () => { const dlg = c.sheet.closest('dialog'); if (dlg) dlg.addEventListener('close', reset, { once: true }); else c.sheet.style.removeProperty('transition'); };
       if (calm() || !M || !c.dy) { set(c.sheet, 0); later(); return; }
-      c.sheet._ctSpring = M.spring({ win, from: c.dy, to: 0, v: Math.min(v, 2500), k: 340, c: 32, set: y => set(c.sheet, y, c.h), done: () => { c.sheet._ctSpring = null; set(c.sheet, 0); later(); } });
+      c.sheet._ctSpring = glideY(c, c.dy, 0, Math.min(v, 2500), 340, 32, () => { c.sheet._ctSpring = null; set(c.sheet, 0); later(); });
     };
     zone.addEventListener('touchend', end, { passive: true }); zone.addEventListener('touchcancel', end, { passive: true });
   }

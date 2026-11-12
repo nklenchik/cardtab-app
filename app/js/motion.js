@@ -35,9 +35,32 @@
   function tracker() { const pts = []; return { add(p) { const t = performance.now(); pts.push([t, p]); while (pts.length > 2 && t - pts[0][0] > 80) pts.shift(); },
     v() { if (pts.length < 2) return 0; const a = pts[0], b = pts[pts.length - 1], dt = (b[0] - a[0]) / 1000; return dt > 0 ? (b[1] - a[1]) / dt : 0; } }; }
   const rubber = (d, lim) => lim * (1 - 1 / (d / lim * 0.55 + 1));
+  // v52.55 glide(): the same spring, but handed to the browser as one animation (a spring-shaped curve), so the system
+  // draws it off the main thread at the screen's own rate (60, or 120 where the browser allows). Busy moments in the app
+  // can't drop its frames. stop() reads where it is mid-move and holds it there, so a touch can still catch it.
+  // Falls back to spring() where the browser can't take the curve.
+  const curveOK = w => { try { return (w || window).CSS.supports('animation-timing-function', 'linear(0, 0.5 50%, 1)'); } catch (e) { return false; } };
+  function glide(o) {
+    const w = o.win || window, el = o.el, d = o.to - o.from;
+    if (calmQ.matches || !el.animate || !curveOK(w) || Math.abs(d) < 0.5) {
+      return spring({ win: w, from: o.from, to: o.to, v: o.v, k: o.k, c: o.c, set: x => { el.style.transform = o.tf(x); if (o.also) o.also(x); }, done: o.done });
+    }
+    // trace the spring once (1ms steps), in units of the whole distance
+    const k = o.k || 380, c = o.c || 39; let x = 0, v = (o.v || 0) / d, t = 0; const pts = [0];
+    while (t < 2000) { for (let i = 0; i < 1; i++) { const a = -k * (x - 1) - c * v; v += a * 0.001; x += v * 0.001; } t++; pts.push(x); if (Math.abs((x - 1) * d) < 0.4 && Math.abs(v * d) < 14) break; }
+    const n = Math.min(80, pts.length - 1), ease = 'linear(' + Array.from({ length: n + 1 }, (_, i) => { const j = Math.round(i / n * (pts.length - 1)); return (Math.round((i === n ? 1 : pts[j]) * 10000) / 10000) + ' ' + (Math.round(j / (pts.length - 1) * 10000) / 100) + '%'; }).join(', ') + ')';
+    const dur = pts.length - 1;
+    el.style.transform = o.tf(o.to);
+    const an = el.animate([{ transform: o.tf(o.from) }, { transform: o.tf(o.to) }], { duration: dur, easing: ease });
+    const an2 = o.with ? o.with.el.animate([{ [o.with.prop]: o.with.map(o.from) }, { [o.with.prop]: o.with.map(o.to) }], { duration: dur, easing: ease }) : null;
+    if (o.with) o.with.el.style[o.with.prop] = o.with.map(o.to);
+    let live = true;
+    an.onfinish = () => { if (!live) return; live = false; an.cancel(); if (an2) an2.cancel(); o.done && o.done(); };
+    return { get live() { return live; }, stop() { if (!live) return o.to; live = false; const p = at(el, w)[o.axis === 'y' ? 1 : 0]; an.cancel(); if (an2) an2.cancel(); el.style.transform = o.tf(p); if (o.with) o.with.el.style[o.with.prop] = o.with.map(p); return p; } };
+  }
   // where an element sits right now (its transform, mid-animation included): [x, y]
   const at = (el, w) => { const t = (w || window).getComputedStyle(el).transform; if (!t || t === 'none') return [0, 0]; const m = t.match(/matrix(3d)?\(([^)]+)\)/); if (!m) return [0, 0]; const n = m[2].split(',').map(Number); return m[1] ? [n[12], n[13]] : [n[4], n[5]]; };
-  window.CTMotion = { spring, tracker, rubber, at };
+  window.CTMotion = { spring, glide, tracker, rubber, at };
 
   const calm = matchMedia('(prefers-reduced-motion: reduce)'), phone = matchMedia('(max-width:760px)');
   ['as', 'ed', 'imp', 'ntf', 'fix', 'dela'].forEach(id => {

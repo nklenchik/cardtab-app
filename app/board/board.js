@@ -1194,7 +1194,7 @@ new MutationObserver(lockScroll).observe($('cb'),{subtree:true,attributes:true,a
 ;(()=>{const bd=document.createElement('div');bd.className='mbd';bd.id='mbd';$('cb').appendChild(bd);
   bd.addEventListener('click',e=>{e.stopPropagation();closeMenus();$('wmenu').hidden=true});
   const menus=[...document.querySelectorAll('#cb .cb-menu')];
-  const sync=()=>{const open=menus.filter(m=>!m.hidden);bd.classList.toggle('on',open.length>0&&matchMedia('(max-width:760px)').matches);lockScroll();
+  const sync=()=>{const open=menus.filter(m=>!m.hidden);bd.classList.toggle('on',open.length>0&&matchMedia('(max-width:760px)').matches);document.documentElement.classList.toggle('mbd-on',bd.classList.contains('on'));lockScroll();
     menus.forEach(m=>{if(!m.hidden)navPush('menu:'+m.id,()=>{m.hidden=true;closeMenus()});else navDone('menu:'+m.id)})};
   const mo=new MutationObserver(sync);menus.forEach(m=>mo.observe(m,{attributes:true,attributeFilter:['hidden']}))})();
 
@@ -1305,6 +1305,8 @@ function place(){const ph=PH.matches;
 let lastY=0,tuckT=0;
 function sync(){const open=!cbx.classList.contains('off')&&!cbx.inert,ok=PH.matches&&open&&!document.querySelector('#cb dialog[open]')&&!document.querySelector('#cb .cb-menu:not([hidden])')&&!cbEl.classList.contains('editing')&&!cbEl.classList.contains('viewing')&&!csx.classList.contains('in');
   dock.classList.toggle('on',ok);if(!ok)dock.classList.remove('tuck');
+  // v52.55 board closed: nothing to measure (measuring here forced a full layout whenever any window opened)
+  if(!open||!PH.matches){if(slim)slim.classList.remove('on');return}
   if(slim){const t=$('cbtn').getBoundingClientRect(),top0=cbx.getBoundingClientRect().top;const show=PH.matches&&open&&!csx.classList.contains('in')&&cbx.scrollTop>40&&t.bottom-top0<8;slim.classList.toggle('on',show);slim.querySelector('.spill span').textContent=$('cb-perl').textContent;
     const s=cbEl.classList.contains('editing');slim.classList.toggle('sedit',s)}}
 cbx.addEventListener('scroll',()=>{const y=cbx.scrollTop,dy=y-lastY;lastY=y;

@@ -24,10 +24,20 @@ const assert = require('assert');
   assert.ok(!(await open()), 'a flick right goes back'); assert.ok(await p.evaluate(() => !document.getElementById('app-menu').hidden), 'the menu stays open');
   // caught mid-slide: reopen, then grab it while it's still sliding in
   await p.evaluate(() => document.querySelector('#app-menu [data-amp=display]').click()); await p.waitForTimeout(60);
-  await touch('touchStart', box.x + 200, box.y); const caught = await pageX(); await p.waitForTimeout(150); const still = await pageX();
+  await touch('touchStart', box.x + box.w - 15, box.y); const caught = await pageX(); await p.waitForTimeout(150); const still = await pageX();
   assert.ok(caught > 1 && Math.abs(still - caught) < 1, 'caught mid-slide: stays under the finger ' + caught + ' ' + still); await touch('touchEnd'); await p.waitForTimeout(800); assert.equal(await pageX(), 0);
   // vertical scrolling on the page still scrolls, doesn't swipe
   await drag(box.x + 100, box.y + 100, box.x + 104, box.y - 100, 200); await p.waitForTimeout(500); assert.ok(await open(), 'scrolling stays scrolling');
+  // v52.55 opening a page from lower in the menu: the menu stays where it was, the page covers what's showing, back returns there
+  await p.evaluate(() => document.querySelector('#amp-display .amp-back').click()); await p.waitForTimeout(700);
+  const sc = await p.evaluate(() => { const m = document.getElementById('app-menu'); m.scrollTop = 160; return m.scrollTop; });
+  if (sc > 20) {
+    await p.evaluate(() => document.querySelector('#app-menu [data-amp=money]').click()); await p.waitForTimeout(700);
+    const r = await p.evaluate(() => { const m = document.getElementById('app-menu'), g = document.getElementById('amp-money'); return [m.scrollTop, Math.round(g.getBoundingClientRect().top - m.getBoundingClientRect().top), Math.round(g.getBoundingClientRect().height - m.clientHeight)]; });
+    assert.equal(r[0], sc, 'the menu keeps its place'); assert.ok(Math.abs(r[1]) <= 2 && Math.abs(r[2]) <= 2, 'the page covers the visible menu ' + r);
+    await p.evaluate(() => document.querySelector('#amp-money .amp-back').click()); await p.waitForTimeout(700);
+    assert.equal(await p.evaluate(() => document.getElementById('app-menu').scrollTop), sc, 'back returns to the same spot');
+  }
   await p.evaluate(() => CTMenu.close()); await p.waitForTimeout(700);
   if (process.argv[2] === 'tablet') { assert.deepEqual(errs, []); console.log('fluid touch checks passed (tablet: settings pages; windows are centered there, not sheets)'); await b.close(); return; }
   // a sheet: Notification settings

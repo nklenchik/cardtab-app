@@ -14,6 +14,11 @@
 
   const displayName = s => s.name || (s.via === 'google' && s.email.endsWith('.local') ? 'You' : s.email.split('@')[0].replace(/[._+-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase()));
 
+  // v52.55 page-wide states as classes on <html> (instead of :has() checks over the whole page, which slowed every
+  // window's first frame): ct-noapp while the app view is hidden, first-on while the get-started panel shows
+  (() => { const H = document.documentElement, va = document.getElementById('view-app'), fw = document.getElementById('app-first-wrap'), grid = document.getElementById('app-grid');
+    const sync = () => { if (va) H.classList.toggle('ct-noapp', va.hidden); if (grid && fw) grid.classList.toggle('first-on', !fw.hidden); };
+    const mo = new MutationObserver(sync); [va, fw].forEach(el => el && mo.observe(el, { attributes: true, attributeFilter: ['hidden'] })); sync(); })();
   async function showApp(session, isNew) {
     vAuth.hidden = true; vApp.hidden = false; document.title = 'Card Tab';
     await S.open({ email: session.email });

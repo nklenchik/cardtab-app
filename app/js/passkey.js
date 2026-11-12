@@ -63,13 +63,21 @@
   const PHONE = '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>', LAPTOP = '<rect x="3" y="5" width="18" height="11" rx="2"/><path d="M2 19h20"/>';
   const ICON = { iPhone: PHONE, 'Android phone': PHONE, iPad: '<rect x="4.5" y="2.5" width="15" height="19" rx="2.5"/><path d="M11 18.5h2"/>', Mac: LAPTOP, 'Windows PC': '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4"/>' };
   const svg = p => '<svg class="mi" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
-  let items = null, busy = false, note = '';
+  // v52.55 the list is remembered on this device, so Account opens with it already drawn (no "Checking…" and no jump);
+  // it's refreshed quietly each time and redrawn only if something changed
+  const CK = 'ct.pkl', readCk = () => { try { const v = JSON.parse(localStorage.getItem(CK) || 'null'); return Array.isArray(v) ? v : null; } catch (e) { return null; } };
+  const saveCk = v => { try { localStorage.setItem(CK, JSON.stringify(v)); } catch (e) {} };
+  let items = null, busy = false, note = '', fresh = false;
+  const forget = () => { items = null; fresh = false; try { localStorage.removeItem(CK); } catch (e) {} };
+  async function refresh() { if (fresh) return; fresh = true; try { const v = (await api('/auth/passkeys')).items || []; const was = JSON.stringify(items); items = v; saveCk(v); if (JSON.stringify(v) !== was) paint(); } catch (e) { fresh = false; } }
   async function paint() {
     const g = document.getElementById('am-pk'), l = document.getElementById('am-pk-l'); if (!g) return;
     const ok = await ready(), mine = flag();
     if (!can || (!ok && !(items && items.length))) { g.hidden = l.hidden = true; return; }
+    if (items === null) items = readCk();
     if (items === null) { g.hidden = l.hidden = false; g.innerHTML = '<div class="amr am-info">' + svg(FACE_PATH) + '<span class="amgt">Face ID and Touch ID<small class="am-sv">Checking…</small></span></div>';
-      try { items = (await api('/auth/passkeys')).items || []; } catch (e) { items = []; } }
+      try { items = (await api('/auth/passkeys')).items || []; saveCk(items); fresh = true; } catch (e) { items = []; } }
+    else if (!fresh) setTimeout(refresh, 400);   // after the page has slid in
     const here = mine && items.some(x => x.id === mine.id);
     if (mine && !here) { setFlag(null); setLock(null); }   // removed on another device
     if (!items.length && !(ok && apple)) { g.hidden = l.hidden = true; return; }
@@ -84,13 +92,13 @@
   document.addEventListener('click', async e => {
     const a = e.target.closest('#am-pkadd'), x = e.target.closest('[data-pkx]');
     if (a && !busy) { e.stopPropagation(); busy = true; note = '';
-      try { await add(); note = 'Done. Next time, tap “Sign in with ' + dev.kind + '”.'; items = null; window.ctBuzz && window.ctBuzz(); }
+      try { await add(); note = 'Done. Next time, tap “Sign in with ' + dev.kind + '”.'; forget(); window.ctBuzz && window.ctBuzz(); }
       catch (er) { note = friendly(er); }
       busy = false; paint(); return; }
     if (x && !busy) { e.stopPropagation();
       if (!x.classList.contains('confirm')) { x.classList.add('confirm'); x.textContent = 'Tap to remove'; setTimeout(() => { if (x.isConnected) { x.classList.remove('confirm'); x.textContent = 'Remove'; } }, 3500); return; }
       busy = true; x.textContent = 'Removing…';
-      try { await api('/auth/passkeys/remove', { id: x.dataset.pkx }); const f = flag(); count('pk_off'); if (f && f.id === x.dataset.pkx) { if (lockPref().on) count('lock_off'); setFlag(null); setLock(null); } items = null; note = ''; }
+      try { await api('/auth/passkeys/remove', { id: x.dataset.pkx }); const f = flag(); count('pk_off'); if (f && f.id === x.dataset.pkx) { if (lockPref().on) count('lock_off'); setFlag(null); setLock(null); } forget(); note = ''; }
       catch (er) { note = friendly(er); }
       busy = false; paint(); }
   });
@@ -161,5 +169,5 @@
     if (t) { e.stopPropagation(); setLock({ on: true, after: +t.dataset.lockt }); count('lock_ask', { 0: 'Always', 300: '5 min', 900: '15 min' }[+t.dataset.lockt]); setTimeout(paint); }
   });
 
-  window.CTPasskey = { can, apple, ready, add, signIn, prepButton, paint, reset() { items = null; note = ''; }, kindName, friendly };
+  window.CTPasskey = { can, apple, ready, add, signIn, prepButton, paint, reset() { fresh = false; note = ''; }, forget, kindName, friendly };
 })();
