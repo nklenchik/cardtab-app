@@ -22,7 +22,7 @@
   // - rubber(): past an edge it gives a little, more and more stiffly.
   const calmQ = matchMedia('(prefers-reduced-motion: reduce)');
   // v52.57 Low Power Mode: iPhone holds web pages to 30 frames a second there. The app checks its own frame rate now and
-  // then (a few blank frames, when it opens or comes back to the screen, and every 20 seconds while it's showing), and at
+  // then (a few blank frames, when it opens or comes back to the screen), and at
   // 30 the springs get gentler: same shape, about 1.5x as long, so each drawn step is about two thirds the size.
   let low = false;
   function probe() {
@@ -31,8 +31,9 @@
       low = med > 24 && med < 80; document.documentElement.classList.toggle('ct-lowfps', low); } };
     requestAnimationFrame(f);
   }
-  setTimeout(probe, 2500); setInterval(probe, 20000);
+  setTimeout(probe, 2500);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(probe, 300); });
+  addEventListener('focus', () => setTimeout(probe, 300));   // back from Control Center, where Low Power Mode is often switched
   // same damping (k and c scale together), just slower
   const tune = (k, c) => low ? [k * 0.45, c * 0.67] : [k, c];
   function spring(o) {
