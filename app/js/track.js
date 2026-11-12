@@ -39,7 +39,7 @@
   // health: errors by kind and file only (never the message, which could hold someone's text), and how fast the app opened
   addEventListener('error', e => { const f = String(e.filename || '').split('/').pop().split('?')[0] || 'page'; ev('error', ((e.error && e.error.name) || 'Error') + ' ' + f); });
   addEventListener('unhandledrejection', e => { ev('error', 'Promise ' + ((e.reason && e.reason.name) || 'rejection')); });
-  addEventListener('load', () => setTimeout(() => { try { const n = performance.getEntriesByType('navigation')[0]; if (n) ev('load_ms', desk.matches ? 'desk' : 'phone', Math.round(n.domContentLoadedEventEnd)); } catch (e) {} ev('page_view', page); }, 0));
+  addEventListener('load', () => setTimeout(() => { try { if (matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) ev('installed', 'yes'); } catch (e) {} try { const n = performance.getEntriesByType('navigation')[0]; if (n) ev('load_ms', desk.matches ? 'desk' : 'phone', Math.round(n.domContentLoadedEventEnd)); } catch (e) {} ev('page_view', page); }, 0));
 
   // watch the app's own moments (each wrapper keeps the original behavior exactly)
   const wrap = (obj, key, before) => { const f = obj && obj[key]; if (typeof f !== 'function' || f._ct) return false; const g = function (...a) { try { before.apply(this, a); } catch (e) {} return f.apply(this, a); }; g._ct = 1; obj[key] = g; return true; };

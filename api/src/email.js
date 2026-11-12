@@ -38,15 +38,17 @@ export function signInEmail({ link, code, mode }) {
 }
 
 // Send through Cloudflare Email Service when its binding is set up (needs Workers Paid for any recipient), otherwise Resend.
-export async function sendMail(env, { to, subject, html, text, replyTo }) {
-  const from = env.MAIL_FROM || 'login@cardtab.app';
+export async function sendMail(env, { to, subject, html, text, replyTo, headers, from: fromAddr }) {
+  const from = fromAddr || env.MAIL_FROM || 'login@cardtab.app';
   if (env.EMAIL && env.EMAIL.send) {
-    await env.EMAIL.send({ to, from: { email: from, name: 'Card Tab' }, subject, html, text, ...(replyTo ? { replyTo } : {}) });
+    const msg = { to, from: { email: from, name: 'Card Tab' }, subject, html, text, ...(replyTo ? { replyTo } : {}) };
+    if (headers) { try { await env.EMAIL.send({ ...msg, headers }); return 'cloudflare'; } catch (e) { /* headers not taken: send without them */ } }
+    await env.EMAIL.send(msg);
     return 'cloudflare';
   }
   if (env.RESEND_API_KEY) {
     const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { authorization: 'Bearer ' + env.RESEND_API_KEY, 'content-type': 'application/json' },
-      body: JSON.stringify({ from: `Card Tab <${from}>`, to: [to], subject, html, text, ...(replyTo ? { reply_to: replyTo } : {}) }) });
+      body: JSON.stringify({ from: `Card Tab <${from}>`, to: [to], subject, html, text, ...(replyTo ? { reply_to: replyTo } : {}), ...(headers ? { headers } : {}) }) });
     if (!r.ok) throw Object.assign(new Error('resend ' + r.status + ' ' + (await r.text()).slice(0, 200)), { status: 502 });
     return 'resend';
   }
@@ -158,3 +160,56 @@ export function giftEmail({ name, until, appUrl }) {
   return { subject, html, text };
 }
 
+
+// ---------- v52.49: the first-two-weeks emails for Free members (sent by drip.js) ----------
+// links: { go(key) -> tracked link into the app, unsub -> stop-these-emails link, pixel -> open-count image (or '') }
+const p14 = (t, last) => `<p style="margin:0 0 ${last ? 4 : 14}px;font-size:15px;line-height:1.5;color:#55524c">${t}</p>`;
+const usd = c => { const n = Math.abs(c) / 100, s = n >= 1000 ? Math.round(n).toLocaleString('en-US') : n.toFixed(2); return (c < 0 ? '−$' : '$') + s; };
+export const TIPS = {
+  start: { subj: 'Still getting set up?', title: 'Start with your last sale', btn: 'Add a card', go: 'add',
+    body: () => 'The quickest way to see what Card Tab does: add the last card you sold. Tap <b style="color:#1a1918">+</b>, type its name, pick it and enter the price. The art fills in on its own.' },
+  sale: { subj: 'See what you really kept', title: 'Log a sale', btn: 'Log a sale', go: 'add',
+    body: n => `You’ve logged ${n} ${n === 1 ? 'buy' : 'buys'} so far. Add a sale and Card Tab takes off the fees and shipping, so you see what you actually made on a card.` },
+  budget: { subj: 'One thing worth trying this week', title: 'Set a monthly budget', btn: 'Set a budget', go: 'budget',
+    body: n => `You’ve logged ${n} ${n === 1 ? 'entry' : 'entries'} so far. Add a monthly budget and Card Tab shows what’s left every time you buy, so a card show doesn’t sneak up on you.` },
+  home: { subj: 'Put Card Tab on your Home Screen', title: 'Open it like an app', btn: 'Show me how', go: 'home',
+    body: () => 'Add Card Tab to your Home Screen and it opens full screen in one tap, right when you’re at a show or checking out. On iPhone, tap Share, then Add to Home Screen.' },
+  board: { subj: 'Your numbers, all in one place', title: 'Try the Card Board', btn: 'Open the Card Board', go: 'board',
+    body: () => 'The Card Board puts your profit, spending, fees and biggest wins on one screen. Move things around and keep what matters to you.' },
+  stories: { subj: 'Your month, as a story', title: 'Play a Card Story', btn: 'Play a Card Story', go: 'stories',
+    body: () => 'Card Stories turns your month into a short slideshow: what you spent, what you sold and your best flip. Fun to watch, easy to share.' },
+  ask: { subj: 'Ask Card Tab anything', title: 'Ask a question', btn: 'Ask Card Tab', go: 'ask',
+    body: () => 'Ask questions about your own cards in plain words, like “What did I make on eBay this month?” or “Which card was my best flip?”' }
+};
+export function dripEmail({ step, tip, name, n, sum, links, open, opens, joinedAt, t }) {
+  const first = String(name || '').trim().split(/\s+/)[0] || '';
+  const pix = links.pixel ? `<img src="${esc(links.pixel)}" width="1" height="1" alt="" style="display:block;border:0;width:1px;height:1px">` : '';
+  const stop = `<a href="${esc(links.unsub)}" style="color:#77736d">Stop these emails</a>`;
+  let subject, pre, body, text;
+  if (step === 'd1') {
+    subject = 'Add your first card in 30 seconds'; pre = 'Start with your last sale.';
+    const a = 'Tap <b style="color:#1a1918">+</b>, type the card’s name, pick it and enter what you paid or sold it for. The art fills in on its own.';
+    body = h1('Your first card takes 30 seconds') + p14(a) + p14('Start with your last sale. It’s the quickest way to see what you really kept.', true) + button(links.go('add'), 'Add your first card', 18);
+    text = `Your first card takes 30 seconds\n\nTap +, type the card’s name, pick it and enter what you paid or sold it for. The art fills in on its own.\n\nStart with your last sale. It’s the quickest way to see what you really kept.\n\nAdd your first card: ${links.go('add')}`;
+  } else if (step === 'd7') {
+    const T = TIPS[tip] || TIPS.board; subject = T.subj; pre = T.title + '.';
+    body = h1(T.title) + p14(T.body(n), true) + button(links.go(T.go), T.btn, 18);
+    text = `${T.title}\n\n${T.body(n).replace(/<[^>]+>/g, '')}\n\n${T.btn}: ${links.go(T.go)}`;
+  } else {
+    subject = 'Your first two weeks in cards'; pre = (sum.profit >= 0 ? 'Profit so far: ' : 'So far: ') + usd(sum.profit) + ' across ' + sum.n + (sum.n === 1 ? ' entry.' : ' entries.');
+    const pl = premiumLine({ open, opens, joinedAt, t });
+    const cell = (k, v, color, small, right) => `<td width="50%" style="padding:${right ? '4px 0 4px 4px' : '4px 4px 4px 0'}"><div style="background:#f6f5f0;border-radius:12px;padding:10px 12px"><div style="font-size:12px;color:#77736d">${k}</div><div style="font-size:${small ? 14 : 18}px;font-weight:800;color:${color || '#1a1918'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v}</div></div></td>`;
+    const rows = [[cell('Profit', (sum.profit > 0 ? '+' : '') + usd(sum.profit), sum.profit >= 0 ? '#3b7a12' : '#a50e37'), cell('Entries', String(sum.n), null, false, true)]];
+    const r2 = []; if (sum.best) r2.push(cell('Biggest sale', esc(sum.best.name) + ' · ' + usd(sum.best.net), null, true)); if (sum.plat) r2.push(cell('Top platform', esc(sum.plat), null, true, r2.length === 1));
+    if (r2.length === 1) r2.push('<td width="50%"></td>'); if (r2.length) rows.push(r2);
+    body = h1('Your first two weeks' + (first ? ', ' + esc(first) : '')) +
+      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 10px;table-layout:fixed">${rows.map(r => '<tr>' + r.join('') + '</tr>').join('')}</table>` +
+      button(links.go('board'), 'See your Card Board', 4) +
+      `<div style="margin:20px 0 0;padding:14px 16px;background:#f9f0f2;border-radius:14px;font-size:13.5px;line-height:1.5;color:#55524c">${pl.html} <a href="${esc(links.go('premium'))}" style="color:#a50e37;font-weight:700">See Premium</a></div>`;
+    text = `Your first two weeks\n\nProfit: ${usd(sum.profit)}\nEntries: ${sum.n}` + (sum.best ? `\nBiggest sale: ${sum.best.name} · ${usd(sum.best.net)}` : '') + (sum.plat ? `\nTop platform: ${sum.plat}` : '') +
+      `\n\nSee your Card Board: ${links.go('board')}\n\n${pl.text}\nSee Premium: ${links.go('premium')}`;
+  }
+  const html = shell({ title: subject, preheader: pre, body: body + pix, foot: 'Questions or ideas? Just reply to this email. It comes straight to us.',
+    note: 'You’re getting this because you created a Card Tab account. ' + stop });
+  return { subject, html, text: text + `\n\nQuestions? Just reply.\n\nStop these emails: ${links.unsub}\n\nCard Tab · cardtab.app` };
+}

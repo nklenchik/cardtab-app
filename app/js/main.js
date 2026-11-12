@@ -27,6 +27,23 @@
     if (!S.persistent) Dash.toast('This browser isn’t letting Card Tab save on the device, so entries last until you close the tab.');
     else if (isNew && !S.all().length) Dash.toast('Welcome to Card Tab');
     history.replaceState(null, '', location.pathname);
+    emailGo();
+  }
+  // v52.49: buttons in Card Tab's emails open a spot in the app (?go=add|budget|board|stories|ask|home|premium). Kept
+  // through sign-in, then run once the app is on screen.
+  const GO_OK = /^(add|budget|board|stories|ask|home|premium)$/;
+  try { const g = new URLSearchParams(location.search).get('go'); if (g && GO_OK.test(g)) sessionStorage.setItem('ct.go', g); } catch (e) {}
+  function emailGo() {
+    let g = ''; try { g = sessionStorage.getItem('ct.go') || ''; sessionStorage.removeItem('ct.go'); } catch (e) {}
+    if (!GO_OK.test(g)) return;
+    setTimeout(() => { try {
+      if (g === 'add') { if (window.CTOpenAdd) window.CTOpenAdd(); }
+      else if (g === 'budget') { if (window.CTBudget) window.CTBudget.open(); }
+      else if (g === 'board' || g === 'stories') { if (window.CTTabGo) window.CTTabGo(g); }
+      else if (g === 'ask') { if (window.CTAskOpen) window.CTAskOpen(); else if (window.CTBoardLoader) window.CTBoardLoader.load().then(() => window.CTAskOpen && window.CTAskOpen()).catch(() => {}); }
+      else if (g === 'home') { if (window.CTInstall) window.CTInstall.open(); }
+      else if (g === 'premium') { if (window.CTDash && window.CTDash.upgradeNote) window.CTDash.upgradeNote(); }
+    } catch (e) {} }, 700);
   }
   // what the server says about you: admin tools only for admins (decided on the server), and your plan
   function applyServer(session) {

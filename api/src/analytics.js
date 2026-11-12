@@ -1,3 +1,4 @@
+import { emailStats } from './drip.js';
 import { ensureAudience, campaigns, bestUsers, tag } from './audience.js';
 // In-house analytics (v50). The app sends small batches of counts ("widget_add: featured", "page_time: board, 42s");
 // the server adds them into one row per day per count, and keeps a list of who was active each day (for active people,
@@ -65,6 +66,7 @@ function featOf(e, d) {
     case 'export': return 'export';
     case 'pk_on': case 'pk_signin': return 'passkey';
     case 'lock_on': case 'lock_open': return 'applock';
+    case 'installed': return 'home_screen';   // v52.49 opened from the Home Screen
     default: return null;
   }
 }
@@ -157,7 +159,7 @@ export async function handleStats(env, req, out) {
     members: Object.fromEntries(members.map(r => [r.plan || 'free', r.n])),
     signups: signups, signupsPrev: (signPrev[0] || {}).n || 0,
     cohorts, askSpend: spend[0] || null, eventsToday: (evToday[0] || {}).n || 0,
-    askCap: +(env.ASK_MONTH_USD || 25), passkeys: Object.entries(pkm).map(([kind, n]) => ({ kind, n })), campaigns: await campaigns(env, from, to), best: await bestUsers(env), geo: { countries: geoCc, us: geoUs, members: (geoAll[0] || {}).n || 0 }, ...v504
+    askCap: +(env.ASK_MONTH_USD || 25), passkeys: Object.entries(pkm).map(([kind, n]) => ({ kind, n })), campaigns: await campaigns(env, from, to), best: await bestUsers(env), geo: { countries: geoCc, us: geoUs, members: (geoAll[0] || {}).n || 0 }, emails: await emailStats(env, from, to), ...v504
   });
 }
 

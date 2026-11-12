@@ -95,3 +95,8 @@ CREATE INDEX IF NOT EXISTS acct_log_uid ON acct_log (uid, at);
 -- v52.10 messages for a person from admin changes (gift, extras, resets), picked up by their app once
 CREATE TABLE IF NOT EXISTS acct_note ( id TEXT PRIMARY KEY, uid TEXT NOT NULL, at INTEGER NOT NULL, title TEXT NOT NULL, body TEXT, seen INTEGER NOT NULL DEFAULT 0 );
 CREATE INDEX IF NOT EXISTS acct_note_uid ON acct_note (uid, seen);
+-- v52.49 first-two-weeks emails for Free members: one row per email (its id goes in the email's links), with opens, clicks
+-- and "stop these emails". Rows starting with x are steps that were skipped (nothing sent). Removed with the account.
+CREATE TABLE IF NOT EXISTS email_log ( id TEXT PRIMARY KEY, uid TEXT NOT NULL, flow TEXT NOT NULL, step TEXT NOT NULL, variant TEXT, sent_at INTEGER NOT NULL, opened_at INTEGER, opens INTEGER NOT NULL DEFAULT 0, clicked_at INTEGER, clicks INTEGER NOT NULL DEFAULT 0, unsub_at INTEGER );
+CREATE INDEX IF NOT EXISTS email_log_uid ON email_log (uid, sent_at);
+CREATE INDEX IF NOT EXISTS email_log_sent ON email_log (sent_at);
