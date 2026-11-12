@@ -175,8 +175,12 @@
     layerOf(to).forEach(el => { el.style.transform = 'none'; if (ms) anims.push(el.animate([{ transform: tx(dir * w) }, { transform: 'none' }], ease)); });
     layerOf(from).forEach(el => { el.style.transform = tx(-dir * w); if (ms) anims.push(el.animate([{ transform: 'none' }, { transform: tx(-dir * w) }], ease)); });
     moving = anims;
-    const end = () => { if (moving === anims) moving = null; H.classList.remove('pg-moving'); placeAll(); if (done) done(); };
-    if (ms) setTimeout(end, ms); else end();
+    let ended = false; const end = () => { if (ended) return; ended = true; if (moving === anims) moving = null; H.classList.remove('pg-moving'); placeAll(); if (done) done(); };
+    if (!ms) { end(); return; }
+    // v52.52 the slide starts on the next frame, once the switch's own work is drawn, so a busy first frame can't eat the
+    // start of the slide (it used to jump ahead by a step or two); it ends when the animations really finish
+    anims.forEach(a => a.pause()); requestAnimationFrame(() => anims.forEach(a => { if (a.playState === 'paused') a.play(); }));
+    Promise.all(anims.map(a => a.finished)).then(end, end); setTimeout(end, ms + 400);
   }
   window.CTPage = { move, place: placeAll, get cur() { return cur; } };
   addEventListener('resize', () => { vw = 0; geo.clear(); if (!moving) placeAll(); syncPill(false); });

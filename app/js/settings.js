@@ -1,6 +1,6 @@
 /* Settings pages in the profile menu (v44).
    The menu lists one row per group, each showing what it's set to. Tapping a row slides its page in from the right; the
-   back arrow (or the back gesture, or Esc) slides it out again. The menu keeps its size, so nothing jumps. Transform and
+   back arrow (or the back gesture, or Esc, or v52.52 a swipe right that follows the finger) slides it out again. The menu keeps its size, so nothing jumps. Transform and
    opacity only.
    Settings that follow the account (saved with the rest of the account's settings): what Add New starts with, the games
    you collect, and the sharing defaults. */
@@ -58,25 +58,64 @@
 
   // ---------- pages ----------
   let cur = null;
+  // v52.52 pages move on a spring (driven by frames, so a slow first frame never makes them skip), can be caught mid-slide,
+  // and on touch screens follow the finger back: swipe right anywhere on a page. Reduced motion keeps the plain fade.
+  const M = window.CTMotion, live = () => M && !calm.matches;
+  const off = pg => (pg.offsetWidth || menu.clientWidth || 360) * 1.04;
+  const setX = (pg, x) => { pg.style.transform = 'translate3d(' + x + 'px,0,0)'; };
+  const rest = pg => { pg.style.transform = ''; pg.style.transition = ''; };
+  function slide(pg, from, to, v, done) {
+    if (pg._sp) pg._sp.stop(); pg.style.transition = 'none'; pg._to = to;
+    pg._sp = M.spring({ from, to, v, k: 420, c: 41, set: x => setX(pg, x), done: () => { pg._sp = null; done && done(); } });
+  }
+  const xOf = pg => pg._sp && pg._sp.live ? pg._sp.stop() : (pg.style.transform ? M.at(pg)[0] : null);
   function openPage(id, byKey) {
     const pg = $('amp-' + id); if (!pg || cur === pg) return;
+    const was = pg.hidden ? null : (live() ? xOf(pg) : null);   // coming back while it's still sliding out: from right there
     fill(id); paint();
-    menu.scrollTop = 0; pg.hidden = false; pg.scrollTop = 0; cur = pg;
-    pg.getBoundingClientRect(); // start from off to the right
-    menu.classList.add('am-in'); pg.classList.add('on');
+    menu.scrollTop = 0; pg.hidden = false; if (was == null) pg.scrollTop = 0; cur = pg;
+    if (live()) { const from = was == null ? off(pg) : was; setX(pg, from); pg.style.transition = 'none'; pg.getBoundingClientRect(); menu.classList.add('am-in'); pg.classList.add('on'); slide(pg, from, 0, 0, () => rest(pg)); }
+    else { pg.getBoundingClientRect(); menu.classList.add('am-in'); pg.classList.add('on'); }
     if (window.CTNav) window.CTNav.push('amp', () => closePage(true));
     // keyboard: focus moves to the page's back arrow; a tap or click leaves no focus ring behind
     const f = pg.querySelector('.amp-back'); if (f && byKey) f.focus({ preventScroll: true }); else if (document.activeElement && menu.contains(document.activeElement)) document.activeElement.blur();
   }
-  function closePage(fromPop, instant) {
+  function closePage(fromPop, instant, v) {
     if (!cur) return; const pg = cur; cur = null;
     if (!fromPop && window.CTNav) window.CTNav.done('amp');
-    if (instant) { pg.style.transition = 'none'; menu.classList.add('am-snap'); }
-    menu.classList.remove('am-in'); pg.classList.remove('on');
-    const fin = () => { if (!pg.classList.contains('on')) pg.hidden = true; pg.style.transition = ''; menu.classList.remove('am-snap'); };
-    if (instant || calm.matches) fin(); else setTimeout(fin, 320);
+    const fin = () => { if (!pg.classList.contains('on')) pg.hidden = true; rest(pg); menu.classList.remove('am-snap'); };
+    if (instant) { if (pg._sp) { pg._sp.stop(); pg._sp = null; } pg.style.transition = 'none'; menu.classList.add('am-snap'); }
+    if (!instant && live()) { const from = xOf(pg); slide(pg, from == null ? 0 : from, off(pg), v || 0, () => { menu.classList.remove('am-in'); fin(); }); pg.classList.remove('on'); }
+    else { menu.classList.remove('am-in'); pg.classList.remove('on'); if (instant || calm.matches) fin(); else setTimeout(fin, 320); }
     if (!instant) { paint(); const row = menu.querySelector('[data-amp="' + pg.dataset.p + '"]'); if (row && pg.contains(document.activeElement)) row.focus({ preventScroll: true }); }
   }
+  // swipe right on a page to go back: it follows the finger; let go past halfway or with a flick and it finishes
+  (() => {
+    let s = null;
+    const sideScroller = t => { for (let el = t; el && el !== menu; el = el.parentElement) { if (el.matches && el.matches('input[type=range],[data-noswipe],select,textarea')) return true; const cs = getComputedStyle(el); if (/(auto|scroll)/.test(cs.overflowX) && el.scrollWidth > el.clientWidth + 1) return true; } return false; };
+    menu.addEventListener('touchstart', e => {
+      s = null; if (!live() || e.touches.length !== 1) return; const pg = e.target.closest && e.target.closest('.amp'); if (!pg || pg !== cur || sideScroller(e.target)) return;
+      const t = e.touches[0], caught = !!(pg._sp && pg._sp.live);
+      s = { pg, x: t.clientX, y: t.clientY, x0: caught ? pg._sp.stop() : 0, lock: caught ? 'x' : '', heading: caught ? pg._to : null, moved: 0, tr: M.tracker() }; if (caught) { pg._sp = null; pg.style.transition = 'none'; } s.tr.add(t.clientX);
+    }, { passive: true });
+    menu.addEventListener('touchmove', e => {
+      if (!s) return; const t = e.touches[0], dx = t.clientX - s.x, dy = t.clientY - s.y;
+      if (!s.lock) { if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return; s.lock = dx > 0 && Math.abs(dx) > Math.abs(dy) * 1.2 ? 'x' : 'y'; if (s.lock !== 'x') { s = null; return; } s.x = t.clientX; s.pg.style.transition = 'none'; }
+      if (e.cancelable) e.preventDefault(); s.tr.add(t.clientX); s.moved = Math.max(s.moved, Math.abs(t.clientX - s.x));
+      let x = s.x0 + (t.clientX - s.x); if (x < 0) x = -M.rubber(-x, 30); setX(s.pg, x);
+    }, { passive: false });
+    const end = () => {
+      if (!s) return; const c = s; s = null; if (c.lock !== 'x') return; const v = c.tr.v(), x = M.at(c.pg)[0], w = off(c.pg);
+      // caught and let go without moving: it carries on where it was going
+      if (c.heading != null && c.moved < 6) { if (c.heading > 0 && cur === c.pg) closePage(false, false, 0); else if (c.heading > 0) slide(c.pg, x, w, 0, () => { c.pg.hidden = true; rest(c.pg); menu.classList.remove('am-in'); }); else slide(c.pg, x, 0, 0, () => rest(c.pg)); return; }
+      const away = v > 450 || (x > w * 0.45 && v > -250);
+      if (away && cur === c.pg) closePage(false, false, Math.max(0, v));
+      else if (away) slide(c.pg, x, w, Math.max(0, v), () => { c.pg.hidden = true; rest(c.pg); menu.classList.remove('am-in'); });
+      else { if (cur !== c.pg) { if (cur) closePage(false, true); cur = c.pg; c.pg.classList.add('on'); menu.classList.add('am-in'); if (window.CTNav) window.CTNav.push('amp', () => closePage(true)); }   // caught on its way out and pulled back
+        slide(c.pg, x, 0, Math.min(0, v), () => rest(c.pg)); }
+    };
+    menu.addEventListener('touchend', end, { passive: true }); menu.addEventListener('touchcancel', end, { passive: true });
+  })();
   // the menu closing (any way at all) puts it back on its first page for next time
   new MutationObserver(() => { if (menu.hidden || cur) closePage(false, true); if (!menu.hidden) paint(); }).observe(menu, { attributes: true, attributeFilter: ['hidden'] });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && cur && !menu.hidden) { e.preventDefault(); e.stopImmediatePropagation(); closePage(); } }, true);
