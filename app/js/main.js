@@ -193,7 +193,10 @@
     if (menu.hidden) return;
     // phones: the sheet slides back down (from wherever a swipe left it)
     if (PHONE.matches && !calmM.matches && !menu.dataset.closing) { menu.dataset.closing = '1'; const from = menu.style.transform || 'none'; menu.style.animation = 'none';
-      const a = menu.animate([{ transform: from }, { transform: 'translateY(100%)' }], { duration: 220, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' }); bd.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
+      // v52.53 the dimmed background fades from where it is now: after a swipe it has already faded, so it must not pop back
+      // to full dim first (that was the flash); a menu already swiped off screen finishes right away
+      const bo = parseFloat(getComputedStyle(bd).opacity), gone = window.CTMotion && window.CTMotion.at(menu)[1] >= menu.offsetHeight - 2, ms = gone ? 60 : 220;
+      const a = menu.animate([{ transform: from }, { transform: 'translateY(100%)' }], { duration: ms, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' }); bd.animate([{ opacity: isNaN(bo) ? 1 : bo }, { opacity: 0 }], { duration: ms, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
       a.onfinish = () => { delete menu.dataset.closing; menu.style.transform = ''; menu.style.animation = ''; a.cancel(); bd.getAnimations().forEach(x => x.cancel()); reallyClose(focus, fromPop); }; return; }
     // v50.98 computers: a quick fade instead of vanishing
     if (!PHONE.matches && !calmM.matches && !menu.dataset.closing) { menu.dataset.closing = '1'; menu.classList.add('am-out');
