@@ -12,7 +12,12 @@
   const calm = matchMedia('(prefers-reduced-motion: reduce)');
   const X = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   const CARD_R = .048, SLAB_AR = 5.25 / 3.1, WELL = .80; // a card's corner radius is about 4.8% of its width; the card fills ~80% of a slab's width
-  let el = null, img = null, slabEl = null, sw = null, from = null, thumbImg = null, thumbSlab = null, mode = 'card', graded = false;
+  let el = null, img = null, slabEl = null, sw = null, from = null, thumbImg = null, thumbSlab = null, mode = 'card', graded = false, frame = null;
+  // v52.44 the box the picture sits in (its background and shadow), so it leaves with the picture instead of staying behind
+  // as an empty card-shaped outline: the closest wrapper that's the same size as the picture
+  const frameOf = t => { if (!t) return null; let f = t; const r = t.getBoundingClientRect();
+    for (let p = t.parentElement, i = 0; p && i < 3; p = p.parentElement, i++) { const q = p.getBoundingClientRect(); if (Math.abs(q.width - r.width) <= 3 && Math.abs(q.height - r.height) <= 3) f = p; else break; }
+    return f; };
   let base = { w: 0, h: 0 }, s = 1, tx = 0, ty = 0, maxS = 3, open = false;
   const T = () => mode === 'slab' ? slabEl : img; // the thing on screen
 
@@ -98,7 +103,7 @@
       if (from && !calm.matches) { const r = from.getBoundingClientRect(); if (r.width) {
         const k = r.width / base.w, dx = r.left + r.width / 2 - innerWidth / 2, dy = r.top + r.height / 2 - innerHeight / 2 - centerY();
         T().animate([{ transform: 'translate(-50%,-50%) translate(' + dx + 'px,' + dy + 'px) scale(' + k + ')' }, { transform: 'translate(-50%,-50%) scale(1)' }], { duration: 380, easing: 'cubic-bezier(.2,.8,.2,1)' });
-        from.style.opacity = '0'; } }
+        frame = frameOf(from); (frame || from).style.opacity = '0'; } }
       el.querySelector('.zm-x').focus({ preventScroll: true });
     };
     img.onload = null;
@@ -111,11 +116,11 @@
   function close(fromPop) {
     if (!open) return; open = false; if (!fromPop && window.CTNav) window.CTNav.done('zoom');
     const t = T(), back = graded ? (mode === 'slab' ? thumbSlab : thumbImg) : from;
-    const done = () => { el.classList.remove('on', 'zoomed', 'drag'); if (el.open) el.close(); document.documentElement.classList.remove('zm-open'); [thumbImg, thumbSlab, from].forEach(x => { if (x) x.style.opacity = ''; }); el.style.removeProperty('--bg'); };
+    const done = () => { el.classList.remove('on', 'zoomed', 'drag'); if (el.open) el.close(); document.documentElement.classList.remove('zm-open'); [thumbImg, thumbSlab, from, frame].forEach(x => { if (x) x.style.opacity = ''; }); frame = null; el.style.removeProperty('--bg'); };
     const r = back && back.getBoundingClientRect(), vis = r && r.width && r.bottom > 0 && r.top < innerHeight;
     el.classList.add('out');
     if (vis && !calm.matches) {
-      if (back !== from && from) from.style.opacity = ''; back.style.opacity = '0';
+      if (back !== from && from) { from.style.opacity = ''; if (frame && frame !== back) frame.style.opacity = ''; } const bf = frameOf(back); (bf || back).style.opacity = '0'; if (bf && bf !== frame) { if (frame) frame.style.opacity = ''; frame = bf; }
       const k = r.width / base.w, dx = r.left + r.width / 2 - innerWidth / 2, dy = r.top + r.height / 2 - innerHeight / 2 - centerY();
       const a = t.animate([{ transform: t.style.transform }, { transform: 'translate(-50%,-50%) translate(' + dx + 'px,' + dy + 'px) scale(' + k + ')' }], { duration: 300, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
       a.onfinish = () => { done(); el.classList.remove('out'); a.cancel(); };
