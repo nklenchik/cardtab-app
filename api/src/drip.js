@@ -20,7 +20,7 @@ export const STEPS = [
   { id: 'd7', day: 7, last: 10, name: 'Day 7 · One tip', when: 'Picked from what they’ve done' },
   { id: 'd13', day: 13, last: 17, name: 'Day 13 · Two weeks', when: 'Summary and Premium' }
 ];
-const GO = { add: 'add', budget: 'budget', board: 'board', stories: 'stories', ask: 'ask', home: 'home', premium: 'premium', app: '' };
+const GO = { add: 'add', budget: 'budget', board: 'board', stories: 'stories', ask: 'ask', home: 'home', premium: 'premium', emails: 'emails', app: '' };
 const admins = env => String(env.ADMIN_EMAILS || '').toLowerCase().split(/[\s,]+/).filter(Boolean);
 const parse = v => { try { return JSON.parse(v); } catch (e) { return null; } };
 const rid = () => [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, '0')).join('');

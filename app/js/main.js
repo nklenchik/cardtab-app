@@ -31,7 +31,7 @@
   }
   // v52.49: buttons in Card Tab's emails open a spot in the app (?go=add|budget|board|stories|ask|home|premium). Kept
   // through sign-in, then run once the app is on screen.
-  const GO_OK = /^(add|budget|board|stories|ask|home|premium)$/;
+  const GO_OK = /^(add|budget|board|stories|ask|home|premium|emails)$/;
   try { const g = new URLSearchParams(location.search).get('go'); if (g && GO_OK.test(g)) sessionStorage.setItem('ct.go', g); } catch (e) {}
   function emailGo() {
     let g = ''; try { g = sessionStorage.getItem('ct.go') || ''; sessionStorage.removeItem('ct.go'); } catch (e) {}
@@ -42,6 +42,7 @@
       else if (g === 'board' || g === 'stories') { if (window.CTTabGo) window.CTTabGo(g); }
       else if (g === 'ask') { if (window.CTAskOpen) window.CTAskOpen(); else if (window.CTBoardLoader) window.CTBoardLoader.load().then(() => window.CTAskOpen && window.CTAskOpen()).catch(() => {}); }
       else if (g === 'home') { if (window.CTInstall) window.CTInstall.open(); }
+      else if (g === 'emails') { if (window.CTNotify) { window.CTNotify.open('settings'); setTimeout(() => { const el = document.getElementById('ntf-email'); if (el) el.scrollIntoView({ block: 'center' }); }, 120); } }
       else if (g === 'premium') { if (window.CTDash && window.CTDash.upgradeNote) window.CTDash.upgradeNote(); }
     } catch (e) {} }, 700);
   }

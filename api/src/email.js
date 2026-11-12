@@ -185,7 +185,7 @@ export const TIPS = {
 export function dripEmail({ step, tip, name, n, sum, links, open, opens, joinedAt, t }) {
   const first = String(name || '').trim().split(/\s+/)[0] || '';
   const pix = links.pixel ? `<img src="${esc(links.pixel)}" width="1" height="1" alt="" style="display:block;border:0;width:1px;height:1px">` : '';
-  const stop = `<a href="${esc(links.unsub)}" style="color:#77736d">Stop these emails</a>`;
+  const stop = `<a href="${esc(links.go('emails'))}" style="color:#77736d">Manage emails</a> · <a href="${esc(links.unsub)}" style="color:#77736d">Stop these emails</a>`;
   let subject, pre, body, text;
   if (step === 'd1') {
     subject = 'Add your first card in 30 seconds'; pre = 'Start with your last sale.';
@@ -212,5 +212,5 @@ export function dripEmail({ step, tip, name, n, sum, links, open, opens, joinedA
   }
   const html = shell({ title: subject, preheader: pre, body: body + pix, foot: 'Questions or ideas? Just reply to this email. It comes straight to us.',
     note: 'You’re getting this because you created a Card Tab account. ' + stop });
-  return { subject, html, text: text + `\n\nQuestions? Just reply.\n\nStop these emails: ${links.unsub}\n\nCard Tab · cardtab.app` };
+  return { subject, html, text: text + `\n\nQuestions? Just reply.\n\nManage emails: ${links.go('emails')}\nStop these emails: ${links.unsub}\n\nCard Tab · cardtab.app` };
 }

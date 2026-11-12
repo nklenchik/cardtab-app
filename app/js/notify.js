@@ -127,8 +127,8 @@
       (S.plan() === 'free' ? sw('monthly', p.monthly, 'Monthly update', 'Your new entries, new stories and last month’s numbers', off) : '') +
       sw('tips', p.tips, 'Tips and offers', 'Now and then, at most every two weeks', off) + '</div>' +
       '<p class="ntf-fine">A failed payment always shows here, so Premium never ends without you knowing.</p>' +
-      '<div class="ntf-gl">Email</div><div class="ntf-set">' + sw('emailOff', p.emailOff, 'Unsubscribe from all emails', 'No tips, news or reminders by email') + '</div>' +
-      '<p class="ntf-fine">You’ll still get an email if a payment fails, plus one reminder. Emails start once accounts go live.</p>';
+      '<div class="ntf-gl" id="ntf-email">Email</div><div class="ntf-set">' + sw('emailOn', !p.emailOff, 'Tips and summaries', 'A few emails in your first weeks, with tips and your numbers') + '</div>' +
+      '<p class="ntf-fine">Sign-in links and anything about payments always come by email.</p>';
   }
   // Your platforms (opened from the profile menu): the ones you added yourself, to add more or remove a typo
   function renderPlats() {
@@ -180,7 +180,7 @@
     if (e.target.closest('.ntf-back')) { view = 'list'; paint(); return; }
     const rmp = e.target.closest('[data-rmp]'); if (rmp) { await S.removePlatform(rmp.dataset.rmp); paint(); return; }
     const t = e.target.closest('[data-pref]');
-    if (t && !t.disabled) { const k = t.dataset.pref, v = t.getAttribute('aria-checked') !== 'true'; window.ctBuzz && window.ctBuzz(); await save(s => { s.prefs = Object.assign({}, DEF, s.prefs, { [k]: v }); }); paint(); return; }
+    if (t && !t.disabled) { let k = t.dataset.pref, v = t.getAttribute('aria-checked') !== 'true'; if (k === 'emailOn') { k = 'emailOff'; v = !v; } /* v52.51: shown as on = get emails, saved as emailOff */ window.ctBuzz && window.ctBuzz(); await save(s => { s.prefs = Object.assign({}, DEF, s.prefs, { [k]: v }); }); paint(); return; }
     const b = e.target.closest('[data-act]'); if (!b) return;
     const id = b.dataset.id, act = b.dataset.act, it = all().find(x => x.id === id);
     if (act === 'adone') { const el = b.closest('.ntf-it'); admGone.add(id); el.style.transition = 'transform .28s cubic-bezier(.4,0,.2,1), opacity .22s ease'; el.style.transform = 'translateX(110%)'; el.style.opacity = '0';
