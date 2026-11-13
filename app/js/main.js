@@ -20,6 +20,10 @@
     const sync = () => { if (va) H.classList.toggle('ct-noapp', va.hidden); if (grid && fw) grid.classList.toggle('first-on', !fw.hidden); };
     const mo = new MutationObserver(sync); [va, fw].forEach(el => el && mo.observe(el, { attributes: true, attributeFilter: ['hidden'] })); sync(); })();
   async function showApp(session, isNew) {
+    // v52.73 lay the page out the way it looked last time (or empty, for a brand-new account) before the entries load, so
+    // the get-started panel doesn't appear a moment later and push everything down. The first render corrects any guess.
+    try { const e = localStorage.getItem('ct.empty'), fw = document.getElementById('app-first-wrap'), g = document.getElementById('app-grid');
+      if (fw && g && (e === '1' || (e === null && isNew))) { fw.hidden = false; g.classList.add('is-empty'); const r = g.querySelector('.ct-demo-right:not(.app-first-wrap)'); if (r) r.hidden = true; } } catch (e) {}
     vAuth.hidden = true; vApp.hidden = false; document.title = 'Card Tab';
     await S.open({ email: session.email });
     av.textContent = (displayName(session)[0] || '?').toUpperCase();

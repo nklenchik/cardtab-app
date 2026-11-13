@@ -409,6 +409,7 @@
     if (listOnly !== true) listOnly = false;
     dates();
     const all = S.all(), empty = !all.length;
+    try { if (localStorage.getItem('ct.empty') !== (empty ? '1' : '0')) localStorage.setItem('ct.empty', empty ? '1' : '0'); } catch (e) {}   // v52.73 (main.js lays the page out from this before the entries load)
     $('app-first-wrap').hidden = !empty; $('app-grid').classList.toggle('is-empty', empty); root.querySelector('.ct-demo-right:not(.app-first-wrap)').hidden = empty;
     if (!listOnly) { limits(); firstRun(); askPanel(); platformsSelect(); }
     $('ct-type').value = type;
