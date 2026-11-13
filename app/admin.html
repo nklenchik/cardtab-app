@@ -204,7 +204,7 @@ body.navopen .navbd{display:block}
 .anl input,.anl select{width:100%;box-sizing:border-box;border:1px solid var(--hair);border-radius:12px;padding:10px 12px;font:inherit;font-size:15px;font-weight:600;background:var(--card);color:var(--text)}
 .anl input:focus,.anl textarea:focus,.anl select:focus{outline:2px solid color-mix(in srgb,var(--brand) 40%,transparent);outline-offset:1px}
 .anl textarea{width:100%;box-sizing:border-box;border:1px solid var(--hair);border-radius:12px;padding:10px 12px;font:inherit;font-size:15px;font-weight:600;line-height:1.45;background:var(--card);color:var(--text);resize:vertical}.ann{position:absolute;right:2px;top:0;font-weight:700;color:var(--muted)}.anl .seg{justify-self:start}
-.anform .chip[disabled]{opacity:.45;cursor:default}
+.anok{padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--good,#2f7d32) 12%,transparent);color:var(--text);font-size:13.5px;font-weight:700}.anerr{align-self:center;color:var(--bad,#c0392b);font-size:13px;font-weight:700}
 .ancf{display:grid;gap:8px;padding:12px 14px;border-radius:14px;background:var(--card2)}.ancf b{font-size:14.5px}.ancf span{color:var(--muted);font-size:13px;font-weight:600}
 .anpv{border-radius:18px;background:var(--card2);padding:14px}.anpv.ph .anptx{opacity:.55}
 .anpg{font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px 2px}
@@ -628,7 +628,7 @@ let FB=null,FBF='new';const FBSHOT={};
 function feedbackCard(){setTimeout(fbLoad,0);return '<div class="grid" style="margin-bottom:14px"><div class="card c12" id="fbc"><div class="hch"><div><h3>Inbox</h3><div class="sub">Bugs, ideas and notes sent from Help and feedback in the app. You get one summary email each morning; replies show up in the person’s app.</div></div></div>'+
  '<div class="seg fbf" id="fbf"></div><div id="fbl"><div class="empty">Loading…</div></div></div></div>'}
 // v52.87 Announce: a What's new note for everyone's in-app notifications. Shown once; people who join later don't get it.
-let AN=null,ANF={title:'',body:'',go:'add',aud:'all'},ANC=false;
+let AN=null,ANF={title:'',body:'',go:'add',aud:'all'},ANC=false,ANOK='',ANERR='';
 const ANGO=[['','Nothing (just the note)'],['add','Add an item'],['board','Board'],['stories','Stories'],['budget','Budget'],['premium','Premium'],['ask','Ask']];
 const ANBTN={add:'Try it',board:'Open Board',stories:'See Stories',budget:'Set a budget',premium:'See Premium',ask:'Try Ask'};
 const ANAUD=[['all','Everyone'],['free','Free'],['premium','Premium']];
@@ -645,7 +645,7 @@ function anForm(){const f=ANF,n=AN&&AN.people,who=ANAUD.find(a=>a[0]===f.aud)[1]
   '<label class="anl">Button opens<select id="an-g">'+ANGO.map(g=>'<option value="'+g[0]+'"'+(g[0]===f.go?' selected':'')+'>'+g[1]+'</option>').join('')+'</select></label>'+
   '<div class="anl">Who gets it<div class="seg" id="an-a">'+ANAUD.map(a=>'<button type="button" data-ana="'+a[0]+'" aria-pressed="'+(a[0]===f.aud)+'">'+a[1]+'</button>').join('')+'</div></div>'+
   (ANC?'<div class="ancf"><b>Send to '+(f.aud==='all'?'everyone':who+' members')+(f.aud==='all'&&n?' ('+n+' people)':'')+'?</b><span>It can’t be edited after sending. You can stop it any time.</span><div class="fbact"><button type="button" class="chip go" data-anx="send">Send now</button><button type="button" class="chip" data-anx="no">Cancel</button></div></div>'
-   :'<div class="fbact"><button type="submit" class="chip go"'+(f.title.trim()?'':' disabled')+'>Send…</button></div>')+'</form>'}
+   :'<div class="fbact"><button type="submit" class="chip go">Send…</button>'+(ANERR?'<span class="anerr">'+esc(ANERR)+'</span>':'')+'</div>')+(ANOK?'<div class="anok">'+esc(ANOK)+'</div>':'')+'</form>'}
 function anPrev(){const f=ANF,t=f.title.trim()||'Card Tab now tracks sealed products',b=f.body.trim()||(f.title.trim()?'':'Log packs, boxes and ETBs right alongside your cards, and see what you spent in one place.');
  return '<div class="anpv'+(f.title.trim()?'':' ph')+'"><div class="anpg">What’s new</div><div class="anpi"><span class="anpic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7z"/></svg></span><div class="anptx"><b>'+esc(t)+'</b>'+(b?'<p>'+esc(b)+'</p>':'')+
   '<div class="anpb">'+(ANBTN[f.go]?'<span class="p">'+ANBTN[f.go]+'</span>':'')+'<span>Got it</span></div></div><span class="anpt">now</span></div></div>'}
@@ -656,15 +656,15 @@ function anList(){if(!AN)return '<div class="empty">Loading…</div>';if(AN.erro
 function anPaint(){const f=document.getElementById('anf'),p=document.getElementById('anp'),l=document.getElementById('anl');if(!f)return;
  const a=document.activeElement,aid=a&&a.id,pos=a&&a.selectionStart;f.innerHTML=anForm();p.innerHTML=anPrev();l.innerHTML=anList();
  if(aid){const e=document.getElementById(aid);if(e){e.focus();try{if(pos!=null)e.setSelectionRange(pos,pos)}catch(er){}}}}
-document.addEventListener('input',e=>{if(e.target.id==='an-t'){ANF.title=e.target.value;ANC=false;anPaint()}else if(e.target.id==='an-b'){ANF.body=e.target.value;ANC=false;anPaint()}});
+document.addEventListener('input',e=>{if(e.target.id==='an-t'){ANF.title=e.target.value;ANC=false;ANERR='';ANOK='';anPaint()}else if(e.target.id==='an-b'){ANF.body=e.target.value;ANC=false;anPaint()}});
 document.addEventListener('change',e=>{if(e.target.id==='an-g'){ANF.go=e.target.value;anPaint()}});
-document.addEventListener('submit',e=>{if(e.target.id!=='anform')return;e.preventDefault();if(!ANF.title.trim())return;ANC=true;anPaint()});
+document.addEventListener('submit',e=>{if(e.target.id!=='anform')return;e.preventDefault();ANOK='';if(!ANF.title.trim()){ANERR='Add a title first.';anPaint();const t=document.getElementById('an-t');if(t)t.focus();return}ANERR='';ANC=true;anPaint()});
 document.addEventListener('click',async e=>{const a=e.target.closest('[data-ana]');if(a){ANF.aud=a.dataset.ana;ANC=false;anPaint();return}
  const x=e.target.closest('[data-anx]');if(x){if(x.dataset.anx==='no'){ANC=false;anPaint();return}
   x.disabled=true;x.textContent='Sending…';const body={title:ANF.title.trim(),body:ANF.body.trim(),go:ANF.go,aud:ANF.aud};
   if(AN&&AN.sample){AN.items.unshift(Object.assign({id:'s'+Date.now(),at:Date.now()/1000,stopped:0,got:0},body))}
-  else{try{const r=await fetch(API+'/auth/admin/announce',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw 0}catch(er){x.disabled=false;x.textContent='Couldn’t send. Try again';return}await anLoad()}
-  ANF={title:'',body:'',go:'add',aud:'all'};ANC=false;anPaint();return}
+  else{try{const r=await fetch(API+'/auth/admin/announce',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:JSON.stringify(body)});if(!r.ok){let m='';try{m=(await r.json()).error||''}catch(e2){}throw new Error(m||('Error '+r.status))}}catch(er){ANC=false;ANERR='Couldn’t send: '+(er.message||'try again');anPaint();return}await anLoad()}
+  ANF={title:'',body:'',go:'add',aud:'all'};ANC=false;ANOK='Sent. It shows in people’s notifications the next time they open Card Tab.';anPaint();return}
  const sp=e.target.closest('[data-anstop]');if(sp){const id=sp.dataset.anstop;if(AN&&AN.sample){const it=AN.items.find(i=>i.id===id);if(it)it.stopped=1;anPaint();return}
   sp.disabled=true;try{await fetch(API+'/auth/admin/announce/stop',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:JSON.stringify({id})})}catch(er){}await anLoad()}});
 function fbSample(){const t=Date.now()/1000;return {items:[{id:'s1',uid:'a',email:'jordan@example.com',name:'Jordan',plan:'premium',kind:'bug',msg:'When I add a card on the Board page the total doesn’t update until I switch tabs.',page:'Board',dev:'iPhone · Instagram',ver:'52.23',shot:true,at:t-3600,status:'new',reply:''},
