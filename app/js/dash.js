@@ -157,6 +157,8 @@
   // ---------- entries list ----------
   const G = window.CTGrade;
   const nmOf = t => G ? G.title(t) : t.name; // graded: the grade leaves the name and shows as the chip
+  // v52.75 sealed products are shown whole; their pictures are noted so nothing turns them upright (zoom included)
+  const sealedOf = t => { const y = !!(window.CTSealed && window.CTSealed.is(t)); if (y && t.art) { const S2 = window.CTSealedSrc || (window.CTSealedSrc = new Set()); if (t.art.list) S2.add(t.art.list); if (t.art.detail) S2.add(t.art.detail); } return y; };
   function artHtml(t, open) {
     // v50.29: a graded card sits in a slab drawn in code; the art goes in its well
     if (G && G.on() && G.of(t)) {
@@ -164,7 +166,7 @@
       const inner = has ? '<img class="sl-img" src="' + esc(open ? (t.art.detail || t.art.list) : (t.art.list || t.art.detail)) + '" data-full="' + esc(t.art.detail || t.art.list) + '" alt="" loading="lazy" decoding="async">' : '<i class="sl-ph"></i>';
       return '<span class="ct-card-art ct-slab-art">' + G.slab(t, inner) + '</span>';
     }
-    if (t.art && (t.art.list || t.art.detail)) return '<img class="ct-card-art" src="' + esc(open ? (t.art.detail || t.art.list) : (t.art.list || t.art.detail)) + '" data-full="' + esc(t.art.detail || t.art.list) + '" alt="" width="44" height="61" loading="lazy" onerror="window.CTArtBroken&&CTArtBroken(this)">';
+    if (t.art && (t.art.list || t.art.detail)) return '<img class="ct-card-art' + (sealedOf(t) ? ' ct-sealed' : '') + '" src="' + esc(open ? (t.art.detail || t.art.list) : (t.art.list || t.art.detail)) + '" data-full="' + esc(t.art.detail || t.art.list) + '" alt="" width="44" height="61" loading="lazy" onerror="window.CTArtBroken&&CTArtBroken(this)">';
     const letter = (t.name.match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase();
     return '<span class="ct-card-art ct-art-ph" aria-hidden="true"><i>' + esc(letter) + '</i></span>';
   }
@@ -341,7 +343,7 @@
   // v52.68 card pictures aren't all exactly card-shaped: each picture's box takes the picture's own shape once it loads
   // (remembered per picture, so redraws don't jump), so nothing is trimmed off its edges or corners
   const artAR = new Map(), arStyle = src => { const r = src && artAR.get(src); return r ? ' style="--ar:' + r + '"' : ''; };
-  const fitArt = img => { const box = img.parentElement; if (!box || !box.matches('.ct-tile-art:not(.ct-slabbed),.gp-art:not(.ct-slabbed)') || !img.naturalWidth) return;
+  const fitArt = img => { const box = img.parentElement; if (!box || !box.matches('.ct-tile-art:not(.ct-slabbed):not(.ct-sealed),.gp-art:not(.ct-slabbed):not(.ct-sealed)') || !img.naturalWidth) return;
     let r = img.naturalWidth / img.naturalHeight; if (r > 0.95) return;   // a sideways picture: it gets turned first (artrot.js)
     r = Math.max(0.62, Math.min(0.8, r)).toFixed(4); artAR.set(img.getAttribute('src'), r); if (box.style.getPropertyValue('--ar') !== r) box.style.setProperty('--ar', r); };
   document.addEventListener('load', e => { if (e.target && e.target.tagName === 'IMG') fitArt(e.target); }, true);
@@ -350,6 +352,7 @@
     const src = t.art && (t.art.detail || t.art.list);
     return '<button type="button" class="ct-tile' + (t.id === justAdded ? ' ct-new' : '') + '" data-tile="' + t.id + '" aria-label="' + esc(t.name) + ', ' + badgeOf(t) + ', ' + amtText(t) + '">' +
       (G && G.on() && G.of(t) ? '<span class="ct-tile-art ct-slabbed">' + G.slab(t, src ? '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async">' : '<i class="sl-ph"></i>') + '</span>'
+        : sealedOf(t) ? '<span class="ct-tile-art ct-sealed">' + (src ? '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async">' : '<i>' + esc(t.name) + '</i>') + '</span>'
         : '<span class="ct-tile-art"' + arStyle(src) + '>' + (src ? '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async">' : '<i>' + esc(t.name) + '</i>') + '</span>') +
       '<b class="ct-tile-nm"><span class="ct-tile-full">' + esc(nmOf(t)) + (t.qty > 1 ? ' ×' + t.qty : '') + '</span><span class="ct-tile-short">' + esc(shortName(nmOf(t))) + '</span></b>' +
       '<small class="ct-tile-ln"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span><span class="ct-tile-meta">' + badgeOf(t) + ' · ' + niceDate(t.date) + '</span><span class="ct-tile-pl">' + esc(t.platform || badgeOf(t)) + '</span></small>' +
@@ -380,6 +383,7 @@
     const A = d => '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + (d < 0 ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6') + '"/></svg>';
     gp.innerHTML = '<div class="gp-in"><i class="gp-grab" aria-hidden="true"></i><button type="button" class="gp-x" data-gx aria-label="Close">' + X + '</button>' +
       (G && G.on() && G.of(t) ? '<div class="gp-art ct-slabbed">' + G.slab(t, src ? '<img src="' + esc(src) + '" alt="">' : '<i class="sl-ph"></i>') + '</div>'
+        : sealedOf(t) ? '<div class="gp-art ct-sealed">' + (src ? '<img src="' + esc(src) + '" alt="">' : '<i>' + esc(t.name) + '</i>') + '</div>'
         : '<div class="gp-art"' + arStyle(src) + '>' + (src ? '<img src="' + esc(src) + '" alt="">' : '<i>' + esc(t.name) + '</i>') + '</div>') +
       '<div class="gp-body"><small class="gp-line"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span>' + badgeOf(t) + ' · ' + (t.platform ? esc(t.platform) + ' · ' : '') + niceDate(t.date) + '</small>' +
       '<h2 class="gp-nm">' + esc(nmOf(t)) + (t.qty > 1 ? ' ×' + t.qty : '') + (pillOf(t) ? ' ' + pillOf(t) : '') + '</h2>' +

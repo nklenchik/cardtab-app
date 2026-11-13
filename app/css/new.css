@@ -2568,3 +2568,8 @@ html.ct-locked body{overflow:hidden}
 /* v52.71 phones: grid tiles have no background or padding, so their own rounding only cut the top corners of the card
    picture (iPhone Safari clips a button's contents to its corners). Leave the rounding to the picture itself. */
 @media(max-width:760px){#ct-rows.ct-gal .ct-tile{border-radius:0}}
+/* v52.75 sealed products (packs, boxes, ETBs, UPCs): the whole picture, centred on a soft panel the shape of a card,
+   with a light shadow; never cropped, never rounded like a card */
+:is(.ct-tile-art,.gp-art).ct-sealed{aspect-ratio:63/88;border-radius:7%/5%;background:color-mix(in srgb,var(--text,#22221f) 4%,transparent);display:grid;place-items:center;overflow:hidden}
+:is(.ct-tile-art,.gp-art).ct-sealed>img{width:86%;height:86%;object-fit:contain;border-radius:0;filter:drop-shadow(0 6px 10px rgba(0,0,0,.2))}
+img.ct-card-art.ct-sealed{object-fit:contain!important;border-radius:0!important;background:none!important;box-shadow:none!important;filter:drop-shadow(0 2px 4px rgba(0,0,0,.18))}

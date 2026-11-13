@@ -7,7 +7,7 @@
   const SEL = 'img.ct-card-art,.ct-tile-art img,.gp-art img,.sl-well img,img.zm-img,img.xart,img.xsart,img.xai,img.pimg';
   const done = new Map();   // original src -> turned copy (a blob: URL), or '' when the picture is upright or can't be turned
   const busy = new Map();   // original src -> promise
-  const isArt = el => el && el.tagName === 'IMG' && el.matches(SEL);
+  const isArt = el => el && el.tagName === 'IMG' && el.matches(SEL) && !el.matches('.ct-sealed,.ct-sealed img') && !(window.CTSealedSrc && window.CTSealedSrc.has(el.getAttribute('src')))   /* v52.75 sealed products stay as they are */;
 
   function turn(src) {
     if (done.has(src)) return Promise.resolve(done.get(src));
