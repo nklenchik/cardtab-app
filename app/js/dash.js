@@ -156,7 +156,8 @@
 
   // ---------- entries list ----------
   const G = window.CTGrade;
-  const nmOf = t => G ? G.title(t) : t.name; // graded: the grade leaves the name and shows as the chip
+  const nmOf = t => { const n = G ? G.title(t) : t.name; return sealedOf(t) ? n.replace(/ - N\/A(?= - |$)/i, '').replace(/ - (?=[^-]+$)/, ' · ') : n; }; // graded: the grade leaves the name and shows as the chip; sealed: no "N/A" number
+  const actsOf = t => sealedOf(t) ? ACTS.replace(/Change card/g, 'Change item') : ACTS;
   // v52.75 sealed products are shown whole; their pictures are noted so nothing turns them upright (zoom included)
   const sealedOf = t => { const y = !!(window.CTSealed && window.CTSealed.is(t)); if (y && t.art) { const S2 = window.CTSealedSrc || (window.CTSealedSrc = new Set()); if (t.art.list) S2.add(t.art.list); if (t.art.detail) S2.add(t.art.detail); } return y; };
   function artHtml(t, open) {
@@ -189,7 +190,7 @@
   const COND = { 'near mint': 'NM', 'mint': 'M', 'lightly played': 'LP', 'moderately played': 'MP', 'heavily played': 'HP', 'damaged': 'DMG' };
   const condShort = c => c ? (COND[String(c).toLowerCase()] || c) : '';
   // v50.34: the card's state sits in a pill after its name: graded = filled (CGC 10 Pristine), raw = outline (NM, LP ...)
-  const pillOf = t => (G && G.of(t)) ? G.chip(t) : t.condition ? '<span class="sl-chip sl-raw" title="' + esc(t.condition) + '">' + esc(condShort(t.condition)) + '</span>' : '';
+  const pillOf = t => (G && G.of(t)) ? G.chip(t) : sealedOf(t) ? '<span class="sl-chip sl-raw" title="Sealed">Sealed</span>' : t.condition ? '<span class="sl-chip sl-raw" title="' + esc(t.condition) + '">' + esc(condShort(t.condition)) + '</span>' : '';
   // v51.6: the open entry's buttons. On phones they sit on one line: Edit with its label, then Change card, Duplicate and
   // Delete as round icons (their names stay for screen readers and show on hover). Desktop and the gallery keep full labels.
   const AI = p => '<svg class="ct-ai" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
@@ -199,7 +200,7 @@
     '<button type="button" data-act="dup" aria-label="Duplicate" title="Duplicate">' + AI('<rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/>') + '<span class="ct-al">Duplicate</span></button>' +
     '<button type="button" data-act="del" aria-label="Delete" title="Delete">' + AI('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3"/>') + '<span class="ct-al">Delete</span></button></div>';
   function detailsHtml(t) {
-    return '<div class="ct-open-actions"><div class="ct-row-expanded-info"><div class="ct-dtot"><i class="ct-mdash"></i><div class="ct-dtrow">' + ACTS + keptRow(t) + '</div></div>' + factsHtml(t) + '<div class="ct-pacts">' + ACTS + '</div></div></div>';
+    return '<div class="ct-open-actions"><div class="ct-row-expanded-info"><div class="ct-dtot"><i class="ct-mdash"></i><div class="ct-dtrow">' + actsOf(t) + keptRow(t) + '</div></div>' + factsHtml(t) + '<div class="ct-pacts">' + ACTS + '</div></div></div>';
   }
   const badgeOf = t => t.type === 'sale' ? 'Sale' : t.type === 'refund' ? 'Refund' : 'Purchase';
   // a sale's big number: what you kept after fees (default), or the full sale price if you picked that in your profile
@@ -387,7 +388,7 @@
         : '<div class="gp-art"' + arStyle(src) + '>' + (src ? '<img src="' + esc(src) + '" alt="">' : '<i>' + esc(t.name) + '</i>') + '</div>') +
       '<div class="gp-body"><small class="gp-line"><span class="ct-dot ' + t.type + '" aria-hidden="true"></span>' + badgeOf(t) + ' · ' + (t.platform ? esc(t.platform) + ' · ' : '') + niceDate(t.date) + '</small>' +
       '<h2 class="gp-nm">' + esc(nmOf(t)) + (t.qty > 1 ? ' ×' + t.qty : '') + (pillOf(t) ? ' ' + pillOf(t) : '') + '</h2>' +
-      moneyHtml(t) + '<div class="ct-row-expanded-info">' + factsHtml(t) + ACTS.replace(/data-act=/g, 'data-gact=') + '</div></div>' +
+      moneyHtml(t) + '<div class="ct-row-expanded-info">' + factsHtml(t) + actsOf(t).replace(/data-act=/g, 'data-gact=') + '</div></div>' +
       (ids.length > 1 ? '<button type="button" class="gp-nav gp-prev" data-gstep="-1" aria-label="Previous card"' + (i <= 0 ? ' disabled' : '') + '>' + A(-1) + '</button><button type="button" class="gp-nav gp-next" data-gstep="1" aria-label="Next card"' + (i >= ids.length - 1 ? ' disabled' : '') + '>' + A(1) + '</button>' : '') + '</div>';
   }
   function openGP(id) { gpId = id; paintGP(); gp.classList.remove('out'); if (!gp.open) gp.showModal(); const x = gp.querySelector('[data-gx]'); if (x) x.focus({ preventScroll: true }); }

@@ -2568,11 +2568,20 @@ html.ct-locked body{overflow:hidden}
 /* v52.71 phones: grid tiles have no background or padding, so their own rounding only cut the top corners of the card
    picture (iPhone Safari clips a button's contents to its corners). Leave the rounding to the picture itself. */
 @media(max-width:760px){#ct-rows.ct-gal .ct-tile{border-radius:0}}
-/* v52.75 sealed products (packs, boxes, ETBs, UPCs): the whole picture, centred on a soft panel the shape of a card,
-   with a light shadow; never cropped, never rounded like a card */
-:is(.ct-tile-art,.gp-art).ct-sealed{aspect-ratio:63/88;border-radius:7%/5%;background:color-mix(in srgb,var(--text,#22221f) 4%,transparent);display:grid;place-items:center;overflow:hidden}
-:is(.ct-tile-art,.gp-art).ct-sealed>img{width:86%;height:86%;object-fit:contain;border-radius:0;filter:drop-shadow(0 6px 10px rgba(0,0,0,.2))}
-img.ct-card-art.ct-sealed{object-fit:contain!important;border-radius:0!important;background:none!important;box-shadow:none!important;filter:drop-shadow(0 2px 4px rgba(0,0,0,.18))}
+/* v52.75/52.78 sealed products (packs, boxes, ETBs, UPCs): their own look, not a card. The picture is cut out of its white
+   backdrop (js/cutout.js) and the product stands in its own shape at the bottom of the card-sized space (so grid rows
+   still line up), on a soft floor shadow. A photo that can't be cut out sits on a soft panel instead. */
+:is(.ct-tile-art,.gp-art).ct-sealed{aspect-ratio:63/88;border-radius:0;background:none!important;box-shadow:none!important;display:block;position:relative;overflow:visible}
+:is(.ct-tile-art,.gp-art).ct-sealed>img{position:absolute;inset:4% 4% 7%;width:92%;height:89%;object-fit:contain;object-position:50% 100%;border-radius:0;filter:drop-shadow(0 8px 10px rgba(0,0,0,.18)) drop-shadow(0 2px 3px rgba(0,0,0,.12));z-index:1}
+:is(.ct-tile-art,.gp-art).ct-sealed::after{content:"";position:absolute;left:14%;right:14%;bottom:3%;height:7%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.2),transparent);pointer-events:none}
+:is(.ct-tile-art,.gp-art).ct-sealed:has(>img.ct-nocut){background:color-mix(in srgb,var(--text,#22221f) 4%,transparent)!important;border-radius:7%/5%;overflow:hidden}
+:is(.ct-tile-art,.gp-art).ct-sealed:has(>img.ct-nocut)::after{display:none}
+:is(.ct-tile-art,.gp-art).ct-sealed>img.ct-nocut{inset:7%;width:86%;height:86%;object-position:50% 50%}
+:is(.ct-tile-art,.gp-art).ct-sealed>img:not(.ct-cut):not(.ct-nocut){opacity:0}
+:is(.ct-tile-art,.gp-art).ct-sealed>img{transition:opacity .25s ease}
+img.ct-card-art.ct-sealed{object-fit:contain!important;object-position:50% 50%;border-radius:0!important;background:none!important;box-shadow:none!important;filter:drop-shadow(0 3px 4px rgba(0,0,0,.2))}
+img.ct-card-art.ct-sealed:not(.ct-cut):not(.ct-nocut){opacity:0}
+img.ct-card-art.ct-sealed{transition:opacity .25s ease}
 /* v52.75 Add an item: All · Cards · Sealed, the Sealed tag, and sealed pictures shown whole */
 #as .kinds{display:flex;gap:6px;padding:8px 0 2px;flex:none}
 #as .kinds button{border:1px solid var(--line);background:var(--raised);color:var(--muted);border-radius:999px;padding:6px 13px;font:inherit;font-size:13px;font-weight:700;-webkit-tap-highlight-color:transparent}
