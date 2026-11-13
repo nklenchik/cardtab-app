@@ -124,16 +124,30 @@
   }
 
   // ---------- welcome ----------
+  // v52.70 the thank-you after checkout: a dark header lit by soft cranberry, ember and violet glows, a ringed check,
+  // the Founding member pill and the thank-you on the dark, then what's unlocked as tiles and Start exploring.
+  // The glows drift in and the check pops as it opens (transform and opacity only).
+  const WI = p => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
+  const WFEAT = [
+    ['No monthly entry limit', '<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/>'],
+    ['Import a spreadsheet', '<path d="M12 15V4M7 9l5-5 5 5M5 20h14"/>'],
+    ['Every Board widget', '<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/>'],
+    ['All Stories themes and video', '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z"/>'],
+    ['Any date range, all history', '<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M8 14h3M13 14h3"/>'],
+    ['More Ask questions', '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>']
+  ];
   function welcome() {
     let w = $('wlc');
     if (!w) { w = document.createElement('dialog'); w.id = 'wlc'; w.className = 'wlc'; document.body.appendChild(w);
       w.addEventListener('click', e => { if (e.target.closest('[data-wgo]') || e.target === w) w.close(); }); }
     const s = status && status.sub, f = s && s.founder;
-    w.innerHTML = '<div class="wl-p"><div class="wl-badge" aria-hidden="true"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div>' +
-      '<h2>You’re Premium.</h2><p>' + (f ? 'Thanks for being a founding member. Your ' + dollars(s.amount) + (s.interval === 'year' ? ' a year' : ' a month') + ' price is locked in.' : 'Thanks for supporting Card Tab.') + '</p>' +
-      '<div class="wl-ul"><div><span>✓</span>No monthly entry limit</div><div><span>✓</span>Every Card Board widget and saved layouts</div><div><span>✓</span>All Stories themes and video</div><div><span>✓</span>Import and all your history</div></div>' +
-      '<button type="button" class="wl-go" data-wgo>Start exploring</button><p class="wl-fine">A receipt is on its way to your email.</p></div>';
-    w.showModal(); const pnl = w.querySelector('.wl-p'); pnl.tabIndex = -1; pnl.style.outline = 'none'; try { pnl.focus({ preventScroll: true }); } catch (e) {}
+    w.innerHTML = '<div class="wl-p"><div class="wl-card"><div class="wl-hero" aria-hidden="false"><i class="wl-o o1"></i><i class="wl-o o2"></i><i class="wl-o o3"></i>' +
+      '<div class="wl-in"><div class="wl-ring" aria-hidden="true"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div></div>' +
+      '<span class="wl-pill">' + (f ? '★ Founding member' : 'Card Tab Premium') + '</span>' +
+      '<h2>You’re Premium.</h2><p class="wl-sub">' + (f ? 'Thanks for being a founding member. Your ' + dollars(s.amount) + (s.interval === 'year' ? '/year' : '/month') + ' price is locked in for as long as you stay subscribed.' : 'Thanks for supporting Card Tab. Everything is unlocked.') + '</p></div></div>' +
+      '<div class="wl-b"><div class="wl-f">' + WFEAT.map(x => '<div>' + WI(x[1]) + '<span>' + x[0] + '</span></div>').join('') + '</div>' +
+      '<button type="button" class="wl-go" data-wgo>Start exploring</button><p class="wl-fine">A receipt is on its way to your email.</p></div></div></div>';
+    w.showModal(); const pnl = w.querySelector('.wl-card'); pnl.tabIndex = -1; pnl.style.outline = 'none'; try { pnl.focus({ preventScroll: true }); } catch (e) {}
   }
 
   // ---------- Settings → Plan and billing ----------

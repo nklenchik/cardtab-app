@@ -254,6 +254,9 @@
   }
   function search() {
     const q = qIn.value.trim().toLowerCase(); qX.hidden = !q;
+    // v52.70 hold the menu at the width it had before typing, so long results wrap instead of stretching it
+    if (q && !menu.style.width && !matchMedia('(max-width:760px)').matches) menu.style.width = menu.getBoundingClientRect().width + 'px';
+    if (!q) menu.style.width = '';
     menu.classList.toggle('am-searching', !!q); qRes.hidden = !q; if (!q) { qRes.innerHTML = ''; return; }
     if (!IDX) IDX = index();
     const hits = IDX.map(o => ({ o, s: score(o, q) })).filter(x => x.s).sort((a, b) => b.s - a.s).slice(0, 8);

@@ -2535,5 +2535,33 @@ html.ct-locked body{overflow:hidden}
    remembered), so the picture fills it exactly with nothing trimmed; card-shaped until then */
 /* corners: many card photos come with their own rounded top corners on a dark background but a bottom edge cut straight,
    so all four corners are rounded the same, a little more than a real card's, which hides the photo's own corners */
-:is(.ct-tile-art,.gp-art):not(.ct-slabbed),#ct-rows .ct-tile-art:not(.ct-slabbed){aspect-ratio:var(--ar,63/88);border-radius:7% / 5%}
+:is(.ct-tile-art,.gp-art):not(.ct-slabbed),#ct-rows .ct-tile-art:not(.ct-slabbed){aspect-ratio:var(--ar,63/88);border-radius:6% / 4.3%}
 :is(.ct-tile-art,.gp-art):not(.ct-slabbed)>img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+
+/* v52.70 the Premium thank-you: dark aurora header with a ringed check */
+.wlc{background:rgba(10,8,6,.55)}
+.wlc .wl-p{max-width:none;padding:40px max(16px,env(safe-area-inset-left,0px)) 32px;justify-content:center}
+.wl-card{width:100%;max-width:520px;background:var(--s-card,#fff);border:1px solid var(--s-hair);border-radius:28px;overflow:hidden;box-shadow:0 30px 80px -30px rgba(0,0,0,.6);text-align:center;transform:translateZ(0);animation:wlIn .45s cubic-bezier(.2,.8,.2,1) both}
+.wl-hero{position:relative;overflow:hidden;background:#12070b;color:#fff;isolation:isolate}
+.wl-o{position:absolute;z-index:-2;border-radius:50%;filter:blur(40px);animation:wlGlow 1.1s cubic-bezier(.2,.8,.2,1) both}
+.wl-o.o1{width:270px;height:210px;left:-50px;top:-60px;background:#bf1240;opacity:.8}
+.wl-o.o2{width:230px;height:200px;right:-60px;top:0;background:#ff8a5c;opacity:.45;animation-delay:.08s}
+.wl-o.o3{width:210px;height:170px;left:32%;bottom:-80px;background:#8e2bd9;opacity:.38;animation-delay:.16s}
+.wl-hero::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(10,4,7,.25),rgba(10,4,7,.45) 60%,rgba(10,4,7,.6))}
+@keyframes wlGlow{from{opacity:0;transform:scale(.7)}}
+.wl-in{padding:30px 22px 26px}
+.wl-ring{width:76px;height:76px;margin:0 auto 14px;border-radius:50%;padding:3px;background:conic-gradient(from 200deg,#7a0b2a,#bf1240,#ff7a8a,#bf1240,#7a0b2a);box-shadow:0 10px 30px -8px rgba(191,18,64,.7);animation:wlPop .55s .15s cubic-bezier(.2,1.4,.4,1) both}
+.wl-ring>div{width:100%;height:100%;border-radius:50%;background:#1a0a10;display:grid;place-items:center;color:#ff7a95}
+.wl-ring svg{width:30px;height:30px}
+.wl-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.02em;color:#fff;background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.16);animation:wlIn .4s .22s ease both}
+.wl-hero h2{margin:12px 0 8px;color:#fff;font-size:32px;font-weight:800;letter-spacing:-.025em;text-shadow:0 2px 16px rgba(0,0,0,.35);animation:wlIn .4s .26s ease both}
+.wl-sub{margin:0 auto;max-width:36ch;font-size:15px;font-weight:600;line-height:1.5;color:rgba(255,255,255,.88);animation:wlIn .4s .3s ease both}
+.wl-b{padding:20px 22px 22px}
+.wl-f{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;text-align:left;animation:wlIn .4s .34s ease both}
+.wl-f div{display:flex;align-items:center;gap:8px;min-height:46px;padding:9px 11px;border-radius:14px;background:var(--s-bg,#f8f7f4);border:1px solid var(--s-hair);font-size:12.5px;font-weight:750;line-height:1.2}
+.wl-f svg{flex:none;color:var(--s-brand-text,#a50e37)}
+.wl-card .wl-go{animation:wlIn .4s .38s ease both}
+@media(max-width:560px){.wl-in{padding:28px 18px 24px}.wl-b{padding:18px 16px 20px}.wl-hero h2{font-size:29px}}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .wl-f svg{color:#f27a9a}}
+:root[data-theme=dark] .wl-f svg{color:#f27a9a}
+@media(prefers-reduced-motion:reduce){.wl-card,.wl-o,.wl-ring,.wl-pill,.wl-hero h2,.wl-sub,.wl-f,.wl-card .wl-go{animation:none}}
