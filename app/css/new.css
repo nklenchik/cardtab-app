@@ -2579,7 +2579,7 @@ html.ct-locked body{overflow:hidden}
 :is(.ct-tile-art,.gp-art).ct-sealed>img.ct-nocut{inset:7%;width:86%;height:86%;object-position:50% 50%}
 :is(.ct-tile-art,.gp-art).ct-sealed>img:not(.ct-cut):not(.ct-nocut){opacity:0}
 :is(.ct-tile-art,.gp-art).ct-sealed>img{transition:opacity .25s ease}
-img.ct-card-art.ct-sealed{object-fit:contain!important;object-position:50% 50%;border-radius:0!important;background:none!important;box-shadow:none!important;filter:drop-shadow(0 3px 4px rgba(0,0,0,.2))}
+img.ct-card-art.ct-sealed{height:calc(var(--ct-art,44px) * 61 / 44)!important;max-height:none!important;object-fit:contain!important;object-position:50% 50%;border-radius:0!important;background:none!important;box-shadow:none!important;filter:drop-shadow(0 3px 4px rgba(0,0,0,.2))}
 img.ct-card-art.ct-sealed:not(.ct-cut):not(.ct-nocut){opacity:0}
 img.ct-card-art.ct-sealed{transition:opacity .25s ease}
 /* v52.75 Add an item: All · Cards · Sealed, the Sealed tag, and sealed pictures shown whole */
