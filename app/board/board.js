@@ -933,14 +933,14 @@ function run(a){
   else toast({plan:'Plan and billing opens here in the app',import:'Import opens from the dashboard in the app',plat:'Platforms and fees open here in the app',goal:'Budget and goals open here in the app',help:'Help and feedback open here in the app',out:'Sign out works in the app'}[a])}
 // avatar editor: your initial on a color, or a photo you upload or take, positioned in a circle
 const av=$('av');let ad=null;const AVC=135;
-function openAvatar(){ad={color:avatar.color||SWATCH[0],photo:null,src:avatar.src||null,x:avatar.x||0,y:avatar.y||0,z:avatar.z||1,img:null,first:profile.first,last:profile.last,show:profile.show};
+function openAvatar(){ad={color:avatar.color||SWATCH[0],photo:null,src:avatar.src||avatar.photo||null,x:avatar.x||0,y:avatar.y||0,z:avatar.z||1,img:null,first:profile.first,last:profile.last,show:profile.show};
   $('av-sw').innerHTML=SWATCH.map(c=>'<button type="button" role="radio" data-c="'+c+'" style="--c:'+c+'" aria-label="Color '+c+'" aria-checked="'+(c===ad.color)+'"></button>').join('')+'<button type="button" class="cust" id="av-pick" aria-label="Pick any color" aria-expanded="false"></button>';$('av-cpk').hidden=true;
   $('pf-first').value=ad.first;$('pf-last').value=ad.last;paintShow();
   $('av-camw').hidden=!touchDev;$('av-l').textContent=initial();
   if(ad.src)loadImg(ad.src,true);else drawAv();av.showModal()}
 function paintShow(){$('pf-show').querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',b.dataset.sh===ad.show))}
 function drawAv(){const c=$('av-c'),img=$('av-img'),has=!!ad.img;c.style.background=has?'#111':ad.color;c.style.color=inkFor(ad.color);$('av-l').textContent=(($('pf-first').value||'?')[0]).toUpperCase();
-  const custom=!SWATCH.includes(ad.color);if(document.activeElement!==$('av-hex'))$('av-hex').value=ad.color.toUpperCase();const pk=$('av-pick');if(pk){pk.classList.toggle('on',custom);pk.style.setProperty('--c',ad.color)}paintPicker();$('av-l').hidden=has;img.hidden=!has;$('av-zw').hidden=!has;$('av-hint').hidden=!has;$('av-rm').hidden=!has;$('av-colw').hidden=has;
+  const custom=!SWATCH.includes(ad.color);if(document.activeElement!==$('av-hex'))$('av-hex').value=ad.color.toUpperCase();const pk=$('av-pick');if(pk){pk.classList.toggle('on',custom);pk.style.setProperty('--c',ad.color)}paintPicker();$('av-l').hidden=has;img.hidden=!has;{const u=$('av-up').parentElement.firstChild;if(u&&u.nodeType===3)u.nodeValue=has?'Change photo':'Upload photo'}$('av-zw').hidden=!has;$('av-hint').hidden=!has;$('av-rm').hidden=!has;$('av-colw').hidden=has;
   $('av-sw').querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',b.dataset.c===ad.color));
   if(has){const s0=Math.max(AVC/ad.img.naturalWidth,AVC/ad.img.naturalHeight),s=s0*ad.z,w=ad.img.naturalWidth*s,h=ad.img.naturalHeight*s;
     ad.x=Math.min(0,Math.max(AVC-w,ad.x));ad.y=Math.min(0,Math.max(AVC-h,ad.y));img.style.width=w+'px';img.style.height=h+'px';img.style.transform='translate('+ad.x+'px,'+ad.y+'px)'}}
