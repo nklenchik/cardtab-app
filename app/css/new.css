@@ -2533,5 +2533,7 @@ html.ct-locked body{overflow:hidden}
    itself, sized like a real card's corners (3mm on a 63×88mm card) at any size */
 /* v52.68 (works the same in Safari): the box takes the picture's own shape (--ar, set by dash.js when the picture loads, and
    remembered), so the picture fills it exactly with nothing trimmed; card-shaped until then */
-:is(.ct-tile-art,.gp-art):not(.ct-slabbed),#ct-rows .ct-tile-art:not(.ct-slabbed){aspect-ratio:var(--ar,63/88);border-radius:4.8% / 3.4%}
+/* corners: many card photos come with their own rounded top corners on a dark background but a bottom edge cut straight,
+   so all four corners are rounded the same, a little more than a real card's, which hides the photo's own corners */
+:is(.ct-tile-art,.gp-art):not(.ct-slabbed),#ct-rows .ct-tile-art:not(.ct-slabbed){aspect-ratio:var(--ar,63/88);border-radius:7% / 5%}
 :is(.ct-tile-art,.gp-art):not(.ct-slabbed)>img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
