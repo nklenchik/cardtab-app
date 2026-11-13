@@ -46,13 +46,26 @@
               for (let k = 0; k < qt; k++) out[q[k]] = 1; } }
         let gone = 0; for (let i = 0; i < N; i++) gone += out[i];
         if (gone < N * 0.03 || gone > N * 0.9) { done.set(src, ''); return ''; }   // nothing to cut, or it would cut the product away
-        // see-through backdrop, and a one-pixel soft edge so the outline isn't jagged
+        // v52.86 clean edges. The few pixels along the outline are part product, part white (the photo's own soft edge), which
+        // left a white fringe. For a band 3 pixels deep, each pixel's see-through amount is worked out from how much white is
+        // mixed into it, and the white is taken back out of its colour ("colour to alpha"). Specks left touching the cut-out
+        // are cleared too.
+        const band = new Uint8Array(N);
+        for (let i = 0; i < N; i++) if (out[i]) band[i] = 1;
+        for (let r = 2; r <= 4; r++) for (let i = 0; i < N; i++) { if (band[i]) continue; const x = i % W;
+          if ((x > 0 && band[i - 1] === r - 1) || (x < W - 1 && band[i + 1] === r - 1) || (i >= W && band[i - W] === r - 1) || (i < N - W && band[i + W] === r - 1)) band[i] = r; }
         let x0 = W, y0 = H, x1 = -1, y1 = -1;
         for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x, o = i * 4;
           if (out[i]) { d[o + 3] = 0; continue; }
-          const nb = (x > 0 && out[i - 1]) + (x < W - 1 && out[i + 1]) + (y > 0 && out[i - W]) + (y < H - 1 && out[i + W]);
-          if (nb) d[o + 3] = Math.round(d[o + 3] * (1 - nb * 0.16));
-          if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+          if (band[i] >= 2) { const deep = band[i];
+            // how far each channel sits from the backdrop toward black, as a share of the room it has: the largest share is the alpha
+            const ar = R > 0 ? (R - d[o]) / R : 0, ag = G > 0 ? (G - d[o + 1]) / G : 0, ab = B > 0 ? (B - d[o + 2]) / B : 0;
+            let a = Math.max(ar, ag, ab, 0); a = Math.min(1, a * (deep === 2 ? 1.25 : deep === 3 ? 1.6 : 2.4));
+            if (a < (deep === 2 ? 0.16 : 0.08)) { d[o + 3] = 0; continue; }
+            if (a < 1) { d[o] = Math.max(0, Math.min(255, Math.round((d[o] - (1 - a) * R) / a))); d[o + 1] = Math.max(0, Math.min(255, Math.round((d[o + 1] - (1 - a) * G) / a))); d[o + 2] = Math.max(0, Math.min(255, Math.round((d[o + 2] - (1 - a) * B) / a))); }
+            d[o + 3] = Math.round(d[o + 3] * a); }
+          if (d[o + 3] > 8) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } }
+        if (x1 < x0) { done.set(src, ''); return ''; }
         g.putImageData(im, 0, 0);
         // trim the empty margin
         const tw = x1 - x0 + 1, th = y1 - y0 + 1, t = document.createElement('canvas'); t.width = tw; t.height = th; t.getContext('2d').drawImage(c, x0, y0, tw, th, 0, 0, tw, th);
