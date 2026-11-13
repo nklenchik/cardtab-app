@@ -2565,3 +2565,6 @@ html.ct-locked body{overflow:hidden}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]) .wl-f svg{color:#f27a9a}}
 :root[data-theme=dark] .wl-f svg{color:#f27a9a}
 @media(prefers-reduced-motion:reduce){.wl-card,.wl-o,.wl-ring,.wl-pill,.wl-hero h2,.wl-sub,.wl-f,.wl-card .wl-go{animation:none}}
+/* v52.71 phones: grid tiles have no background or padding, so their own rounding only cut the top corners of the card
+   picture (iPhone Safari clips a button's contents to its corners). Leave the rounding to the picture itself. */
+@media(max-width:760px){#ct-rows.ct-gal .ct-tile{border-radius:0}}
