@@ -92,6 +92,8 @@
     // a graded card: its slab comes along (cloned from the one you tapped, with the full picture in its well)
     thumbImg = thumb || null; thumbSlab = thumb && thumb.closest ? thumb.closest('.slab') : null; graded = !!thumbSlab;
     slabEl.innerHTML = ''; sw.hidden = !graded; el.classList.toggle('zm-g', graded);
+    // v52.78 a sealed product is a cut-out with see-through edges: no dark box, rounded corners or frame behind it
+    el.classList.toggle('zm-s', !!((thumb && thumb.closest && thumb.closest('.ct-sealed')) || (window.CTSealedSrc && window.CTSealedSrc.has(src))));
     if (graded) { const c = thumbSlab.cloneNode(true); c.removeAttribute('style'); const ci = c.querySelector('.sl-well img'); if (ci) { ci.removeAttribute('loading'); ci.src = thumb.currentSrc || src; const full = new Image(); full.onload = () => { if (open) ci.src = src; }; full.src = src; } slabEl.appendChild(c); }
     mode = graded ? 'slab' : 'card'; slabEl.hidden = !graded; img.style.visibility = graded ? 'hidden' : '';
     sw.querySelectorAll('[data-m]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.m === mode)));
