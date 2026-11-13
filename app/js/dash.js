@@ -638,7 +638,7 @@
   $('ct-ask').inert = true;
 
   // Search hint: "Search" plus a word that slides up every 3 seconds
-  const hint = $('ct-qhint'), wordBox = hint.querySelector('.ct-qword'), words = ['cards', 'sets', 'platforms']; let wi = 0;
+  const hint = $('ct-qhint'), wordBox = hint.querySelector('.ct-qword'), words = ['cards', 'sealed', 'sets', 'platforms']; let wi = 0;
   const qclear = $('ct-qclear'); const hintSync = () => { const has = !!$('ct-search').value; hint.classList.toggle('ct-hide', has); qclear.hidden = !has; };
   qclear.addEventListener('click', e => { e.preventDefault(); const q = $('ct-search'); q.value = ''; q.dispatchEvent(new Event('input', { bubbles: true })); q.focus(); });
   $('ct-search').addEventListener('input', hintSync);

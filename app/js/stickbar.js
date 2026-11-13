@@ -12,7 +12,7 @@
   const bar = document.createElement('div');
   bar.className = 'ct-phead'; bar.setAttribute('aria-hidden', 'true');
   bar.innerHTML = '<div class="ph-row"><span class="ph-brand"></span><div class="ph-r"><button type="button" class="ph-q" aria-label="Search" tabindex="-1"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg></button></div></div>' +
-    '<label class="ph-field"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg><input type="search" placeholder="Search all months" aria-label="Search cards, sets and platforms" autocomplete="off" enterkeyhint="search" tabindex="-1"><button type="button" class="ph-x" aria-label="Close search">Cancel</button></label>';
+    '<label class="ph-field"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg><input type="search" placeholder="Search all months" aria-label="Search cards, sealed, sets and platforms" autocomplete="off" enterkeyhint="search" tabindex="-1"><button type="button" class="ph-x" aria-label="Close search">Cancel</button></label>';
   bar.querySelector('.ph-brand').innerHTML = brand.innerHTML;
   document.body.appendChild(bar);
   const q = bar.querySelector('.ph-field input'), qBtn = bar.querySelector('.ph-q');

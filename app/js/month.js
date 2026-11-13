@@ -236,7 +236,7 @@
     '<button type="button" class="sb-num sb-top" aria-label="Back to the totals"><small>Spent</small><b id="sb-spent"></b></button>' +
     '<span class="sb-bud" id="sb-bud"><i><em></em></i><span></span></span><span class="sb-sep"></span>' +
     '<button type="button" class="sb-num sb-top sb-profit" aria-label="Back to the totals"><small>Profit</small><b id="sb-profit"></b></button></div>' +
-    '<label class="sb-q"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg><input type="search" placeholder="Search all months" aria-label="Search cards, sets and platforms" autocomplete="off" tabindex="-1"></label>' +
+    '<label class="sb-q"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg><input type="search" placeholder="Search all months" aria-label="Search cards, sealed, sets and platforms" autocomplete="off" tabindex="-1"></label>' +
     '<div class="sb-acts"><button type="button" class="sb-search" aria-label="Search" tabindex="-1"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg></button>' +
     '<button type="button" class="sb-add" tabindex="-1"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add</button></div></div>';
   const mini = mk('ms-mini', false);
