@@ -30,6 +30,11 @@ n = await notes(fan.c); assert.equal(n.news.length, 0, 'handed over once');
 // someone who joins later never gets it
 sq.prepare("UPDATE announce SET at=at-100").run();
 const late = await signIn('late@x.com'); n = await notes(late.c); assert.equal(n.news.length, 0, 'new sign-ups skip old news');
+// edit: someone who already has it gets the fixed text on their next check, once
+await new Promise(r => setTimeout(r, 1100));
+r = await call('/auth/admin/announce/edit', { method: 'POST', body: { id, title: 'Card Tab now tracks sealed products!', body: 'Fixed text.', go: 'add', aud: 'all' }, cookie: boss.c }); assert.equal(r.status, 200);
+n = await notes(fan.c); assert.equal(n.news.length, 1); assert.equal(n.news[0].fix, 1); assert.equal(n.news[0].body, 'Fixed text.');
+n = await notes(fan.c); assert.equal(n.news.length, 0, 'fix sent once');
 // the list shows how many have it; bad go/aud are cleaned
 r = await call('/auth/admin/announce', { cookie: boss.c }); let j = await r.json(); assert.equal(j.items[0].got, 1); assert.ok(j.people >= 3);
 r = await call('/auth/admin/announce', { method: 'POST', body: { title: 'Two', go: 'evil', aud: 'nope' }, cookie: boss.c }); const id2 = (await r.json()).id;

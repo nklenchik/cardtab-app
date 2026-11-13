@@ -339,8 +339,10 @@
       const j = await Sess.api('/auth/notes', {}), notes = (j && j.notes) || [];
       // v52.87 What's new: shown once; aimed at Free or Premium only when it says so
       const pl = S.plan() === 'free' ? 'free' : 'premium', news = ((j && j.news) || []).filter(n => !n.aud || n.aud === 'all' || n.aud === pl);
-      if (news.length) { await save(s => { const have = new Set((s.items || []).map(x => x.id)); s.items = (s.items || []).concat(news.filter(n => !have.has('ann:' + n.id)).map(n => ({ id: 'ann:' + n.id, kind: 'news', cat: 'news', ts: (n.at || 0) * 1000 || now(), title: n.title, body: n.body || '', go: n.go || '' }))); });
-        paintDot(); if (prefs().all && prefs().news !== false && window.CTDash && window.CTDash.toast && !notes.length) window.CTDash.toast(news[0].title); }
+      const fixes = ((j && j.news) || []).filter(n => n.fix);   // an announcement you already have was corrected: update your copy (a dismissed one stays gone)
+      if (fixes.length) await save(s => { s.items = (s.items || []).map(x => { const f = fixes.find(n => 'ann:' + n.id === x.id); return f ? Object.assign({}, x, { title: f.title, body: f.body || '', go: f.go || '' }) : x; }); });
+      if (news.filter(n => !n.fix).length) { const fresh = news.filter(n => !n.fix); await save(s => { const have = new Set((s.items || []).map(x => x.id)); s.items = (s.items || []).concat(fresh.filter(n => !have.has('ann:' + n.id)).map(n => ({ id: 'ann:' + n.id, kind: 'news', cat: 'news', ts: (n.at || 0) * 1000 || now(), title: n.title, body: n.body || '', go: n.go || '' }))); });
+        paintDot(); if (prefs().all && prefs().news !== false && window.CTDash && window.CTDash.toast && !notes.length) window.CTDash.toast(fresh[0].title); }
       if (notes.length) {
         await save(s => { const have = new Set((s.items || []).map(x => x.id)); s.items = (s.items || []).concat(notes.filter(n => !have.has('adm:' + n.id)).map(n => ({ id: 'adm:' + n.id, kind: 'admin', cat: 'billing', ts: (n.at || 0) * 1000 || now(), title: n.title, body: n.body || '' }))); });
         paintDot();

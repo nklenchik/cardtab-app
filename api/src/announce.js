@@ -2,6 +2,8 @@
    POST /auth/admin/announce          admins: {title, body, go, aud}  send a new one
    GET  /auth/admin/announce          admins: the ones sent, newest first, with how many people have it so far
    POST /auth/admin/announce/stop     admins: {id}  stop handing it out (people who already have it keep it)
+   POST /auth/admin/announce/edit     admins: {id, title, body, go, aud}  fix it: new copies get the new text, and copies
+                                      already handed over are updated the next time that person's app checks
    Each person's app picks new ones up with its other messages (POST /auth/notes). An announcement only reaches people
    whose account existed when it was sent, so new sign-ups never see old news, and it stops going out after 60 days. */
 const now = () => Math.floor(Date.now() / 1000), DAY = 86400;
@@ -11,10 +13,11 @@ let ready = false;
 export async function ensureAnnounce(env) {
   if (ready) return;
   await env.DB.batch([
-    env.DB.prepare('CREATE TABLE IF NOT EXISTS announce ( id TEXT PRIMARY KEY, at INTEGER NOT NULL, title TEXT NOT NULL, body TEXT, go TEXT, aud TEXT NOT NULL DEFAULT \'all\', stopped INTEGER NOT NULL DEFAULT 0 )'),
+    env.DB.prepare('CREATE TABLE IF NOT EXISTS announce ( id TEXT PRIMARY KEY, at INTEGER NOT NULL, title TEXT NOT NULL, body TEXT, go TEXT, aud TEXT NOT NULL DEFAULT \'all\', stopped INTEGER NOT NULL DEFAULT 0, edited INTEGER )'),
     env.DB.prepare('CREATE TABLE IF NOT EXISTS announce_seen ( uid TEXT NOT NULL, aid TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (uid, aid) )'),
     env.DB.prepare('CREATE INDEX IF NOT EXISTS announce_seen_aid ON announce_seen (aid)')
   ]);
+  try { await env.DB.prepare('ALTER TABLE announce ADD COLUMN edited INTEGER').run(); } catch (e) { /* already there */ }
   ready = true;
 }
 // the person's app asks: announcements sent since they joined, not stopped, not older than 60 days, not handed over yet
@@ -24,8 +27,11 @@ export async function takeNews(env, me) {
     const t = now(), joined = +me.created_at || 0;
     const rows = (await env.DB.prepare('SELECT a.id,a.at,a.title,a.body,a.go,a.aud FROM announce a LEFT JOIN announce_seen s ON s.aid=a.id AND s.uid=? WHERE a.stopped=0 AND a.at>=? AND a.at>? AND s.aid IS NULL ORDER BY a.at LIMIT 5')
       .bind(me.id, joined, t - 60 * DAY).all()).results || [];
-    if (rows.length) await env.DB.batch(rows.map(r => env.DB.prepare('INSERT OR IGNORE INTO announce_seen (uid,aid,at) VALUES (?,?,?)').bind(me.id, r.id, t)));
-    return rows;
+    // ones already handed over that were edited since: send the fixed text again (the app replaces its copy)
+    const fixed = (await env.DB.prepare('SELECT a.id,a.at,a.title,a.body,a.go,a.aud FROM announce a JOIN announce_seen s ON s.aid=a.id AND s.uid=? WHERE a.edited IS NOT NULL AND a.edited>s.at LIMIT 10').bind(me.id).all()).results || [];
+    const all = rows.concat(fixed.map(r => Object.assign(r, { fix: 1 })));
+    if (all.length) await env.DB.batch(all.map(r => env.DB.prepare('INSERT INTO announce_seen (uid,aid,at) VALUES (?,?,?) ON CONFLICT(uid,aid) DO UPDATE SET at=excluded.at').bind(me.id, r.id, t)));
+    return all;
   } catch (e) { return []; }
 }
 const clean = (s, n) => String(s == null ? '' : s).replace(/[\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
@@ -44,6 +50,13 @@ export async function handleAnnounce(env, req, path, admin, out) {
     const id = crypto.randomUUID(), at = now();
     await env.DB.prepare('INSERT INTO announce (id,at,title,body,go,aud,stopped) VALUES (?,?,?,?,?,?,0)').bind(id, at, title, body, go, aud).run();
     return out({ ok: true, id, at });
+  }
+  if (path === '/auth/admin/announce/edit' && req.method === 'POST') {
+    const b = await req.json().catch(() => ({}));
+    const title = clean(b.title, 70), body = clean(b.body, 200), go = GOS.includes(b.go) ? b.go : '', aud = AUDS.includes(b.aud) ? b.aud : 'all';
+    if (!title) return out({ error: 'Add a title.' }, 400);
+    const r = await env.DB.prepare('UPDATE announce SET title=?,body=?,go=?,aud=?,edited=? WHERE id=?').bind(title, body, go, aud, now(), String(b.id || '')).run();
+    return out({ ok: true });
   }
   if (path === '/auth/admin/announce/stop' && req.method === 'POST') {
     const b = await req.json().catch(() => ({}));
