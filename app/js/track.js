@@ -10,6 +10,9 @@
   let page = 'entries', since = performance.now(), visible = !document.hidden, activeMs = 0, lastPrem = '';
   const desk = matchMedia('(min-width:761px)');
   const on = () => { try { const s = Sess() && Sess().get(); if (!s || s.role === 'admin') return false; const v = S() && S().meta('shareUsage'); return v !== false; } catch (e) { return false; } };
+  // v52.72: real-world speed numbers also come from admin devices (the server keeps them apart as "your devices"); the
+  // "Share anonymous usage" switch still turns them off
+  const onV = () => { try { const s = Sess() && Sess().get(); if (!s) return false; const v = S() && S().meta('shareUsage'); return v !== false; } catch (e) { return false; } };
   const word = s => String(s == null ? '' : s).toLowerCase().replace(/\d{4}/g, '').replace(/[^a-z0-9 &+\-]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 40);
 
   // v50.97: a running tally of what this person uses, kept only on this device (never sent): the Premium sheet leans its
@@ -26,14 +29,39 @@
 
   async function flush(beacon) {
     tickTime();
-    if (!on()) { q.length = 0; activeMs = 0; return; }
-    const secs = Math.round(activeMs / 1000); if (!q.length && secs < 5) return;
+    if (!on()) { const keep = onV() ? q.filter(x => /^v_/.test(x.e)) : []; q.length = 0; q.push(...keep); activeMs = 0; if (!q.length) return; }
+    const secs = on() ? Math.round(activeMs / 1000) : 0; if (!q.length && secs < 5) return;
     const body = JSON.stringify({ dev: desk.matches ? 'desk' : 'phone', secs, ev: q.splice(0, 120) }); activeMs = 0;
     const s = Sess(); if (!s || !s.REAL) return;   // test copies: nothing leaves the device
     try { await fetch(s.API + '/auth/ev', { method: 'POST', credentials: 'include', keepalive: !!beacon, headers: { 'content-type': 'application/json' }, body }); } catch (e) {}
   }
   setInterval(flush, 60000);
-  document.addEventListener('visibilitychange', () => { tickTime(); visible = !document.hidden; since = performance.now(); if (document.hidden) flush(true); });
+  // v52.72 real-world speed, the three numbers Google uses, measured on this device and sent only as ranges (buckets):
+  // loading (largest content on screen), tap response (slowest-but-typical tap, INP) and layout jumps (CLS). Loading and
+  // jumps once per app open; tap response for the taps since the last report, each time the app goes to the background.
+  const V = (() => {
+    const sup = (window.PerformanceObserver && PerformanceObserver.supportedEntryTypes) || [], hidden0 = document.hidden;
+    let lcp = 0, lcpDone = false, cls = 0, win = 0, w0 = 0, wLast = 0, sentOnce = false; const taps = new Map();
+    const obs = (type, fn, o) => { if (!sup.includes(type)) return; try { new PerformanceObserver(l => l.getEntries().forEach(fn)).observe(Object.assign({ type, buffered: true }, o)); } catch (e) {} };
+    obs('largest-contentful-paint', e => { if (!lcpDone) lcp = e.renderTime || e.startTime; });
+    const stopLcp = () => { lcpDone = true; }; ['pointerdown', 'keydown'].forEach(t => addEventListener(t, stopLcp, { capture: true, once: true, passive: true }));
+    obs('layout-shift', e => { if (e.hadRecentInput) return; if (win && e.startTime - wLast < 1000 && e.startTime - w0 < 5000) win += e.value; else { win = e.value; w0 = e.startTime; } wLast = e.startTime; if (win > cls) cls = win; });
+    obs('event', e => { if (e.interactionId) taps.set(e.interactionId, Math.max(taps.get(e.interactionId) || 0, e.duration)); }, { durationThreshold: 40 });
+    obs('first-input', e => { if (e.interactionId) taps.set(e.interactionId, Math.max(taps.get(e.interactionId) || 0, e.duration)); });
+    const bucket = (x, steps) => { for (const t of steps) if (x <= t) return String(t); return 'more'; };
+    const put = (e, d) => { if (onV()) q.push({ e, d, v: 0 }); };
+    let tapCount0 = 0;
+    return function report() {
+      const dev = desk.matches ? 'desk' : 'phone';
+      if (!sentOnce) { sentOnce = true; lcpDone = true;
+        if (lcp && !hidden0) put('v_lcp', dev + ' ' + bucket(lcp, [500, 1000, 1500, 2000, 2500, 3000, 4000, 6000]));
+        if (sup.includes('layout-shift')) put('v_cls', dev + ' ' + bucket(cls * 1000, [25, 50, 100, 150, 250, 400])); }
+      if (taps.size) { const d = [...taps.values()].sort((a, b) => b - a), all = Math.max(taps.size, (performance.interactionCount || 0) - tapCount0);
+        put('v_inp', dev + ' ' + bucket(d[Math.min(d.length - 1, Math.floor(all / 50))], [50, 100, 150, 200, 300, 500, 800]));
+        taps.clear(); tapCount0 = performance.interactionCount || 0; }
+    };
+  })();
+  document.addEventListener('visibilitychange', () => { tickTime(); visible = !document.hidden; since = performance.now(); if (document.hidden) { try { V(); } catch (e) {} flush(true); } });
   addEventListener('pagehide', () => flush(true));
 
   // health: errors by kind and file only (never the message, which could hold someone's text), and how fast the app opened

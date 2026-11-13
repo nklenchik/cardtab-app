@@ -11,8 +11,13 @@ const clean = s => String(s == null ? '' : s).replace(/[^\w .:+\-×&'/·]/g, '')
 const admins = env => (env.ADMIN_EMAILS || '').toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
 
 export async function handleEvents(env, req, me, out) {
-  if (admins(env).includes(String(me.email).toLowerCase())) return out({ ok: true, skipped: 'admin' });
   const b = await req.json().catch(() => ({}));
+  // v52.72: admin devices send only real-world speed numbers, kept apart (plan 'admin') so they show as "your devices"
+  if (admins(env).includes(String(me.email).toLowerCase())) {
+    const vs = (Array.isArray(b.ev) ? b.ev.slice(0, 40) : []).filter(x => x && /^v_(lcp|inp|cls)$/.test(x.e));
+    if (vs.length) { const dv = b.dev === 'desk' ? 'desk' : 'phone', d0 = day(); await env.DB.batch(vs.map(x => env.DB.prepare("INSERT INTO an_day (day,ev,dim,plan,dev,n,v) VALUES (?,?,?,'admin',?,1,0) ON CONFLICT(day,ev,dim,plan,dev) DO UPDATE SET n=n+1").bind(d0, x.e, clean(x.d), dv))); }
+    return out({ ok: true, skipped: 'admin' });
+  }
   const evs = Array.isArray(b.ev) ? b.ev.slice(0, 120) : [];
   const dev = b.dev === 'desk' ? 'desk' : 'phone', plan = me.plan === 'premium' ? 'premium' : 'free', d = day();
   const sum = new Map();
@@ -91,7 +96,7 @@ export async function handleStats(env, req, out) {
   const n = Math.min(800, span(from, to)), pTo = addDays(from, -1), pFrom = addDays(pTo, -(n - 1));
   const plan = ['free', 'premium'].includes(u.searchParams.get('plan')) ? u.searchParams.get('plan') : '';
   const dev = ['phone', 'desk'].includes(u.searchParams.get('dev')) ? u.searchParams.get('dev') : '';
-  const f = (a, b) => { let w = ' WHERE day BETWEEN ? AND ?', p = [a, b]; if (plan) { w += ' AND plan=?'; p.push(plan); } if (dev) { w += ' AND dev=?'; p.push(dev); } return [w, p]; };
+  const f = (a, b) => { let w = " WHERE day BETWEEN ? AND ? AND plan!='admin'", p = [a, b]; if (plan) { w += ' AND plan=?'; p.push(plan); } if (dev) { w += ' AND dev=?'; p.push(dev); } return [w, p]; };
   const q = async (sql, p) => (await env.DB.prepare(sql).bind(...p).all()).results || [];
   const [w1, p1] = f(from, to), [w0, p0] = f(pFrom, pTo);
   const adm = admins(env), notAdmin = adm.length ? ' AND lower(email) NOT IN (' + adm.map(() => '?').join(',') + ')' : '';
@@ -117,7 +122,9 @@ export async function handleStats(env, req, out) {
       COUNT(DISTINCT CASE WHEN julianday(a.day) - julianday(date(u.created_at,'unixepoch')) BETWEEN 50 AND 56 THEN u.id END) w8
     FROM users u LEFT JOIN an_active a ON a.uid = u.id
     WHERE u.created_at >= strftime('%s', date('now','start of month','-2 months'))` + notAdmin.replace(/lower\(email\)/, 'lower(u.email)') + ' GROUP BY m ORDER BY m', adm);
-  const evToday = await q('SELECT SUM(n) n FROM an_day WHERE day=?', [today]);
+  const evToday = await q("SELECT SUM(n) n FROM an_day WHERE day=? AND plan!='admin'", [today]);
+  // v52.72 real-world speed: how many app opens landed in each range, members and admin devices ("me") apart
+  const vitals = await q("SELECT ev, dim, CASE WHEN plan='admin' THEN 'me' ELSE 'all' END who, SUM(n) n FROM an_day WHERE day BETWEEN ? AND ? AND ev IN ('v_lcp','v_inp','v_cls') GROUP BY ev, dim, who", [from, to]).catch(() => []);
   // v50.4: feature reach (who used what, of everyone active), what upgraders had used before going Premium, and where people came from
   const pf = (plan ? ' AND f.plan=?' : '') + (dev ? ' AND f.dev=?' : ''), pp = [...(plan ? [plan] : []), ...(dev ? [dev] : [])];
   const safe = p => p.catch(() => []);
@@ -158,7 +165,7 @@ export async function handleStats(env, req, out) {
     events: ev, eventsPrev: evPrev, eventsByDay: evDay,
     members: Object.fromEntries(members.map(r => [r.plan || 'free', r.n])),
     signups: signups, signupsPrev: (signPrev[0] || {}).n || 0,
-    cohorts, askSpend: spend[0] || null, eventsToday: (evToday[0] || {}).n || 0,
+    cohorts, askSpend: spend[0] || null, eventsToday: (evToday[0] || {}).n || 0, vitals,
     askCap: +(env.ASK_MONTH_USD || 25), passkeys: Object.entries(pkm).map(([kind, n]) => ({ kind, n })), campaigns: await campaigns(env, from, to), best: await bestUsers(env), geo: { countries: geoCc, us: geoUs, members: (geoAll[0] || {}).n || 0 }, emails: await emailStats(env, from, to), ...v504
   });
 }
