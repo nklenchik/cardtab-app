@@ -44,6 +44,10 @@
   try { const g = new URLSearchParams(location.search).get('go'); if (g && GO_OK.test(g)) sessionStorage.setItem('ct.go', g); } catch (e) {}
   function emailGo() {
     let g = ''; try { g = sessionStorage.getItem('ct.go') || ''; sessionStorage.removeItem('ct.go'); } catch (e) {}
+    goTo(g, 700);
+  }
+  // v52.87 also used by What's new notifications (window.CTGo)
+  function goTo(g, wait) {
     if (!GO_OK.test(g)) return;
     setTimeout(() => { try {
       if (g === 'add') { if (window.CTOpenAdd) window.CTOpenAdd(); }
@@ -53,8 +57,9 @@
       else if (g === 'home') { if (window.CTInstall) window.CTInstall.open(); }
       else if (g === 'emails') { if (window.CTNotify) { window.CTNotify.open('settings'); setTimeout(() => { const el = document.getElementById('ntf-email'); if (el) el.scrollIntoView({ block: 'center' }); }, 120); } }
       else if (g === 'premium') { if (window.CTDash && window.CTDash.upgradeNote) window.CTDash.upgradeNote(); }
-    } catch (e) {} }, 700);
+    } catch (e) {} }, wait || 0);
   }
+  window.CTGo = goTo;
   // what the server says about you: admin tools only for admins (decided on the server), and your plan
   function applyServer(session) {
     $('am-dev').hidden = !((session && session.role === 'admin') || (Sess.LOCAL_MODE && !PUBLIC_HOST));

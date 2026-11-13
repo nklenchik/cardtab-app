@@ -9,6 +9,7 @@ import { handleAsk } from './ask.js';
 import { handlePasskey } from './passkey.js';
 import { noteGeo } from './geo.js';
 import { handleAdSpend } from './audience.js';
+import { handleAnnounce, takeNews } from './announce.js';
 /* Card Tab sign-in: Google, or an emailed link + 6-digit code. No passwords.
    A session is a random token in an HttpOnly cookie on .cardtab.app (good for 30 days); only its SHA-256 is stored.
    Link tokens and codes are single use, last 15 minutes, and are stored only as hashes. Admins are the emails in
@@ -186,7 +187,8 @@ export async function handleAuth(env, req, path) {
     return out(env, req, { ok: true }, 200, { 'set-cookie': setCookie(env, 'ct_s', '', 0) });
   }
   // v52.10 messages from Card Tab (an admin's gift, extras, resets), each handed over once
-  if (path === '/auth/notes' && req.method === 'POST') return out(env, req, { notes: await takeNotes(env, me.id) });
+  if (path === '/auth/notes' && req.method === 'POST') return out(env, req, { notes: await takeNotes(env, me.id), news: await takeNews(env, me) });   // v52.87 + What's new
+  if (path.startsWith('/auth/admin/announce')) return handleAnnounce(env, req, path, isAdmin(env, me.email), (body, status = 200) => out(env, req, body, status));
   // v52.8 admin account tools: one person's details and actions
   if (path === '/auth/admin/people/one' || path === '/auth/admin/people/act') {
     if (!isAdmin(env, me.email)) return out(env, req, { error: 'Admins only.' }, 403);

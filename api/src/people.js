@@ -115,7 +115,7 @@ export async function wipeAccount(env, uid, email) {
   for (const [t, c] of [['sessions', 'user_id'], ['an_active', 'uid'], ['an_feat', 'uid'], ['shares', 'uid'], ['an_user', 'uid'], ['ask_usage', 'user_id'], ['usage_user', 'user_id']]) st.push(env.DB.prepare(`DELETE FROM ${t} WHERE ${c}=?`).bind(uid));
   st.push(env.DB.prepare('DELETE FROM login_tokens WHERE email=?').bind(email), env.DB.prepare('DELETE FROM users WHERE id=?').bind(uid));
   await env.DB.batch(st);
-  for (const sql of ['DELETE FROM geo WHERE user_id=?', 'DELETE FROM passkeys WHERE user_id=?', 'DELETE FROM an_copy WHERE uid=?', 'DELETE FROM acct WHERE user_id=?', 'DELETE FROM acct_log WHERE uid=?', 'DELETE FROM acct_note WHERE uid=?', 'DELETE FROM email_log WHERE uid=?'])
+  for (const sql of ['DELETE FROM geo WHERE user_id=?', 'DELETE FROM passkeys WHERE user_id=?', 'DELETE FROM an_copy WHERE uid=?', 'DELETE FROM acct WHERE user_id=?', 'DELETE FROM acct_log WHERE uid=?', 'DELETE FROM acct_note WHERE uid=?', 'DELETE FROM announce_seen WHERE uid=?', 'DELETE FROM email_log WHERE uid=?'])
     try { await env.DB.prepare(sql).bind(uid).run(); } catch (e) { /* a table not made yet */ }
 }
 

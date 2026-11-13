@@ -200,6 +200,23 @@ body.navopen .navfab .i2{opacity:1;transform:none}
 .navbd{position:fixed;inset:0;z-index:30;display:none}
 body.navopen .navbd{display:block}
 @media(max-width:360px){header.hd2 h1{display:none}}
+.anform{display:grid;gap:14px}.anl{display:grid;gap:6px;font-size:12.5px;font-weight:800;color:var(--muted);position:relative}
+.anl input,.anl select{width:100%;box-sizing:border-box;border:1px solid var(--hair);border-radius:12px;padding:10px 12px;font:inherit;font-size:15px;font-weight:600;background:var(--card);color:var(--text)}
+.anl input:focus,.anl textarea:focus,.anl select:focus{outline:2px solid color-mix(in srgb,var(--brand) 40%,transparent);outline-offset:1px}
+.anl textarea{width:100%;box-sizing:border-box;border:1px solid var(--hair);border-radius:12px;padding:10px 12px;font:inherit;font-size:15px;font-weight:600;line-height:1.45;background:var(--card);color:var(--text);resize:vertical}.ann{position:absolute;right:2px;top:0;font-weight:700;color:var(--muted)}.anl .seg{justify-self:start}
+.anform .chip[disabled]{opacity:.45;cursor:default}
+.ancf{display:grid;gap:8px;padding:12px 14px;border-radius:14px;background:var(--card2)}.ancf b{font-size:14.5px}.ancf span{color:var(--muted);font-size:13px;font-weight:600}
+.anpv{border-radius:18px;background:var(--card2);padding:14px}.anpv.ph .anptx{opacity:.55}
+.anpg{font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px 2px}
+.anpi{display:flex;gap:12px;align-items:flex-start;background:var(--card);border-radius:14px;padding:13px 14px}
+.anpic{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:var(--brand);background:color-mix(in srgb,var(--brand) 12%,transparent)}
+.anptx{flex:1;min-width:0}.anptx b{display:block;font-size:14.5px;line-height:1.3}.anptx p{margin:3px 0 0;color:var(--muted);font-size:13.5px;line-height:1.4}
+.anpb{display:flex;gap:8px;margin-top:10px}.anpb span{border:1px solid var(--hair);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700}.anpb span.p{background:var(--brand);color:#fff;border-color:var(--brand)}
+.anpt{color:var(--muted);font-size:12px;font-weight:700}
+.anr{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid var(--hair)}.anr:first-child{border-top:0}
+.anrt{flex:1;min-width:0}.anrt b{font-size:14.5px}.anrt p{margin:2px 0 4px;color:var(--muted);font-size:13px}.anrt small{color:var(--muted);font-size:12px;font-weight:700}
+.anrn{text-align:right}.anrn b{display:block;font-size:18px}.anrn small{color:var(--muted);font-size:11.5px;font-weight:700}.anst{color:var(--muted);font-size:12.5px;font-weight:700;min-width:64px;text-align:right}
+@media(max-width:640px){.anr{flex-wrap:wrap}.anrt{flex-basis:100%}}
 .fbf{margin:0 0 12px}
 .fbi{border-top:1px solid var(--hair);padding:16px 0;display:grid;gap:10px}.fbi:first-child{border-top:0;padding-top:4px}
 .fbm{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:12.5px;color:var(--muted);font-weight:650}
@@ -422,7 +439,7 @@ td.hi{color:var(--green,#2f8a1d);font-weight:800}
 const REAL=/(^|\.)cardtab\.app$/i.test(location.hostname),API='https://api.cardtab.app';
 const R=[['1','Today'],['7','7 days'],['30','30 days'],['90','90 days'],['ytd','This year'],['c','Custom']];
 const PLANS=[['all','Everyone'],['free','Free'],['premium','Premium']],DEVS=[['all','All devices'],['phone','Phone'],['desk','Desktop']];
-const TABS=['Overview','Features','Time & pages','Board','Stories','Premium','Sign-ups & upgrades','Ask','Collection','Health','People','Feedback','Audience','Emails'];
+const TABS=['Overview','Features','Time & pages','Board','Stories','Premium','Sign-ups & upgrades','Ask','Collection','Health','People','Feedback','Audience','Emails','Announce'];
 let st={r:'30',pm:'p',at:'',cmp:true,plan:'all',dev:'all',tab:0,cf:'',ct:'',src:'app',stab:0,smp:false},D=null,busy=0;
 const STABS=['Overview','Sources','Pages & sections','Funnel','Who joins'];
 try{Object.assign(st,JSON.parse(localStorage.getItem('ct.admin')||'{}'))}catch(e){}
@@ -596,7 +613,7 @@ function views(){const E=D.events,P=st.cmp?D.eventsPrev:null,PP=D.eventsPrev,L=d
    card('c6','Day 7 tips','Each person gets the first tip that fits what they’ve done. “Tried it” means they did the thing after the email.',tips)+
    card('c6','Sent each day',fmt(M.offNow||0)+' members have emails switched off right now.',daily)+'</div>'};
  // v52.8: Find a person has its own section (People), right under Overview
- return [S[0],FEAT,S[1],S[2],S[3],S[4],UPG,S[5],S[6],S[7],()=>peopleCard(),()=>feedbackCard(),AUD,EML]}
+ return [S[0],FEAT,S[1],S[2],S[3],S[4],UPG,S[5],S[6],S[7],()=>peopleCard(),()=>feedbackCard(),AUD,EML,()=>annCard()]}
 // v52.43 Audience: the best-users tabs, what a campaign cost, and the link builder
 document.addEventListener('click',e=>{const b=e.target.closest('[data-bus]');if(!b)return;const c=b.closest('.card');c.querySelectorAll('[data-bus]').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-selected',on)});c.querySelectorAll('[data-bu]').forEach(x=>x.hidden=x.dataset.bu!==b.dataset.bus)});
 document.addEventListener('submit',async e=>{const f=e.target.closest('[data-spend]');if(!f)return;e.preventDefault();const btn=f.querySelector('button'),v=+f.querySelector('input').value||0;btn.textContent='…';
@@ -610,6 +627,46 @@ document.addEventListener('click',e=>{if(e.target.id!=='utm-copy')return;const t
 let FB=null,FBF='new';const FBSHOT={};
 function feedbackCard(){setTimeout(fbLoad,0);return '<div class="grid" style="margin-bottom:14px"><div class="card c12" id="fbc"><div class="hch"><div><h3>Inbox</h3><div class="sub">Bugs, ideas and notes sent from Help and feedback in the app. You get one summary email each morning; replies show up in the person’s app.</div></div></div>'+
  '<div class="seg fbf" id="fbf"></div><div id="fbl"><div class="empty">Loading…</div></div></div></div>'}
+// v52.87 Announce: a What's new note for everyone's in-app notifications. Shown once; people who join later don't get it.
+let AN=null,ANF={title:'',body:'',go:'add',aud:'all'},ANC=false;
+const ANGO=[['','Nothing (just the note)'],['add','Add an item'],['board','Board'],['stories','Stories'],['budget','Budget'],['premium','Premium'],['ask','Ask']];
+const ANBTN={add:'Try it',board:'Open Board',stories:'See Stories',budget:'Set a budget',premium:'See Premium',ask:'Try Ask'};
+const ANAUD=[['all','Everyone'],['free','Free'],['premium','Premium']];
+function annCard(){setTimeout(anLoad,0);
+ return '<div class="grid" style="margin-bottom:14px"><div class="card c6"><div class="hch"><div><h3>New announcement</h3><div class="sub">It shows once under What’s new in everyone’s notifications, with a short pop-up the next time they open the app. People can turn What’s new off in their settings.</div></div></div><div id="anf"></div></div>'+
+  '<div class="card c6"><div class="hch"><div><h3>Preview</h3><div class="sub">How it looks in the app</div></div></div><div id="anp"></div></div>'+
+  '<div class="card c12"><div class="hch"><div><h3>Sent</h3><div class="sub">Each one goes out for 60 days, to people who had an account when you sent it. “Reached” counts people whose app has picked it up.</div></div></div><div id="anl"><div class="empty">Loading…</div></div></div></div>'}
+function anSample(){const t=Date.now()/1000;return {items:[{id:'s1',at:t-86400*9,title:'Your Board can be shared',body:'Send anyone a link to your Board, with amounts hidden if you like.',go:'board',aud:'all',stopped:0,got:41}],people:58,sample:1}}
+async function anLoad(){if(!REAL||st.smp){if(!AN)AN=anSample();anPaint();return}
+ try{const r=await fetch(API+'/auth/admin/announce',{credentials:'include'});AN=await r.json();if(!r.ok)AN={error:AN.error||'Couldn’t load'}}catch(e){AN={error:'Couldn’t load'}}anPaint()}
+function anForm(){const f=ANF,n=AN&&AN.people,who=ANAUD.find(a=>a[0]===f.aud)[1];
+ return '<form id="anform" class="anform"><label class="anl">Title<input id="an-t" maxlength="70" value="'+esc(f.title)+'" placeholder="Card Tab now tracks sealed products" autocomplete="off"><small class="ann">'+f.title.length+'/70</small></label>'+
+  '<label class="anl">Text<textarea id="an-b" rows="3" maxlength="200" placeholder="Log packs, boxes and ETBs right alongside your cards, and see what you spent in one place.">'+esc(f.body)+'</textarea><small class="ann">'+f.body.length+'/200</small></label>'+
+  '<label class="anl">Button opens<select id="an-g">'+ANGO.map(g=>'<option value="'+g[0]+'"'+(g[0]===f.go?' selected':'')+'>'+g[1]+'</option>').join('')+'</select></label>'+
+  '<div class="anl">Who gets it<div class="seg" id="an-a">'+ANAUD.map(a=>'<button type="button" data-ana="'+a[0]+'" aria-pressed="'+(a[0]===f.aud)+'">'+a[1]+'</button>').join('')+'</div></div>'+
+  (ANC?'<div class="ancf"><b>Send to '+(f.aud==='all'?'everyone':who+' members')+(f.aud==='all'&&n?' ('+n+' people)':'')+'?</b><span>It can’t be edited after sending. You can stop it any time.</span><div class="fbact"><button type="button" class="chip go" data-anx="send">Send now</button><button type="button" class="chip" data-anx="no">Cancel</button></div></div>'
+   :'<div class="fbact"><button type="submit" class="chip go"'+(f.title.trim()?'':' disabled')+'>Send…</button></div>')+'</form>'}
+function anPrev(){const f=ANF,t=f.title.trim()||'Card Tab now tracks sealed products',b=f.body.trim()||(f.title.trim()?'':'Log packs, boxes and ETBs right alongside your cards, and see what you spent in one place.');
+ return '<div class="anpv'+(f.title.trim()?'':' ph')+'"><div class="anpg">What’s new</div><div class="anpi"><span class="anpic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7z"/></svg></span><div class="anptx"><b>'+esc(t)+'</b>'+(b?'<p>'+esc(b)+'</p>':'')+
+  '<div class="anpb">'+(ANBTN[f.go]?'<span class="p">'+ANBTN[f.go]+'</span>':'')+'<span>Got it</span></div></div><span class="anpt">now</span></div></div>'}
+function anList(){if(!AN)return '<div class="empty">Loading…</div>';if(AN.error)return '<div class="empty">'+esc(AN.error)+'</div>';if(!AN.items.length)return '<div class="empty">Nothing sent yet.</div>';
+ const t=Date.now()/1000;return AN.items.map(a=>{const done=a.stopped||t-a.at>60*86400;
+  return '<div class="anr"><div class="anrt"><b>'+esc(a.title)+'</b>'+(a.body?'<p>'+esc(a.body)+'</p>':'')+'<small>'+fbAgo(a.at)+' · '+ANAUD.find(x=>x[0]===(a.aud||'all'))[1]+(a.go?' · opens '+ANGO.find(g=>g[0]===a.go)[1]:'')+'</small></div>'+
+   '<div class="anrn"><b>'+(a.got||0)+'</b><small>reached</small></div>'+(done?'<span class="anst">'+(a.stopped?'Stopped':'Finished')+'</span>':'<button type="button" class="chip" data-anstop="'+esc(a.id)+'">Stop</button>')+'</div>'}).join('')}
+function anPaint(){const f=document.getElementById('anf'),p=document.getElementById('anp'),l=document.getElementById('anl');if(!f)return;
+ const a=document.activeElement,aid=a&&a.id,pos=a&&a.selectionStart;f.innerHTML=anForm();p.innerHTML=anPrev();l.innerHTML=anList();
+ if(aid){const e=document.getElementById(aid);if(e){e.focus();try{if(pos!=null)e.setSelectionRange(pos,pos)}catch(er){}}}}
+document.addEventListener('input',e=>{if(e.target.id==='an-t'){ANF.title=e.target.value;ANC=false;anPaint()}else if(e.target.id==='an-b'){ANF.body=e.target.value;ANC=false;anPaint()}});
+document.addEventListener('change',e=>{if(e.target.id==='an-g'){ANF.go=e.target.value;anPaint()}});
+document.addEventListener('submit',e=>{if(e.target.id!=='anform')return;e.preventDefault();if(!ANF.title.trim())return;ANC=true;anPaint()});
+document.addEventListener('click',async e=>{const a=e.target.closest('[data-ana]');if(a){ANF.aud=a.dataset.ana;ANC=false;anPaint();return}
+ const x=e.target.closest('[data-anx]');if(x){if(x.dataset.anx==='no'){ANC=false;anPaint();return}
+  x.disabled=true;x.textContent='Sending…';const body={title:ANF.title.trim(),body:ANF.body.trim(),go:ANF.go,aud:ANF.aud};
+  if(AN&&AN.sample){AN.items.unshift(Object.assign({id:'s'+Date.now(),at:Date.now()/1000,stopped:0,got:0},body))}
+  else{try{const r=await fetch(API+'/auth/admin/announce',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw 0}catch(er){x.disabled=false;x.textContent='Couldn’t send. Try again';return}await anLoad()}
+  ANF={title:'',body:'',go:'add',aud:'all'};ANC=false;anPaint();return}
+ const sp=e.target.closest('[data-anstop]');if(sp){const id=sp.dataset.anstop;if(AN&&AN.sample){const it=AN.items.find(i=>i.id===id);if(it)it.stopped=1;anPaint();return}
+  sp.disabled=true;try{await fetch(API+'/auth/admin/announce/stop',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:JSON.stringify({id})})}catch(er){}await anLoad()}});
 function fbSample(){const t=Date.now()/1000;return {items:[{id:'s1',uid:'a',email:'jordan@example.com',name:'Jordan',plan:'premium',kind:'bug',msg:'When I add a card on the Board page the total doesn’t update until I switch tabs.',page:'Board',dev:'iPhone · Instagram',ver:'52.23',shot:true,at:t-3600,status:'new',reply:''},
  {id:'s2',uid:'b',email:'sam.k@example.com',name:'Sam',plan:'free',kind:'idea',msg:'Would love a way to tag cards as PSA submissions so I can track what’s out for grading.',page:'Entries',dev:'Android · Chrome',ver:'52.23',shot:false,at:t-86400*1.2,status:'new',reply:''},
  {id:'s3',uid:'c',email:'alex@example.com',name:'',plan:'premium',kind:'other',msg:'Love the Stories. Shared one with my group chat already.',page:'Stories',dev:'Mac · Safari',ver:'52.21',shot:false,at:t-86400*3,status:'handled',reply:'Thanks Alex, glad you like them!',repliedAt:t-86400*2}],total:3,fresh:2,sample:1}}
@@ -684,11 +741,11 @@ function dd(id,label,groups){const w=document.getElementById(id),b=w.querySelect
 const closeDd=()=>document.querySelectorAll('.dd .mn').forEach(m=>{m.hidden=true;m.previousElementSibling.setAttribute('aria-expanded','false')});
 document.addEventListener('click',closeDd);document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDd()});
 const IC=p=>'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>';
-const ICS={fb:IC('<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12.5h5"/>'),ov:IC('<rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/>'),gr:IC('<path d="M4 19h16M6 15l4-4 3 3 5-6"/>'),en:IC('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>'),co:IC('<rect x="6" y="3" width="12" height="18" rx="2.5"/>'),he:IC('<path d="M3 12h4l2-5 4 10 2-5h6"/>'),so:IC('<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>'),pg:IC('<rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/>'),fu:IC('<path d="M4 5h16l-6 8v6l-4-2v-4z"/>'),wj:IC('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>'),pp:IC('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2a5 5 0 016 4.8"/>')};
+const ICS={an:IC('<path d="M4 10v4a1 1 0 001 1h2l5 4V5L7 9H5a1 1 0 00-1 1z"/><path d="M16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12"/>'),fb:IC('<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12.5h5"/>'),ov:IC('<rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/>'),gr:IC('<path d="M4 19h16M6 15l4-4 3 3 5-6"/>'),en:IC('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>'),co:IC('<rect x="6" y="3" width="12" height="18" rx="2.5"/>'),he:IC('<path d="M3 12h4l2-5 4 10 2-5h6"/>'),so:IC('<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>'),pg:IC('<rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/>'),fu:IC('<path d="M4 5h16l-6 8v6l-4-2v-4z"/>'),wj:IC('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>'),pp:IC('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2a5 5 0 016 4.8"/>')};
 // sections: [name, icon, view indexes (TABS / STABS), what's inside]
-const NAV={app:[['Overview','ov',[0],''],['People','pp',[10],'Find someone, give Premium'],['Growth','gr',[6,12,13,5],'Sign-ups, audience, emails, Premium'],['Engagement','en',[1,2,3,4,7],'Features, time, Board, Stories, Ask','Activity'],['Collection','co',[8],'Entries, games, platforms','Cards'],['Health','he',[9],'Checks, errors, art review'],['Feedback','fb',[11],'Bugs, ideas, replies']],
+const NAV={app:[['Overview','ov',[0],''],['People','pp',[10],'Find someone, give Premium'],['Growth','gr',[6,12,13,5],'Sign-ups, audience, emails, Premium'],['Engagement','en',[1,2,3,4,7],'Features, time, Board, Stories, Ask','Activity'],['Collection','co',[8],'Entries, games, platforms','Cards'],['Health','he',[9],'Checks, errors, art review'],['Feedback','fb',[11],'Bugs, ideas, replies'],['Announce','an',[14],'Tell everyone what’s new']],
   site:[['Overview','ov',[0],''],['Sources','so',[1],'Where visitors come from'],['Pages','pg',[2],'How far people read'],['Funnel','fu',[3],'Visit to sign-up'],['Who joins','wj',[4],'What sign-ups saw first','Joiners']]};
-const SUBN={0:'Overview',1:'Features',2:'Time & pages',3:'Board',4:'Stories',5:'Premium',6:'Sign-ups & upgrades',7:'Ask',8:'Collection',9:'Health',10:'People',11:'Feedback',12:'Audience',13:'Emails'};
+const SUBN={0:'Overview',1:'Features',2:'Time & pages',3:'Board',4:'Stories',5:'Premium',6:'Sign-ups & upgrades',7:'Ask',8:'Collection',9:'Health',10:'People',11:'Feedback',12:'Audience',13:'Emails',14:'Announce'};
 const curTab=()=>st.src==='site'?st.stab:st.tab;
 function secOf(){return NAV[st.src==='site'?'site':'app'].find(x=>x[2].includes(curTab()))||NAV.app[0]}
 const fmtD=(s,o)=>D0(s).toLocaleDateString('en-US',o);
@@ -712,7 +769,7 @@ function chrome(){const pv=document.getElementById('priv');if(pv)pv.lastChild.te
  document.getElementById('sech').textContent=sec[0];
  {const fb=document.getElementById('navfab');if(fb){fb.querySelector('.i1').innerHTML=ICS[sec[1]];fb.setAttribute('aria-label','Pages, now on '+sec[0])}}
  // v52.8: People isn't counts and doesn't use dates, so the date line and the counts-only note step aside there
- {const pp=st.src!=='site'&&(st.tab===10||st.tab===11);document.getElementById('rlab').hidden=pp;if(pv)pv.style.display=pp?'none':''}
+ {const pp=st.src!=='site'&&(st.tab===10||st.tab===11||st.tab===14);document.getElementById('rlab').hidden=pp;if(pv)pv.style.display=pp?'none':''}
  document.getElementById('tabs').innerHTML=sec[2].length>1?sec[2].map(t=>'<button role="tab" aria-selected="'+(t===curTab())+'" data-t="'+t+'">'+(st.src==='site'?STABS[t]:SUBN[t])+'</button>').join(''):'';
  if(!document.getElementById('perp').hidden)paintPer()}
 document.getElementById('side').onclick=e=>{const b=e.target.closest('[data-sec]');if(!b)return;const x=NAV[st.src==='site'?'site':'app'][+b.dataset.sec];st.last=st.last||{};const k=st.src+':'+x[0],t=x[2].includes(st.last[k])?st.last[k]:x[2][0];if(st.src==='site')st.stab=t;else st.tab=t;save();chrome();paint();scrollTo({top:0})};

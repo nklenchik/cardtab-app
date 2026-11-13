@@ -17,7 +17,7 @@
   const $ = id => document.getElementById(id);
   const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const DAY = 864e5, now = () => Date.now();
-  const DEF = { all: true, cards: true, billing: true, monthly: true, tips: true, emailOff: false };
+  const DEF = { all: true, cards: true, billing: true, monthly: true, tips: true, news: true, emailOff: false };
   const st = () => Object.assign({ prefs: {}, read: {}, items: [], tips: {} }, S.meta('notif') || {});
   const prefs = () => Object.assign({}, DEF, st().prefs);
   async function save(fn) { const s = st(); fn(s); await S.setMeta('notif', s); }
@@ -30,6 +30,7 @@
     card: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/>',
     renew: '<path d="M4 12a8 8 0 0114-5.3L20 9M20 4v5h-5M20 12a8 8 0 01-14 5.3L4 15M4 20v-5h5"/>',
     star: '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.9 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>',
+    spark: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7z"/>',
     bell: '<path d="M6 9a6 6 0 1112 0c0 5 2 6.5 2 6.5H4S6 14 6 9z"/><path d="M10 19a2 2 0 004 0"/>',
     cal: '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
     gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>'
@@ -92,7 +93,8 @@
     '<div class="ntf-body" id="ntf-body"></div></div>';
   document.body.appendChild(dlg);
   let view = 'list';
-  const GROUP = { cards: 'Your cards', billing: 'Account and billing', monthly: 'Your month', tips: 'Tips and offers' };
+  const GO_LABEL = { add: 'Try it', board: 'Open Board', stories: 'See Stories', budget: 'Set a budget', premium: 'See Premium', ask: 'Try Ask' };
+  const GROUP = { cards: 'Your cards', billing: 'Account and billing', monthly: 'Your month', news: 'What’s new', tips: 'Tips and offers' };
 
   function itemHtml(it, read) {
     const nw = read ? '' : ' new', act = (a, label, p) => '<button type="button" class="ntf-btn' + (p ? ' p' : '') + '" data-act="' + a + '" data-id="' + esc(it.id) + '">' + label + '</button>';
@@ -105,6 +107,7 @@
     else if (it.kind === 'payfail') { ic = 'alert'; t = 'Your payment didn’t go through'; p = 'Update your card to keep Premium. We’ve emailed you too.'; acts = act('billing', 'Update card', 1); }
     else if (it.kind === 'admin') { ic = 'star'; t = esc(it.title); p = esc(it.body); }   // v52.10: from Card Tab (a gift, extras, a reset)
     else if (it.kind === 'monthly') { ic = 'cal'; t = esc(it.title); p = esc(it.body); acts = (it.stories ? act('stories', 'See Stories', 1) : '') + act('dismiss', 'Got it'); }
+    else if (it.kind === 'news') { ic = 'spark'; t = esc(it.title); p = esc(it.body); acts = (GO_LABEL[it.go] ? act('go', GO_LABEL[it.go], 1) : '') + act('dismiss', 'Got it'); }   // v52.87 What's new
     else if (it.kind === 'tip') { ic = 'star'; t = esc(it.title); p = esc(it.body); acts = act('premium', 'See Premium', 1) + act('notnow', 'Not now'); }
     return '<div class="ntf-it' + nw + (it.kind === 'payfail' ? ' urgent' : '') + '" data-nid="' + esc(it.id) + '"><div class="ntf-t"><span class="ntf-ic">' + svg(ic) + '</span><div class="ntf-tx"><b>' + t + '</b><p>' + p + '</p></div><span class="ntf-when">' + ago(it.ts) + '</span>' + (it.kind === 'payfail' ? '' : '<button type="button" class="ntf-x" data-act="x" data-id="' + esc(it.id) + '" aria-label="Dismiss">' + svg('x', 13) + '</button>') + '</div>' + (acts ? '<div class="ntf-acts">' + acts + '</div>' : '') + '</div>';
   }
@@ -114,7 +117,7 @@
     if (!list.length) return '<div class="ntf-empty">' + svg('bell', 26) + '<b>You’re all caught up</b><p>' + (p.all ? 'Cards that need a look and account news show up here.' : 'Notifications are off. Payment problems still show here.') + '</p></div>';
     const by = {}; list.forEach(it => { const g = it.kind === 'payfail' ? 'billing' : it.cat; (by[g] = by[g] || []).push(it); });
     const n = list.filter(it => it.kind !== 'payfail').length;
-    return admHtml() + ['billing', 'monthly', 'cards', 'tips'].filter(g => by[g]).map(g => '<div class="ntf-gl">' + GROUP[g] + '</div>' + by[g].map(it => itemHtml(it, r[it.id])).join('')).join('') +
+    return admHtml() + ['billing', 'news', 'monthly', 'cards', 'tips'].filter(g => by[g]).map(g => '<div class="ntf-gl">' + GROUP[g] + '</div>' + by[g].map(it => itemHtml(it, r[it.id])).join('')).join('') +
       (n > 1 ? '<button type="button" class="ntf-clear" data-act="clearall">Clear all</button>' : '');
   }
   const sw = (k, on, label, sub, dis) => '<div class="ntf-sr"><div><b>' + label + '</b><span>' + sub + '</span></div><button type="button" class="swt" role="switch" data-pref="' + k + '" aria-checked="' + on + '" aria-label="' + label + '"' + (dis ? ' disabled' : '') + '><i></i></button></div>';
@@ -125,6 +128,7 @@
       sw('cards', p.cards, 'Your cards', 'Cards that weren’t matched, and matches we find later', off) +
       sw('billing', p.billing, 'Account and billing', 'Renewals and cards about to expire', off) +
       (S.plan() === 'free' ? sw('monthly', p.monthly, 'Monthly update', 'Your new entries, new stories and last month’s numbers', off) : '') +
+      sw('news', p.news, 'What’s new', 'New features, now and then', off) +
       sw('tips', p.tips, 'Tips and offers', 'Now and then, at most every two weeks', off) + '</div>' +
       '<p class="ntf-fine">A failed payment always shows here, so Premium never ends without you knowing.</p>' +
       '<div class="ntf-gl" id="ntf-email">Email</div><div class="ntf-set">' + sw('emailOn', !p.emailOff, 'Tips and summaries', 'A few emails in your first weeks, with tips and your numbers') + '</div>' +
@@ -197,6 +201,7 @@
     if (act === 'notnow') { await save(s => { s.items = (s.items || []).filter(x => x.id !== id); s.tips = Object.assign({}, s.tips, { dismissed: now() }); }); paint(); return; }
     if (act === 'stories') { await save(s => { s.items = (s.items || []).filter(x => x.id !== id); }); close(); setTimeout(() => { const t = [...document.querySelectorAll('.ct-tbar button, .ct-tabs button')].find(x => x.offsetParent && /stories/i.test(x.textContent)); if (t) t.click(); }, 280); return; }
     if (act === 'premium') { close(); window.CTDash && window.CTDash.upgradeNote(); return; }
+    if (act === 'go' && it) { await save(s => { s.items = (s.items || []).filter(x => x.id !== id); }); close(); if (window.CTGo) window.CTGo(it.go, 320); return; }
     if (act === 'billing') { close(); if (window.CTBilling) window.CTBilling.portal(); return; }
   });
   dlg.addEventListener('submit', async e => { if (e.target.id !== 'ntf-addp') return; e.preventDefault(); const v = $('ntf-pin').value.trim(); if (!v) return;
@@ -309,6 +314,7 @@
     const um = S.all().find(e => e.unmatched), t = now(), d = new Date(t + 27 * DAY);
     await save(s => {
       s.items = (s.items || []).filter(i => !/^demo:/.test(i.id)).concat([
+        { id: 'demo:news', kind: 'news', cat: 'news', ts: t - 2 * 36e5, title: 'Card Tab now tracks sealed products', body: 'Log packs, boxes and ETBs right alongside your cards, and see what you spent in one place.', go: 'add' },
         { id: 'demo:renew', kind: 'renew', cat: 'billing', ts: t - 6 * DAY, when: d.toLocaleString('en-US', { month: 'short', day: 'numeric' }) },
         { id: 'demo:exp', kind: 'cardexp', cat: 'billing', ts: t - 3 * DAY, last4: '4242', when: 'next month' },
         { id: 'demo:fail', kind: 'payfail', cat: 'billing', ts: t - 60 * 6e4 },
@@ -331,6 +337,10 @@
     pulling = true; pulledAt = now();
     try {
       const j = await Sess.api('/auth/notes', {}), notes = (j && j.notes) || [];
+      // v52.87 What's new: shown once; aimed at Free or Premium only when it says so
+      const pl = S.plan() === 'free' ? 'free' : 'premium', news = ((j && j.news) || []).filter(n => !n.aud || n.aud === 'all' || n.aud === pl);
+      if (news.length) { await save(s => { const have = new Set((s.items || []).map(x => x.id)); s.items = (s.items || []).concat(news.filter(n => !have.has('ann:' + n.id)).map(n => ({ id: 'ann:' + n.id, kind: 'news', cat: 'news', ts: (n.at || 0) * 1000 || now(), title: n.title, body: n.body || '', go: n.go || '' }))); });
+        paintDot(); if (prefs().all && prefs().news !== false && window.CTDash && window.CTDash.toast && !notes.length) window.CTDash.toast(news[0].title); }
       if (notes.length) {
         await save(s => { const have = new Set((s.items || []).map(x => x.id)); s.items = (s.items || []).concat(notes.filter(n => !have.has('adm:' + n.id)).map(n => ({ id: 'adm:' + n.id, kind: 'admin', cat: 'billing', ts: (n.at || 0) * 1000 || now(), title: n.title, body: n.body || '' }))); });
         paintDot();
