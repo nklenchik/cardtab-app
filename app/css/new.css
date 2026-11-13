@@ -2528,3 +2528,6 @@ html.ct-locked body{overflow:hidden}
 /* v52.55 the classes above (ct-noapp, mbd-on, first-on) replace :has() checks on the whole page, which were re-run on
    every change and made each window's first frame slower; main.js keeps them in step */
 .app-menu.am>.amp-shade{position:absolute;left:0;right:0;z-index:2;background:#000;opacity:0;pointer-events:none;border-radius:inherit;will-change:opacity}   /* v52.56 dims the menu as a settings page covers it */
+/* v52.63 card art corners follow a real card's (3mm on a 63×88mm card) at any tile size, instead of a fixed radius that cut
+   into the card's border on the small grid */
+.ct-tile-art:not(.ct-slabbed),#ct-rows.gs-l .ct-tile-art:not(.ct-slabbed){border-radius:4.8% / 3.4%}
