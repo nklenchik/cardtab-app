@@ -148,14 +148,16 @@
     if (status.gift) h = '<div class="amg bl-hero"><span class="bl-k">Gift</span><b>Premium</b><small>Given by Card Tab. There’s nothing to pay.</small></div>';
     else if (s) {
       const per = s.interval === 'year' ? ' a year' : ' a month', other = s.interval === 'year' ? 'month' : 'year';
-      const line = s.status === 'past_due' ? 'Payment didn’t go through' : s.cancelAtEnd ? 'Ends ' + dateOf(s.periodEnd) : dollars(s.amount) + per + ' · renews ' + dateOf(s.periodEnd);
+      const line = s.status === 'past_due' ? 'Payment didn’t go through' : s.cancelAtEnd ? dollars(s.amount) + per + ' · cancelled' : dollars(s.amount) + per + ' · renews ' + dateOf(s.periodEnd);
       h = '<div class="amg bl-hero">' + (s.founder ? '<span class="bl-k">Founding member</span>' : '') + '<b>Premium · ' + (s.interval === 'year' ? 'Yearly' : 'Monthly') + '</b><small>' + line + '</small>' +
         (s.pending ? '<small class="bl-pend">Switches to ' + (s.pending.interval === 'year' ? 'yearly' : 'monthly') + ' (' + dollars(s.pending.amount) + (s.pending.interval === 'year' ? ' a year' : ' a month') + ') on ' + dateOf(s.periodEnd) + '</small>' : '') + '</div>';
+      // v52.66 cancelled (Premium runs to the end of what's paid): say plainly when it ends and what happens after
+      if (s.cancelAtEnd && s.status !== 'past_due') h += '<div class="amg bl-warn"><b>Your Premium ends ' + dateOf(s.periodEnd) + '</b><small>You keep everything until then. After that you’re on Free: 20 new entries a month, and every entry stays in your list.' + (s.founder ? ' Renew before then to keep your founding member price.' : '') + '</small><button type="button" class="bl-btn" data-bl="portal">Renew Premium</button></div>';
       if (s.status === 'past_due') h += '<div class="amg bl-warn"><b>Your payment didn’t go through</b><small>Update your card to keep Premium. It stays on until ' + dateOf(s.graceUntil || s.periodEnd) + ' while we try again.</small><button type="button" class="bl-btn" data-bl="portal">Update card</button></div>';
       const sw = s.pending ? R('switch:' + s.interval, 'Keep ' + (s.interval === 'year' ? 'yearly' : 'monthly'), 'Cancel the switch to ' + (s.pending.interval === 'year' ? 'yearly' : 'monthly'))
         : s.cancelAtEnd ? '' : R('switch:' + other, 'Switch to ' + (other === 'year' ? 'yearly' : 'monthly'), dollars(priceFor(s.founder, other)) + (other === 'year' ? ' a year' : ' a month') + ', starting ' + dateOf(s.periodEnd));
       h += '<div class="amg">' + sw + R('portal', 'Payment method', card(s.card) || 'Add a card', '<em class="am-val">Update</em>') + R('portal', 'Receipts', 'Every payment, ready to download') + '</div>';
-      h += '<div class="amg">' + (s.cancelAtEnd ? R('portal', 'Renew Premium', 'Keep Premium after ' + dateOf(s.periodEnd)) : R('portal', '<span class="bl-red">Cancel Premium</span>', 'You keep Premium until ' + dateOf(s.periodEnd))) + '</div>';
+      if (!s.cancelAtEnd) h += '<div class="amg">' + R('portal', '<span class="bl-red">Cancel Premium</span>', 'You keep Premium until ' + dateOf(s.periodEnd)) + '</div>';   // cancelled: the box above has Renew
     } else if (status.plan === 'premium') h = '<div class="amg bl-hero"><b>Premium</b><small>Turned on for this account.</small></div>';
     else {
       h = '<div class="amg bl-hero"><b>Free</b><small>Up to 20 new entries a month, totals and the starting Card Board for your last 3 months. Every entry stays in your list.</small></div>' +
