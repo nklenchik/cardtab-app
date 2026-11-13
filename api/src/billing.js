@@ -64,13 +64,19 @@ export async function ensureTable(env) {
   ]);
   // v50.72: which payment emails went out for this problem (0 none, 1 the first, 2 the reminder); older tables get the column
   try { await env.DB.prepare('ALTER TABLE billing ADD COLUMN mailed INTEGER DEFAULT 0').run(); } catch (e) {}
+  try { await env.DB.prepare('ALTER TABLE billing ADD COLUMN mode TEXT').run(); } catch (e) {}   // v52.65 'test' or 'live'
   tableReady = true;
 }
-export const rowOf = async (env, uid) => (await env.DB.prepare('SELECT * FROM billing WHERE user_id=?').bind(uid).first()) || null;
+// v52.65 a billing row belongs to the Stripe mode it was made in (test or live; older rows are test). After the switch to
+// live keys, a test customer or subscription is ignored (a gift is kept), so testers start fresh and can buy for real.
+export const modeOf = env => (isLive(env) ? 'live' : 'test');
+const STALE = { customer: null, sub: null, status: null, price_key: null, interval: null, amount: null, founder: 0, period_end: null, cancel_at_end: 0, grace_until: null, card_brand: null, card_last4: null, pending_key: null, schedule: null, mailed: 0 };
+export const rowOf = async (env, uid) => { const r = (await env.DB.prepare('SELECT * FROM billing WHERE user_id=?').bind(uid).first()) || null;
+  return !r || (r.mode || 'test') === modeOf(env) ? r : Object.assign({}, r, STALE, { mode: modeOf(env) }); };
 export async function saveRow(env, uid, patch) {
   const cur = (await rowOf(env, uid)) || { user_id: uid };
-  const r = Object.assign({ gift: 0, founder: 0, cancel_at_end: 0 }, cur, patch, { updated: now() });
-  const cols = ['user_id', 'customer', 'sub', 'status', 'price_key', 'interval', 'amount', 'founder', 'period_end', 'cancel_at_end', 'grace_until', 'card_brand', 'card_last4', 'pending_key', 'schedule', 'gift', 'updated', 'mailed'];
+  const r = Object.assign({ gift: 0, founder: 0, cancel_at_end: 0 }, cur, patch, { updated: now(), mode: modeOf(env) });
+  const cols = ['user_id', 'customer', 'sub', 'status', 'price_key', 'interval', 'amount', 'founder', 'period_end', 'cancel_at_end', 'grace_until', 'card_brand', 'card_last4', 'pending_key', 'schedule', 'gift', 'updated', 'mailed', 'mode'];
   await env.DB.prepare('INSERT OR REPLACE INTO billing (' + cols.join(',') + ') VALUES (' + cols.map(() => '?').join(',') + ')').bind(...cols.map(c => (r[c] === undefined ? null : r[c]))).run();
   return r;
 }

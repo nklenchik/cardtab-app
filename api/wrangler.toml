@@ -40,7 +40,7 @@ STRIPE_TAX = "off"
 BILLING_OPEN = "off"
 BILLING_OPENS = "Dec 1"
 # v52.64 the live publishable key (public by design). It's used only once STRIPE_SECRET_KEY is a live key, so both always match.
-STRIPE_PUBLISHABLE_KEY_LIVE = ""
+STRIPE_PUBLISHABLE_KEY_LIVE = "pk_live_51UZhBIATHQc3NaMr1o2qWIlVjkXFAkEGAVkkuCbPE9O8cMnD8OQTEzoRIyRltbDBnHcLgCy4Xtx1YnVx9Frahtyu00Mr8U3aKZ"
 # v52.64 the first-two-weeks emails for Free members: "off" pauses them. Plain variables live here (a deploy replaces any set
 # in the dashboard), so changing this means a push.
 DRIP = "on"

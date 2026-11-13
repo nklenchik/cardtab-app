@@ -158,3 +158,14 @@ console.log('billing tests ok:', S.calls.length, 'Stripe calls');
   assert.equal(pubKey({ STRIPE_SECRET_KEY: 'sk_live_x', STRIPE_PUBLISHABLE_KEY: 'pk_test_a' }), '');   // live secret, no live key yet: not ready
   assert.ok(isLive({ STRIPE_SECRET_KEY: 'sk_live_1' }) && !isLive({ STRIPE_SECRET_KEY: 'sk_test_1' }));
   console.log('publishable key checks ok'); }
+
+// v52.65 after the switch to live keys, test-mode billing rows are ignored (gifts kept)
+{ const { rowOf, saveRow, modeOf } = await import('./src/billing.js');
+  const assert = (await import('node:assert')).default;
+  const testEnv = Object.assign({}, env, { STRIPE_SECRET_KEY: 'sk_test_x' }), liveEnv = Object.assign({}, env, { STRIPE_SECRET_KEY: 'sk_live_x' });
+  await saveRow(testEnv, 'modeu', { customer: 'cus_T', sub: 'sub_T', status: 'active', gift: 0 });
+  assert.equal((await rowOf(testEnv, 'modeu')).sub, 'sub_T');
+  const L = await rowOf(liveEnv, 'modeu'); assert.equal(L.sub, null); assert.equal(L.customer, null);
+  await saveRow(testEnv, 'modeg', { customer: 'cus_G', gift: 1 }); assert.equal((await rowOf(liveEnv, 'modeg')).gift, 1);
+  await saveRow(liveEnv, 'modeu', { customer: 'cus_L' }); assert.equal((await rowOf(liveEnv, 'modeu')).customer, 'cus_L'); assert.equal(modeOf(liveEnv), 'live');
+  console.log('test/live mode checks ok'); }
