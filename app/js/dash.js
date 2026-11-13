@@ -36,7 +36,9 @@
   const periodLabel = p => (rangeOf(p) ? rangeLabel(p) : monthOf(p) ? ymLabel(monthOf(p), { month: 'long', year: 'numeric' }) : p === 'all' ? 'All time' : p === 'month' ? D.monthLabel : p === 'last' ? D.prevLabel : 'Last 30 days');
   const YM = new Map();
   const ymLabel = (k, fmt) => { const key = k + JSON.stringify(fmt); let v = YM.get(key); if (v == null) { v = new Date(k + '-15T12:00:00').toLocaleString('en-US', fmt); YM.set(key, v); } return v; };
-  const niceDate = d => { const dt = new Date(d + 'T12:00:00'); return dt.toLocaleString('en-US', dt.getFullYear() === new Date().getFullYear() ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' }); };
+  // v52.93: formatters made once and each date's label remembered, so adding rows while scrolling stays cheap
+  const ND1 = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }), ND2 = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), NDM = new Map();
+  const niceDate = d => { let v = NDM.get(d); if (v == null) { const dt = new Date(d + 'T12:00:00'); v = (dt.getFullYear() === new Date().getFullYear() ? ND1 : ND2).format(dt); NDM.set(d, v); } return v; };
   const shortDate = d => Number(d.slice(5, 7)) + '/' + Number(d.slice(8, 10)) + '/' + d.slice(0, 4);
   const premium = () => S.plan() === 'premium';
 
@@ -482,8 +484,7 @@
     sent.insertAdjacentHTML('beforebegin', moreCtx.build(from, shown));
     if (shown >= moreCtx.rows.length) { sent.remove(); if (moreIO) { moreIO.disconnect(); moreIO = null; } }
     else if (moreIO) { moreIO.unobserve(sent); moreIO.observe(sent); }   // still near the end: check again
-    fadeSync();
-    warmBig(list);
+    requestAnimationFrame(() => { fadeSync(); warmBig(list); });   // v52.93: measured on the next frame, so the new rows never force an extra layout mid-scroll
   }
   // v52.14 the bigger picture an opened entry shows, fetched and decoded quietly for rows on (or near) the screen, so
   // opening one on a phone shows it sharp right away (hover did this only with a mouse). Skipped with Data Saver on.

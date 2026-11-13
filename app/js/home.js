@@ -172,6 +172,7 @@
     window.__nhT = setTimeout(() => { c.remove(); window.__nh = null; document.documentElement.classList.remove('navhold'); if (fdoc) fdoc.documentElement.classList.remove('navhold'); }, ms + 40);
   };
   function go(g, from) {
+    window.__ctIn = Date.now();   // v52.93: a tab switch counts as activity, so background Stories prep never lands on top of it
     if (from) opener = from;
     if (window.ctBuzz) window.ctBuzz('tap');
     if (g === 'entries') {
