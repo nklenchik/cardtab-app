@@ -32,6 +32,18 @@
         const push = i => { if (!out[i] && near(i * 4)) { out[i] = 1; st[sp++] = i; } };
         for (let x = 0; x < W; x++) { push(x); push((H - 1) * W + x); } for (let y = 0; y < H; y++) { push(y * W); push(y * W + W - 1); }
         while (sp) { const i = st[--sp], x = i % W; if (x > 0) push(i - 1); if (x < W - 1) push(i + 1); if (i >= W) push(i - W); if (i < N - W) push(i + W); }
+        // v52.80 the hang hole of a sleeved pack or blister: a white slot near the top middle, closed in by the packaging,
+        // so the border fill can't reach it. A plain, near-white, slot-shaped patch there is cut out too.
+        { const seen = new Uint8Array(N), top = Math.round(H * 0.22), q = new Int32Array(N);
+          const white = o => d[o + 3] < 20 || (d[o] > 232 && d[o + 1] > 232 && d[o + 2] > 232);
+          for (let y = 1; y < top; y++) for (let x = Math.round(W * 0.25); x < Math.round(W * 0.75); x++) { const i0 = y * W + x; if (out[i0] || seen[i0] || !white(i0 * 4)) continue;
+            let qh = 0, qt = 0, n = 0, ax = W, bx = 0, ay = H, by = 0, edge = false; q[qt++] = i0; seen[i0] = 1;
+            while (qh < qt) { const i = q[qh++], px = i % W, py = (i / W) | 0; n++; if (px < ax) ax = px; if (px > bx) bx = px; if (py < ay) ay = py; if (py > by) by = py;
+              if (px === 0 || px === W - 1 || py === 0 || py >= top + Math.round(H * 0.06)) edge = true;
+              for (const j of [i - 1, i + 1, i - W, i + W]) { if (j < 0 || j >= N || seen[j] || out[j]) continue; if ((j % W) - px > 1 || px - (j % W) > 1) continue; if (white(j * 4)) { seen[j] = 1; q[qt++] = j; } } }
+            const bw = bx - ax + 1, bh = by - ay + 1, cx = (ax + bx) / 2;
+            if (!edge && bw >= W * 0.12 && bw <= W * 0.6 && bh <= H * 0.12 && bw >= bh * 1.6 && n >= bw * bh * 0.55 && Math.abs(cx - W / 2) < W * 0.12)
+              for (let k = 0; k < qt; k++) out[q[k]] = 1; } }
         let gone = 0; for (let i = 0; i < N; i++) gone += out[i];
         if (gone < N * 0.03 || gone > N * 0.9) { done.set(src, ''); return ''; }   // nothing to cut, or it would cut the product away
         // see-through backdrop, and a one-pixel soft edge so the outline isn't jagged
