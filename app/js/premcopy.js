@@ -42,7 +42,7 @@
     1: ['No monthly entry limit', 'cal'], 2: ['All your history', 'hist'], 3: ['Any date range', 'range'], 4: ['Import a spreadsheet', 'imp'],
     5: ['50 Ask questions a month', 'ask'], 6: ['All Card Board features', 'board'], 7: ['Every Card Board widget', 'widget'], 8: ['Save every board layout', 'save'],
     9: ['Export to PDF and Excel', 'exp'], 10: ['Every Stories theme + video', 'story'], 11: ['All 24 Stories themes', 'theme'], 12: ['Unlimited Stories video', 'video'],
-    13: ['Every Stories background', 'bg'], 14: ['Stories for any date range', 'range'], 15: ['Your all-time biggest wins', 'win'], 16: ['Profit by month, all time', 'bars']
+    13: ['Every Stories background', 'bg'], 14: ['Stories for any date range', 'range'], 15: ['All-time biggest profits', 'win'], 16: ['Profit by month, all time', 'bars']
   };
   // v50.97: each bullet's home page. A sheet shows 3 from the page it opened on (what was tapped is always one of them) and
   // 3 from elsewhere in the app, leaning toward the features this person uses most (counted on this device only).
