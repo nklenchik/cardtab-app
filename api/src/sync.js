@@ -4,7 +4,7 @@
    (deleted:true), so it reaches every device. "seq" numbers the server's changes so a device can ask for what's new. */
 // settings that follow the account (v44/v46 added Start on, Add New defaults, games, sharing, and saved Board layouts)
 const META_KEYS = ['budget', 'budgetFlags', 'customPlatforms', 'hiddenPlatforms', 'notif', 'storiesFree', 'startOn', 'addDefaults', 'games', 'sharing', 'boardSavesDesk', 'boardSavesPhone', 'storyFav', 'shareUsage', 'me', 'prefs'];
-const MAX_IN = 400, MAX_OUT = 800, MAX_ENTRY = 24000;
+const MAX_IN = 400, MAX_OUT = 800, MAX_ENTRY = 24000, MAX_ME = 80000;
 
 export async function handleSync(env, req, me, out) {
   const b = await req.json().catch(() => null);
@@ -35,7 +35,7 @@ export async function handleSync(env, req, me, out) {
   // synced settings
   for (const k of META_KEYS) {
     const m = inM[k]; if (!m || typeof m.t !== 'string') continue;
-    let v = JSON.stringify(m.v === undefined ? null : m.v), at = m.t; if (v.length > MAX_ENTRY) continue;
+    let v = JSON.stringify(m.v === undefined ? null : m.v), at = m.t; if (v.length > (k === 'me' ? MAX_ME : MAX_ENTRY)) continue;   // v52.94: the profile photo gets a little more room
     // v52.62 Notifications from a device that hasn't heard about a "Stop these emails" tap: keep emails off (unless this
     // device turned them back on after the tap), so the switch can't flip back on its own
     if (k === 'notif' && m.v && typeof m.v === 'object') { try {
