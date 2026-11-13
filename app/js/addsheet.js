@@ -9,11 +9,13 @@
   const dlg = $('as'), inp = $('as-in'), chips = $('as-chips'), res = $('as-res'), go = $('as-go'), price = $('as-price'), fees = $('as-fees'), ship = $('as-ship'), sv = $('as-save');
   const KEY = 'ct.addsheet';
   const CONDS = ['NM', 'LP', 'MP', 'HP'], COND_FULL = { NM: 'Near Mint', LP: 'Lightly Played', MP: 'Moderately Played', HP: 'Heavily Played' };
-  const st = { tok: 0, busy: false, type: 'purchase', cond: 0, qty: 1, sel: -1, list: [], sig: '', why: '', card: null, parsed: null, rows: [], total: 0, shown: 0, onDone: null };
+  const st = { kind: 'all', tok: 0, busy: false, type: 'purchase', cond: 0, qty: 1, sel: -1, list: [], sig: '', why: '', card: null, parsed: null, rows: [], total: 0, shown: 0, onDone: null };
 
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const money = c => '$' + (Math.abs(c) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const grad = h => 'linear-gradient(155deg,hsl(' + h + ' 62% 50%),hsl(' + ((h + 40) % 360) + ' 55% 22%))';
+  const isSealed = c => !!(c && window.CTSealed && window.CTSealed.is(c));   // v52.75 packs, boxes, ETBs, UPCs
+  const slBg = c => c.art ? 'url(' + c.art.list + ') center/contain no-repeat' : artBg(c);   // sealed: the whole picture, no card backdrop
   const artBg = c => (c.art ? 'url(' + c.art.list + ') center/cover no-repeat, ' : '') + grad(c.h == null ? 220 : c.h);
   const CK = '<span class="tick"><svg viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg></span>';
   const mem = { get() { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } }, set(extra) { try { localStorage.setItem(KEY, JSON.stringify(Object.assign(mem.get(), { type: st.type, plat: $('as-plat').value }, extra || {}))); } catch (e) {} } };
@@ -21,7 +23,7 @@
   const PHN = matchMedia('(max-width:760px)');
   function chipsFor(p) {
     const c = [];
-    if (p.name) c.push(['Card', p.name]); if (p.number) c.push(['No.', p.number]); if (p.set) c.push(['Set', p.set]);
+    if (p.name) c.push(['Item', p.name]); if (p.number) c.push(['No.', p.number]); if (p.set) c.push(['Set', p.set]);
     if (p.rarity) c.push(['Rarity', p.rarity]); if (p.variant) c.push(['Variant', p.variant]);
     if (p.finishes && p.finishes.length) c.push(['Finish', p.finishes[0]]);
     if (p.grade) c.push(['Graded', p.grade]); if (p.condition) c.push(['Cond.', p.condition]);
@@ -32,16 +34,16 @@
   // Session list: what was added since the sheet opened, with one running total (sales +, purchases −)
   function sessionHTML() {
     let h = '<div class="tot"><span class="lab" id="as-tl">This session</span><b id="as-tt"></b></div>';
-    if (!st.rows.length) return h + '<div class="none" style="margin-top:14px">Nothing yet. Your first card will show up here.</div>';
+    if (!st.rows.length) return h + '<div class="none" style="margin-top:14px">Nothing yet. Your first item will show up here.</div>';
     st.rows.forEach(r => {
-      h += '<div class="row' + (r.isNew ? ' new' : '') + '"><span class="art" style="background:' + artBg(r) + '"></span><div class="tx"><div class="n">' + esc(r.n) + '</div><div class="m">' + esc(r.m) + '</div></div><div class="amt' + (r.sale ? ' in' : '') + '">' + (r.sale ? '+' : '−') + money(r.amt) + '</div></div>';
+      h += '<div class="row' + (r.isNew ? ' new' : '') + '"><span class="art' + (r.sl ? ' sl' : '') + '" style="background:' + (r.sl ? slBg(r) : artBg(r)) + '"></span><div class="tx"><div class="n">' + esc(r.n) + '</div><div class="m">' + esc(r.m) + '</div></div><div class="amt' + (r.sale ? ' in' : '') + '">' + (r.sale ? '+' : '−') + money(r.amt) + '</div></div>';
       r.isNew = false;
     });
     return h;
   }
   function totals() {
     const el = $('as-tt'); if (!el) return;
-    const n = st.rows.reduce((a, r) => a + r.qty, 0); $('as-tl').textContent = 'This session · ' + n + (n === 1 ? ' card' : ' cards');
+    const n = st.rows.reduce((a, r) => a + r.qty, 0); $('as-tl').textContent = 'This session · ' + n + (n === 1 ? ' item' : ' items');
     const v = Math.round(st.shown); el.textContent = st.rows.length ? (v < 0 ? '−' : '+') + money(v) : ''; el.style.color = v > 0 ? 'var(--green)' : '';
   }
   function tween() {
@@ -57,7 +59,7 @@
     chips.innerHTML = tchip + (t ? chipsFor(p).map((c, i) => '<span class="chip" style="animation-delay:' + i * 45 + 'ms"><i>' + c[0] + '</i>' + esc(c[1]) + '</span>').join('') : '');
     const sig = [p.name, p.number, p.set, p.rarity].join('|');
     if (sig !== st.sig) {
-      st.sig = sig;
+      st.sig = sig; st.kind = 'all';
       // v42.6: ask the card database only once there's something worth asking: 3+ letters of a name, or a card number
       const worth = !!p.number || String(p.name || '').replace(/[^a-z0-9]/gi, '').length >= 3;
       if (window.CARDTAB_API && worth) {
@@ -71,20 +73,27 @@
     }
     st.parsed = p;
     const typed = '<button type="button" class="addtyped" data-typed>Add “' + esc(t.length > 40 ? t.slice(0, 40) + '…' : t) + '” as typed</button>';
-    if (!t) { res.innerHTML = sessionHTML(); totals(); setGo(false, 'Pick a card'); return; }
-    if (!st.list.length && st.busy) { res.innerHTML = '<div class="none">Looking it up…</div>'; setGo(false, 'Pick a card'); return; }
-    if (!st.list.length) { res.innerHTML = '<div class="none">No match yet. Keep typing, or add the number.</div>' + typed; setGo(false, 'Pick a card'); return; }
+    if (!t) { res.innerHTML = sessionHTML(); totals(); setGo(false, 'Pick one'); return; }
+    if (!st.list.length && st.busy) { res.innerHTML = '<div class="none">Looking it up…</div>'; setGo(false, 'Pick one'); return; }
+    if (!st.list.length) { res.innerHTML = '<div class="none">No match yet. Keep typing, or add the number.</div>' + typed; setGo(false, 'Pick one'); return; }
     // Results are a short list: tap the one that's yours and go straight to price ("Change" on the price step undoes a wrong tap)
     const pre = st.list.length === 1 || (st.why && st.why !== 'one');
     if (st.list.length === 1 && !st.dym) st.sel = 0;
-    let h = '<div class="lsl">' + (st.dym ? 'No exact match · did you mean' : st.list.length === 1 ? 'One match · tap it or press Enter' : st.list.length + ' printings · tap yours') + '</div><div class="lst">';
-    st.list.forEach((c, i) => {
-      h += '<button type="button" class="li" data-i="' + i + '"><span class="art" style="background:' + artBg(c) + '"></span><span class="t"><span class="n">' + esc(c.n) + (c.r ? ' · ' + esc(c.r) : '') + '</span><span class="m">' + esc([c.s, c.num].filter(Boolean).join(' · ')) + (pre && !st.dym && i === 0 ? '<b class="bm">' + (st.list.length === 1 ? 'Match' : 'Best match') + '</b>' : '') + '</span></span><span class="go" aria-hidden="true"></span></button>';
+    // v52.75: when the results mix cards and sealed products, All · Cards · Sealed narrows them; sealed ones carry a tag
+    const sl = st.list.map(isSealed), mixed = sl.some(Boolean) && sl.some(x => !x);
+    if (!mixed) st.kind = 'all';
+    const vis = st.list.map((c, i) => i).filter(i => st.kind === 'all' || (st.kind === 'sealed') === sl[i]);
+    const kinds = mixed ? '<div class="kinds" role="group" aria-label="Show">' + [['all', 'All'], ['cards', 'Cards'], ['sealed', 'Sealed']].map(k => '<button type="button" data-kind="' + k[0] + '" aria-pressed="' + (st.kind === k[0]) + '">' + k[1] + '</button>').join('') + '</div>' : '';
+    const n = vis.length, allSealed = vis.every(i => sl[i]);
+    let h = kinds + '<div class="lsl">' + (st.dym ? 'No exact match · did you mean' : n === 1 ? 'One match · tap it or press Enter' : n + (allSealed ? ' products' : mixed && st.kind === 'all' ? ' results' : ' printings') + ' · tap yours') + '</div><div class="lst">';
+    vis.forEach((i, k) => { const c = st.list[i], y = sl[i];
+      h += '<button type="button" class="li" data-i="' + i + '"><span class="art' + (y ? ' sl' : '') + '" style="background:' + (y ? slBg(c) : artBg(c)) + '"></span><span class="t"><span class="n">' + esc(c.n) + (c.r && !y ? ' · ' + esc(c.r) : '') + '</span><span class="m">' + (y ? '<b class="slt">Sealed</b>' : '') + esc([c.s, y ? '' : c.num].filter(Boolean).join(' · ')) + (pre && !st.dym && k === 0 ? '<b class="bm">' + (n === 1 ? 'Match' : 'Best match') + '</b>' : '') + '</span></span><span class="go" aria-hidden="true"></span></button>';
     });
     h += '</div>' + typed;
-    res.innerHTML = h; setGo(st.sel > -1, st.sel < 0 ? 'Pick a card' : 'Continue to price');
+    res.innerHTML = h; setGo(st.sel > -1, st.sel < 0 ? 'Pick one' : 'Continue to price');
   }
   res.addEventListener('click', e => {
+    const kb = e.target.closest('[data-kind]'); if (kb) { st.kind = kb.dataset.kind; st.sel = -1; render(); return; }
     const li = e.target.closest('.li');
     if (li) { st.sel = +li.dataset.i; li.classList.add('on'); window.ctBuzz && window.ctBuzz(); toPrice(); return; }
     if (e.target.closest('[data-typed]')) toPrice(true);
@@ -132,7 +141,9 @@
     st.qty = p.qty || 1; st.grade = p.grade || '';
     const ci = p.condition ? CONDS.indexOf(p.condition) : -1; if (ci > -1) { setSeg('as-cond', ci); st.cond = ci; }
     const c = st.card;
-    $('as-pa').style.background = artBg(c); $('as-pn').textContent = c.n;
+    st.sealed = c.typed ? !!p.sealed : isSealed(c); $('as-pa').classList.toggle('sl', st.sealed); $('as-cond').closest('.sec').hidden = st.sealed;   // sealed: no condition
+    $('as-pa').style.background = st.sealed ? slBg(c) : artBg(c); $('as-pn').textContent = c.n;
+    if (st.sealed) $('as-pm').innerHTML = '<b class="slt">Sealed</b>' + esc(c.s || ''); else
     $('as-pm').textContent = c.typed ? 'Added as typed' : c.s + ' · ' + c.num + (st.grade ? ' · ' + st.grade : '');
     $('as-q').textContent = st.qty;
     show(2); price.value = ''; fees.value = ''; const ls = mem.get().ship; ship.value = ls != null ? S.fromCents(ls) : ''; $('as-err').textContent = ''; upd(); price.focus();
@@ -154,13 +165,13 @@
     const sale = st.type === 'sale', c = st.card, v = S.toCents(price.value), fe = S.toCents(fees.value) || 0, sh = S.toCents(ship.value) || 0, k = v - fe - sh;
     const name = c.typed ? c.n : listName(c);
     try {
-      const e = await S.add({ type: st.type, name, platform: $('as-plat').value, qty: st.qty, amount: v, fees: sale ? fe : null, ship: sale ? sh : null, condition: st.grade ? 'Graded' : COND_FULL[CONDS[st.cond]], grade: st.grade && window.CTGrade ? window.CTGrade.parse(st.grade) : undefined, art: c.art || null, note: st.grade && !window.CTGrade ? 'Graded ' + st.grade : '', unmatched: !!c.typed });
+      const e = await S.add({ type: st.type, name, platform: $('as-plat').value, qty: st.qty, amount: v, fees: sale ? fe : null, ship: sale ? sh : null, condition: st.sealed ? 'Sealed' : st.grade ? 'Graded' : COND_FULL[CONDS[st.cond]], sealed: st.sealed ? true : undefined, grade: st.grade && window.CTGrade ? window.CTGrade.parse(st.grade) : undefined, art: c.art || null, note: st.grade && !window.CTGrade ? 'Graded ' + st.grade : '', unmatched: !!c.typed });
       const amt = sale ? k : v;
-      st.rows.unshift({ n: c.n, m: (c.typed ? '' : c.s + ' · ') + (st.qty > 1 ? '×' + st.qty + ' · ' : '') + CONDS[st.cond], h: c.h, art: c.art, sale, amt, qty: st.qty, isNew: true, id: e.id });
+      st.rows.unshift({ n: c.n, m: (c.typed ? '' : c.s + ' · ') + (st.qty > 1 ? '×' + st.qty + ' · ' : '') + (st.sealed ? 'Sealed' : CONDS[st.cond]), h: c.h, art: c.art, sale, amt, qty: st.qty, isNew: true, id: e.id, sl: st.sealed });
       st.total += sale ? amt : -amt; window.ctBuzz && window.ctBuzz();
       show(1); inp.value = ''; st.sig = '~'; render(); tween(); inp.focus(); mem.set(sale ? { ship: sh } : null);
       const u = S.usage();
-      flash(u.plan === 'free' && u.blocked ? 'Saved · that was your last free entry this month' : u.plan === 'free' && u.warn ? 'Saved · ' + u.left + (u.left === 1 ? ' free entry' : ' free entries') + ' left' : 'Saved · ready for the next card');
+      flash(u.plan === 'free' && u.blocked ? 'Saved · that was your last free entry this month' : u.plan === 'free' && u.warn ? 'Saved · ' + u.left + (u.left === 1 ? ' free entry' : ' free entries') + ' left' : 'Saved · ready for the next one');
       if (u.plan === 'free' && u.blocked) { setGo(false, 'Free entries used up this month'); inp.disabled = true; }
     } catch (err) {
       if (err.code === 'limit') { $('as-err').textContent = 'You’ve used all 20 free entries this month. More on ' + S.usage().resetsOn + '.'; sv.disabled = true; }
