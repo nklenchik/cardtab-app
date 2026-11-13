@@ -148,7 +148,7 @@
     if (status.gift) h = '<div class="amg bl-hero"><span class="bl-k">Gift</span><b>Premium</b><small>Given by Card Tab. There’s nothing to pay.</small></div>';
     else if (s) {
       const per = s.interval === 'year' ? ' a year' : ' a month', other = s.interval === 'year' ? 'month' : 'year';
-      const line = s.status === 'past_due' ? 'Payment didn’t go through' : s.cancelAtEnd ? dollars(s.amount) + per + ' · cancelled' : dollars(s.amount) + per + ' · renews ' + dateOf(s.periodEnd);
+      const line = s.status === 'past_due' ? 'Payment didn’t go through' : s.cancelAtEnd ? dollars(s.amount) + (s.interval === 'year' ? '/year' : '/month') : dollars(s.amount) + per + ' · renews ' + dateOf(s.periodEnd);
       h = '<div class="amg bl-hero">' + (s.founder ? '<span class="bl-k">Founding member</span>' : '') + '<b>Premium · ' + (s.interval === 'year' ? 'Yearly' : 'Monthly') + '</b><small>' + line + '</small>' +
         (s.pending ? '<small class="bl-pend">Switches to ' + (s.pending.interval === 'year' ? 'yearly' : 'monthly') + ' (' + dollars(s.pending.amount) + (s.pending.interval === 'year' ? ' a year' : ' a month') + ') on ' + dateOf(s.periodEnd) + '</small>' : '') + '</div>';
       // v52.66 cancelled (Premium runs to the end of what's paid): say plainly when it ends and what happens after

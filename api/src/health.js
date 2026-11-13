@@ -1,6 +1,7 @@
 // Daily check (v50.12): a short, light look at the things people use most, once a day, with an email to the admins.
 // About a dozen small requests in all (the app and site pages, the database, picture storage, one tiny AI question) and
 // a few database reads. Nothing is changed or fixed automatically: problems come with a suggested fix to approve.
+import { isOpen } from './billing.js';
 import { sendMail } from './email.js';
 import { alertsFromHealth } from './alerts.js';
 
@@ -79,7 +80,7 @@ export async function runHealth(env, { send = true } = {}) {
     const r = await fetch('https://api.stripe.com/v1/balance', { headers: { authorization: 'Bearer ' + String(env.STRIPE_SECRET_KEY).trim() } });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) return { ok: false, note: 'Stripe refused the key (' + r.status + ')' };
-    const live = !!j.livemode, open = env.BILLING_OPEN === 'on';
+    const live = !!j.livemode, open = isOpen(env);
     return { ok: true, warn: open && !live, note: (live ? 'live key' : 'test key') + (open && !live ? ' while Premium is open: customers can’t pay' : open ? '' : ' · Premium not open yet') };
   }), 'Add the Stripe secret key (live mode once Premium is open) in Cloudflare → card-tab-api → Settings → Runtime variables and secrets as STRIPE_SECRET_KEY (type Secret).');
   add('webhook', 'Stripe payment notices', await timed(async () => {

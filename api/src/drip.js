@@ -10,6 +10,7 @@
    /e/u/<id> stops these emails (one click, plus the List-Unsubscribe header mail apps use).
    Admin dashboard: Growth → Emails (emailStats) and each person's email history (emailsFor). Removed with the account.
    To pause sending, set DRIP = "off" in wrangler.toml and push (a deploy replaces dashboard variables). */
+import { isOpen } from './billing.js';
 import { dripEmail, sendMail, TIPS } from './email.js';
 import { ensureGeo } from './geo.js';
 
@@ -124,7 +125,7 @@ export async function dripRun(env, t = Date.now(), opt = {}) {
       if (step === 'd13') sum = summary(ents);
       const id = rid(), api = env.API_URL || 'https://api.cardtab.app';
       const links = { go: k => api + '/e/c/' + id + '?to=' + k, unsub: api + '/e/u/' + id, pixel: api + '/e/o/' + id + '.gif' };
-      const msg = dripEmail({ step, tip: variant, name: u.name, n, sum, links, open: env.BILLING_OPEN === 'on', opens: env.BILLING_OPENS || '', joinedAt: u.created_at, t });
+      const msg = dripEmail({ step, tip: variant, name: u.name, n, sum, links, open: isOpen(env), opens: env.BILLING_OPENS || '', joinedAt: u.created_at, t });
       try {
         await sendMail(env, { to: u.email, from: 'hello@cardtab.app', replyTo: 'hello@cardtab.app', ...msg,
           headers: { 'List-Unsubscribe': '<' + links.unsub + '>, <mailto:hello@cardtab.app?subject=Stop%20emails>', 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } });

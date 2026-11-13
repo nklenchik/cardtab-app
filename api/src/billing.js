@@ -232,7 +232,10 @@ export async function graceSweep(env) {
 
 // ---------- signed-in routes ----------
 // v50.72: until launch (BILLING_OPEN = "on"), only admins can check out; everyone else sees when Premium opens (BILLING_OPENS)
-const billingOpen = (env, admin) => env.BILLING_OPEN === 'on' || !!admin;
+// v52.67 Premium opens by itself at BILLING_OPEN_AT (midnight Eastern, Dec 1) once the live Stripe key is in; BILLING_OPEN = "on"
+// opens it right away. Before then, only admins can check out.
+export const isOpen = (env, t = Date.now()) => env.BILLING_OPEN === 'on' || (!!env.BILLING_OPEN_AT && t >= Date.parse(env.BILLING_OPEN_AT) && isLive(env));
+const billingOpen = (env, admin) => isOpen(env) || !!admin;
 // v52.64 the publishable key always matches the secret key's mode (test or live), so a half-done switch can't break checkout:
 // a live secret key (sk_live_ / rk_live_) uses STRIPE_PUBLISHABLE_KEY_LIVE, anything else STRIPE_PUBLISHABLE_KEY (the test one)
 export const isLive = env => /^(sk|rk)_live_/.test(env.STRIPE_SECRET_KEY || '');

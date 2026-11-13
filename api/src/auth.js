@@ -1,4 +1,4 @@
-import { handleBilling, cancelForDelete } from './billing.js';
+import { handleBilling, cancelForDelete, isOpen } from './billing.js';
 import { handleAdminAsk } from './adminask.js';
 import { handleFeedback } from './feedback.js';
 import { handleHealth } from './health.js';
@@ -66,7 +66,7 @@ async function upsertUser(env, email, extra = {}) {
     u.isNew = true;
     // v50.72: one welcome email for a new account (a hiccup here never blocks signing in)
     // v52.50: its opens and clicks are counted like the first-two-weeks emails (Growth › Emails); no stop link, it's sent once
-    try { const w = welcomeLinks(env); await sendMail(env, { to: email, replyTo: 'hello@cardtab.app', ...welcomeEmail({ name: u.name, appUrl: appUrl(env), open: env.BILLING_OPEN === 'on', opens: env.BILLING_OPENS || '', joinedAt: u.created_at, links: w.links }) }); await w.log(u.id); } catch (e) {}
+    try { const w = welcomeLinks(env); await sendMail(env, { to: email, replyTo: 'hello@cardtab.app', ...welcomeEmail({ name: u.name, appUrl: appUrl(env), open: isOpen(env), opens: env.BILLING_OPENS || '', joinedAt: u.created_at, links: w.links }) }); await w.log(u.id); } catch (e) {}
   } else if ((extra.name && !u.name) || (extra.sub && !u.google_sub)) {
     await env.DB.prepare('UPDATE users SET name=COALESCE(NULLIF(name,\'\'),?), google_sub=COALESCE(google_sub,?) WHERE id=?').bind(extra.name || '', extra.sub || null, u.id).run();
     u.name = u.name || extra.name || ''; u.google_sub = u.google_sub || extra.sub || null;

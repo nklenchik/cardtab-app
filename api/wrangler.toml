@@ -36,9 +36,11 @@ GOOGLE_CLIENT_ID = "402189262163-0kb6qq7l9igfmvgiqp81plvjk5572to8.apps.googleuse
 # The publishable key is public by design. STRIPE_TAX turns on sales tax at checkout once Stripe Tax and the NY registration are set up.
 STRIPE_PUBLISHABLE_KEY = "pk_test_51UZQhqAs7GNZKele0ycVJmDzt7boB8zZe2zINnUoRZfknC3juGVIkjULVuAg19QlzsO47xknyBogXXztzJrQFGtC00VonSEri1"
 STRIPE_TAX = "off"
-# Until launch day only admins can check out; set BILLING_OPEN = "on" with the live keys. BILLING_OPENS is the date people see.
+# Until launch only admins can check out. BILLING_OPEN = "on" opens it right away; otherwise it opens at BILLING_OPEN_AT. BILLING_OPENS is the date people see.
 BILLING_OPEN = "off"
 BILLING_OPENS = "Dec 1"
+# v52.67 Premium opens by itself at this moment (midnight Eastern), as long as the live Stripe key is set
+BILLING_OPEN_AT = "2026-12-01T00:00:00-05:00"
 # v52.64 the live publishable key (public by design). It's used only once STRIPE_SECRET_KEY is a live key, so both always match.
 STRIPE_PUBLISHABLE_KEY_LIVE = "pk_live_51UZhBIATHQc3NaMr1o2qWIlVjkXFAkEGAVkkuCbPE9O8cMnD8OQTEzoRIyRltbDBnHcLgCy4Xtx1YnVx9Frahtyu00Mr8U3aKZ"
 # v52.64 the first-two-weeks emails for Free members: "off" pauses them. Plain variables live here (a deploy replaces any set

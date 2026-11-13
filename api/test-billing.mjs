@@ -169,3 +169,12 @@ console.log('billing tests ok:', S.calls.length, 'Stripe calls');
   await saveRow(testEnv, 'modeg', { customer: 'cus_G', gift: 1 }); assert.equal((await rowOf(liveEnv, 'modeg')).gift, 1);
   await saveRow(liveEnv, 'modeu', { customer: 'cus_L' }); assert.equal((await rowOf(liveEnv, 'modeu')).customer, 'cus_L'); assert.equal(modeOf(liveEnv), 'live');
   console.log('test/live mode checks ok'); }
+
+// v52.67 Premium opens by itself at midnight Eastern on Dec 1, only with the live key
+{ const { isOpen } = await import('./src/billing.js'); const assert = (await import('node:assert')).default;
+  const at = '2026-12-01T00:00:00-05:00', t0 = Date.parse(at);
+  assert.equal(isOpen({ BILLING_OPEN: 'off', BILLING_OPEN_AT: at, STRIPE_SECRET_KEY: 'rk_live_x' }, t0 - 1000), false, 'not yet');
+  assert.equal(isOpen({ BILLING_OPEN: 'off', BILLING_OPEN_AT: at, STRIPE_SECRET_KEY: 'rk_live_x' }, t0), true, 'midnight');
+  assert.equal(isOpen({ BILLING_OPEN: 'off', BILLING_OPEN_AT: at, STRIPE_SECRET_KEY: 'sk_test_x' }, t0 + 1000), false, 'not with a test key');
+  assert.equal(isOpen({ BILLING_OPEN: 'on', STRIPE_SECRET_KEY: 'sk_test_x' }), true, 'on means on');
+  console.log('opening time checks ok'); }
