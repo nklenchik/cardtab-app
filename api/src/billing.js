@@ -227,9 +227,13 @@ export async function graceSweep(env) {
 // ---------- signed-in routes ----------
 // v50.72: until launch (BILLING_OPEN = "on"), only admins can check out; everyone else sees when Premium opens (BILLING_OPENS)
 const billingOpen = (env, admin) => env.BILLING_OPEN === 'on' || !!admin;
+// v52.64 the publishable key always matches the secret key's mode (test or live), so a half-done switch can't break checkout:
+// a live secret key (sk_live_ / rk_live_) uses STRIPE_PUBLISHABLE_KEY_LIVE, anything else STRIPE_PUBLISHABLE_KEY (the test one)
+export const isLive = env => /^(sk|rk)_live_/.test(env.STRIPE_SECRET_KEY || '');
+export const pubKey = env => (isLive(env) ? env.STRIPE_PUBLISHABLE_KEY_LIVE : env.STRIPE_PUBLISHABLE_KEY) || '';
 const statusOut = (env, user, r, admin) => ({
   open: billingOpen(env, admin), opens: env.BILLING_OPENS || '',
-  plan: user.plan || 'free', gift: !!(r && r.gift), publishableKey: env.STRIPE_PUBLISHABLE_KEY || '', ready: !!env.STRIPE_SECRET_KEY,
+  plan: user.plan || 'free', gift: !!(r && r.gift), publishableKey: pubKey(env), ready: !!env.STRIPE_SECRET_KEY && !!pubKey(env), live: isLive(env),
   founders: founderOffer(user, r),
   sub: r && r.sub ? { status: r.status, interval: r.interval, amount: r.amount, founder: !!r.founder, periodEnd: r.period_end, cancelAtEnd: !!r.cancel_at_end, graceUntil: r.status === 'past_due' ? r.grace_until : null,
     card: r.card_last4 ? { brand: r.card_brand, last4: r.card_last4 } : null, pending: r.pending_key ? { interval: PRICES[r.pending_key] && PRICES[r.pending_key].interval, amount: PRICES[r.pending_key] && PRICES[r.pending_key].amount } : null } : null
@@ -239,6 +243,7 @@ export async function handleBilling(env, req, me, path, out, admin) {
   if (path === '/auth/billing' && req.method === 'GET') return out(statusOut(env, me, await rowOf(env, me.id), admin));
   if (path === '/auth/billing/checkout' && req.method === 'POST') {
     if (!billingOpen(env, admin)) return out({ error: 'Premium opens ' + (env.BILLING_OPENS || 'soon') + '.', closed: true }, 403);
+    if (!pubKey(env)) return out({ error: 'Payments aren’t set up yet.' }, 503);
     const b = await req.json().catch(() => ({})), interval = b.plan === 'yearly' ? 'year' : 'month';
     let r = await rowOf(env, me.id);
     if (r && r.sub && ACTIVE(r.status)) return out({ error: 'You already have Premium.', have: true }, 409);
@@ -259,7 +264,7 @@ export async function handleBilling(env, req, me, path, out, admin) {
       customer = (await stripe(env, 'POST', '/customers', { email: me.email, name: me.name || undefined, metadata: { uid: me.id } })).id;
       await saveRow(env, me.id, { customer, card_brand: null, card_last4: null }); s = await mk(customer);
     }
-    return out({ clientSecret: s.client_secret, publishableKey: env.STRIPE_PUBLISHABLE_KEY || '', plan: key, amount: PRICES[key].amount, interval });
+    return out({ clientSecret: s.client_secret, publishableKey: pubKey(env), plan: key, amount: PRICES[key].amount, interval });
   }
   if (path === '/auth/billing/confirm' && req.method === 'POST') {
     // right after checkout: ask Stripe directly instead of waiting for the webhook, so Premium turns on at once

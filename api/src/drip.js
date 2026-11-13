@@ -9,7 +9,7 @@
    app there, /e/o/<id>.gif counts an open (a 1x1 image; Apple Mail opens most mail by itself, so opens run high),
    /e/u/<id> stops these emails (one click, plus the List-Unsubscribe header mail apps use).
    Admin dashboard: Growth → Emails (emailStats) and each person's email history (emailsFor). Removed with the account.
-   Set DRIP = "off" in the Worker's variables to pause sending. */
+   To pause sending, set DRIP = "off" in wrangler.toml and push (a deploy replaces dashboard variables). */
 import { dripEmail, sendMail, TIPS } from './email.js';
 import { ensureGeo } from './geo.js';
 

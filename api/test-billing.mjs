@@ -149,3 +149,12 @@ console.log('billing tests ok:', S.calls.length, 'Stripe calls');
 
 // v51.5: paid upgrades and moves back to Free are logged for the daily check (gifts are not)
 { const ev = sq.prepare("SELECT kind, COUNT(*) n FROM plan_ev GROUP BY kind").all(); console.log("plan changes logged:", JSON.stringify(ev)); assert.ok(ev.some(e => e.kind === "up"), "a paid upgrade is logged"); }
+
+// v52.64 the publishable key follows the secret key's mode
+{ const { pubKey, isLive } = await import('./src/billing.js');
+  const assert = (await import('node:assert')).default;
+  assert.equal(pubKey({ STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_PUBLISHABLE_KEY: 'pk_test_a', STRIPE_PUBLISHABLE_KEY_LIVE: 'pk_live_b' }), 'pk_test_a');
+  assert.equal(pubKey({ STRIPE_SECRET_KEY: 'rk_live_x', STRIPE_PUBLISHABLE_KEY: 'pk_test_a', STRIPE_PUBLISHABLE_KEY_LIVE: 'pk_live_b' }), 'pk_live_b');
+  assert.equal(pubKey({ STRIPE_SECRET_KEY: 'sk_live_x', STRIPE_PUBLISHABLE_KEY: 'pk_test_a' }), '');   // live secret, no live key yet: not ready
+  assert.ok(isLive({ STRIPE_SECRET_KEY: 'sk_live_1' }) && !isLive({ STRIPE_SECRET_KEY: 'sk_test_1' }));
+  console.log('publishable key checks ok'); }

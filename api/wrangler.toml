@@ -39,6 +39,11 @@ STRIPE_TAX = "off"
 # Until launch day only admins can check out; set BILLING_OPEN = "on" with the live keys. BILLING_OPENS is the date people see.
 BILLING_OPEN = "off"
 BILLING_OPENS = "Dec 1"
+# v52.64 the live publishable key (public by design). It's used only once STRIPE_SECRET_KEY is a live key, so both always match.
+STRIPE_PUBLISHABLE_KEY_LIVE = ""
+# v52.64 the first-two-weeks emails for Free members: "off" pauses them. Plain variables live here (a deploy replaces any set
+# in the dashboard), so changing this means a push.
+DRIP = "on"
 
 # v50: nightly analytics tidy-up (keeps two years of daily rows). Times are UTC.
 [triggers]
