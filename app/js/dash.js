@@ -209,7 +209,10 @@
   addEventListener('ct-amt', () => render());
   const subText = t => t.type === 'sale' ? money(t.net) + ' after fees' : t.type === 'refund' ? 'Refunded' : 'Paid';
   // v52.14: a picture already fetched and decoded ahead of time goes in at once; one still loading waits until the opening glide is done
-  const fullArt = img => { if (!img || img.tagName !== 'IMG' || img.dataset.loaded) return; img.dataset.loaded = 1; const u = img.dataset.full, pre = new Image(), t0 = performance.now(); pre.src = u;
+  const fullArt = img => { if (!img || img.tagName !== 'IMG' || img.dataset.loaded) return; img.dataset.loaded = 1; const u = img.dataset.full, pre = new Image(), t0 = performance.now();
+    // v52.83 sealed: cut the bigger picture out first and swap straight to the cut-out, so its white backdrop never flashes
+    if (img.classList.contains('ct-sealed') && window.CTCutout) { const abs = new URL(u, location.href).href; window.CTCutout.cut(abs).then(c => { if (!img.isConnected) return; img.dataset.cut = abs; if (c) img.src = c; else { img.classList.remove('ct-cut'); img.classList.add('ct-nocut'); img.src = u; } }); return; }
+    pre.src = u;
     const w = warmedU.get(u); if ((w && w.complete && w.naturalWidth) || (pre.complete && pre.naturalWidth)) { img.src = u; return; } (pre.decode ? pre.decode() : new Promise((r, j) => { pre.onload = r; pre.onerror = j; })).then(() => setTimeout(() => { if (img.isConnected) img.src = u; }, Math.max(0, 380 - (performance.now() - t0)))).catch(() => { delete img.dataset.loaded; }); };
   function setBtn(btn, open) { const t = S.get(btn.dataset.tx); if (!t) return; btn.setAttribute('aria-expanded', open); btn.setAttribute('aria-label', (open ? 'Collapse ' : 'Expand ') + t.name); btn.querySelector('.ct-row-chevron').textContent = open ? '−' : '+'; }
 
@@ -485,7 +488,7 @@
   // v52.14 the bigger picture an opened entry shows, fetched and decoded quietly for rows on (or near) the screen, so
   // opening one on a phone shows it sharp right away (hover did this only with a mouse). Skipped with Data Saver on.
   let warmIO = null; const warmedU = new Map();   // picture address -> the loaded picture
-  function warmOne(img) { const u = img.dataset.full; if (!u || img.dataset.warm || img.dataset.loaded || u === img.getAttribute('src') || warmedU.has(u)) return; img.dataset.warm = 1;
+  function warmOne(img) { const u = img.dataset.full; if (!u || img.dataset.warm || img.dataset.loaded || u === img.getAttribute('src') || warmedU.has(u)) return; img.dataset.warm = 1; if (img.classList.contains('ct-sealed') && window.CTCutout) { window.CTCutout.cut(new URL(u, location.href).href); return; }
     const w = new Image(); w.decoding = 'async'; w.src = u; warmedU.set(u, w); if (w.decode) w.decode().catch(() => {}); }
   function warmBig(list) {
     if (!('IntersectionObserver' in window) || (navigator.connection && navigator.connection.saveData)) return;
@@ -526,7 +529,7 @@
     }
     // the card art in an open entry opens the art viewer (instead of closing the entry)
     const zart = e.target.closest('.ct-row.expanded img.ct-card-art,.ct-row.expanded .ct-slab-art img');
-    if (zart && window.CTZoom) { e.stopPropagation(); window.CTZoom.open(zart.dataset.full || zart.src, zart); return; }
+    if (zart && window.CTZoom) { e.stopPropagation(); window.CTZoom.open(zart.classList.contains('ct-sealed') ? zart.src : (zart.dataset.full || zart.src), zart); return; }
     const tile = e.target.closest('[data-tile]'); if (tile) { openGP(tile.dataset.tile); return; }
     const tg = e.target.closest('.ct-row-toggle'); if (tg) toggle(tg.dataset.tx);
   });
