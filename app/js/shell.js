@@ -198,13 +198,15 @@
   let resume = null, hookFrame = null;
   window.CTPage = { move, place: placeAll, get cur() { return cur; }, get moving() { return !!moving; } };
 
-  // ---------- v52.59 swipe test: swipe right on the Board to go back to Entries, on Stories to go back to the Board ----------
-  // Off for everyone unless switched on for this device: open the app once with ?swipe=1 (and ?swipe=0 to switch it off).
+  // ---------- v52.59 swipe back: swipe right on the Board to go back to Entries, on Stories to go back to the Board ----------
+  // On in the Home Screen app (v52.61). In a browser only when switched on for this device: ?swipe=1 (?swipe=0 switches it off).
   // The page follows the finger with the one it's going back to beside it; let go past the middle or with a flick and it
   // finishes (the normal way back runs, so everything else works as before), otherwise it springs back.
   (() => {
     try { const q = new URLSearchParams(location.search).get('swipe'); if (q === '1') localStorage.setItem('ct.swipe', '1'); if (q === '0') localStorage.removeItem('ct.swipe'); } catch (e) {}
-    let on = false; try { on = localStorage.getItem('ct.swipe') === '1'; } catch (e) {}
+    // v52.61 on for everyone in the Home Screen app (browsers have their own swipe, so there it stays a test: ?swipe=1)
+    let app = false; try { app = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) {}
+    let on = app; try { on = on || localStorage.getItem('ct.swipe') === '1'; } catch (e) {}
     if (!on || !window.CTMotion) return;
     const M = window.CTMotion, H = document.documentElement;
     const NO = 'svg,canvas,input,textarea,select,button,a,[data-noswipe],.grip,.cb-menu,.sheetw,.pl,dialog';

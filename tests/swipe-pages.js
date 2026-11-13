@@ -31,4 +31,10 @@ const assert = require('assert');
   assert.equal(await cur(), 'board', 'a flick right on Stories goes back to the Board');
   // off unless switched on
   await p.goto('http://localhost:8765/index.html?swipe=0'); await p.waitForTimeout(1200); assert.equal(await p.evaluate(() => localStorage.getItem('ct.swipe')), null);
+  // the Home Screen app: on without the switch
+  await p.addInitScript(() => { Object.defineProperty(navigator, 'standalone', { get: () => true }); });
+  await p.goto('http://localhost:8765/index.html'); await p.waitForTimeout(1500);
+  await p.evaluate(() => CTTabGo('board')); await p.waitForTimeout(2500); pt = await spot();
+  await drag(Math.max(30, pt.x), pt.y, Math.max(30, pt.x) + 150, 40); await p.waitForTimeout(1000);
+  assert.equal(await cur(), 'entries', 'on in the Home Screen app');
   assert.deepEqual(errs, []); console.log('swipe test passed'); await b.close(); })().catch(e => { console.error(e.message); process.exit(1); });
