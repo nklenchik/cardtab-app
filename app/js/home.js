@@ -276,15 +276,17 @@
     ['app-avatar', 'am-av'].forEach(id => { const el = $(id); if (!el) return; if (a.photo) { el.style.background = 'url(' + a.photo + ') center/cover'; el.textContent = ''; el.classList.add('has-photo'); } else if (a.color) { el.classList.remove('has-photo'); el.style.background = a.color; el.style.color = inkFor(a.color); if (first) el.textContent = first[0].toUpperCase(); } });
     const nm = document.querySelector('#am-name .am-nm'); if (nm && name) nm.textContent = name;
   };
-  // v50.9: your name and picture follow your account to every device. A small copy of the picture (160px) is synced;
-  // the original you cropped from stays on the device where you picked it.
+  // v50.9: your name and picture follow your account to every device. A smaller copy of the picture is synced; the original
+  // you cropped from stays on the device where you picked it. v52.94: the synced copy is 512px WebP (about 15-35 KB), stepping
+  // down only if a photo is unusually busy, so it stays sharp in the big Edit profile circle on other devices too.
   window.CTMeSave = async function () {
     const S = window.CTStore; if (!S || !S.setMeta) return;
     let a = {}, pr = {}; try { a = JSON.parse(localStorage.getItem('cb.avatar')) || {}; pr = JSON.parse(localStorage.getItem('cb.profile')) || {}; } catch (e) {}
     let photo = '';
     if (a.photo) { try { const im = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = a.photo; });
-      for (const [sz, q] of [[160, .82], [128, .72], [96, .66]]) { const cv = document.createElement('canvas'); cv.width = cv.height = sz; cv.getContext('2d').drawImage(im, 0, 0, sz, sz); photo = cv.toDataURL('image/jpeg', q); if (photo.length < 20000) break; }
-      if (photo.length >= 20000) photo = ''; } catch (e) { photo = ''; } }
+      const MAXP = 72000;
+      for (const [sz, q] of [[512, .82], [384, .8], [320, .76], [256, .72]]) { const cv = document.createElement('canvas'); cv.width = cv.height = sz; const g = cv.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(im, 0, 0, sz, sz); photo = cv.toDataURL('image/webp', q); if (!photo.startsWith('data:image/webp')) photo = cv.toDataURL('image/jpeg', q); if (photo.length < MAXP) break; }
+      if (photo.length >= MAXP) photo = ''; } catch (e) { photo = ''; } }
     const t = Date.now(); try { localStorage.setItem('cb.me.t', String(t)); } catch (e) {}
     await S.setMeta('me', { first: pr.first || '', last: pr.last || '', show: pr.show || '', color: a.color || '', photo, t });
   };

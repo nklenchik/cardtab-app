@@ -965,8 +965,9 @@ av.addEventListener('click',e=>{if(e.target===av){av.close();return}const b=e.ta
   if(b.dataset.c){ad.color=b.dataset.c;buzz('tick');drawAv()}
   else if(b.dataset.sh){ad.show=b.dataset.sh;paintShow()}
   else if(b.id==='av-rm'){ad.img=null;ad.src=null;drawAv()}
-  else if(b.id==='av-save'){if(ad.img){const out=256,k=out/AVC,cv=document.createElement('canvas');cv.width=cv.height=out;const s=Math.max(AVC/ad.img.naturalWidth,AVC/ad.img.naturalHeight)*ad.z;
-      cv.getContext('2d').drawImage(ad.img,ad.x*k,ad.y*k,ad.img.naturalWidth*s*k,ad.img.naturalHeight*s*k);let url=cv.toDataURL('image/webp',.9);if(!url.startsWith('data:image/webp'))url=cv.toDataURL('image/jpeg',.9);
+  else if(b.id==='av-save'){if(ad.img){const out=512,k=out/AVC,cv=document.createElement('canvas');cv.width=cv.height=out;const s=Math.max(AVC/ad.img.naturalWidth,AVC/ad.img.naturalHeight)*ad.z;
+      /* v52.94: kept at 512px on this device (sharp in the big Edit profile circle on any phone); WebP where the browser can make it */
+      const g2=cv.getContext('2d');g2.imageSmoothingQuality='high';g2.drawImage(ad.img,ad.x*k,ad.y*k,ad.img.naturalWidth*s*k,ad.img.naturalHeight*s*k);let url=cv.toDataURL('image/webp',.86);if(!url.startsWith('data:image/webp'))url=cv.toDataURL('image/jpeg',.88);
       avatar={color:ad.color,photo:url,src:ad.src,x:ad.x,y:ad.y,z:ad.z}}else avatar={color:ad.color};
     try{localStorage.setItem('cb.avatar',JSON.stringify(avatar))}catch(e){try{localStorage.setItem('cb.avatar',JSON.stringify({color:avatar.color,photo:avatar.photo}))}catch(e2){}}
     profile={first:$('pf-first').value.trim()||profile.first,last:$('pf-last').value.trim(),show:ad.show};try{localStorage.setItem('cb.profile',JSON.stringify(profile))}catch(e){}
