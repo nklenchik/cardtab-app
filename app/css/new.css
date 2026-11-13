@@ -2579,3 +2579,26 @@ img.ct-card-art.ct-sealed{object-fit:contain!important;border-radius:0!important
 #as .kinds button[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:transparent}
 #as .slt{display:inline-block;margin-right:6px;padding:1px 7px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:.02em;color:var(--muted);background:color-mix(in srgb,var(--text) 8%,transparent);vertical-align:1px}
 #as .art.sl{background-size:contain!important;background-repeat:no-repeat!important;background-position:center!important;background-color:transparent!important;box-shadow:none!important;border-radius:0!important}
+/* v52.75 Add an item: "Did you mean" for platforms, and the Edit platforms panel (slides over the sheet) */
+#as .dym{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:0 2px 8px;font-size:13.5px;font-weight:600;color:var(--muted);flex:none}
+#as .dym button{border:0;border-radius:999px;padding:5px 12px;background:color-mix(in srgb,var(--brand) 11%,transparent);color:var(--brand-text,var(--brand));font:inherit;font-weight:800}
+#as .sheet{position:relative}
+#as .ep{position:absolute;inset:0;z-index:30;background:var(--bg,#f8f7f4);border-radius:inherit;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px));overflow-y:auto;overscroll-behavior:contain;opacity:0;transform:translateX(24px);pointer-events:none;transition:opacity .22s ease,transform .3s cubic-bezier(.2,.8,.2,1)}
+#as .ep.on{opacity:1;transform:none;pointer-events:auto}
+#as .eph{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#as .eph h3{margin:0;font-size:22px;font-weight:800;letter-spacing:-.01em}
+#as .epd{border:0;border-radius:999px;padding:8px 16px;background:var(--brand-fill,var(--brand));color:#fff;font:inherit;font-weight:800}
+#as .eps{margin:6px 0 4px;color:var(--muted);font-size:13.5px;font-weight:600}
+#as .epl{margin:16px 2px 6px;font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+#as .epg{background:var(--raised,#fff);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+#as .epr{display:flex;align-items:center;gap:6px;min-height:48px;padding:6px 10px 6px 16px;border-top:1px solid var(--line);font-weight:700;font-size:15px}
+#as .epr:first-child{border-top:0}
+#as .epr>span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#as .epr small{margin-left:8px;color:var(--muted);font-weight:600;font-size:12.5px}
+#as .epr button{border:0;background:none;border-radius:10px;padding:8px 9px;font:inherit;font-size:13.5px;font-weight:800;color:var(--brand-text,var(--brand))}
+#as .epr button.mut{color:var(--muted)}
+#as .epr button:active{background:color-mix(in srgb,var(--text) 6%,transparent)}
+#as .epr.edit input{flex:1;min-width:0;height:38px;border:1px solid var(--brand);border-radius:10px;padding:0 10px;font:inherit;font-size:15px;background:var(--surface,#fff);color:var(--text);outline:0}
+#as .epn{margin:0;padding:12px 4px;color:var(--muted);font-size:13.5px}
+@media(prefers-reduced-motion:reduce){#as .ep{transition:none}}
+#as .dym .q{margin-left:-4px}#as .dym small{flex-basis:100%;font-size:12.5px;font-weight:600;color:var(--muted)}

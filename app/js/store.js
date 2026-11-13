@@ -16,7 +16,7 @@
   const FREE_LIMIT = 20, WARN_AT = 17;
   const TYPES = ['purchase', 'sale', 'refund'];
   const SCHEMA = 1;
-  const DEFAULT_PLATFORMS = ['eBay', 'TCGplayer', 'Mercari', 'Whatnot', 'Card Show', 'Facebook Marketplace', 'Local game store', 'Other'];
+  const DEFAULT_PLATFORMS = ['eBay', 'TCGplayer', 'Mercari', 'Whatnot', 'Card Show', 'Facebook Marketplace', 'Local game store', 'Retail store', 'Other'];
 
   // ---------- small helpers ----------
   const pad = n => String(n).padStart(2, '0');
@@ -82,7 +82,7 @@
   // _d = changed here and not yet sent to the account (sync); copies that came from another device are saved without it
   async function putEntry(e, fromSync) { if (fromSync) delete e._d; else e._d = 1; entries.set(e.id, e); if (db) await reqP(db.transaction('entries', 'readwrite').objectStore('entries').put(e)); }
   async function dropEntry(id) { entries.delete(id); if (db) await reqP(db.transaction('entries', 'readwrite').objectStore('entries').delete(id)); }
-  const SYNC_META = ['budget', 'budgetFlags', 'customPlatforms', 'notif', 'storiesFree', 'startOn', 'addDefaults', 'games', 'sharing', 'boardSavesDesk', 'boardSavesPhone', 'storyFav', 'shareUsage', 'me', 'prefs'];   // settings that follow you to other devices
+  const SYNC_META = ['budget', 'budgetFlags', 'customPlatforms', 'hiddenPlatforms', 'notif', 'storiesFree', 'startOn', 'addDefaults', 'games', 'sharing', 'boardSavesDesk', 'boardSavesPhone', 'storyFav', 'shareUsage', 'me', 'prefs'];   // settings that follow you to other devices
   async function rawMeta(k, v) { meta[k] = v; if (db) await reqP(db.transaction('meta', 'readwrite').objectStore('meta').put({ k, v })); }
   async function putMeta(k, v, fromSync, t) {
     await rawMeta(k, v);
@@ -209,14 +209,40 @@
     async addPlatform(name) {
       const n = String(name || '').trim().slice(0, 40); if (!n) return null;
       const all = DEFAULT_PLATFORMS.concat(meta.customPlatforms || []);
-      const hit = all.find(p => p.toLowerCase() === n.toLowerCase()); if (hit) return hit;
-      await putMeta('customPlatforms', (meta.customPlatforms || []).concat([n])); changed('platforms'); return n;
+      const unhide = async x => { const h = meta.hiddenPlatforms || []; if (h.some(p => p.toLowerCase() === x.toLowerCase())) await putMeta('hiddenPlatforms', h.filter(p => p.toLowerCase() !== x.toLowerCase())); };
+      const hit = all.concat(this.platforms()).find(p => p.toLowerCase() === n.toLowerCase()); if (hit) { await unhide(hit); changed('platforms'); return hit; }
+      await unhide(n); await putMeta('customPlatforms', (meta.customPlatforms || []).concat([n])); changed('platforms'); return n;
     },
-    // Removing your own platform only takes it off the pickers; entries that already use it keep it
-    async removePlatform(name) { await putMeta('customPlatforms', (meta.customPlatforms || []).filter(p => p !== name)); changed('platforms'); },
+    // Removing a platform takes it off the pickers; entries that already use it keep it (so your history stays as it was)
+    async removePlatform(name) { const l = name.toLowerCase();
+      await putMeta('customPlatforms', (meta.customPlatforms || []).filter(p => p.toLowerCase() !== l));
+      if (this.platforms().some(p => p.toLowerCase() === l)) await putMeta('hiddenPlatforms', [...new Set((meta.hiddenPlatforms || []).concat([name]))]);
+      changed('platforms'); },
+    // v52.75 renaming one of your platforms renames it everywhere, past entries too. Renaming onto another platform merges them.
+    async renamePlatform(from, to) {
+      const n = String(to || '').trim().slice(0, 40), l = String(from || '').toLowerCase(); if (!n || !l || n === from) return n || null;
+      const known = DEFAULT_PLATFORMS.concat(meta.customPlatforms || [], this.platforms()).find(p => p.toLowerCase() === n.toLowerCase()), name = known || n;
+      const cp = (meta.customPlatforms || []).filter(p => p.toLowerCase() !== l && p.toLowerCase() !== name.toLowerCase());
+      if (!DEFAULT_PLATFORMS.some(p => p.toLowerCase() === name.toLowerCase())) cp.push(name);
+      await putMeta('customPlatforms', cp);
+      await putMeta('hiddenPlatforms', (meta.hiddenPlatforms || []).filter(p => p.toLowerCase() !== name.toLowerCase()));
+      const now = new Date().toISOString();
+      for (const e of entries.values()) if (!e.deleted && (e.platform || '').toLowerCase() === l) { const x = clone(e); x.platform = name; x.updatedAt = now; await putEntry(x); }
+      const df = meta.addDefaults; if (df && (df.plat || '').toLowerCase() === l) await putMeta('addDefaults', Object.assign({}, df, { plat: name }));
+      changed('update'); changed('platforms'); return name;
+    },
+    // Platforms that are yours (added by you, or used in your entries but not on the standard list), with how many entries use each
+    yourPlatforms() { const hid = new Set((meta.hiddenPlatforms || []).map(p => p.toLowerCase())), std = new Set(DEFAULT_PLATFORMS.map(p => p.toLowerCase())), cnt = new Map();
+      this.all().forEach(e => { if (e.platform) { const k = e.platform; cnt.set(k, (cnt.get(k) || 0) + 1); } });
+      return [...new Set((meta.customPlatforms || []).concat([...cnt.keys()]))].filter(p => !std.has(p.toLowerCase()) && !hid.has(p.toLowerCase())).map(p => ({ name: p, n: cnt.get(p) || 0 })); },
+    // "Did you mean": a platform you already have that's spelled almost the same (ignoring capitals, spaces and punctuation)
+    similarPlatform(name) { const k = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''), t = k(name); if (t.length < 3) return null;
+      const lev = (a, b) => { const d = Array.from({ length: b.length + 1 }, (_, i) => i); for (let i = 1; i <= a.length; i++) { let p = d[0]; d[0] = i; for (let j = 1; j <= b.length; j++) { const q = d[j]; d[j] = Math.min(d[j] + 1, d[j - 1] + 1, p + (a[i - 1] === b[j - 1] ? 0 : 1)); p = q; } } return d[b.length]; };
+      let best = null, bd = 9; this.pickerPlatforms().forEach(p => { const c = k(p); if (c === t) { best = p; bd = 0; return; } const d = lev(t, c), lim = Math.min(c.length, t.length) >= 6 ? 2 : 1; if (d <= lim && d < bd) { best = p; bd = d; } });
+      return bd > 0 ? best : null; },
     // Everything to offer when picking a platform: ones you use most, then your own, then the standard list
     // the pickers end with their own "Other…" (type a platform), so a plain "Other" isn't listed separately
-    pickerPlatforms() { return [...new Set(this.platforms().concat(meta.customPlatforms || [], DEFAULT_PLATFORMS))].filter(p => p.toLowerCase() !== 'other'); },
+    pickerPlatforms() { const hid = new Set((meta.hiddenPlatforms || []).map(p => p.toLowerCase())); return [...new Set(this.platforms().concat(meta.customPlatforms || [], DEFAULT_PLATFORMS))].filter(p => p.toLowerCase() !== 'other' && !hid.has(p.toLowerCase())); },
     DEFAULT_PLATFORMS,
 
     // ---------- import ----------

@@ -124,6 +124,7 @@
   const bd = document.createElement('div'); bd.className = 'as-bd'; bd.setAttribute('aria-hidden', 'true'); document.body.appendChild(bd);
   dlg.addEventListener('closing', () => { moving = true; clearTimeout(settle); bd.classList.remove('on'); });
   dlg.addEventListener('close', () => bd.classList.remove('on'));
+  dlg.addEventListener('close', () => { const ep = $('as-ep'); if (ep) ep.classList.remove('on'); dymHide && dymHide(); $('as-addplat').hidden = true; });
   dlg.addEventListener('close', () => { dlg.classList.remove('go'); moving = false; clearTimeout(settle); dlg.style.height = ''; dlg.style.top = ''; dlg.classList.remove('moving'); });
   if (vv) { vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
 
@@ -207,18 +208,46 @@
   // Platform picker, with "Other…" at the end to type your own. Your own platforms are saved in your account only.
   function fillPlatforms(pick) {
     const plats = S.pickerPlatforms(), sel = $('as-plat');
-    sel.innerHTML = plats.map(p => '<option>' + esc(p) + '</option>').join('') + '<option value="__add">Other…</option>';
+    sel.innerHTML = plats.map(p => '<option>' + esc(p) + '</option>').join('') + '<option value="__add">Other…</option><option value="__edit">Edit platforms…</option>';
     sel.value = pick && plats.includes(pick) ? pick : plats[0];
     sel.dataset.prev = sel.value; $('as-addplat').hidden = true;
   }
   $('as-plat').addEventListener('change', e => {
-    if (e.target.value === '__add') { e.target.value = e.target.dataset.prev || ''; $('as-addplat').hidden = false; $('as-newplat').value = ''; $('as-newplat').focus(); }
+    if (e.target.value === '__edit') { e.target.value = e.target.dataset.prev || ''; editPlats(); return; }
+    if (e.target.value === '__add') { e.target.value = e.target.dataset.prev || ''; $('as-addplat').hidden = false; $('as-newplat').value = ''; dymHide(); $('as-newplat').focus(); }
     else e.target.dataset.prev = e.target.value;
   });
-  async function savePlat() { const n = await S.addPlatform($('as-newplat').value); if (!n) { $('as-newplat').focus(); return; } fillPlatforms(n); mem.set(); (st.card ? price : inp).focus(); }
-  $('as-saveplat').addEventListener('click', savePlat);
-  $('as-newplat').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); savePlat(); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); $('as-addplat').hidden = true; } });
-  $('as-cancelplat').addEventListener('click', () => { $('as-addplat').hidden = true; });
+  // v52.75 "Did you mean Wegmans?": a new platform spelled almost like one you have offers that one first; Add again keeps yours
+  let dymFor = '';
+  const dymHide = () => { const d = $('as-dym'); if (d) d.hidden = true; dymFor = ''; };
+  async function savePlat(force) { const v = $('as-newplat').value.trim(); if (!v) { $('as-newplat').focus(); return; }
+    const near = force === true || dymFor === v ? null : S.similarPlatform(v);
+    if (near) { let d = $('as-dym'); if (!d) { d = document.createElement('div'); d.id = 'as-dym'; d.className = 'dym'; $('as-addplat').after(d);
+        d.addEventListener('click', e => { const b = e.target.closest('[data-dym]'); if (!b) return; $('as-newplat').value = b.dataset.dym; dymFor = ''; savePlat(true); }); }
+      d.innerHTML = '<span>Did you mean</span><button type="button" data-dym="' + esc(near) + '">' + esc(near) + '</button><span class="q">?</span><small>Or press Add again to keep “' + esc(v) + '”.</small>'; d.hidden = false; dymFor = v; $('as-newplat').focus(); return; }
+    dymHide(); const n = await S.addPlatform(v); if (!n) { $('as-newplat').focus(); return; } fillPlatforms(n); mem.set(); (st.card ? price : inp).focus(); }
+  $('as-newplat').addEventListener('input', () => { if (dymFor && $('as-newplat').value.trim() !== dymFor) dymHide(); });
+  // v52.75 Edit platforms: rename (past entries follow) or remove the platforms you added; the standard ones are listed below
+  function editPlats() {
+    let pn = $('as-ep'); if (!pn) { pn = document.createElement('div'); pn.id = 'as-ep'; pn.className = 'ep'; dlg.querySelector('.sheet').appendChild(pn);
+      pn.addEventListener('click', async e => {
+        const b = e.target.closest('button'); if (!b) return; const row = b.closest('[data-p]'), name = row && row.dataset.p;
+        if (b.dataset.a === 'done') { pn.classList.remove('on'); fillPlatforms($('as-plat').value); return; }
+        if (b.dataset.a === 'rm') { await S.removePlatform(name); paintEp(); return; }
+        if (b.dataset.a === 'rn') { row.classList.add('edit'); row.innerHTML = '<input type="text" maxlength="40" value="' + esc(name) + '" aria-label="New name for ' + esc(name) + '" enterkeyhint="done"><button type="button" data-a="ok">Save</button><button type="button" data-a="x" class="mut">Cancel</button>'; const i = row.querySelector('input'); i.focus(); i.select(); return; }
+        if (b.dataset.a === 'x') { paintEp(); return; }
+        if (b.dataset.a === 'ok') { const v = row.querySelector('input').value.trim(); if (v && v !== name) { const cur = $('as-plat').value; const nn = await S.renamePlatform(name, v); if (cur === name) $('as-plat').dataset.prev = nn; } paintEp(); }
+      });
+      pn.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('input')) { e.preventDefault(); const ok = e.target.parentElement.querySelector('[data-a="ok"]'); ok && ok.click(); } else if (e.key === 'Escape' && e.target.matches('input')) { e.preventDefault(); e.stopPropagation(); paintEp(); } }); }
+    paintEp(); requestAnimationFrame(() => pn.classList.add('on'));
+  }
+  function paintEp() { const pn = $('as-ep'); if (!pn) return; const mine = S.yourPlatforms(), std = S.DEFAULT_PLATFORMS.filter(p => p !== 'Other');
+    pn.innerHTML = '<div class="eph"><h3>Edit platforms</h3><button type="button" data-a="done" class="epd">Done</button></div><p class="eps">Renaming updates your past entries too.</p>' +
+      '<div class="epl">Added by you</div>' + (mine.length ? '<div class="epg">' + mine.map(x => '<div class="epr" data-p="' + esc(x.name) + '"><span>' + esc(x.name) + (x.n ? '<small>' + x.n + (x.n === 1 ? ' entry' : ' entries') + '</small>' : '') + '</span><button type="button" data-a="rn">Rename</button><button type="button" data-a="rm" class="mut">Remove</button></div>').join('') + '</div>' : '<p class="epn">None yet. Pick “Other…” to add your own, like a local shop.</p>') +
+      '<div class="epl">Built in</div><div class="epg">' + std.map(p => '<div class="epr"><span>' + esc(p) + '</span></div>').join('') + '</div>'; }
+  $('as-saveplat').addEventListener('click', () => savePlat());
+  $('as-newplat').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); savePlat(); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); $('as-addplat').hidden = true; dymHide(); } });
+  $('as-cancelplat').addEventListener('click', () => { $('as-addplat').hidden = true; dymHide(); });
 
   // The visible height with the keyboard up, remembered per screen height, so the next open starts at the right size
   function kbMem() { try { const m = JSON.parse(localStorage.getItem('ct.kbh') || 'null'); return m && m.ih === innerHeight ? m.h : 0; } catch (e) { return 0; } }
