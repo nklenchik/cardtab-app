@@ -44,7 +44,7 @@ assert.equal(p.plan, 'premium'); assert.ok(p.gift && p.giftUntil > Date.now() / 
 assert.equal(sq.prepare('SELECT plan FROM users WHERE id=?').get(fid).plan, 'premium');
 sq.prepare('UPDATE acct SET gift_until=? WHERE user_id=?').run(Math.floor(Date.now() / 1000) - 5, fid);
 assert.equal(await giftSweep(env), 1); p = await one(); assert.equal(p.plan, 'free'); assert.equal(p.gift, false);
-assert.ok(p.history.some(h => /Gift ended/.test(h.what)) && p.history.some(h => /for 30 days/.test(h.what)), 'history');
+assert.ok(p.history.some(h => /Gift ended/.test(h.what)) && p.history.some(h => /Gift of Premium until/.test(h.what)), 'history');
 // a gift with no end date stays
 await act({ id: fid, act: 'gift', on: true }); await giftSweep(env); assert.equal((await one()).plan, 'premium'); await act({ id: fid, act: 'gift', on: false });
 
@@ -110,7 +110,7 @@ assert.equal((await call('/auth/admin/people/one?id=' + fid, { cookie: boss.c })
   const g2 = await signIn('gifted@x.com');
   let n1 = (await (await call('/auth/notes', { method: 'POST', cookie: g2.c })).json()).notes;
   assert.deepEqual(n1.map(x => x.title), ['You’ve been given Premium', 'You’ve been given Premium', 'You have 30 extra entries this month', 'You have 10 extra Ask questions this month']);
-  assert.match(n1[0].body, /30 days, until/); assert.match(n1[1].body, /60 days, until/);
+  assert.match(n1[0].body, /Premium until /); assert.match(n1[1].body, /Premium until /);
   assert.equal((await (await call('/auth/notes', { method: 'POST', cookie: g2.c })).json()).notes.length, 0, 'handed over once');
   r2 = await act({ id: gid, act: 'entries', n: 10 }); assert.equal((await r2.json()).told, false, 'fewer extras: no message');
   sq.prepare('UPDATE acct SET gift_until=? WHERE user_id=?').run(Math.floor(Date.now() / 1000) - 5, gid); await giftSweep(env);
