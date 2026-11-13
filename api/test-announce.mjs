@@ -48,4 +48,21 @@ n = await notes(late.c); assert.equal(n.news.filter(x => x.id === id2).length, 0
 // deleting an account removes what it had seen
 { const { wipeAccount } = await import('./src/people.js'); const u = sq.prepare("SELECT id FROM users WHERE email='fan@x.com'").get();
   await wipeAccount(env, u.id, 'fan@x.com'); assert.equal(sq.prepare("SELECT COUNT(*) n FROM announce_seen WHERE uid=?").get(u.id).n, 0); }
+// drafts written with a feature: a draft and a Waiting on you alert, never sent by themselves
+{ const { seedDrafts } = await import('./src/announce.js'); const { openAlerts } = await import('./src/alerts.js');
+  const L = [{ key: 'test-draft-1', title: 'Big new thing', body: 'Try it.', go: 'board', aud: 'all' }, { key: 'test-draft-2', title: 'Other thing' }];
+  await seedDrafts(env, L); await seedDrafts(env, L);
+  let j = await (await call('/auth/admin/announce', { cookie: boss.c })).json();
+  assert.equal(j.drafts.length, 2, 'seeded once'); assert.ok(!j.items.some(x => x.title === 'Big new thing'), 'drafts are not in Sent');
+  let al = await openAlerts(env); assert.equal(al.filter(a => /^ann-draft:/.test(a.key)).length, 2); assert.equal(al.find(a => a.key === 'ann-draft:test-draft-1').grp, 'you');
+  const late2 = await signIn('late2@x.com'); sq.prepare("UPDATE users SET created_at=0").run();
+  let nn = await notes(late2.c); assert.ok(!nn.news.some(x => x.title === 'Big new thing'), 'a draft never reaches people');
+  // send the first (edited), discard the second
+  const d1 = j.drafts.find(x => x.title === 'Big new thing'), d2 = j.drafts.find(x => x.title === 'Other thing');
+  let r2 = await call('/auth/admin/announce', { method: 'POST', body: { draftId: d1.id, title: 'Big new thing, fixed', body: 'Try it.', go: 'board', aud: 'all' }, cookie: boss.c }); assert.equal(r2.status, 200);
+  assert.equal((await call('/auth/admin/announce', { method: 'POST', body: { draftId: d1.id, title: 'again' }, cookie: boss.c })).status, 409, 'a draft sends once');
+  await call('/auth/admin/announce/discard', { method: 'POST', body: { id: d2.id }, cookie: boss.c });
+  nn = await notes(late2.c); assert.ok(nn.news.some(x => x.title === 'Big new thing, fixed'), 'sent draft reaches people');
+  al = await openAlerts(env); assert.equal(al.filter(a => /^ann-draft:/.test(a.key)).length, 0, 'alerts closed');
+  await seedDrafts(env, L); j = await (await call('/auth/admin/announce', { cookie: boss.c })).json(); assert.equal(j.drafts.length, 0, 'sent and discarded drafts never come back'); }
 console.log('announce: all good');

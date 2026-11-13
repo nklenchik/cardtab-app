@@ -101,6 +101,7 @@ CREATE TABLE IF NOT EXISTS email_log ( id TEXT PRIMARY KEY, uid TEXT NOT NULL, f
 CREATE INDEX IF NOT EXISTS email_log_uid ON email_log (uid, sent_at);
 CREATE INDEX IF NOT EXISTS email_log_sent ON email_log (sent_at);
 -- v52.87 What's new announcements from the admin dashboard, and who has had each one
-CREATE TABLE IF NOT EXISTS announce ( id TEXT PRIMARY KEY, at INTEGER NOT NULL, title TEXT NOT NULL, body TEXT, go TEXT, aud TEXT NOT NULL DEFAULT 'all', stopped INTEGER NOT NULL DEFAULT 0, edited INTEGER );
+CREATE TABLE IF NOT EXISTS announce ( id TEXT PRIMARY KEY, at INTEGER NOT NULL, title TEXT NOT NULL, body TEXT, go TEXT, aud TEXT NOT NULL DEFAULT 'all', stopped INTEGER NOT NULL DEFAULT 0, edited INTEGER, draft INTEGER NOT NULL DEFAULT 0, dkey TEXT );
+CREATE UNIQUE INDEX IF NOT EXISTS announce_dkey ON announce (dkey);
 CREATE TABLE IF NOT EXISTS announce_seen ( uid TEXT NOT NULL, aid TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (uid, aid) );
 CREATE INDEX IF NOT EXISTS announce_seen_aid ON announce_seen (aid);

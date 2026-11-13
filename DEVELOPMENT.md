@@ -675,3 +675,11 @@ Only once the NY sales tax Certificate of Authority has arrived.
 - People → open an account → "Or until": pick a date and tap Gift. Premium runs through the end of that day (Eastern time) and the account returns to Free by itself (the daily sweep). The 7 days / 30 days / 1 year / No end date buttons still work.
 - The API accepts `until: "YYYY-MM-DD"` on the gift action (must be a real, future date within 10 years); handles daylight saving. The gift email and in-app notice say "until Jan 31, 2027".
 - The last date used is remembered in the browser for gifting the next tester the same day.
+
+## Standing rules for shipping (added 2026-11-13)
+- What's new announcements: when a feature worth announcing ships (Nick's call: features people can act on, not fixes),
+  add a suggested announcement to `api/src/announce-drafts.js` in the same change (unique `key`, title ≤70, body ≤200,
+  `go`, `aud`). It becomes a draft in the admin dashboard's Announce page with a "Waiting on you" alert; Nick reviews
+  and sends. Never send announcements directly. Tell Nick in chat when a draft was added. Keys are never reused.
+- Board files: when anything in `app/board/` changes, bump `const V` in `js/board-loader.js` AND the
+  `board-loader.js?v=` tag in `app/index.html` (otherwise browsers keep the old loader).
