@@ -97,4 +97,15 @@ assert.equal((await dripRun({ ...env, DRIP: 'off' }, NOW, { force: true })).off,
 // deleting the account removes its emails
 const two = await signIn('two@x.com'); await call('/auth/delete', { method: 'POST', body: {}, cookie: two });
 assert.equal(sq.prepare('SELECT COUNT(*) n FROM email_log WHERE uid NOT IN (SELECT id FROM users)').get().n, 0);
+// v52.62 an older device syncing Notifications after a "Stop these emails" tap can't switch emails back on
+{ const off = await signIn('stale@x.com'); ago('stale@x.com', 2); mails.length = 0; await dripRun(env, NOW, { force: true, pace: false });
+  const sid = /e\/u\/([0-9a-f]{32})/.exec(mails.find(m => m.to === 'stale@x.com').html)[1]; await call('/e/u/' + sid);
+  // the old device pushes its settings (emails on, written later than the tap)
+  const later = new Date(Date.now() + 60e3).toISOString();
+  const r = await (await call('/auth/sync', { method: 'POST', body: { since: 0, entries: [], meta: { notif: { v: { prefs: { emailOff: false } }, t: later } } }, cookie: off })).json();
+  assert.equal(r.meta.notif.v.prefs.emailOff, true, 'kept off, and the device gets the corrected copy');
+  ago('stale@x.com', 7); mails.length = 0; await dripRun(env, NOW + 86400e3 * 6, { force: true, pace: false }); assert.ok(!mails.some(m => m.to === 'stale@x.com'), 'no day 7');
+  // turning them back on in the app (emailOnAt after the tap) does turn them on
+  const r2 = await (await call('/auth/sync', { method: 'POST', body: { since: 0, entries: [], meta: { notif: { v: { prefs: { emailOff: false, emailOnAt: Math.floor(Date.now() / 1000) + 120 } }, t: new Date(Date.now() + 120e3).toISOString() } } }, cookie: off })).json();
+  assert.equal(r2.meta.notif.v.prefs.emailOff, false, 'turned back on by the person'); }
 console.log('drip tests passed');

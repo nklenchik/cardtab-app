@@ -180,7 +180,7 @@
     if (e.target.closest('.ntf-back')) { view = 'list'; paint(); return; }
     const rmp = e.target.closest('[data-rmp]'); if (rmp) { await S.removePlatform(rmp.dataset.rmp); paint(); return; }
     const t = e.target.closest('[data-pref]');
-    if (t && !t.disabled) { let k = t.dataset.pref, v = t.getAttribute('aria-checked') !== 'true'; if (k === 'emailOn') { k = 'emailOff'; v = !v; } /* v52.51: shown as on = get emails, saved as emailOff */ window.ctBuzz && window.ctBuzz(); await save(s => { s.prefs = Object.assign({}, DEF, s.prefs, { [k]: v }); }); paint(); return; }
+    if (t && !t.disabled) { let k = t.dataset.pref, v = t.getAttribute('aria-checked') !== 'true'; if (k === 'emailOn') { k = 'emailOff'; v = !v; } /* v52.51: shown as on = get emails, saved as emailOff */ window.ctBuzz && window.ctBuzz(); await save(s => { s.prefs = Object.assign({}, DEF, s.prefs, { [k]: v }, k === 'emailOff' && !v ? { emailOnAt: Math.floor(Date.now() / 1000) } : {}); }); paint(); return; }   // v52.62 emailOnAt: when you turned emails back on yourself
     const b = e.target.closest('[data-act]'); if (!b) return;
     const id = b.dataset.id, act = b.dataset.act, it = all().find(x => x.id === id);
     if (act === 'adone') { const el = b.closest('.ntf-it'); admGone.add(id); el.style.transition = 'transform .28s cubic-bezier(.4,0,.2,1), opacity .22s ease'; el.style.transform = 'translateX(110%)'; el.style.opacity = '0';

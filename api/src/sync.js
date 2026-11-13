@@ -35,11 +35,17 @@ export async function handleSync(env, req, me, out) {
   // synced settings
   for (const k of META_KEYS) {
     const m = inM[k]; if (!m || typeof m.t !== 'string') continue;
-    const v = JSON.stringify(m.v === undefined ? null : m.v); if (v.length > MAX_ENTRY) continue;
+    let v = JSON.stringify(m.v === undefined ? null : m.v), at = m.t; if (v.length > MAX_ENTRY) continue;
+    // v52.62 Notifications from a device that hasn't heard about a "Stop these emails" tap: keep emails off (unless this
+    // device turned them back on after the tap), so the switch can't flip back on its own
+    if (k === 'notif' && m.v && typeof m.v === 'object') { try {
+      const p = m.v.prefs || {}; if (!p.emailOff) { const u = await env.DB.prepare('SELECT MAX(unsub_at) t FROM email_log WHERE uid=?').bind(me.id).first();
+        if (u && u.t && !((+p.emailOnAt || 0) > u.t)) { v = JSON.stringify(Object.assign({}, m.v, { prefs: Object.assign({}, p, { emailOff: true }) })); at = new Date(Date.parse(m.t) + 1).toISOString(); } }   // a hair newer, so the device takes the corrected copy
+    } catch (e) { /* no emails sent yet */ } }
     const cur = await env.DB.prepare('SELECT updated_at FROM user_meta WHERE user_id=? AND k=?').bind(me.id, k).first();
     if (cur && cur.updated_at >= m.t) continue;
     seq++;
-    writes.push(env.DB.prepare('INSERT INTO user_meta (user_id,k,v,updated_at,seq) VALUES (?,?,?,?,?) ON CONFLICT(user_id,k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at, seq=excluded.seq').bind(me.id, k, v, m.t, seq));
+    writes.push(env.DB.prepare('INSERT INTO user_meta (user_id,k,v,updated_at,seq) VALUES (?,?,?,?,?) ON CONFLICT(user_id,k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at, seq=excluded.seq').bind(me.id, k, v, at, seq));
   }
   if (writes.length) {
     writes.push(env.DB.prepare('INSERT INTO sync_state (user_id,seq) VALUES (?,?) ON CONFLICT(user_id) DO UPDATE SET seq=excluded.seq').bind(me.id, seq));

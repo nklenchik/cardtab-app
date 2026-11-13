@@ -51,10 +51,12 @@ export function dueStep(created, t, tz, sent) {
 }
 
 // switched off: Notifications → Email in the app, or a "Stop these emails" link newer than that setting
+// v52.62 a "Stop these emails" tap wins unless the person turned emails back on in the app after it (emailOnAt, set only by
+// that switch). Another device syncing older settings can't switch them back on.
 export function emailsOff(notif, lastUnsub) {
   const v = notif && notif.v, p = v && v.prefs || {};
   if (p.emailOff === true) return true;
-  return !!(lastUnsub && (!notif || !notif.t || lastUnsub * 1000 > Date.parse(notif.t)));
+  return !!(lastUnsub && !((+p.emailOnAt || 0) > lastUnsub));
 }
 
 // the day-7 tip: the first that fits what they've done
