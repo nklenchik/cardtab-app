@@ -2272,3 +2272,5 @@ dialog.sheet.closing::backdrop,dialog.drawer.closing::backdrop{animation:bdOut .
  .cbx #cb .eM .xs>div{display:flex;align-items:baseline;gap:10px;min-width:0;flex:1}
  .cbx #cb .eM .xs>div .cq{flex:0 0 54%;min-width:0}.cbx #cb .eM .xs>div .nm{flex:1;min-width:0}}
 .cbx #cb .eM .fill>.cv{min-height:0}   /* a phone's Wide row is shorter than the usual chart minimum: the chart draws to fit it */
+html.pg-moving .cbxbg{visibility:hidden!important}   /* v52.60 the board's full-screen backdrop stays out of page slides (it covered Entries, which slid in blank and then popped in) */
+html.pg-moving .cbx{box-shadow:none!important}   /* v52.60 its cover-the-page edge (above) stays out of page slides: it painted over Entries as it slid in */
