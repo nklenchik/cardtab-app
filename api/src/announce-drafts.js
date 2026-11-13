@@ -5,4 +5,5 @@
    { key: unique and never reused, title: up to 70 characters, body: up to 200, go: '' | add | board | stories | budget | premium | ask,
      aud: all | free | premium } */
 export const DRAFTS = [
+  { key: 'sealed-board-stories-2026-11', title: 'Sealed products now show on your Board and Stories', body: 'Booster boxes, ETBs and packs you track now appear in Board widgets and Stories as clean cut-outs, so a big sealed purchase and sale gets its moment too.', go: 'board', aud: 'all' },
 ];
