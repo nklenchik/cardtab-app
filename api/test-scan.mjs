@@ -123,4 +123,16 @@ assert.equal(d2.items[1].learned, 'Pikachu - 4/53 - Promo'); assert.equal(d2.ite
 const { scanStats } = await import('./src/scan.js');
 const today = new Date().toISOString().slice(0, 10), stt = await scanStats(env, today, today);
 assert.ok(stt.scans >= 3 && stt.tin > 0); assert.ok(stt.fixes.some(f => f.f === 'Pikachu - 4/53 - Promo')); assert.equal(stt.learned, 1);
+// v53.03 Use your phone: a code for the same account only, then the phone's cards show on the computer
+const P = (cookie, pair) => call('/auth/scan', { method: 'POST', cookie, body: { pair } });
+r = await P(fan, { op: 'new' }); const pc = (await r.json()).code; assert.ok(/^[A-Za-z0-9_-]{20,}$/.test(pc));
+assert.equal((await (await P(fan, { op: 'poll', code: pc })).json()).joined, false);
+r = await P(pro, { op: 'join', code: pc }); assert.equal(r.status, 403); assert.equal((await r.json()).error, 'other');   // another account
+assert.equal((await P(fan, { op: 'join', code: 'nope-nope-nope-nope-nope' })).status, 410);
+assert.equal((await P(fan, { op: 'join', code: pc })).status, 200);
+await P(fan, { op: 'added', code: pc, items: [{ id: 'e1', name: 'Pikachu', meta: 'Base Set · No. 58/102 · Purchase', amt: '$3.00', art: 'javascript:alert(1)' }, { id: 'e2', name: 'Raichu', meta: '', amt: '$9.00', art: 'https://art.cardtab.app/x.webp' }] });
+j = await (await P(fan, { op: 'poll', code: pc })).json(); assert.equal(j.joined, true); assert.equal(j.items.length, 2); assert.equal(j.items[0].art, ''); assert.equal(j.items[1].art, 'https://art.cardtab.app/x.webp');
+await P(fan, { op: 'removed', code: pc, ids: ['e1'] }); j = await (await P(fan, { op: 'poll', code: pc })).json(); assert.deepEqual(j.items.map(x => x.id), ['e2']);
+assert.equal((await P(pro, { op: 'poll', code: pc })).status, 403);
+await P(fan, { op: 'end', code: pc }); assert.equal((await P(fan, { op: 'poll', code: pc })).status, 410);
 console.log('scan tests ok');

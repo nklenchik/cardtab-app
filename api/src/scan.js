@@ -9,7 +9,10 @@
    - Photos are sent to Anthropic and nowhere else and are never kept. What is kept, to learn from: what was read on each
      photo (card names, numbers, sets, how sure), how the person fixed the list, the time taken and the tokens used (v52.99).
    - POST /auth/scan {images, stream:true} streams one JSON line per card as it's read, then a done line (v52.99).
-   - POST /auth/scan {feedback:{scan, added, rows:[{i, outcome, auto, final}]}} records how the list was used. */
+   - POST /auth/scan {feedback:{scan, added, rows:[{i, outcome, auto, final}]}} records how the list was used.
+   - POST /auth/scan {pair:{op, code}} (v53.03) Use your phone: the computer gets a short-lived code for a QR code, the phone
+     (signed in to the SAME account) joins it, and the cards the phone adds are listed on the computer. A code never signs
+     anyone in: both sides need their own session. new -> {code, exp}; join; added {items}; removed {ids}; poll -> {joined, items}; end. */
 import { claudeCall, claudeStream, addSpend, askLimits, ASK_MODEL, ASK_PRICE } from './ask.js';
 import { acctOf, ownLimit } from './people.js';
 const n = (v, d) => { const x = Number(v); return Number.isFinite(x) && x >= 0 && v !== '' && v != null ? x : d; };
@@ -77,7 +80,8 @@ const DDL = [
   'CREATE TABLE IF NOT EXISTS scan_usage ( user_id TEXT NOT NULL, month TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (user_id, month) )',
   'CREATE TABLE IF NOT EXISTS scan_log ( id INTEGER PRIMARY KEY AUTOINCREMENT, at INTEGER NOT NULL, user_id TEXT NOT NULL, month TEXT NOT NULL, photos INTEGER NOT NULL, items INTEGER NOT NULL, tin INTEGER NOT NULL, tout INTEGER NOT NULL, ms INTEGER NOT NULL, issues TEXT, model TEXT, added INTEGER, done INTEGER NOT NULL DEFAULT 0 )',
   'CREATE TABLE IF NOT EXISTS scan_item ( scan_id INTEGER NOT NULL, idx INTEGER NOT NULL, read_name TEXT, read_number TEXT, read_set TEXT, kind TEXT, sure REAL, learned TEXT, outcome TEXT, auto INTEGER, final TEXT, PRIMARY KEY (scan_id, idx) )',
-  'CREATE TABLE IF NOT EXISTS scan_learn ( k TEXT NOT NULL, final TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, at INTEGER NOT NULL, PRIMARY KEY (k, final) )'
+  'CREATE TABLE IF NOT EXISTS scan_learn ( k TEXT NOT NULL, final TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, at INTEGER NOT NULL, PRIMARY KEY (k, final) )',
+  'CREATE TABLE IF NOT EXISTS scan_pair ( id TEXT PRIMARY KEY, user_id TEXT NOT NULL, created INTEGER NOT NULL, exp INTEGER NOT NULL, joined INTEGER, items TEXT )'
 ];
 let ready = false;
 async function ensure(env) { if (ready) return; for (const s of DDL) await env.DB.prepare(s).run(); ready = true; }
@@ -133,13 +137,14 @@ async function hints(env, items) {
 }
 
 export async function handleScan(env, req, me, out, raw) {
+  let b; try { b = await req.json(); } catch (e) { b = {}; }
+  if (b && b.pair) { await ensure(env); return pair(env, me, b.pair, out); }
   const key = String(env.ANTHROPIC_API_KEY || '').trim();
   if (!key) return out({ error: 'setup' }, 503);
   const L = scanLimits(env), m = month(), plan = me.plan === 'premium' ? 'premium' : 'free', limit = ownLimit(await acctOf(env, me.id), plan, 'scan_limit') || L[plan], admin = me.role === 'admin';
   await ensure(env);
   const used = (await env.DB.prepare('SELECT n FROM scan_usage WHERE user_id=? AND month=?').bind(me.id, m).first() || {}).n || 0;
   const info = { limit, left: Math.max(0, limit - used), resets: resets(), plan };
-  let b; try { b = await req.json(); } catch (e) { b = {}; }
   if (b.check) return out(info);
   if (b.feedback) return feedback(env, me, b.feedback, out);
   const imgs = (Array.isArray(b.images) ? b.images : []).filter(s => typeof s === 'string').slice(0, MAX_PHOTOS + 1);
@@ -207,6 +212,44 @@ export async function handleScan(env, req, me, out, raw) {
 
 // how the person used the list: kept a match, changed it, removed it, typed it themselves; and whether they added the lot
 const OUTCOMES = ['kept', 'changed', 'removed', 'typed', 'unmatched'];
+// ---------- v53.03 Use your phone ----------
+const PAIR_WAIT = 600, PAIR_OPEN = 3600, PAIR_ITEMS = 200;   // a code works 10 minutes until the phone joins, then an hour
+const cut = (s, n) => String(s == null ? '' : s).replace(/[\u0000-\u001f]/g, ' ').slice(0, n);
+async function pair(env, me, p, out) {
+  const t = Math.floor(Date.now() / 1000), op = String(p.op || '');
+  if (op === 'new') {
+    await env.DB.prepare('DELETE FROM scan_pair WHERE exp < ?').bind(t - 86400).run();
+    const live = (await env.DB.prepare('SELECT COUNT(*) n FROM scan_pair WHERE user_id=? AND exp>?').bind(me.id, t).first() || {}).n || 0;
+    if (live >= 6) await env.DB.prepare('DELETE FROM scan_pair WHERE id IN (SELECT id FROM scan_pair WHERE user_id=? ORDER BY created LIMIT 3)').bind(me.id).run();
+    const raw = crypto.getRandomValues(new Uint8Array(18)), code = btoa(String.fromCharCode(...raw)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    await env.DB.prepare('INSERT INTO scan_pair (id,user_id,created,exp,joined,items) VALUES (?,?,?,?,NULL,?)').bind(code, me.id, t, t + PAIR_WAIT, '[]').run();
+    return out({ code, exp: t + PAIR_WAIT });
+  }
+  const code = cut(p.code, 64);
+  const row = /^[A-Za-z0-9_-]{16,64}$/.test(code) ? await env.DB.prepare('SELECT * FROM scan_pair WHERE id=?').bind(code).first() : null;
+  if (!row || row.exp < t) return out({ error: 'expired' }, 410);
+  if (row.user_id !== me.id) return out({ error: 'other' }, 403);   // the phone is signed in to a different account
+  let items = []; try { items = JSON.parse(row.items || '[]') || []; } catch (e) {}
+  if (op === 'join') {
+    await env.DB.prepare('UPDATE scan_pair SET joined=?, exp=? WHERE id=?').bind(t, Math.max(row.exp, t + PAIR_OPEN), code).run();
+    return out({ ok: true });
+  }
+  if (op === 'poll') return out({ joined: !!row.joined, items, exp: row.exp });
+  if (op === 'end') { await env.DB.prepare('DELETE FROM scan_pair WHERE id=?').bind(code).run(); return out({ ok: true }); }
+  if (op === 'added' || op === 'removed') {
+    if (op === 'added') {
+      const add = (Array.isArray(p.items) ? p.items : []).slice(0, 40).map(x => ({ id: cut(x && x.id, 80), name: cut(x && x.name, 140), meta: cut(x && x.meta, 180), amt: cut(x && x.amt, 24), art: /^(https:\/\/|\/)[^\s"'<>]{1,400}$/.test(String(x && x.art || '')) ? String(x.art) : '' })).filter(x => x.name);
+      items = items.concat(add).slice(-PAIR_ITEMS);
+    } else {
+      const gone = new Set((Array.isArray(p.ids) ? p.ids : []).map(x => cut(x, 80)));
+      items = items.filter(x => !gone.has(x.id));
+    }
+    await env.DB.prepare('UPDATE scan_pair SET items=? WHERE id=?').bind(JSON.stringify(items), code).run();
+    return out({ ok: true, n: items.length });
+  }
+  return out({ error: 'bad' }, 400);
+}
+
 async function feedback(env, me, f, out) {
   const sid = Math.round(Number(f && f.scan)); if (!sid) return out({ ok: false }, 400);
   const lg = await env.DB.prepare('SELECT id, done FROM scan_log WHERE id=? AND user_id=?').bind(sid, me.id).first();

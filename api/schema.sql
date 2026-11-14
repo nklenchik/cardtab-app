@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS scan_usage ( user_id TEXT NOT NULL, month TEXT NOT NU
 -- v52.99 learning from photo scans (no photos are kept): each scan, each item read and how it was fixed, and fixes that repeat
 CREATE TABLE IF NOT EXISTS scan_log ( id INTEGER PRIMARY KEY AUTOINCREMENT, at INTEGER NOT NULL, user_id TEXT NOT NULL, month TEXT NOT NULL, photos INTEGER NOT NULL, items INTEGER NOT NULL, tin INTEGER NOT NULL, tout INTEGER NOT NULL, ms INTEGER NOT NULL, issues TEXT, model TEXT, added INTEGER, done INTEGER NOT NULL DEFAULT 0 );
 CREATE TABLE IF NOT EXISTS scan_item ( scan_id INTEGER NOT NULL, idx INTEGER NOT NULL, read_name TEXT, read_number TEXT, read_set TEXT, kind TEXT, sure REAL, learned TEXT, outcome TEXT, auto INTEGER, final TEXT, PRIMARY KEY (scan_id, idx) );
+CREATE TABLE IF NOT EXISTS scan_pair ( id TEXT PRIMARY KEY, user_id TEXT NOT NULL, created INTEGER NOT NULL, exp INTEGER NOT NULL, joined INTEGER, items TEXT );
 CREATE TABLE IF NOT EXISTS scan_learn ( k TEXT NOT NULL, final TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, at INTEGER NOT NULL, PRIMARY KEY (k, final) );
 CREATE TABLE IF NOT EXISTS ask_spend ( month TEXT PRIMARY KEY, tin INTEGER NOT NULL DEFAULT 0, tout INTEGER NOT NULL DEFAULT 0, n INTEGER NOT NULL DEFAULT 0 );
 
