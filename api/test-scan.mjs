@@ -40,6 +40,8 @@ globalThis.fetch = async (url, init) => {
   assert.equal(url, 'https://api.anthropic.com/v1/messages'); assert.equal(init.headers.authorization, 'Bearer test-key');
   const body = JSON.parse(init.body); sent.push(body);
   if (mode === 'down') return new Response('{}', { status: 529 });
+  if (mode === 'unread') return Response.json({ stop_reason: 'tool_use', usage: { input_tokens: 1000, output_tokens: 40 }, content: [{ type: 'tool_use', id: 'tu2', name: 'cards', input: { items: [], photos: [{ photo: 1, readable: false, problem: 'glare' }] } }] });
+  if (mode === 'partial') return Response.json({ stop_reason: 'tool_use', usage: { input_tokens: 1000, output_tokens: 40 }, content: [{ type: 'tool_use', id: 'tu3', name: 'cards', input: { items: [{ photo: 2, kind: 'card', name: 'Pikachu', number: '58/102' }], photos: [{ photo: 1, readable: false, problem: 'blurry' }, { photo: 2, readable: true, problem: 'far' }] } }] });
   assert.equal(body.model, 'claude-haiku-5-5'); assert.deepEqual(body.tool_choice, { type: 'tool', name: 'cards' });
   const imgs = body.messages[0].content.filter(c => c.type === 'image');
   assert.ok(imgs.length >= 1); assert.equal(imgs[0].source.media_type, 'image/jpeg');
@@ -75,4 +77,10 @@ assert.equal(r.status, 502); assert.equal(j.error, 'busy');
 assert.equal((sq.prepare("SELECT n FROM scan_usage WHERE user_id=(SELECT id FROM users WHERE email='boss@x.com')").get() || { n: 0 }).n, 0);
 // admins aren't limited
 mode = 'ok'; for (let i = 0; i < 5; i++) { r = await call('/auth/scan', { method: 'POST', cookie: boss, body: { images: [IMG] } }); assert.equal(r.status, 200); }
+// v52.98: a photo that couldn't be read (nothing found on it) doesn't count; problems come back so the app can say retake
+const pro = await signIn('pro@x.com', '4.4.4.4'); const used = id => (sq.prepare("SELECT n FROM scan_usage WHERE user_id=(SELECT id FROM users WHERE email=?)").get(id) || { n: 0 }).n;
+mode = 'unread'; r = await call('/auth/scan', { method: 'POST', cookie: pro, body: { images: [IMG] } }); j = await r.json();
+assert.equal(r.status, 200); assert.equal(j.items.length, 0); assert.equal(j.uncounted, 1); assert.deepEqual(j.issues.map(x => x.problem), ['glare']); assert.equal(used('pro@x.com'), 0); assert.equal(j.left, 5);
+mode = 'partial'; r = await call('/auth/scan', { method: 'POST', cookie: pro, body: { images: [IMG, IMG] } }); j = await r.json();
+assert.equal(j.uncounted, 1); assert.deepEqual(j.issues.map(x => x.photo + x.problem), ['1blurry', '2far']); assert.equal(used('pro@x.com'), 1);
 console.log('scan tests ok');

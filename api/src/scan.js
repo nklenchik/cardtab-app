@@ -19,6 +19,9 @@ const GRADERS = ['PSA', 'BGS', 'CGC', 'SGC', 'TAG'];
 const TOOL = {
   name: 'cards', description: 'Every trading card, graded slab and sealed product visible in the photos.',
   input_schema: { type: 'object', required: ['items'], properties: {
+    photos: { type: 'array', description: 'One entry per photo: can its cards be read well?', items: { type: 'object', required: ['photo', 'readable'], properties: {
+      photo: { type: 'integer' }, readable: { type: 'boolean', description: 'false when the card names and numbers cannot be read at all' },
+      problem: { type: 'string', enum: ['', 'blurry', 'glare', 'far', 'cut', 'dark'], description: 'The main thing making cards hard to read: blurry, glare (light reflecting on the cards or sleeves), far (cards too small in the photo), cut (cards cut off at the edge), dark. Empty if the photo is fine.' } } } },
     crowded: { type: 'array', items: { type: 'integer' }, description: 'Photo numbers that show more than 4 cards (only the first 4 of each are listed)' },
     items: { type: 'array', maxItems: 16, items: { type: 'object', required: ['photo', 'kind', 'name'], properties: {
     photo: { type: 'integer', description: 'Which photo it is in, starting at 1' },
@@ -38,6 +41,7 @@ const PROMPT = 'These photos are from a trading card collector adding cards to t
   'collector number and set exactly as printed (on modern Pokémon cards the number and set code are at the bottom left; on Magic cards the ' +
   'collector number and set code are at the bottom left; on One Piece and Dragon Ball cards the code like OP05-119 is at the bottom right). ' +
   'For graded slabs read the label: company, grade, cert number, card name, set name and card number (labels often show the year, game and set, e.g. "1999 Pokemon Game Base Set #4 Charizard Holo": set Base Set, number 4). ' +
+  'For each photo also say whether its cards are readable and the main problem if any (blurry, glare, too far away, cut off, too dark), so the collector can retake it. ' +
   'List at most 4 items per photo; if a photo shows more, list the first 4 and add its number to crowded. If a number is blurry, cut off or hidden by glare, ' +
   'leave it empty rather than guess. Skip card backs, sleeves with no card, and anything that is not a trading card product. ' +
   'If there are no cards, return an empty list.';
@@ -95,9 +99,13 @@ export async function handleScan(env, req, me, out) {
   const tin = (res.usage && res.usage.input_tokens) || 0, tout = (res.usage && res.usage.output_tokens) || 0;
   const use = (res.content || []).find(c => c.type === 'tool_use' && c.name === 'cards');
   const items = tidy(use && use.input, imgs.length), inp = (use && use.input) || {};
+  // v52.98: what made a photo hard to read, and photos that couldn't be read at all (nothing found on them) don't count
+  const PROB = ['blurry', 'glare', 'far', 'cut', 'dark'], issues = [], seen = new Set();
+  for (const x of Array.isArray(inp.photos) ? inp.photos : []) { const ph = Math.round(Number(x && x.photo)); if (!(ph >= 1 && ph <= imgs.length) || seen.has(ph)) continue; seen.add(ph); const pr = PROB.includes(x.problem) ? x.problem : (x.readable === false ? 'unreadable' : ''); if (pr) issues.push({ photo: ph, problem: pr, readable: x.readable !== false }); }
+  const unread = issues.filter(x => !x.readable && !items.some(it => it.photo === x.photo)).length, counted = imgs.length - unread;
   const counts = {}; (Array.isArray(inp.items) ? inp.items : []).forEach(x => { const k = Math.round(Number(x && x.photo) || 1); counts[k] = (counts[k] || 0) + 1; });
   const crowded = [...new Set([...(Array.isArray(inp.crowded) ? inp.crowded : []).map(Number), ...Object.keys(counts).filter(k => counts[k] > PER_PHOTO).map(Number)])].filter(k => k >= 1 && k <= imgs.length);
-  await env.DB.batch([env.DB.prepare('INSERT INTO scan_usage (user_id,month,n) VALUES (?,?,?) ON CONFLICT(user_id,month) DO UPDATE SET n=n+excluded.n').bind(me.id, m, imgs.length)]);
+  await env.DB.batch([env.DB.prepare('INSERT INTO scan_usage (user_id,month,n) VALUES (?,?,?) ON CONFLICT(user_id,month) DO UPDATE SET n=n+excluded.n').bind(me.id, m, counted)]);
   await addSpend(env, m, tin, tout);
-  return out({ items, crowded, limit, left: Math.max(0, limit - used - imgs.length), resets: info.resets, plan });
+  return out({ items, crowded, issues, uncounted: imgs.length - counted, limit, left: Math.max(0, limit - used - counted), resets: info.resets, plan });
 }
