@@ -5,6 +5,6 @@
    { key: unique and never reused, title: up to 70 characters, body: up to 200, go: '' | add | board | stories | budget | premium | ask,
      aud: all | free | premium } */
 export const DRAFTS = [
-  { key: 'add-from-photo-2026-11', title: 'New: add cards from a photo', body: "Snap your cards and Card Tab finds each one, with its set and number. Check the list, enter what you paid once, and they're all added. 5 photos a month free, 50 with Premium.", go: 'add', aud: 'all' },
+  { key: 'add-from-photo-2026-11', title: 'New: add cards from a photo', body: "Snap your cards, or drop photos in on your computer, and Card Tab finds each one with its set and number. Check the list and add them all at once. 5 photos a month free, 100 with Premium.", go: 'add', aud: 'all' },
   { key: 'sealed-board-stories-2026-11', title: 'Sealed products now show on your Board and Stories', body: 'Booster boxes, ETBs and packs you track now appear in Board widgets and Stories as clean cut-outs, so a big sealed purchase and sale gets its moment too.', go: 'board', aud: 'all' },
 ];

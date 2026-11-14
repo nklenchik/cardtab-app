@@ -44,7 +44,9 @@ export async function seedDrafts(env, list = DRAFTS) {
     await ensureAnnounce(env);
     for (const d of list || []) {
       const key = String(d && d.key || '').slice(0, 80), title = clean(d && d.title, 70); if (!key || !title) continue;
-      const have = await env.DB.prepare('SELECT id FROM announce WHERE dkey=?').bind(key).first(); if (have) continue;
+      const have = await env.DB.prepare('SELECT id, title, body, edited, draft FROM announce WHERE dkey=?').bind(key).first();
+      // v53.07 a draft still waiting for review, and not edited by hand, follows Claude's newer wording
+      if (have) { if (have.draft && !have.edited && (have.title !== title || have.body !== clean(d.body, 200))) await env.DB.prepare('UPDATE announce SET title=?, body=? WHERE id=?').bind(title, clean(d.body, 200), have.id).run(); continue; }
       const id = crypto.randomUUID();
       await env.DB.prepare('INSERT INTO announce (id,at,title,body,go,aud,stopped,draft,dkey) VALUES (?,?,?,?,?,?,0,1,?)')
         .bind(id, now(), title, clean(d.body, 200), GOS.includes(d.go) ? d.go : '', AUDS.includes(d.aud) ? d.aud : 'all', key).run();

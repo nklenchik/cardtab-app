@@ -52,6 +52,7 @@ n = await notes(late.c); assert.equal(n.news.filter(x => x.id === id2).length, 0
 { const { seedDrafts } = await import('./src/announce.js'); const { openAlerts } = await import('./src/alerts.js');
   const L = [{ key: 'test-draft-1', title: 'Big new thing', body: 'Try it.', go: 'board', aud: 'all' }, { key: 'test-draft-2', title: 'Other thing' }];
   await seedDrafts(env, L); await seedDrafts(env, L);
+  await seedDrafts(env, [{ key: 'test-draft-2', title: 'Other thing', body: 'Newer words.' }]); assert.equal(sq.prepare("SELECT body FROM announce WHERE dkey='test-draft-2'").get().body, 'Newer words.', 'an untouched draft follows newer wording');
   let j = await (await call('/auth/admin/announce', { cookie: boss.c })).json();
   const { DRAFTS } = await import('./src/announce-drafts.js');   // the admin page also seeds the real drafts waiting in the code
   assert.equal(j.drafts.length, 2 + DRAFTS.length, 'seeded once'); assert.ok(!j.items.some(x => x.title === 'Big new thing'), 'drafts are not in Sent');
