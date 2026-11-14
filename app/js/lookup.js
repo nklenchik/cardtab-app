@@ -29,8 +29,17 @@
   function score(c, p) {
     var sc = 0, nm = words(c.n), pn = words(p.name);
     if (p.number && numKey(p.number) === numKey(c.num)) sc += 3;
-    if (pn.length && hit(nm, pn)) sc += 3; else if (pn.length && pn.some(function (w) { return nm.indexOf(w) > -1; })) sc += 1;
-    if (p.set && hit(words(c.s), words(p.set))) sc += 2;
+    // v53.06 set words typed after the name ("Blastoise base", "Charizard evolving skies") count toward the set, not against the name
+    var cs = words(c.s), extra = pn.filter(function (w) { return !hit(nm, [w]); });
+    if (pn.length && hit(nm, pn)) sc += 3;
+    else if (extra.length < pn.length && hit(cs, extra)) {   // the closest set name first: "base" -> Base Set, "base 2" -> Base Set 2
+      var rawX = norm(p.name).split(' ').filter(function (w) { return !hit(nm, [w]); }), rawS = norm(c.s).split(' ');
+      sc += 5 + (rawS.length === rawX.length && rawX.every(function (w) { return rawS.some(function (h) { return h.indexOf(w) === 0; }); }) ? 2 : rawS.length - rawX.length <= 1 ? 1 : 0);
+    }
+    else if (pn.length && pn.some(function (w) { return nm.indexOf(w) > -1; })) sc += 1;
+    if (p.set && hit(cs, words(p.set))) sc += 2;
+    // finishes the parser picked out ("Shadowless", "1st Edition") lift the printing whose set carries them
+    (p.finishes || []).forEach(function (f) { if (hit(cs, words(f))) sc += 2; });
     if (p.rarity && norm(c.r).indexOf(RARITY_FULL[p.rarity] || '~') > -1) sc += 1;
     if (p.game && c.g === p.game) sc += 1;
     return sc;
