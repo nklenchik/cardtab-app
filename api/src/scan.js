@@ -41,6 +41,7 @@ const TOOL = {
     grade: { type: 'string', description: 'Graded only: the grade number on the label, e.g. 10, 9.5' },
     cert: { type: 'string', description: 'Graded only: the certification number on the label, if readable' },
     lang: { type: 'string', description: 'Card language if not English, e.g. Japanese' },
+    edition: { type: 'string', enum: ['', '1st Edition', 'Shadowless', 'Unlimited', '4th Edition'], description: 'Vintage English Pokémon only (Base Set to Neo Destiny, 1999-2002): 1st Edition when the black "Edition 1" stamp is visible below the art on the left; for Base Set without the stamp, Shadowless when the art box has no drop shadow on its right side, Unlimited when it does, 4th Edition when the copyright line reads 1999-2000; Unlimited for other early sets without the stamp. On a slab label use its wording (1st Edition, Shadowless). Empty when you cannot tell or the card is not one of these.' },
     sure: { type: 'number', description: 'How sure you are that name and number are right, 0 to 1' } } } } } }
 };
 const PROMPT = 'These photos are from a trading card collector adding cards to their purchase and sale tracker. List every trading card, ' +
@@ -48,6 +49,7 @@ const PROMPT = 'These photos are from a trading card collector adding cards to t
   'collector number and set exactly as printed (on modern Pokémon cards the number and set code are at the bottom left; on Magic cards the ' +
   'collector number and set code are at the bottom left; on One Piece and Dragon Ball cards the code like OP05-119 is at the bottom right). ' +
   'For graded slabs read the label: company, grade, cert number, card name, set name and card number (labels often show the year, game and set, e.g. "1999 Pokemon Game Base Set #4 Charizard Holo": set Base Set, number 4). ' +
+  'For vintage English Pokémon cards (Base Set through Neo Destiny) also give the edition: look for the 1st Edition stamp below the art on the left, and on Base Set for the shadow along the right side of the art box. Leave it empty if you cannot see clearly. ' +
   'For each photo also say whether its cards are readable and the main problem if any (blurry, glare, too far away, cut off, too dark), so the collector can retake it. ' +
   'List at most 4 items per photo; if a photo shows more, list the first 4 and add its number to crowded. If a number is blurry, cut off or hidden by glare, ' +
   'leave it empty rather than guess. Skip card backs, sleeves with no card, and anything that is not a trading card product. ' +
@@ -66,7 +68,7 @@ export function tidy(raw, photos) {
     per[photo] = (per[photo] || 0) + 1; if (per[photo] > PER_PHOTO) continue;   // at most 4 cards a photo
     out.push({ photo, kind: kind === 'graded' && !(grader && grade) ? 'card' : kind, game: clean(x.game, 40), name, number: clean(x.number, 24), set: clean(x.set, 80),
       grader: kind === 'graded' ? grader : '', grade: kind === 'graded' ? grade : '', cert: kind === 'graded' ? clean(x.cert, 20).replace(/[^\w-]/g, '') : '',
-      lang: clean(x.lang, 20), sure: Math.max(0, Math.min(1, Number(x.sure) || 0)) });
+      lang: clean(x.lang, 20), edition: ['1st Edition', 'Shadowless', 'Unlimited', '4th Edition'].includes(x.edition) ? x.edition : '', sure: Math.max(0, Math.min(1, Number(x.sure) || 0)) });
   }
   return out;
 }

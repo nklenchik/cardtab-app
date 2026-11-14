@@ -22,8 +22,8 @@ export function catLimits(env) {
 }
 // which games to fill (English printings; Japanese is for later)
 const GAME_RX = [/^pok[eé]mon$/i, /magic/i, /one.?piece/i, /fusion/i, /dragon.?ball/i, /lorcana/i, /yu.?gi.?oh/i];
-const pickGames = list => (list || []).filter(g => !/japan|\bjp\b/i.test(g.id + ' ' + g.name) && GAME_RX.some(rx => rx.test(g.id) || rx.test(g.name)));
-const released = s => String(s.release_date || s.releaseDate || s.released_at || s.released || s.published_at || '').slice(0, 10);
+export const pickGames = list => (list || []).filter(g => !/japan|\bjp\b/i.test(g.id + ' ' + g.name) && GAME_RX.some(rx => rx.test(g.id) || rx.test(g.name)));
+export const released = s => String(s.release_date || s.releaseDate || s.released_at || s.released || s.published_at || '').slice(0, 10);
 
 export async function ensure(env) {
   await env.DB.batch([

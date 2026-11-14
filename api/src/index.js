@@ -11,7 +11,7 @@ import { handlePublicShare, cleanupShares } from './share.js';
 import { cleanupAnalytics, handleSiteEvent } from './analytics.js';
 import { handleAuth, currentUser, isAdmin } from './auth.js';
 import { gate, count } from './budget.js';
-import { step as catalogStep } from './catalog.js';
+import { step as catalogStep, ensure as catEnsure, pickGames, released } from './catalog.js';
 import { ensureSchema } from './schema.js';
 import { alertChecks, cleanupAlerts } from './alerts.js';
 import { indexNow } from './indexnow.js';
@@ -100,10 +100,49 @@ async function search(env, q, ctl) {
     if (q.name && cards.length) { const nm = norm(q.name); const named = cards.filter(c => norm(c.name).includes(nm)); if (named.length) cards = named; }
   }
   cards = cards.slice(0, 12);
+  // v53.06 a set typed with the name ("umbreon evolving skies", "charizard vmax darkness ablaze") that the first results
+  // don't reach: look inside that set too. Only when no result already carries every word typed, so plain names cost nothing more.
+  if (q.name && !q.number && !(cards.length && cards.some(c => { const hay = norm((c.name || '') + ' ' + (c.set_name || c.set || '')); return norm(q.name).split(' ').every(w => hay.includes(w)); }))) {
+    const inSet = await setSearch(env, q, ctl).catch(e => { if (e && e.held) throw e; return []; });
+    if (inSet.length) { const seen = new Set(inSet.map(c => c.id)); cards = inSet.concat(cards.filter(c => !seen.has(c.id))).slice(0, 12); }
+  }
   const stmts = cards.map(c => env.DB.prepare('INSERT OR REPLACE INTO cards (id,game,name,set_name,number,rarity,tcgplayer_id,fetched_at) VALUES (?,?,?,?,?,?,?,?)').bind(c.id, c.game, c.name, c.set_name || c.set, c.number, c.rarity, c.tcgplayerId ? String(c.tcgplayerId) : '', now));
   stmts.push(env.DB.prepare('INSERT OR REPLACE INTO lookups (key,ids,fetched_at) VALUES (?,?,?)').bind(key, JSON.stringify(cards.map(c => c.id)), now));
   await env.DB.batch(stmts);
   return cards.map(c => normCard({ ...c, set_name: c.set_name || c.set }));
+}
+
+// the sets we know (cat_sets, kept by the catalog fill); listed once from JustTCG if it's still empty (a request per game)
+async function listSets(env, ctl) {
+  await catEnsure(env);
+  if (((await env.DB.prepare('SELECT COUNT(*) n FROM cat_sets').first()) || {}).n) return;
+  const d = new Date().toISOString().slice(0, 10);
+  for (const g of pickGames((await jt(env, '/v1/games', ctl)).data)) {
+    const list = (await jt(env, '/v1/sets?game=' + encodeURIComponent(g.id), ctl)).data || [];
+    if (list.length) await env.DB.batch(list.map(s => env.DB.prepare('INSERT INTO cat_sets (id,game,name,released,total,listed) VALUES (?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name')
+      .bind(String(s.id), g.id, s.name || '', released(s), Number(s.cards_count || s.count || s.total || 0) || null, d)));
+  }
+}
+async function setSearch(env, q, ctl) {
+  const nw = norm(q.name).split(' ').filter(Boolean);
+  if (nw.length < 2 && !q.set) return [];
+  await listSets(env, ctl);
+  // the set as sent, else the last one to three words of what was typed
+  const tries = q.set ? [{ name: q.name, set: q.set }] : [3, 2, 1].filter(k => nw.length > k).map(k => ({ name: nw.slice(0, -k).join(' '), set: nw.slice(-k).join(' ') }));
+  for (const t of tries) {
+    const sw = norm(t.set).split(' ').filter(w => w.length > 1 && !/^(set|the|of|and|pokemon|tcg)$/.test(w)); if (!sw.length) continue;
+    const long = sw.slice().sort((a, b) => b.length - a.length)[0];
+    const sets = ((await env.DB.prepare('SELECT id, game, name FROM cat_sets WHERE lower(name) LIKE ? LIMIT 60').bind('%' + long + '%').all()).results || [])
+      .filter(s => { const sn = norm(s.name).split(' '); return sw.every(w => sn.some(x => x.startsWith(w))); });
+    if (!sets.length || sets.length > 4) continue;
+    const out = [];
+    for (const s of sets.slice(0, 2)) {
+      if (ctl && ctl.calls >= 6) break;
+      out.push(...((await jt(env, `/v1/cards?limit=20&include_price_history=false&game=${encodeURIComponent(s.game)}&set=${encodeURIComponent(s.id)}&q=${encodeURIComponent(t.name)}`, ctl)).data || []));
+    }
+    if (out.length) return out;
+  }
+  return [];
 }
 
 async function art(env, ctx, id, size) {
