@@ -21,6 +21,7 @@ import { rowOf, saveRow, planOf, ACTIVE, ensureTable, cancelForDelete } from './
 import { deleteUserPhotos } from './artup.js';
 import { deleteSynced } from './sync.js';
 import { askLimits } from './ask.js';
+import { scanLimits } from './scan.js';
 import { sendMail, giftEmail } from './email.js';
 
 const now = () => Math.floor(Date.now() / 1000);
@@ -35,14 +36,15 @@ let ready = false;
 export async function ensureAcct(env) {
   if (ready) return;
   await env.DB.batch([
-    env.DB.prepare('CREATE TABLE IF NOT EXISTS acct ( user_id TEXT PRIMARY KEY, gift_until INTEGER, bonus_month TEXT, bonus_entries INTEGER NOT NULL DEFAULT 0, suspended INTEGER NOT NULL DEFAULT 0, no_upload INTEGER NOT NULL DEFAULT 0, updated INTEGER, ask_month TEXT, ask_bonus INTEGER NOT NULL DEFAULT 0 )'),
+    env.DB.prepare('CREATE TABLE IF NOT EXISTS acct ( user_id TEXT PRIMARY KEY, gift_until INTEGER, bonus_month TEXT, bonus_entries INTEGER NOT NULL DEFAULT 0, suspended INTEGER NOT NULL DEFAULT 0, no_upload INTEGER NOT NULL DEFAULT 0, updated INTEGER, ask_month TEXT, ask_bonus INTEGER NOT NULL DEFAULT 0, ask_limit INTEGER, scan_limit INTEGER )'),
     env.DB.prepare('CREATE TABLE IF NOT EXISTS acct_log ( at INTEGER NOT NULL, uid TEXT NOT NULL, act TEXT NOT NULL, note TEXT )'),
     env.DB.prepare('CREATE INDEX IF NOT EXISTS acct_log_uid ON acct_log (uid, at)'),
     env.DB.prepare('CREATE TABLE IF NOT EXISTS acct_note ( id TEXT PRIMARY KEY, uid TEXT NOT NULL, at INTEGER NOT NULL, title TEXT NOT NULL, body TEXT, seen INTEGER NOT NULL DEFAULT 0 )'),
     env.DB.prepare('CREATE INDEX IF NOT EXISTS acct_note_uid ON acct_note (uid, seen)')
   ]);
   // v52.9: extra Ask questions (tables made before that get the columns)
-  for (const c of ['ask_month TEXT', 'ask_bonus INTEGER NOT NULL DEFAULT 0']) { try { await env.DB.prepare('ALTER TABLE acct ADD COLUMN ' + c).run(); } catch (e) { /* already there */ } }
+  // v53.02: a person's own monthly Ask and photo-scan limits (Premium only; empty = the plan's)
+  for (const c of ['ask_month TEXT', 'ask_bonus INTEGER NOT NULL DEFAULT 0', 'ask_limit INTEGER', 'scan_limit INTEGER']) { try { await env.DB.prepare('ALTER TABLE acct ADD COLUMN ' + c).run(); } catch (e) { /* already there */ } }
   ready = true;
 }
 // an account's flags ({} when there are none, or the table can't be read)
@@ -51,9 +53,9 @@ export async function acctOf(env, uid) {
 }
 async function setAcct(env, uid, patch) {
   const cur = await acctOf(env, uid);
-  const r = Object.assign({ gift_until: null, bonus_month: null, bonus_entries: 0, suspended: 0, no_upload: 0, ask_month: null, ask_bonus: 0 }, cur, patch, { user_id: uid, updated: now() });
-  await env.DB.prepare('INSERT OR REPLACE INTO acct (user_id,gift_until,bonus_month,bonus_entries,suspended,no_upload,updated,ask_month,ask_bonus) VALUES (?,?,?,?,?,?,?,?,?)')
-    .bind(uid, r.gift_until, r.bonus_month, r.bonus_entries, r.suspended, r.no_upload, r.updated, r.ask_month, r.ask_bonus || 0).run();
+  const r = Object.assign({ gift_until: null, bonus_month: null, bonus_entries: 0, suspended: 0, no_upload: 0, ask_month: null, ask_bonus: 0, ask_limit: null, scan_limit: null }, cur, patch, { user_id: uid, updated: now() });
+  await env.DB.prepare('INSERT OR REPLACE INTO acct (user_id,gift_until,bonus_month,bonus_entries,suspended,no_upload,updated,ask_month,ask_bonus,ask_limit,scan_limit) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
+    .bind(uid, r.gift_until, r.bonus_month, r.bonus_entries, r.suspended, r.no_upload, r.updated, r.ask_month, r.ask_bonus || 0, r.ask_limit || null, r.scan_limit || null).run();
   return r;
 }
 // v52.10: a message for the person, picked up by their app (POST /auth/notes) and shown in their notifications
@@ -80,6 +82,8 @@ const log = (env, uid, act, note = '') => env.DB.prepare('INSERT INTO acct_log (
 
 // extra Free entries for the app (only this month's count)
 // extra Ask questions this month (0 when none)
+// v53.02: Premium limits set for one person (an admin raises a power user's Ask questions or photo scans every month)
+export const ownLimit = (a, plan, k) => (plan === 'premium' && a && a[k] > 0 ? a[k] : null);
 export const askBonus = a => (a && a.ask_month === ym() && a.ask_bonus > 0 ? a.ask_bonus : 0);
 export const bonusOut = a => (a && a.bonus_month === ym() && a.bonus_entries > 0 ? { m: a.bonus_month, n: a.bonus_entries } : null);
 
@@ -131,6 +135,7 @@ async function details(env, uid) {
   const paying = !!(b.status && ACTIVE(b.status) && !b.gift);
   const ent = await q1(env, "SELECT COUNT(*) n, COALESCE(SUM(substr(json_extract(data,'$.createdAt'),1,7)=?),0) mo FROM entries WHERE user_id=? AND deleted=0", m, uid);
   const ask = await q1(env, 'SELECT n FROM ask_usage WHERE user_id=? AND month=?', uid, m);
+  const scan = await q1(env, 'SELECT n FROM scan_usage WHERE user_id=? AND month=?', uid, m), SL = scanLimits(env);
   const share = await q1(env, 'SELECT live,exp,views,created FROM shares WHERE uid=?', uid);
   const ups = await q1(env, 'SELECT COUNT(*) n FROM art_uploads WHERE user_id=?', uid);
   const sess = await qa(env, 'SELECT created_at,expires_at,ua FROM sessions WHERE user_id=? AND expires_at>? ORDER BY created_at DESC LIMIT 12', uid, now());
@@ -142,7 +147,9 @@ async function details(env, uid) {
     id: u.id, email: u.email, name: u.name || '', joined: u.created_at, lastSeen: u.last_seen_at || null, via: u.google_sub ? 'Google' : 'Email',
     plan, gift: !!b.gift, giftUntil: b.gift ? (a.gift_until || null) : null, paying, interval: b.interval || null, founderPrice: !!b.founder,
     status: b.status || null, renews: b.period_end || null, cancelAtEnd: !!b.cancel_at_end, stripe: stripeUrl(env, b.customer),
-    month: { entries: ent.mo || 0, limit: plan === 'premium' ? null : 20 + ((bonusOut(a) || {}).n || 0), bonus: (bonusOut(a) || {}).n || 0, ask: ask.n || 0, askLimit: (plan === 'premium' ? L.premium : L.free) + askBonus(a), askBonus: askBonus(a) },
+    month: { entries: ent.mo || 0, limit: plan === 'premium' ? null : 20 + ((bonusOut(a) || {}).n || 0), bonus: (bonusOut(a) || {}).n || 0, ask: ask.n || 0, askLimit: (ownLimit(a, plan, 'ask_limit') || (plan === 'premium' ? L.premium : L.free)) + askBonus(a), askBonus: askBonus(a),
+      scan: scan.n || 0, scanLimit: ownLimit(a, plan, 'scan_limit') || (plan === 'premium' ? SL.premium : SL.free) },
+    own: { ask: a.ask_limit || null, scan: a.scan_limit || null, plan: { ask: L.premium, scan: SL.premium } },
     totals: { entries: ent.n || 0, uploads: ups.n || 0 },
     share: share.created ? { live: !!share.live && !(share.exp && share.exp < now()), views: share.views || 0, since: share.created } : null,
     devices: sess.map(s => ({ name: device(s.ua), since: s.created_at })),
@@ -206,6 +213,14 @@ export async function handlePeople(env, req, path, out) {
       await setAcct(env, uid, { ask_month: ym(), ask_bonus: n });
       if (n > hadA) await tell('You have ' + n + ' extra Ask questions this month', 'A gift from Card Tab, on top of your plan’s questions. Extras end on the 1st.');
       return done(n ? n + ' extra Ask questions this month' : 'Extra Ask questions taken away');
+    }
+    case 'limits': {   // v53.02: this person's own Premium limits each month (null = back to the plan's)
+      const a = await acctOf(env, uid), Lp = askLimits(env).premium, Sp = scanLimits(env).premium;
+      const v = x => (x == null || x === '' ? null : Math.max(1, Math.min(10000, parseInt(x, 10) || 0)) || null);
+      const na = v(b.ask), ns = v(b.scan), was = [a.ask_limit || Lp, a.scan_limit || Sp], now_ = [na || Lp, ns || Sp];
+      await setAcct(env, uid, { ask_limit: na, scan_limit: ns });
+      if (now_[0] > was[0] || now_[1] > was[1]) await tell('More Ask and photo scans every month', 'A gift from Card Tab: with Premium you now get ' + now_[0] + ' Ask questions and ' + now_[1] + ' photo scans a month.');
+      return done(na || ns ? 'Own limits: ' + now_[0] + ' Ask questions, ' + now_[1] + ' photo scans a month' : 'Limits back to the plan’s');
     }
     case 'ask':
       await env.DB.prepare('DELETE FROM ask_usage WHERE user_id=? AND month=?').bind(uid, ym()).run();

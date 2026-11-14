@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS cat_day ( day TEXT PRIMARY KEY, calls INTEGER NOT NUL
 CREATE TABLE IF NOT EXISTS plan_ev ( at INTEGER NOT NULL, uid TEXT NOT NULL, kind TEXT NOT NULL );
 CREATE INDEX IF NOT EXISTS plan_ev_at ON plan_ev (at);
 -- v52.8 admin account tools: per-account flags (gift end date, extra Free entries, paused, uploads off) and a log of admin actions
-CREATE TABLE IF NOT EXISTS acct ( user_id TEXT PRIMARY KEY, gift_until INTEGER, bonus_month TEXT, bonus_entries INTEGER NOT NULL DEFAULT 0, suspended INTEGER NOT NULL DEFAULT 0, no_upload INTEGER NOT NULL DEFAULT 0, updated INTEGER, ask_month TEXT, ask_bonus INTEGER NOT NULL DEFAULT 0 );
+CREATE TABLE IF NOT EXISTS acct ( user_id TEXT PRIMARY KEY, gift_until INTEGER, bonus_month TEXT, bonus_entries INTEGER NOT NULL DEFAULT 0, suspended INTEGER NOT NULL DEFAULT 0, no_upload INTEGER NOT NULL DEFAULT 0, updated INTEGER, ask_month TEXT, ask_bonus INTEGER NOT NULL DEFAULT 0, ask_limit INTEGER, scan_limit INTEGER );
 CREATE TABLE IF NOT EXISTS acct_log ( at INTEGER NOT NULL, uid TEXT NOT NULL, act TEXT NOT NULL, note TEXT );
 CREATE INDEX IF NOT EXISTS acct_log_uid ON acct_log (uid, at);
 -- v52.10 messages for a person from admin changes (gift, extras, resets), picked up by their app once

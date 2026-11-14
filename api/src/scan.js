@@ -4,15 +4,16 @@
    - Claude reads each card's name, number and set (and the label on a graded slab, or a sealed product's name). It never
      decides which printing it is: the app matches every item against the card catalog (/api/lookup), the same way typing does,
      and the person checks the list before anything is added.
-   - Photos per calendar month (UTC): Free SCAN_FREE (5), Premium SCAN_PREMIUM (50), the same as Ask's questions. Admins aren't limited. Each photo counts once.
+   - Photos per calendar month (UTC): Free SCAN_FREE (5), Premium SCAN_PREMIUM (100); an admin can set a Premium person's own limit. Admins aren't limited. Each photo counts once.
    - Shares Ask's monthly spending cap (ASK_MONTH_USD) and spend record, so one number keeps all AI costs in check.
    - Photos are sent to Anthropic and nowhere else and are never kept. What is kept, to learn from: what was read on each
      photo (card names, numbers, sets, how sure), how the person fixed the list, the time taken and the tokens used (v52.99).
    - POST /auth/scan {images, stream:true} streams one JSON line per card as it's read, then a done line (v52.99).
    - POST /auth/scan {feedback:{scan, added, rows:[{i, outcome, auto, final}]}} records how the list was used. */
 import { claudeCall, claudeStream, addSpend, askLimits, ASK_MODEL, ASK_PRICE } from './ask.js';
+import { acctOf, ownLimit } from './people.js';
 const n = (v, d) => { const x = Number(v); return Number.isFinite(x) && x >= 0 && v !== '' && v != null ? x : d; };
-export const scanLimits = env => ({ free: n(env.SCAN_FREE, 5), premium: n(env.SCAN_PREMIUM, 50) });
+export const scanLimits = env => ({ free: n(env.SCAN_FREE, 5), premium: n(env.SCAN_PREMIUM, 100) });   // v53.02 Premium 100 (up to 400 cards)
 const MAX_PHOTOS = 4, MAX_CHARS = 3200000;   // per request; the app sends JPEGs about 1568px on the long edge (~300-600 KB)
 const month = (t = Date.now()) => new Date(t).toISOString().slice(0, 7);
 const resets = (t = Date.now()) => { const d = new Date(t); return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1)).toISOString().slice(0, 10); };
@@ -134,7 +135,7 @@ async function hints(env, items) {
 export async function handleScan(env, req, me, out, raw) {
   const key = String(env.ANTHROPIC_API_KEY || '').trim();
   if (!key) return out({ error: 'setup' }, 503);
-  const L = scanLimits(env), m = month(), plan = me.plan === 'premium' ? 'premium' : 'free', limit = L[plan], admin = me.role === 'admin';
+  const L = scanLimits(env), m = month(), plan = me.plan === 'premium' ? 'premium' : 'free', limit = ownLimit(await acctOf(env, me.id), plan, 'scan_limit') || L[plan], admin = me.role === 'admin';
   await ensure(env);
   const used = (await env.DB.prepare('SELECT n FROM scan_usage WHERE user_id=? AND month=?').bind(me.id, m).first() || {}).n || 0;
   const info = { limit, left: Math.max(0, limit - used), resets: resets(), plan };

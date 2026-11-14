@@ -59,6 +59,17 @@ me = await (await call('/auth/me', { cookie: fan.c })).json(); assert.equal(me.u
 await act({ id: fid, act: 'askmore', n: 10 }); p = await one(); assert.equal(p.month.askLimit, 15); assert.equal(p.month.askBonus, 10);
 env.ANTHROPIC_API_KEY = 'k'; let ai = await (await call('/auth/ask', { method: 'POST', body: { check: true }, cookie: fan.c })).json(); assert.equal(ai.limit, 15); assert.equal(ai.left, 11);
 await act({ id: fid, act: 'askmore', n: 0 }); ai = await (await call('/auth/ask', { method: 'POST', body: { check: true }, cookie: fan.c })).json(); assert.equal(ai.limit, 5);
+// v53.02 own Premium limits: standing numbers each month, only while Premium; raising them sends a notification
+await act({ id: fid, act: 'gift', on: true });
+p = await one(); assert.equal(p.month.askLimit, 50); assert.equal(p.month.scanLimit, 100); assert.deepEqual(p.own, { ask: null, scan: null, plan: { ask: 50, scan: 100 } });
+r = await act({ id: fid, act: 'limits', ask: 120, scan: 300 }); p = (await r.json()).person;
+assert.equal(p.month.askLimit, 120); assert.equal(p.month.scanLimit, 300); assert.equal(p.own.ask, 120);
+ai = await (await call('/auth/ask', { method: 'POST', body: { check: true }, cookie: fan.c })).json(); assert.equal(ai.limit, 120);
+assert.ok(sq.prepare("SELECT title FROM acct_note WHERE uid=? AND title LIKE 'More Ask%'").get(fid), 'told');
+await act({ id: fid, act: 'gift', on: false }); p = await one(); assert.equal(p.month.askLimit, 5); assert.equal(p.month.scanLimit, 5);   // Free uses Free's
+await act({ id: fid, act: 'gift', on: true }); assert.equal((await one()).month.scanLimit, 300);
+await act({ id: fid, act: 'limits', ask: null, scan: null }); p = await one(); assert.equal(p.month.askLimit, 50); assert.equal(p.own.ask, null);
+await act({ id: fid, act: 'gift', on: false });
 // Ask reset
 await act({ id: fid, act: 'ask' }); assert.equal((await one()).month.ask, 0);
 
