@@ -5,7 +5,7 @@
 #as .as-cam:active{transform:scale(.96)}
 #as .as-cam:focus-visible{outline:2px solid var(--brand,#a50e37);outline-offset:2px}
 
-.scan .scan-form{width:min(520px,calc(100vw - 32px));padding:14px 18px 22px;gap:0}
+dialog#scan .scan-form{width:min(520px,calc(100vw - 32px));padding:24px 22px 24px;gap:0}
 .scan-top{display:flex;align-items:center;gap:10px;min-height:38px}
 .scan-top h2{margin:0;font-size:19px;font-weight:800;letter-spacing:-.01em;flex:1;min-width:0}
 .scan-step[hidden]{display:none}
@@ -86,7 +86,7 @@
 .scan-left:empty{display:none}
 
 @media(max-width:760px){
-  .scan .scan-form{padding:12px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+  dialog#scan .scan-form{padding:26px 18px calc(20px + env(safe-area-inset-bottom,0px))}
   .scan-r .scan-share{order:2}
 }
 @media(prefers-reduced-motion:reduce){.scan-shot i{animation:none;opacity:.35;transform:translateY(80%)}.scan-seg button,.scan-ic,.scan-btn{transition:none}}
@@ -116,3 +116,6 @@
 @media(prefers-reduced-motion:reduce){.scan-art.sk::after{animation:none}}
 .scan-toast{display:flex;align-items:center;gap:14px}
 .scan-toast button{border:0;background:none;font:inherit;font-weight:800;color:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:4px 2px}
+
+/* v53.00: room above the title and the close button on phones (the shared sheet style has no top padding), and the header stays put while the list scrolls */
+@media(max-width:760px){dialog#scan .scan-top{position:sticky;top:0;z-index:3;min-height:44px;padding:24px 6px 10px;margin:0 -6px;background:var(--sheet-bg,var(--ct-bg,#fff))}dialog#scan .scan-step:last-child{padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}}
