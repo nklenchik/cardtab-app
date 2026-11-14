@@ -1,4 +1,4 @@
-/* Add from photo (v52.96; v52.98 photo check; v52.99 cards appear as they're read, Undo, learns from every scan).
+/* Add from photo (v52.96; v53.03 desktop start sheet with drag and paste, and Use your phone by QR code; v52.98 photo check; v52.99 cards appear as they're read, Undo, learns from every scan).
    Before anything is sent, each photo is checked on the phone for blur, darkness and size (Retake or Use anyway); the
    card reader then says if a photo had glare or cards too far away, and photos it couldn't read don't count.
    Snap or pick up to 4 photos (a binder page, cards on a table, slabs, sealed product). The server reads what's on them
@@ -24,6 +24,20 @@
     dlg = document.createElement('dialog'); dlg.className = 'ed scan'; dlg.id = 'scan'; dlg.setAttribute('aria-label', 'Add from photo');
     dlg.innerHTML = '<div class="ed-form scan-form" id="scan-form">' +
       '<div class="scan-top"><h2 id="scan-h">Add from photo</h2><button type="button" class="ed-x" data-scan-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
+      // v53.03 desktop start: drag, paste or choose photos, or use your phone (QR code)
+      '<section class="scan-step" id="scan-s0" hidden><div class="scan-halves">' +
+        '<label class="scan-drop"><span class="scan-dico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg></span><b class="scan-dh1">Drag photos here</b><b class="scan-dh2" id="scan-droph">Drop to read these photos</b><small class="scan-dh1">or paste a screenshot</small><small class="scan-dh2">Each photo is checked before it’s read.</small><span class="scan-btn scan-pick">Choose photos</span><input type="file" accept="image/*" multiple data-scan-file></label>' +
+        '<div class="scan-qrbox" id="scan-qrbox"><div class="scan-qr" id="scan-qr" role="img" aria-label="QR code that opens Add from photo on your phone"></div><button type="button" class="scan-qrnew" data-qr-new>Code expired. Show a new one</button><b>Use your phone</b><small class="scan-qrok">Scan with your phone’s camera. Cards you add there show up here.</small><small class="scan-qroff">Couldn’t make a code right now. Choose photos instead, or try again in a moment.</small></div>' +
+      '</div><p class="scan-tip">Up to 4 cards a photo, in good light.</p></section>' +
+      '<section class="scan-step" id="scan-s3" hidden><span class="scan-conn"><i></i>Connected to your phone</span><div class="scan-live" id="scan-live" aria-live="polite"></div>' +
+        '<div class="scan-bar"><p class="scan-sum">They’re already in your entries. Close this any time.</p><button type="button" class="scan-btn" data-scan-close>Done</button></div></section>' +
+      // the phone, opened from that QR code
+      '<section class="scan-step" id="scan-s4" hidden><div class="scan-who"><span class="scan-whoav" id="scan-whoav"></span><span><b id="scan-who"></b><small>Opened from your computer</small></span></div>' +
+        '<div id="scan-pgo"><div class="scan-stack" aria-hidden="true"><i></i><i></i><i></i><span><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.5-2h5L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.5" r="3.5"/></svg></span></div><p class="scan-tip">Up to 4 cards a photo, in good light.<br>They’ll show up on your computer as you add them.</p>' +
+        '<label class="scan-btn">Take photo<input type="file" accept="image/*" capture="environment" data-scan-file></label><label class="scan-btn ghost wide">Choose from library<input type="file" accept="image/*" multiple data-scan-file></label></div>' +
+        '<div class="scan-pbad" id="scan-pbad" hidden><p></p><button type="button" class="scan-btn ghost wide" data-scan-close>Close</button></div></section>' +
+      '<section class="scan-step scan-done" id="scan-s5" hidden><div class="scan-ok"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h3 id="scan-dh"></h3><p id="scan-dp"></p><div class="scan-thumbs" id="scan-thumbs"></div>' +
+        '<label class="scan-btn">Snap more cards<input type="file" accept="image/*" capture="environment" data-scan-file></label><button type="button" class="scan-btn ghost wide" data-scan-close>Done</button><button type="button" class="scan-undo" id="scan-undo">Undo</button></section>' +
       '<section class="scan-step" id="scan-s1"><div class="scan-shots" id="scan-shots"></div><p class="scan-wait" id="scan-wait" aria-live="polite">Reading your cards…</p><p class="scan-tip" id="scan-tip1">Up to 4 cards a photo, in good light.</p><p class="scan-err" id="scan-err" role="alert" hidden></p>' +
         '<div class="scan-acts" id="scan-retry" hidden><label class="scan-btn ghost">Choose other photos<input type="file" accept="image/*" multiple data-scan-file></label></div>' +
         '<div class="scan-acts two" id="scan-chk" hidden><label class="scan-btn">Retake<input type="file" accept="image/*" multiple data-scan-file></label><button type="button" class="scan-btn ghost" data-scan-anyway>Use anyway</button></div>' +
@@ -48,6 +62,16 @@
     dlg.querySelector('[data-scan-up]').addEventListener('click', () => { close(); if (window.CTAddSheet && window.CTAddSheet.isOpen) window.CTAddSheet.close(); setTimeout(() => window.CTPremiumOpen && window.CTPremiumOpen('scan'), 260); });
     dlg.addEventListener('click', e => { if (e.target === dlg) close(); });
     dlg.querySelector('[data-scan-anyway]').addEventListener('click', () => { const p = st.pending; st.pending = null; if (p) run(p.files, p.adding, true); });
+    dlg.querySelector('[data-qr-new]').addEventListener('click', newCode);
+    // v53.03 drag photos onto the sheet, or paste one (desktop). Onto the review list, they're added to it
+    let dc = 0;
+    const hasFiles = e => !!(e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files'));
+    const into = () => !$('scan-s2').hidden && st.rows.length > 0;
+    dlg.addEventListener('dragenter', e => { if (!hasFiles(e) || st.phone) return; e.preventDefault(); dc++; const n = Math.min(MAX, [...(e.dataTransfer.items || [])].filter(x => x.kind === 'file').length || 1), t = into() ? (n > 1 ? 'Drop to add ' + n + ' photos' : 'Drop to add this photo') : (n > 1 ? 'Drop to read ' + n + ' photos' : 'Drop to read this photo'); $('scan-droph').textContent = t; $('scan-form').dataset.drop = t; dlg.classList.add('dragging'); });
+    dlg.addEventListener('dragover', e => { if (!hasFiles(e) || st.phone) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+    dlg.addEventListener('dragleave', e => { if (!hasFiles(e)) return; if (--dc <= 0) { dc = 0; dlg.classList.remove('dragging'); } });
+    dlg.addEventListener('drop', e => { if (!hasFiles(e) || st.phone) return; e.preventDefault(); dc = 0; dlg.classList.remove('dragging'); const files = [...(e.dataTransfer.files || [])]; if (files.length && !st.busy) run(files, into()); });
+    dlg.addEventListener('paste', e => { const files = [...((e.clipboardData && e.clipboardData.files) || [])].filter(f => /^image\//.test(f.type)); if (!files.length || st.busy || st.phone) return; e.preventDefault(); run(files, into()); });
     dlg.addEventListener('change', e => { const f = e.target.closest('[data-scan-file]'); if (f && f.files && f.files.length) { const files = [...f.files]; const add = !!f.dataset.add; f.value = ''; run(files, add); } });
     seg('scan-type', v => { st.type = v; paint(); });
     seg('scan-mode', v => { st.mode = v; paint(); });
@@ -60,7 +84,7 @@
     return dlg;
   }
   function seg(id, on) { $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $(id).querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); on(b.dataset.v); }); }
-  function step(n) { $('scan-s1').hidden = n !== 1; $('scan-s2').hidden = n !== 2; }
+  function step(n) { [0, 1, 2, 3, 4, 5].forEach(k => { $('scan-s' + k).hidden = k !== n; }); dlg.classList.toggle('start', n === 0); }
 
   // ---------- photos: shrink, send, match ----------
   async function shrink(file) {
@@ -108,6 +132,7 @@
     files = files.filter(f => /^image\//.test(f.type) || /\.(jpe?g|png|webp|heic|heif)$/i.test(f.name || '')).slice(0, MAX);
     if (!files.length) return;
     build(); if (!dlg.open) show();
+    if (!st.phone) stopPair();   // chose photos on the computer instead of the phone
     const tok = ++st.tok;
     if (!adding) { sendAll(0); st.rows = []; st.gone = []; st.fixing = -1; }
     step(adding && st.rows.length ? 2 : 1);
@@ -406,6 +431,12 @@
     }
     st.busy = false; window.ctBuzz && window.ctBuzz();
     sendAll(true); st.done = true;
+    if (st.phone) {   // v53.03 on the phone from the QR code: list them on the computer and stay open for more
+      const sale2 = st.type === 'sale', items = st.rows.slice(0, added).map((r, i) => { const c = r.card;
+        return { id: ids[i] || '', name: c ? c.n : r.it.name, meta: [c && c.s ? setName(c.s) : r.it.set, c && c.num ? 'No. ' + c.num : r.it.number ? 'No. ' + r.it.number : '', sale2 ? 'Sale' : 'Purchase'].filter(Boolean).join(' · '), amt: '$' + S.fromCents(sh[i] || 0), art: (c && c.art && c.art.list) || '' }; });
+      pairPost({ op: 'added', code: st.phone.code, items }).catch(() => {});
+      st.rows = []; st.gone = []; doneHere(added, items, ids.slice()); return;
+    }
     close(); if (window.CTAddSheet && window.CTAddSheet.isOpen) window.CTAddSheet.close();
     // Added 4 items · Undo (takes them all back out, and gives the free entries back)
     const t = $('app-toasts'); if (t) {
@@ -433,7 +464,7 @@
     const f = $('scan-form'); f.tabIndex = -1; f.style.outline = 'none'; f.focus({ preventScroll: true });
   }
   function close() {
-    if (!dlg || !dlg.open) return; st.tok++; st.streaming = false;
+    if (!dlg || !dlg.open) return; st.tok++; st.streaming = false; stopPair(); st.phone = null; dlg.classList.remove('dragging');
     if (!st.done) sendAll(0);   // closed without adding: still tells the reader which matches were right
     const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (calm) { dlg.close(); return; }
@@ -441,12 +472,101 @@
   }
   // pick photos straight away (inside the tap, so the phone offers camera or library), then the sheet opens on its own
   function check() { const url = URL_(); if (!url) return; fetch(url, { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: '{"check":true}' }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.limit != null) st.info = { left: j.left, limit: j.limit, resets: j.resets, plan: j.plan }; }).catch(() => {}); }
+  // ---------- v53.03 Use your phone ----------
+  const DESK = () => matchMedia('(hover: hover) and (pointer: fine)').matches;
+  let qrLib = null;
+  function loadQR() { return qrLib || (qrLib = new Promise((ok, no) => { if (window.qrcode) return ok(); const s = document.createElement('script'); s.src = 'js/vendor/qrcode.min.js?v=53.03'; s.onload = () => (window.qrcode ? ok() : no()); s.onerror = () => { qrLib = null; no(); }; document.head.appendChild(s); })); }
+  function qrSVG(text) {
+    const q = window.qrcode(0, 'M'); q.addData(text); q.make();
+    const n = q.getModuleCount(); let d = '';
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) d += 'M' + c + ' ' + r + 'h1v1h-1z';
+    return '<svg viewBox="-2 -2 ' + (n + 4) + ' ' + (n + 4) + '" shape-rendering="crispEdges" aria-hidden="true"><rect x="-2" y="-2" width="' + (n + 4) + '" height="' + (n + 4) + '" fill="#fff"/><path d="' + d + '" fill="#1c1b19"/></svg>';
+  }
+  function pairPost(body) {
+    const url = URL_(); if (!url) return Promise.reject(Object.assign(new Error('off'), { code: 'off' }));
+    return fetch(url, { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ pair: body }) })
+      .then(async r => { const j = await r.json().catch(() => ({})); if (!r.ok) throw Object.assign(new Error(j.error || 'failed'), { code: j.error || 'failed' }); return j; });
+  }
+  function stopPair() { clearTimeout(st.pt); st.pt = 0; const c = st.pc; st.pc = null; st.pjoined = false; if (c) pairPost({ op: 'end', code: c }).catch(() => {}); }
+  // the computer: a fresh code, drawn as a QR code, then checks every couple of seconds for the phone and its cards
+  async function newCode() {
+    stopPair(); const box = $('scan-qrbox'), tok = st.tok; box.classList.remove('exp', 'off'); $('scan-qr').innerHTML = '<i class="scan-qrsk"></i>';
+    try {
+      const both = await Promise.all([pairPost({ op: 'new' }), loadQR()]), j = both[0];
+      if (tok !== st.tok || !dlg.open) { pairPost({ op: 'end', code: j.code }).catch(() => {}); return; }
+      st.pc = j.code;
+      $('scan-qr').innerHTML = qrSVG(location.origin + location.pathname.replace(/[^/]*$/, '') + '?scan=' + j.code);
+      poll(tok);
+    } catch (e) { if (tok === st.tok) box.classList.add('off'); }
+  }
+  function poll(tok) {
+    clearTimeout(st.pt);
+    st.pt = setTimeout(async () => {
+      if (tok !== st.tok || !st.pc || !dlg.open) return;
+      if (document.visibilityState === 'hidden') return poll(tok);
+      const code = st.pc;
+      try {
+        const j = await pairPost({ op: 'poll', code });
+        if (tok !== st.tok || code !== st.pc) return;
+        if (j.joined && !st.pjoined) { st.pjoined = true; st.lkey = null; st.lseen = new Set(); step(3); }
+        if (st.pjoined) live(j.items || []);
+        poll(tok);
+      } catch (e) {
+        if (tok !== st.tok || code !== st.pc) return;
+        if (e.code === 'expired') { st.pc = null; if (st.pjoined) { const w = $('scan-live').querySelector('.sk .m'); if (w) w.textContent = 'Your phone link has closed'; } else $('scan-qrbox').classList.add('exp'); return; }
+        poll(tok);   // a blip: keep trying
+      }
+    }, st.pjoined ? 2500 : 2000);
+  }
+  function live(items) {
+    const key = items.map(x => x.id).join(','); if (key === st.lkey) return; st.lkey = key;
+    const n = items.length, seen = st.lseen || new Set(), grew = items.some(x => !seen.has(x.id));
+    $('scan-h').textContent = n ? n + (n === 1 ? ' card' : ' cards') + ' added from your phone' : 'Connected to your phone';
+    $('scan-live').innerHTML = items.map(x => '<div class="scan-r' + (seen.has(x.id) ? '' : ' new') + '"><div class="scan-rin">' + (x.art ? '<span class="scan-art"><img src="' + esc(x.art) + '" alt="" draggable="false" loading="lazy"></span>' : '<span class="scan-art ph"></span>') +
+      '<div class="tx"><div class="n">' + esc(x.name) + '</div><div class="m">' + esc(x.meta) + '</div></div><b class="scan-amt">' + esc(x.amt) + '</b></div></div>').join('') +
+      '<div class="scan-r sk" aria-hidden="true"><span class="scan-art ph sk"></span><div class="tx"><div class="n">' + (n ? 'Waiting for more…' : 'Waiting for photos…') + '</div><div class="m">Keep snapping on your phone</div></div></div>';
+    items.forEach(x => seen.add(x.id)); st.lseen = seen;
+    if (grew && window.CTSync && window.CTSync.now) window.CTSync.now();   // pull the new entries into this computer's list
+  }
+  function start() {
+    build(); show(); st.tok++; st.rows = []; st.gone = []; st.phone = null;
+    $('scan-h').textContent = 'Add from photo'; $('scan-sub').textContent = ''; step(0); newCode();
+  }
+  // the phone: opened from the QR code (?scan=code, kept through sign-in)
+  async function paired(code) {
+    if (!/^[A-Za-z0-9_-]{16,64}$/.test(String(code || ''))) return;
+    build(); if (!dlg.open) show(); st.tok++; st.rows = []; st.gone = []; st.phone = { code };
+    const who = window.CTSession && window.CTSession.current ? window.CTSession.current() : null, nm = who && String(who.name || '').trim().split(/\s+/)[0];
+    $('scan-who').textContent = nm ? 'Adding to ' + nm + '’s account' : 'Adding to your account';
+    $('scan-whoav').textContent = String(nm || (who && who.email) || '?')[0].toUpperCase();
+    $('scan-pbad').hidden = true; $('scan-pgo').hidden = false; $('scan-h').textContent = 'Add from photo'; step(4);
+    try { await pairPost({ op: 'join', code }); }
+    catch (e) {
+      if (!st.phone || st.phone.code !== code) return;
+      st.phone = null; $('scan-pgo').hidden = true; const b = $('scan-pbad'); b.hidden = false;
+      b.querySelector('p').textContent = e.code === 'other' ? 'This code is for a different Card Tab account. Sign in on this phone with the same account as your computer, then scan it again.'
+        : e.code === 'expired' ? 'This code has expired. Show a new one on your computer and scan it again.' : 'Couldn’t reach your computer. Check your connection and scan the code again.';
+    }
+  }
+  function doneHere(n, items, ids) {
+    step(5); $('scan-h').textContent = '';
+    $('scan-dh').textContent = 'Added ' + n + (n === 1 ? ' card' : ' cards');
+    $('scan-dp').textContent = 'They’re on your computer now. Snap more, or you’re all set.';
+    $('scan-thumbs').innerHTML = items.slice(0, 6).map(x => x.art ? '<span class="scan-art"><img src="' + esc(x.art) + '" alt="" draggable="false"></span>' : '<span class="scan-art ph"></span>').join('');
+    const u = $('scan-undo'); u.hidden = !ids.length;
+    u.onclick = async () => {
+      u.hidden = true; for (const id of ids) { try { await S.remove(id); } catch (e) {} }
+      if (st.phone) pairPost({ op: 'removed', code: st.phone.code, ids }).catch(() => {});
+      $('scan-dh').textContent = 'Removed ' + ids.length + (ids.length === 1 ? ' card' : ' cards'); $('scan-dp').textContent = 'Nothing from that photo was kept. Snap again whenever you’re ready.'; $('scan-thumbs').innerHTML = '';
+    };
+  }
   function open() {
     check();
+    if (DESK()) { start(); return; }   // computers get the start sheet; phones go straight to the camera or library
     const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true; inp.style.display = 'none';
     inp.addEventListener('change', () => { const files = [...(inp.files || [])]; inp.remove(); if (files.length) run(files, false); });
     document.body.appendChild(inp); inp.click();
     setTimeout(() => { if (inp.isConnected && !inp.files.length) inp.remove(); }, 120000);
   }
-  window.CTScan = { open, run, close, _assess: assess };
+  window.CTScan = { open, run, close, paired, _assess: assess };
 })();

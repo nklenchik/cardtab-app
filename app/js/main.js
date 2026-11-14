@@ -42,8 +42,12 @@
   // through sign-in, then run once the app is on screen.
   const GO_OK = /^(add|budget|board|stories|ask|home|premium|emails)$/;
   try { const g = new URLSearchParams(location.search).get('go'); if (g && GO_OK.test(g)) sessionStorage.setItem('ct.go', g); } catch (e) {}
+  // v53.03 the QR code on a computer's Add from photo opens ?scan=<code> on the phone, kept through sign-in the same way
+  try { const c = new URLSearchParams(location.search).get('scan'); if (c && /^[A-Za-z0-9_-]{16,64}$/.test(c)) sessionStorage.setItem('ct.scanpair', c); } catch (e) {}
   function emailGo() {
     let g = ''; try { g = sessionStorage.getItem('ct.go') || ''; sessionStorage.removeItem('ct.go'); } catch (e) {}
+    let pc = ''; try { pc = sessionStorage.getItem('ct.scanpair') || ''; sessionStorage.removeItem('ct.scanpair'); } catch (e) {}
+    if (pc) { setTimeout(() => { if (window.CTScan) window.CTScan.paired(pc); }, 500); return; }
     goTo(g, 700);
   }
   // v52.87 also used by What's new notifications (window.CTGo)
