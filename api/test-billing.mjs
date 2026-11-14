@@ -72,14 +72,14 @@ let r = await call('/auth/billing/checkout', { method: 'POST', cookie: cf, body:
 j = await (await call('/auth/billing', { cookie: ca })).json(); assert.equal(j.open, true, 'admins can still test');
 env.BILLING_OPEN = 'on';
 r = await call('/auth/billing/checkout', { method: 'POST', cookie: cf, body: { plan: 'monthly' } }); j = await r.json();
-assert.equal(r.status, 200, JSON.stringify(j)); assert.ok(j.clientSecret); assert.equal(j.plan, 'fm4'); assert.equal(j.amount, 400);
+assert.equal(r.status, 200, JSON.stringify(j)); assert.ok(j.clientSecret); assert.equal(j.plan, 'fm5'); assert.equal(j.amount, 500);
 assert.equal(S.prices.length, 4); assert.equal(S.products.length, 1); assert.equal(S.customers.length, 1);
-const sess = Object.values(S.sessions)[0]; assert.equal(sess.price, priceBy('ct_fm4').id); assert.equal(sess.tax, null, 'no tax until it is switched on');
+const sess = Object.values(S.sessions)[0]; assert.equal(sess.price, priceBy('ct_fm5').id); assert.equal(sess.tax, null, 'no tax until it is switched on');
 r = await call('/auth/billing/checkout', { method: 'POST', cookie: cf, body: { plan: 'yearly' } }); j = await r.json();
-assert.equal(j.plan, 'fy40'); assert.equal(S.prices.length, 4, 'prices reused'); assert.equal(S.customers.length, 1, 'same customer');
+assert.equal(j.plan, 'fy50'); assert.equal(S.prices.length, 4, 'prices reused'); assert.equal(S.customers.length, 1, 'same customer');
 // Stripe finishes the checkout: the webhook turns Premium on
 const uid = sq.prepare("SELECT id FROM users WHERE email='friend@x.com'").get().id, P = Math.floor(Date.now() / 1000) + 30 * 86400;
-S.subs.sub_A = { id: 'sub_A', customer: sess.customer, status: 'active', cancel_at_period_end: false, metadata: { uid }, items: { data: [{ current_period_end: P, price: priceBy('ct_fm4') }] }, default_payment_method: { card: { brand: 'visa', last4: '4242' } } };
+S.subs.sub_A = { id: 'sub_A', customer: sess.customer, status: 'active', cancel_at_period_end: false, metadata: { uid }, items: { data: [{ current_period_end: P, price: priceBy('ct_fm5') }] }, default_payment_method: { card: { brand: 'visa', last4: '4242' } } };
 assert.equal((await hook('checkout.session.completed', { mode: 'subscription', subscription: 'sub_A', customer: sess.customer, client_reference_id: uid }, 'wrong')).status, 400, 'bad signature refused');
 assert.equal(planOf('friend@x.com'), 'free');
 // v50.95 copy test: the Premium sheet copy they saw last gets the credit for the purchase
@@ -88,14 +88,14 @@ assert.equal((await hook('checkout.session.completed', { mode: 'subscription', s
 assert.equal(planOf('friend@x.com'), 'premium');
 { const c = sq.prepare('SELECT buy, buy_iv, buy_day FROM an_copy WHERE uid=?').get(uid); assert.equal(c.buy, 'b2:1.4.6.7.9.16'); assert.equal(c.buy_iv, 'month'); assert.ok(c.buy_day); }
 j = await (await call('/auth/billing', { cookie: cf })).json();
-assert.equal(j.sub.founder, true); assert.equal(j.sub.amount, 400); assert.equal(j.sub.interval, 'month'); assert.deepEqual(j.sub.card, { brand: 'visa', last4: '4242' }); assert.equal(j.sub.periodEnd, P);
+assert.equal(j.sub.founder, true); assert.equal(j.sub.amount, 500); assert.equal(j.sub.interval, 'month'); assert.deepEqual(j.sub.card, { brand: 'visa', last4: '4242' }); assert.equal(j.sub.periodEnd, P);
 assert.equal((await call('/auth/billing/checkout', { method: 'POST', cookie: cf, body: { plan: 'monthly' } })).status, 409, 'no second subscription');
 // confirm right after checkout (no waiting on the webhook)
 sess.subscription = 'sub_A'; j = await (await call('/auth/billing/confirm', { method: 'POST', cookie: cf, body: { session: sess.id } })).json(); assert.equal(j.plan, 'premium');
 // switch to yearly at renewal: stays on the founders price
 j = await (await call('/auth/billing/switch', { method: 'POST', cookie: cf, body: { to: 'yearly' } })).json();
-assert.equal(j.sub.pending.interval, 'year'); assert.equal(j.sub.pending.amount, 4000);
-assert.equal(Object.values(S.scheds)[0].next, priceBy('ct_fy40').id);
+assert.equal(j.sub.pending.interval, 'year'); assert.equal(j.sub.pending.amount, 5000);
+assert.equal(Object.values(S.scheds)[0].next, priceBy('ct_fy50').id);
 j = await (await call('/auth/billing/switch', { method: 'POST', cookie: cf, body: { to: 'monthly' } })).json(); assert.equal(j.sub.pending, null, 'switching back drops the change');
 // billing page link
 j = await (await call('/auth/billing/portal', { method: 'POST', cookie: cf })).json(); assert.match(j.url, /^https:\/\/billing\.stripe\.com\//);
@@ -125,7 +125,7 @@ S.subs.sub_A.status = 'canceled'; await hook('customer.subscription.deleted', S.
 assert.equal(planOf('friend@x.com'), 'free'); j = await (await call('/auth/billing', { cookie: cf })).json(); assert.equal(j.sub, null);
 // joined after New Year: regular price
 sq.prepare('UPDATE users SET created_at=? WHERE id=?').run(FOUNDER_JOIN_BEFORE + 100, uid);
-j = await (await call('/auth/billing/checkout', { method: 'POST', cookie: cf, body: { plan: 'monthly' } })).json(); assert.equal(j.plan, 'm6'); assert.equal(j.amount, 600);
+j = await (await call('/auth/billing/checkout', { method: 'POST', cookie: cf, body: { plan: 'monthly' } })).json(); assert.equal(j.plan, 'm8'); assert.equal(j.amount, 800);
 // a customer deleted in Stripe (clearing a test card): checkout starts a fresh one
 S.gone = sq.prepare('SELECT customer FROM billing WHERE user_id=?').get(uid).customer; const nC = S.customers.length;
 r = await call('/auth/billing/checkout', { method: 'POST', cookie: cf, body: { plan: 'monthly' } }); assert.equal(r.status, 200); assert.equal(S.customers.length, nC + 1); assert.notEqual(sq.prepare('SELECT customer FROM billing WHERE user_id=?').get(uid).customer, S.gone);

@@ -86,11 +86,11 @@ const FOUNDERS_JOIN_BEFORE = Date.parse('2027-01-01T00:00:00-05:00'), FOUNDERS_U
 export function premiumLine({ open, opens, joinedAt, t = Date.now() }) {
   const perks = 'Premium adds unlimited entries, spreadsheet import, every Stories theme and your full history.';
   const founder = joinedAt * 1000 < FOUNDERS_JOIN_BEFORE && t < FOUNDERS_UPGRADE_BY;
-  if (founder && !open) return { html: `<b style="color:#a50e37">Want more?</b> ${perks} You joined early, so you'll get founders pricing ($4 a month or $40 a year) if you upgrade by Jan 31. Premium opens ${esc(opens || 'soon')}.`,
-    text: `Want more? ${perks} You joined early, so you'll get founders pricing ($4 a month or $40 a year) if you upgrade by Jan 31. Premium opens ${opens || 'soon'}.` };
-  if (founder) return { html: `<b style="color:#a50e37">Want more?</b> ${perks} You joined early, so you can lock in founders pricing ($4 a month or $40 a year) if you upgrade by Jan 31.`,
-    text: `Want more? ${perks} You joined early, so you can lock in founders pricing ($4 a month or $40 a year) if you upgrade by Jan 31.` };
-  return { html: `<b style="color:#a50e37">Want more?</b> ${perks} $6 a month or $60 a year.`, text: `Want more? ${perks} $6 a month or $60 a year.` };
+  if (founder && !open) return { html: `<b style="color:#a50e37">Want more?</b> ${perks} You joined early, so you'll get founders pricing ($5 a month or $50 a year) if you upgrade by Jan 31. Premium opens ${esc(opens || 'soon')}.`,
+    text: `Want more? ${perks} You joined early, so you'll get founders pricing ($5 a month or $50 a year) if you upgrade by Jan 31. Premium opens ${opens || 'soon'}.` };
+  if (founder) return { html: `<b style="color:#a50e37">Want more?</b> ${perks} You joined early, so you can lock in founders pricing ($5 a month or $50 a year) if you upgrade by Jan 31.`,
+    text: `Want more? ${perks} You joined early, so you can lock in founders pricing ($5 a month or $50 a year) if you upgrade by Jan 31.` };
+  return { html: `<b style="color:#a50e37">Want more?</b> ${perks} $8 a month or $80 a year.`, text: `Want more? ${perks} $8 a month or $80 a year.` };
 }
 
 export function welcomeEmail({ name, appUrl, open, opens, joinedAt, t, links }) {

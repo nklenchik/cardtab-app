@@ -1,5 +1,5 @@
 /* Card Tab Premium billing (v50.63), on Stripe.
-   Prices (made once, found again by their lookup keys): regular $6/month and $60/year; founders $4/month and $40/year.
+   Prices (made once, found again by their lookup keys): regular $8/month and $80/year; founders $5/month and $50/year (v53.08; were $6/$60 and $4/$40 before paid Premium opened).
    Founders: anyone whose account was made before Jan 1, 2027 (Eastern) who upgrades by Jan 31, 2027 gets the founders price,
    and keeps it for as long as that subscription lasts (switching monthly <-> yearly stays on founders prices). Cancel and come
    back later, and it's the regular price.
@@ -23,14 +23,14 @@ export const FOUNDER_JOIN_BEFORE = Date.parse('2027-01-01T00:00:00-05:00') / 100
 export const FOUNDER_UPGRADE_BY = Date.parse('2027-02-01T00:00:00-05:00') / 1000;   // through the end of Jan 31, Eastern
 export const GRACE = 7 * 86400;
 const PRICES = {
-  m6: { amount: 600, interval: 'month', founder: 0, nick: 'Premium monthly' },
-  y60: { amount: 6000, interval: 'year', founder: 0, nick: 'Premium yearly' },
-  fm4: { amount: 400, interval: 'month', founder: 1, nick: 'Premium monthly, founding member' },
-  fy40: { amount: 4000, interval: 'year', founder: 1, nick: 'Premium yearly, founding member' }
+  m8: { amount: 800, interval: 'month', founder: 0, nick: 'Premium monthly' },
+  y80: { amount: 8000, interval: 'year', founder: 0, nick: 'Premium yearly' },
+  fm5: { amount: 500, interval: 'month', founder: 1, nick: 'Premium monthly, founding member' },
+  fy50: { amount: 5000, interval: 'year', founder: 1, nick: 'Premium yearly, founding member' }
 };
 const LK = k => 'ct_' + k;                       // Stripe lookup key
 const keyOfLookup = lk => (String(lk || '').startsWith('ct_') ? lk.slice(3) : '');
-const keyFor = (founder, interval) => (founder ? (interval === 'year' ? 'fy40' : 'fm4') : (interval === 'year' ? 'y60' : 'm6'));
+const keyFor = (founder, interval) => (founder ? (interval === 'year' ? 'fy50' : 'fm5') : (interval === 'year' ? 'y80' : 'm8'));
 const now = () => Math.floor(Date.now() / 1000);
 const appUrl = env => env.APP_URL || 'https://app.cardtab.app';
 
