@@ -1,4 +1,6 @@
-/* Add from photo (v52.96).
+/* Add from photo (v52.96; v52.98 photo check).
+   Before anything is sent, each photo is checked on the phone for blur, darkness and size (Retake or Use anyway); the
+   card reader then says if a photo had glare or cards too far away, and photos it couldn't read don't count.
    Snap or pick up to 4 photos (a binder page, cards on a table, slabs, sealed product). The server reads what's on them
    (/auth/scan, Claude), each item is matched against the card catalog the same way typing a card is (CardLookup.remote),
    and a review sheet lists them. Nothing is added until you press Add: fix or remove any row, then fill in the purchase
@@ -24,6 +26,7 @@
       '<div class="scan-top"><h2 id="scan-h">Add from photo</h2><button type="button" class="ed-x" data-scan-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
       '<section class="scan-step" id="scan-s1"><div class="scan-shots" id="scan-shots"></div><p class="scan-wait" id="scan-wait" aria-live="polite">Reading your cards…</p><p class="scan-tip" id="scan-tip1">Up to 4 cards a photo, in good light.</p><p class="scan-err" id="scan-err" role="alert" hidden></p>' +
         '<div class="scan-acts" id="scan-retry" hidden><label class="scan-btn ghost">Choose other photos<input type="file" accept="image/*" multiple data-scan-file></label></div>' +
+        '<div class="scan-acts two" id="scan-chk" hidden><label class="scan-btn">Retake<input type="file" accept="image/*" multiple data-scan-file></label><button type="button" class="scan-btn ghost" data-scan-anyway>Use anyway</button></div>' +
         '<div class="scan-acts" id="scan-up" hidden><button type="button" class="scan-btn ghost up" data-scan-up>See Premium</button></div></section>' +
       '<section class="scan-step" id="scan-s2" hidden>' +
         '<p class="scan-sub" id="scan-sub"></p>' +
@@ -44,6 +47,7 @@
     dlg.querySelectorAll('[data-scan-close]').forEach(b => b.addEventListener('click', close));
     dlg.querySelector('[data-scan-up]').addEventListener('click', () => { close(); if (window.CTAddSheet && window.CTAddSheet.isOpen) window.CTAddSheet.close(); setTimeout(() => window.CTPremiumOpen && window.CTPremiumOpen('scan'), 260); });
     dlg.addEventListener('click', e => { if (e.target === dlg) close(); });
+    dlg.querySelector('[data-scan-anyway]').addEventListener('click', () => { const p = st.pending; st.pending = null; if (p) run(p.files, p.adding, true); });
     dlg.addEventListener('change', e => { const f = e.target.closest('[data-scan-file]'); if (f && f.files && f.files.length) { const files = [...f.files]; const add = !!f.dataset.add; f.value = ''; run(files, add); } });
     seg('scan-type', v => { st.type = v; paint(); });
     seg('scan-mode', v => { st.mode = v; paint(); });
@@ -65,21 +69,65 @@
     const w = bmp.width || bmp.naturalWidth, h = bmp.height || bmp.naturalHeight, k = Math.min(1, EDGE / Math.max(w, h));
     const cv = document.createElement('canvas'); cv.width = Math.round(w * k); cv.height = Math.round(h * k);
     const g = cv.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(bmp, 0, 0, cv.width, cv.height);
-    return cv.toDataURL('image/jpeg', 0.85);
+    return { url: cv.toDataURL('image/jpeg', 0.85), q: assess(cv, Math.min(w, h)) };
+  }
+  // v52.98 photo check, on the phone: sharpness (how much fine edge detail there is, the variance of a Laplacian over a
+  // 640px greyscale copy, read from the sharpest part of the photo so a plain table around the cards doesn't count against
+  // it), brightness, and size. Thresholds are set loose: only clearly bad photos are stopped, and Use anyway is always there.
+  const Q = { blur: 450, dark: 45, small: 600 };   // calibrated: a card number stops being readable well before sharpness drops to ~1100; 450 only stops clearly blurry photos
+  function assess(src, short) {
+    const k = Math.min(1, 640 / Math.max(src.width, src.height)), w = Math.max(8, Math.round(src.width * k)), h = Math.max(8, Math.round(src.height * k));
+    const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(src, 0, 0, w, h); const d = g.getImageData(0, 0, w, h).data, y = new Float32Array(w * h);
+    let sum = 0; for (let i = 0, p = 0; i < y.length; i++, p += 4) { y[i] = 0.299 * d[p] + 0.587 * d[p + 1] + 0.114 * d[p + 2]; sum += y[i]; }
+    // sharpness per tile (4 x 4), keep the sharpest quarter of the tiles: the cards are the detailed part of the photo
+    const T = 4, tv = [];
+    for (let ty = 0; ty < T; ty++) for (let tx = 0; tx < T; tx++) {
+      const x0 = Math.max(1, Math.floor(tx * w / T)), x1 = Math.min(w - 1, Math.floor((tx + 1) * w / T)), y0 = Math.max(1, Math.floor(ty * h / T)), y1 = Math.min(h - 1, Math.floor((ty + 1) * h / T));
+      let n = 0, m = 0, m2 = 0;
+      for (let yy = y0; yy < y1; yy++) for (let xx = x0; xx < x1; xx++) { const i = yy * w + xx, L = y[i - 1] + y[i + 1] + y[i - w] + y[i + w] - 4 * y[i]; n++; m += L; m2 += L * L; }
+      if (n) { m /= n; tv.push(m2 / n - m * m); }
+    }
+    tv.sort((a, b) => b - a); const top = tv.slice(0, Math.max(1, Math.round(tv.length / 4))), sharp = top.reduce((a, v) => a + v, 0) / top.length;
+    const bright = sum / y.length, issues = [];
+    if (short < Q.small) issues.push('small'); else if (bright < Q.dark) issues.push('dark'); else if (sharp < Q.blur) issues.push('blurry');
+    return { sharp: Math.round(sharp), bright: Math.round(bright), short, issues };
+  }
+  const SAY = { blurry: 'looks blurry', dark: 'is too dark', small: 'is too small', glare: 'has glare on the cards', far: 'has the cards too far away', cut: 'has cards cut off at the edge', unreadable: 'couldn’t be read' };
+  const FIX = { blurry: 'Hold steady and tap the screen to focus on the cards.', dark: 'Try brighter light, or turn on the flash with the cards out of their sleeves.', small: 'Use the camera’s full-size photo rather than a screenshot or thumbnail.', glare: 'Tilt the cards or the phone a little so the light doesn’t reflect on them.', far: 'Move closer so the cards fill most of the photo.', cut: 'Step back a little so every card is fully in the photo.', unreadable: 'Try closer, in good light, with the card numbers in focus.' };
+  const LABEL = { blurry: 'Blurry', dark: 'Too dark', small: 'Too small', glare: 'Glare', far: 'Too far', cut: 'Cut off', unreadable: 'Unreadable' };
+  function issueText(list, n) {
+    // list: [{photo, problem}] ; n photos in the batch
+    const p = list[0], who = n > 1 ? 'Photo ' + p.photo : 'That photo';
+    const more = list.length > 1 ? ' ' + list.slice(1).map(x => 'Photo ' + x.photo + ' ' + SAY[x.problem] + '.').join(' ') : '';
+    return who + ' ' + SAY[p.problem] + '. ' + FIX[p.problem] + more;
   }
   const WHY = { limit: 'limit', busy: 'Card reading is busy right now. Try again in a minute.', key: 'Card reading isn’t available right now.', billing: 'Card reading isn’t available right now.', setup: 'Card reading isn’t set up yet.', offline: 'You look offline. Connect and try again.', failed: 'Those photos couldn’t be read. Try again, or try a clearer photo.' };
-  async function run(files, adding) {
+  async function run(files, adding, force) {
     files = files.filter(f => /^image\//.test(f.type) || /\.(jpe?g|png|webp|heic|heif)$/i.test(f.name || '')).slice(0, MAX);
     if (!files.length) return;
     build(); if (!dlg.open) show();
     const tok = ++st.tok;
     if (!adding) { st.rows = []; st.fixing = -1; }
     step(adding && st.rows.length ? 2 : 1);
-    $('scan-err').hidden = true; $('scan-retry').hidden = true; $('scan-up').hidden = true; $('scan-wait').hidden = false; $('scan-shots').classList.remove('done'); $('scan-wait').textContent = files.length > 1 ? 'Reading ' + files.length + ' photos…' : 'Reading your cards…';
+    $('scan-err').hidden = true; $('scan-retry').hidden = true; $('scan-up').hidden = true; $('scan-chk').hidden = true; $('scan-wait').hidden = false; $('scan-shots').classList.remove('done'); $('scan-wait').textContent = files.length > 1 ? 'Reading ' + files.length + ' photos…' : 'Reading your cards…';
     if (adding && st.rows.length) { $('scan-sub').textContent = 'Reading the new photo…'; $('scan-go').disabled = true; }
-    let imgs = [];
-    try { imgs = await Promise.all(files.map(shrink)); } catch (e) { return fail('That photo couldn’t be opened. Try a JPEG or PNG.', tok); }
+    let shots = [];
+    try { shots = await Promise.all(files.map(shrink)); } catch (e) { return fail('That photo couldn’t be opened. Try a JPEG or PNG.', tok); }
     if (tok !== st.tok) return;
+    const imgs = shots.map(s => s.url);
+    if (window.CT_SCAN_DEBUG) console.log('photo check', JSON.stringify(shots.map(s => s.q)));
+    // the photo check: stop clearly bad photos before they use a scan (Retake, or Use anyway)
+    const bad = shots.map((s, i) => ({ photo: i + 1, problem: s.q.issues[0] })).filter(x => x.problem);
+    if (bad.length && !force) {
+      step(1); $('scan-wait').hidden = true; $('scan-tip1').hidden = true;
+      $('scan-shots').classList.add('done');
+      $('scan-shots').innerHTML = shots.map((s, i) => '<span class="scan-shot' + (s.q.issues.length ? ' bad' : '') + '"><img src="' + s.url + '" alt="" draggable="false"><i></i>' + (s.q.issues.length ? '<b>' + LABEL[s.q.issues[0]] + '</b>' : '') + '</span>').join('');
+      const e = $('scan-err'); e.textContent = issueText(bad, shots.length) + ' A clear photo gets better matches and doesn’t waste a scan.'; e.hidden = false;
+      st.pending = { files, adding }; $('scan-chk').hidden = false; $('scan-chk').querySelector('[data-scan-file]').dataset.add = adding ? '1' : '';
+      return;
+    }
+    $('scan-tip1').hidden = false;
     if (!adding || !st.rows.length) $('scan-shots').innerHTML = imgs.map(u => '<span class="scan-shot"><img src="' + u + '" alt="" draggable="false"><i></i></span>').join('');
     const url = URL_();
     if (!url) return fail('Add from photo works once you’re signed in.', tok);
@@ -94,15 +142,19 @@
       if (j.error === 'limit') return limitFail(tok);
       return fail(WHY[j.error] || j.error || WHY.failed, tok);
     }
-    const items = j.items || [];
+    const items = j.items || [], issues = (j.issues || []).filter(x => SAY[x.problem]);
     st.crowded = (j.crowded || []).length;
-    if (!items.length && !st.rows.length) return fail('No cards found in ' + (imgs.length > 1 ? 'those photos' : 'that photo') + '. Try closer, with the card numbers in focus and no glare.', tok, true);
+    const free = j.uncounted ? ' ' + (j.uncounted === imgs.length ? (imgs.length > 1 ? 'They didn’t' : 'It didn’t') : j.uncounted + (j.uncounted === 1 ? ' photo didn’t' : ' photos didn’t')) + ' count toward your scans.' : '';
+    if (!items.length && !st.rows.length) return fail((issues.length ? issueText(issues, imgs.length) : 'No cards found in ' + (imgs.length > 1 ? 'those photos' : 'that photo') + '. Try closer, with the card numbers in focus and no glare.') + free, tok, true);
     $('scan-wait').textContent = 'Matching ' + items.length + (items.length === 1 ? ' item…' : ' items…');
     const found = await Promise.all(items.map(match));
     if (tok !== st.tok) return;
     st.rows = st.rows.concat(found);
     step(2); paint();
-    if (st.crowded) { const e2 = $('scan-err2'); e2.textContent = (st.crowded > 1 ? 'Some photos had' : 'That photo had') + ' more than 4 cards, so the first 4 were read. Add another photo for the rest.'; e2.hidden = false; e2.classList.add('note'); }
+    const notes = [];
+    if (st.crowded) notes.push((st.crowded > 1 ? 'Some photos had' : 'That photo had') + ' more than 4 cards, so the first 4 were read. Add another photo for the rest.');
+    if (issues.length) notes.push(issueText(issues, imgs.length) + ' Some cards may be missing or need a check.' + free);
+    if (notes.length) { const e2 = $('scan-err2'); e2.textContent = notes.join(' '); e2.hidden = false; e2.classList.add('note'); }
     window.CTTrack && window.CTTrack.ev && window.CTTrack.ev('scan', String(found.length));
   }
   function fail(text, tok, retry) {
@@ -289,5 +341,5 @@
     document.body.appendChild(inp); inp.click();
     setTimeout(() => { if (inp.isConnected && !inp.files.length) inp.remove(); }, 120000);
   }
-  window.CTScan = { open, run, close };
+  window.CTScan = { open, run, close, _assess: assess };
 })();

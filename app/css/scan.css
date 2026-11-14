@@ -98,3 +98,9 @@
 #scan-s2 .scan-tip{text-align:left;margin-top:12px}
 .scan-err.note{color:var(--ct-muted,#6b6862)}
 @media(max-width:760px){.scan-ra{gap:0}.scan-ic{width:30px;height:30px}.scan-r{gap:6px 10px}}
+
+/* v52.98 photo check: the problem on the photo, Retake / Use anyway */
+.scan-shot b{position:absolute;left:8px;top:8px;line-height:1;padding:5px 9px;border-radius:999px;background:#c23a3f;color:#fff;font-size:12px;font-weight:800}
+.scan-shot.bad img{filter:saturate(.8)}
+.scan-acts.two{gap:10px}.scan-acts.two .scan-btn{margin-top:0;flex:1;max-width:200px;height:46px;line-height:46px;font-size:15px;font-weight:800;padding:0 14px}
+.scan-btn.ghost{box-shadow:inset 0 0 0 1px var(--ct-line,rgba(0,0,0,.14))}
