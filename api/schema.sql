@@ -42,6 +42,8 @@ CREATE TABLE IF NOT EXISTS usage_user ( day TEXT NOT NULL, user_id TEXT NOT NULL
 CREATE INDEX IF NOT EXISTS cards_name ON cards(name);
 -- Ask (v45): questions asked per account per month, and the month's tokens (for the spending cap)
 CREATE TABLE IF NOT EXISTS ask_usage ( user_id TEXT NOT NULL, month TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (user_id, month) );
+-- v52.96 Add from photo: photos read per person per month
+CREATE TABLE IF NOT EXISTS scan_usage ( user_id TEXT NOT NULL, month TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (user_id, month) );
 CREATE TABLE IF NOT EXISTS ask_spend ( month TEXT PRIMARY KEY, tin INTEGER NOT NULL DEFAULT 0, tout INTEGER NOT NULL DEFAULT 0, n INTEGER NOT NULL DEFAULT 0 );
 
 -- v50 analytics: one row per day per count (totals only), and who was active each day (for active people, time in the app

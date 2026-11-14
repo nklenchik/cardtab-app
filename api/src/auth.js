@@ -6,6 +6,7 @@ import { handleAlerts } from './alerts.js';
 import { handleShare } from './share.js';
 import { handleEvents, handleStats, handleSiteStats } from './analytics.js';
 import { handleAsk } from './ask.js';
+import { handleScan } from './scan.js';
 import { handlePasskey } from './passkey.js';
 import { noteGeo } from './geo.js';
 import { handleAdSpend } from './audience.js';
@@ -21,6 +22,7 @@ import { handleAnnounce, takeNews } from './announce.js';
    GET  /auth/me            the signed-in person, or 401
    POST /auth/logout        end this session
    POST /auth/ask           a question about your own numbers (see ask.js)
+   POST /auth/scan          photos of cards in, what's on them out (see scan.js)
    POST /auth/logout-all    end every session for this account (Sign out of all devices)
    POST /auth/delete        delete the account and every session
    POST /auth/plan {plan}   admins only: switch your own plan for testing
@@ -197,6 +199,7 @@ export async function handleAuth(env, req, path) {
   // v50.63 Premium billing (Stripe) and, for admins, finding people and giving Premium
   if (path.startsWith('/auth/billing') || path.startsWith('/auth/admin/people')) { try { const r = await handleBilling(env, req, me, path, (body, status = 200) => out(env, req, body, status), isAdmin(env, me.email)); if (r) return r; } catch (e) { return out(env, req, { error: e.status === 503 ? 'Payments aren’t set up yet.' : (e.message || 'Something went wrong. Try again.') }, e.status || 500); } }
   if (path === '/auth/sync' && req.method === 'POST') return handleSync(env, req, me, (body, status = 200) => out(env, req, body, status));
+  if (path === '/auth/scan' && req.method === 'POST') return handleScan(env, req, Object.assign({}, me, { role: isAdmin(env, me.email) ? 'admin' : 'user' }), (body, status = 200) => out(env, req, body, status));   // v52.96 Add from photo
   if (path === '/auth/ask' && req.method === 'POST') return handleAsk(env, req, Object.assign({}, me, { role: isAdmin(env, me.email) ? 'admin' : 'user' }), (body, status = 200) => out(env, req, body, status));
   // v50.5 shared boards
   if ((path === '/auth/share' || path === '/auth/share/invite') && req.method === 'POST') return handleShare(env, req, Object.assign({}, me, { admin: isAdmin(env, me.email) }), path, (body, status = 200) => out(env, req, body, status));
