@@ -1,4 +1,4 @@
-/* Add from photo (v52.96; v52.98 photo check).
+/* Add from photo (v52.96; v52.98 photo check; v52.99 cards appear as they're read, Undo, learns from every scan).
    Before anything is sent, each photo is checked on the phone for blur, darkness and size (Retake or Use anyway); the
    card reader then says if a photo had glare or cards too far away, and photos it couldn't read don't count.
    Snap or pick up to 4 photos (a binder page, cards on a table, slabs, sealed product). The server reads what's on them
@@ -108,7 +108,7 @@
     if (!files.length) return;
     build(); if (!dlg.open) show();
     const tok = ++st.tok;
-    if (!adding) { st.rows = []; st.fixing = -1; }
+    if (!adding) { sendAll(0); st.rows = []; st.gone = []; st.fixing = -1; }
     step(adding && st.rows.length ? 2 : 1);
     $('scan-err').hidden = true; $('scan-retry').hidden = true; $('scan-up').hidden = true; $('scan-chk').hidden = true; $('scan-wait').hidden = false; $('scan-shots').classList.remove('done'); $('scan-wait').textContent = files.length > 1 ? 'Reading ' + files.length + ' photos…' : 'Reading your cards…';
     if (adding && st.rows.length) { $('scan-sub').textContent = 'Reading the new photo…'; $('scan-go').disabled = true; }
@@ -133,30 +133,87 @@
     if (!url) return fail('Add from photo works once you’re signed in.', tok);
     // already known to be out of scans this month: say so before sending anything
     if (st.info && st.info.left != null && st.info.left < imgs.length && !st.info.admin) { if (st.info.left > 0) return fail('You have ' + st.info.left + (st.info.left === 1 ? ' photo scan' : ' photo scans') + ' left this month. Pick fewer photos.', tok, true); st.info.left = 0; return limitFail(tok); }
-    let r, j = {};
-    try { r = await fetch(url, { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ images: imgs }) }); j = await r.json().catch(() => ({})); }
+    // v52.99: streamed. Each card shows as soon as it's read (a placeholder row first, filled in when it's matched)
+    const batch = { scan: null, sent: false }, startN = st.rows.length;
+    let r, j = null, n = 0;
+    try { r = await fetch(url, { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ images: imgs, stream: true }) }); }
     catch (e) { return fail(WHY.offline, tok); }
     if (tok !== st.tok) return;
-    if (j.limit != null) st.info = { left: j.left, limit: j.limit, resets: j.resets, plan: j.plan };
-    if (!r.ok) {
-      if (j.error === 'limit') return limitFail(tok);
-      return fail(WHY[j.error] || j.error || WHY.failed, tok);
+    const fills = [];
+    const add = it => {
+      const row = { it, card: null, list: [], check: true, price: '', idx: n++, batch, loading: true };
+      st.rows.push(row);
+      if (st.rows.length === startN + 1) { step(2); st.streaming = true; }
+      fills.push(match(it).then(m => { if (tok !== st.tok) return; Object.assign(row, m, { idx: row.idx, batch, loading: false, price: row.price }); row.orig = row.card; row.auto = !!row.card && !row.check; paint(); }));
+      paint();
+    };
+    if (r.ok && /ndjson/.test(r.headers.get('content-type') || '') && r.body && r.body.getReader) {
+      st.streaming = true;
+      const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '';
+      try {
+        for (;;) {
+          const { value, done } = await rd.read(); if (done) break;
+          if (tok !== st.tok) { try { rd.cancel(); } catch (e) {} return; }
+          buf += dec.decode(value, { stream: true });
+          let nl; while ((nl = buf.indexOf('\n')) >= 0) {
+            const line = buf.slice(0, nl).trim(); buf = buf.slice(nl + 1); if (!line) continue;
+            let o; try { o = JSON.parse(line); } catch (e) { continue; }
+            if (o.item) add(o.item); else if (o.done) j = o.done; else if (o.error) j = { error: o.error };
+          }
+        }
+      } catch (e) { if (!j) j = { error: 'offline' }; }
+    } else {
+      j = await r.json().catch(() => ({}));
+      if (r.ok) (j.items || []).forEach(add);
+      else j.status = r.status;
     }
-    const items = j.items || [], issues = (j.issues || []).filter(x => SAY[x.problem]);
+    st.streaming = false;
+    if (tok !== st.tok) return;
+    j = j || { error: 'failed' };
+    if (j.limit != null) st.info = { left: j.left, limit: j.limit, resets: j.resets, plan: j.plan };
+    if (j.error) {
+      if (n) { paint(); }
+      if (j.error === 'limit') return limitFail(tok);
+      return fail(WHY[j.error] || (j.status ? j.error : '') || WHY.failed, tok);
+    }
+    batch.scan = j.scan || null;
+    // the final list is the server's: add anything the stream didn't deliver
+    const items = j.items || [];
+    for (let k = n; k < items.length; k++) add(items[k]);
+    await Promise.all(fills);
+    if (tok !== st.tok) return;
+    // what earlier scans learned: when people keep fixing this exact read to one card, start on that card
+    await Promise.all(items.map(async (it, k) => {
+      if (!it.learned) return; const row = st.rows.find(x => x.batch === batch && x.idx === k); if (!row) return;
+      row.it.learned = it.learned;
+      if (row.card && listName(row.card) === it.learned) { row.check = false; row.auto = true; row.orig = row.card; return; }
+      const p = window.CardParser ? window.CardParser.parse(it.learned.replace(/ - /g, ' ')) : { name: it.learned };
+      const res = window.CardLookup ? await window.CardLookup.remote(p) : { list: [] };
+      const hit = (res.list || []).find(c => listName(c) === it.learned);
+      if (hit) { row.card = hit; row.orig = hit; row.check = false; row.auto = true; row.list = [hit].concat((row.list || []).filter(c => c !== hit)).slice(0, 6); }
+    }));
+    if (tok !== st.tok) return;
+    const issues = (j.issues || []).filter(x => SAY[x.problem]);
     st.crowded = (j.crowded || []).length;
     const free = j.uncounted ? ' ' + (j.uncounted === imgs.length ? (imgs.length > 1 ? 'They didn’t' : 'It didn’t') : j.uncounted + (j.uncounted === 1 ? ' photo didn’t' : ' photos didn’t')) + ' count toward your scans.' : '';
-    if (!items.length && !st.rows.length) return fail((issues.length ? issueText(issues, imgs.length) : 'No cards found in ' + (imgs.length > 1 ? 'those photos' : 'that photo') + '. Try closer, with the card numbers in focus and no glare.') + free, tok, true);
-    $('scan-wait').textContent = 'Matching ' + items.length + (items.length === 1 ? ' item…' : ' items…');
-    const found = await Promise.all(items.map(match));
-    if (tok !== st.tok) return;
-    st.rows = st.rows.concat(found);
+    if (!items.length && st.rows.length === startN) { sendFeedback(batch, 0); if (!st.rows.length) return fail((issues.length ? issueText(issues, imgs.length) : 'No cards found in ' + (imgs.length > 1 ? 'those photos' : 'that photo') + '. Try closer, with the card numbers in focus and no glare.') + free, tok, true); }
     step(2); paint();
     const notes = [];
     if (st.crowded) notes.push((st.crowded > 1 ? 'Some photos had' : 'That photo had') + ' more than 4 cards, so the first 4 were read. Add another photo for the rest.');
     if (issues.length) notes.push(issueText(issues, imgs.length) + ' Some cards may be missing or need a check.' + free);
     if (notes.length) { const e2 = $('scan-err2'); e2.textContent = notes.join(' '); e2.hidden = false; e2.classList.add('note'); }
-    window.CTTrack && window.CTTrack.ev && window.CTTrack.ev('scan', String(found.length));
+    window.CTTrack && window.CTTrack.ev && window.CTTrack.ev('scan', String(items.length));
   }
+  // v52.99 learning: how the list was used goes back to the server (never the photo): which matches were kept, changed,
+  // removed or typed in, and whether the lot was added. Repeated fixes are used to pick the right card on later scans.
+  function outcome(r) { if (r.gone) return 'removed'; if (r.typed) return 'typed'; if (r.card && r.card !== r.orig) return 'changed'; if (r.card) return 'kept'; return 'unmatched'; }
+  function sendFeedback(batch, added) {
+    if (!batch || batch.sent || !batch.scan) return; batch.sent = true;
+    const url = URL_(); if (!url) return;
+    const rows = st.rows.concat(st.gone || []).filter(r => r.batch === batch && !r.loading).map(r => ({ i: r.idx, outcome: outcome(r), auto: !!r.auto, final: r.card ? listName(r.card) : r.typed ? [r.it.name, r.it.number, r.it.set].filter(Boolean).join(' - ') : '' }));
+    try { fetch(url, { method: 'POST', credentials: 'include', keepalive: true, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ feedback: { scan: batch.scan, added: added || 0, rows } }) }).catch(() => {}); } catch (e) {}
+  }
+  function sendAll(added) { const seen = new Set(); st.rows.concat(st.gone || []).forEach(r => { if (r.batch && !seen.has(r.batch)) { seen.add(r.batch); sendFeedback(r.batch, added ? st.rows.filter(x => x.batch === r.batch).length : 0); } }); }
   function fail(text, tok, retry) {
     if (tok !== st.tok) return;
     if (st.rows.length) { step(2); paint(); const e2 = $('scan-err2'); e2.textContent = text; e2.hidden = false; return; }
@@ -229,7 +286,9 @@
   }
   function paintRows() {
     const each = st.mode === 'each', sh = shares();
+    const SK = (t, m) => '<div class="scan-r sk" aria-hidden="true"><span class="scan-art ph sk"></span><div class="tx"><div class="n">' + esc(t) + '</div><div class="m">' + esc(m) + '</div></div></div>';
     $('scan-rows').innerHTML = st.rows.map((r, i) => {
+      if (r.loading) return SK(r.it.name, 'Finding the card…');
       const fix = st.fixing === i;
       return '<div class="scan-r' + (r.check ? ' chk' : '') + (fix ? ' fixing' : '') + '" data-i="' + i + '">' + artOf(r) +
         '<div class="tx"><div class="n">' + esc(nameOf(r)) + '</div><div class="m">' + esc(metaOf(r) || 'Not matched to a card yet') + '</div>' +
@@ -238,7 +297,7 @@
         '<div class="scan-ra"><button type="button" class="scan-ic" data-fix="' + i + '" aria-label="Change ' + esc(nameOf(r)) + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>' +
         '<button type="button" class="scan-ic" data-rm="' + i + '" aria-label="Remove ' + esc(nameOf(r)) + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
         (fix ? fixHTML(r, i) : '') + '</div>';
-    }).join('');
+    }).join('') + (st.streaming ? SK('Reading…', 'Looking for more cards') : '');
     if (st.fixing >= 0) { const q = $('scan-rows').querySelector('[data-q]'); if (q && document.activeElement !== q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }
   }
   function fixHTML(r, i) {
@@ -262,7 +321,7 @@
   }
   function onRow(e) {
     const b = e.target.closest('button'); if (!b) return;
-    if (b.dataset.rm != null) { st.rows.splice(+b.dataset.rm, 1); st.fixing = -1; paint(); return; }
+    if (b.dataset.rm != null) { const gone = st.rows.splice(+b.dataset.rm, 1)[0]; if (gone) { gone.gone = true; (st.gone = st.gone || []).push(gone); } st.fixing = -1; paint(); return; }
     if (b.dataset.fix != null) { const i = +b.dataset.fix; st.fixing = st.fixing === i ? -1 : i; const r = st.rows[i]; r.qt = r.qt || 0; paintRows(); return; }
     if (b.dataset.pick) { const [i, k] = b.dataset.pick.split(':').map(Number), r = st.rows[i]; r.card = r.list[k]; r.check = false; r.typed = false; st.fixing = -1; paint(); return; }
     if (b.dataset.keep != null) { const i = +b.dataset.keep, r = st.rows[i], q = (r.q != null ? r.q : r.it.name).trim(); if (q) { const p = window.CardParser ? window.CardParser.parse(q) : { name: q }; r.it = Object.assign({}, r.it, { name: p.name || q, number: p.number || '', set: p.set || '' }); } r.card = null; r.check = false; r.typed = true; st.fixing = -1; paint(); return; }
@@ -270,9 +329,9 @@
   }
   function paint() {
     const n = st.rows.length, sale = st.type === 'sale';
-    $('scan-h').textContent = n ? 'Found ' + n + (n === 1 ? ' item' : ' items') : 'Add from photo';
-    const chk = st.rows.filter(r => r.check).length;
-    $('scan-sub').textContent = !n ? 'Nothing left to add. Add another photo, or close.' : chk ? chk + (chk === 1 ? ' needs' : ' need') + ' a quick check. Tap it to pick the right card.' : 'Check the list, then fill in the details once for all of them.';
+    $('scan-h').textContent = n ? (st.streaming ? 'Found ' + n + ' so far' : 'Found ' + n + (n === 1 ? ' item' : ' items')) : st.streaming ? 'Reading your cards…' : 'Add from photo';
+    const chk = st.rows.filter(r => r.check && !r.loading).length;
+    $('scan-sub').textContent = st.streaming ? 'Cards appear as they’re read. You can start checking them now.' : !n ? 'Nothing left to add. Add another photo, or close.' : chk ? chk + (chk === 1 ? ' needs' : ' need') + ' a quick check. Tap it to pick the right card.' : 'Check the list, then fill in the details once for all of them.';
     $('scan-tlab').textContent = sale ? 'Total sold for' : 'Total paid';
     $('scan-salew').hidden = !sale;
     $('scan-lotw').hidden = st.mode === 'each';
@@ -286,30 +345,39 @@
     const total = sh.reduce((a, v) => a + (v || 0), 0), fe = S.toCents($('scan-fees').value) || 0, sp = S.toCents($('scan-ship').value) || 0;
     $('scan-sum').innerHTML = !n ? '' : ok ? (sale ? 'You keep <b>' + money(total - fe - sp) + '</b> from ' + money(total) : n + (n === 1 ? ' item' : ' items') + ' · <b>' + money(total) + '</b>' + (st.mode === 'lot' && n > 1 ? ' · about ' + money(Math.round(total / n)) + ' each' : '')) : (st.mode === 'each' ? 'Enter a price for each item' : 'Enter what you ' + (sale ? 'sold them for' : 'paid for all of them'));
     const go = $('scan-go'), u = S.usage(), room = u.plan === 'premium' ? Infinity : u.left;
-    go.disabled = !ok || st.busy || n > room;
+    const wait = st.streaming || st.rows.some(r => r.loading);
+    go.disabled = !ok || st.busy || n > room || wait;
     go.textContent = n > room ? (room ? 'Only ' + room + ' free ' + (room === 1 ? 'entry' : 'entries') + ' left this month' : 'Free entries used up this month') : 'Add ' + n + (n === 1 ? ' item' : ' items');
   }
   async function addAll() {
     if (st.busy) return;
     const sh = shares(), sale = st.type === 'sale', plat = $('scan-plat').value, date = $('scan-date').value;
     const fees = sale ? spread(S.toCents($('scan-fees').value) || 0, sh) : null, ship = sale ? spread(S.toCents($('scan-ship').value) || 0, sh) : null;
-    st.busy = true; $('scan-go').disabled = true; let added = 0;
+    st.busy = true; $('scan-go').disabled = true; let added = 0; const ids = [];
+    try { localStorage.setItem('ct.scan', JSON.stringify({ mode: st.mode, plat })); } catch (e) {}
     try {
       for (let i = 0; i < st.rows.length; i++) {
         const r = st.rows[i], c = r.card, g = graded(r) && window.CTGrade ? window.CTGrade.norm({ co: r.it.grader, g: r.it.grade, cert: r.it.cert }) : null, sl = sealed(r);
         const name = c ? listName(c) : [r.it.name, r.it.number, r.it.set].filter(Boolean).join(' - ');
         await S.add({ type: st.type, name, platform: plat, date, qty: 1, amount: sh[i], fees: sale ? fees[i] : null, ship: sale ? ship[i] : null,
-          condition: sl ? 'Sealed' : g ? 'Graded' : 'Near Mint', sealed: sl ? true : undefined, grade: g || undefined, art: (c && c.art) || null, unmatched: !c }, { label: 'Photo entries added' });
+          condition: sl ? 'Sealed' : g ? 'Graded' : 'Near Mint', sealed: sl ? true : undefined, grade: g || undefined, art: (c && c.art) || null, unmatched: !c }, { label: 'Photo entries added' }).then(e => { if (e && e.id) ids.push(e.id); });
         added++;
       }
     } catch (err) {
       st.busy = false; const e2 = $('scan-err2');
       e2.textContent = err.code === 'limit' ? 'Added ' + added + '. You’ve used all your free entries this month.' : 'Something went wrong after ' + added + ' of ' + st.rows.length + '. The rest weren’t added.';
-      e2.hidden = false; st.rows.splice(0, added); paintRows(); sums(); return;
+      e2.hidden = false; if (added) sendAll(true); st.rows.splice(0, added); paintRows(); sums(); return;
     }
     st.busy = false; window.ctBuzz && window.ctBuzz();
+    sendAll(true); st.done = true;
     close(); if (window.CTAddSheet && window.CTAddSheet.isOpen) window.CTAddSheet.close();
-    const t = $('app-toasts'); if (t) { const d = document.createElement('div'); d.className = 'app-toast'; d.setAttribute('role', 'status'); d.textContent = 'Added ' + added + (added === 1 ? ' item' : ' items') + ' from your photo'; t.innerHTML = ''; t.appendChild(d); setTimeout(() => d.remove(), 4200); }
+    // Added 4 items · Undo (takes them all back out, and gives the free entries back)
+    const t = $('app-toasts'); if (t) {
+      const d = document.createElement('div'); d.className = 'app-toast scan-toast'; d.setAttribute('role', 'status');
+      d.innerHTML = '<span>Added ' + added + (added === 1 ? ' item' : ' items') + ' from your photo</span><button type="button">Undo</button>';
+      t.innerHTML = ''; t.appendChild(d); const tm = setTimeout(() => d.remove(), 6500);
+      d.querySelector('button').addEventListener('click', async () => { clearTimeout(tm); for (const id of ids) { try { await S.remove(id); } catch (e) {} } d.querySelector('span').textContent = 'Removed ' + ids.length + (ids.length === 1 ? ' item' : ' items'); d.querySelector('button').remove(); setTimeout(() => d.remove(), 2500); });
+    }
   }
 
   // ---------- open / close ----------
@@ -321,13 +389,16 @@
     const want = df.plat || last; if (want && plats.includes(want)) sel.value = want;
     $('scan-date').value = S.today ? S.today() : new Date().toISOString().slice(0, 10);
     ['scan-total', 'scan-fees', 'scan-ship'].forEach(id => { $(id).value = ''; });
-    st.type = 'purchase'; st.mode = 'lot';
-    [['scan-type', 'purchase'], ['scan-mode', 'lot']].forEach(([id, v]) => $(id).querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v))));
+    let mem = {}; try { mem = JSON.parse(localStorage.getItem('ct.scan') || '{}') || {}; } catch (e) {}
+    if (mem.plat && plats.includes(mem.plat)) sel.value = mem.plat;   // the last platform used for a photo lot
+    st.type = 'purchase'; st.mode = mem.mode === 'each' ? 'each' : 'lot'; st.done = false;
+    [['scan-type', 'purchase'], ['scan-mode', st.mode]].forEach(([id, v]) => $(id).querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v))));
     dlg.classList.remove('closing'); dlg.showModal();
     const f = $('scan-form'); f.tabIndex = -1; f.style.outline = 'none'; f.focus({ preventScroll: true });
   }
   function close() {
-    if (!dlg || !dlg.open) return; st.tok++;
+    if (!dlg || !dlg.open) return; st.tok++; st.streaming = false;
+    if (!st.done) sendAll(0);   // closed without adding: still tells the reader which matches were right
     const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (calm) { dlg.close(); return; }
     dlg.classList.add('closing'); setTimeout(() => { dlg.classList.remove('closing'); dlg.close(); }, 230);
