@@ -83,7 +83,7 @@ async function search(env, q, ctl) {
     const by = Object.fromEntries(rows.results.map(r => [r.id, r]));
     const got = ids.map(i => by[i]).filter(Boolean);
     // v53.06 answers saved before set search existed: try the set once, then remember that it was tried
-    if (needsSet(q, got.map(r => ({ name: r.name, set_name: r.set_name, number: r.number }))) && !(await env.DB.prepare('SELECT 1 FROM lookups WHERE key=?').bind('s|' + key).first())) {
+    if (needsSet(q, got.map(r => ({ name: r.name, set_name: r.set_name, number: r.number }))) && !(await env.DB.prepare('SELECT 1 FROM lookups WHERE key=? AND fetched_at>?').bind('s|' + key, now - DAY).first())) {
       await env.DB.prepare('INSERT OR REPLACE INTO lookups (key,ids,fetched_at) VALUES (?,?,?)').bind('s|' + key, '[]', now).run();
       const more = await withSet(env, q, [], ctl, key, now);
       if (more.length) {
@@ -140,8 +140,8 @@ async function listSets(env, ctl) {
   const d = new Date().toISOString().slice(0, 10);
   for (const g of pickGames((await jt(env, '/v1/games', ctl)).data)) {
     const list = (await jt(env, '/v1/sets?game=' + encodeURIComponent(g.id), ctl)).data || [];
-    if (list.length) await env.DB.batch(list.map(s => env.DB.prepare('INSERT INTO cat_sets (id,game,name,released,total,listed) VALUES (?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name')
-      .bind(String(s.id), g.id, s.name || '', released(s), Number(s.cards_count || s.count || s.total || 0) || null, d)));
+    for (let i = 0; i < list.length; i += 50) await env.DB.batch(list.slice(i, i + 50).map(s => env.DB.prepare('INSERT INTO cat_sets (id,game,name,released,total,listed) VALUES (?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name')
+      .bind(String(s.id), g.id, s.name || '', released(s), Number(s.cards_count || s.count || s.total || 0) || null, d)));   // in small batches
   }
 }
 async function setSearch(env, q, ctl) {
