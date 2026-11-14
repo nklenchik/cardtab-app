@@ -275,6 +275,8 @@
       row.list = list.slice().sort((a, b) => confirm(b, it) - confirm(a, it)).slice(0, 6);
       if (best >= 2) row.card = tops[0];
       else if (res.pick >= 0 && !it.set && !it.number) row.card = list[res.pick];
+      // v53.05 the name matches exactly but the set or number read doesn't (a misread set): start on that card, marked to check
+      if (!row.card) { const bare = x => nrm(String(x || '').replace(/\s*\(\d+\)\s*$/, '')), same = row.list.filter(c => bare(c.n) === bare(it.name)); if (same.length) row.card = same[0]; }
       // sure: the set and the number both agree (or a full number does), it's the only such printing, and the reading was clear
       row.check = !row.card || best < 3 || tops.length > 1 || it.sure < 0.6;
     } catch (e) { row.check = true; }
@@ -319,7 +321,7 @@
       const fix = st.fixing === i;
       return '<div class="scan-r' + (r.check ? ' chk' : '') + (fix ? ' fixing' : '') + '" data-i="' + i + '"><button type="button" class="scan-del" data-del="' + i + '" tabindex="-1" aria-hidden="true">Remove</button><div class="scan-rin">' + artOf(r) +
         '<div class="tx"><div class="n">' + esc(nameOf(r)) + '</div><div class="m">' + esc(metaOf(r) || 'Not matched to a card yet') + '</div>' +
-        (r.check && !fix ? '<button type="button" class="scan-chk" data-fix="' + i + '">' + (r.card ? 'Check this one' : 'Not found, find it') + '</button>' : '') + '</div>' +
+        (r.check && !fix ? '<button type="button" class="scan-chk" data-fix="' + i + '">' + (r.card ? 'Check this one' : r.list.length ? 'Pick the right one' : 'Not found, find it') + '</button>' : '') + '</div>' +
         (each ? '<span class="scan-in sm"><i>$</i><input type="text" inputmode="decimal" data-price="' + i + '" value="' + esc(r.price) + '" placeholder="0.00" aria-label="Price for ' + esc(nameOf(r)) + '"></span>' : '<span class="scan-share">' + (sh[i] != null ? money(sh[i]) : '') + '</span>') +
         '<div class="scan-ra"><button type="button" class="scan-ic" data-fix="' + i + '" aria-label="Change ' + esc(nameOf(r)) + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>' +
         '<button type="button" class="scan-ic" data-rm="' + i + '" aria-label="Remove ' + esc(nameOf(r)) + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
