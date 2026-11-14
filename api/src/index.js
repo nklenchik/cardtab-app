@@ -81,7 +81,19 @@ async function search(env, q, ctl) {
     const ids = JSON.parse(hit.ids); if (!ids.length) return [];
     const rows = await env.DB.prepare(`SELECT * FROM cards WHERE id IN (${ids.map(() => '?').join(',')})`).bind(...ids).all();
     const by = Object.fromEntries(rows.results.map(r => [r.id, r]));
-    return ids.map(i => by[i]).filter(Boolean).map(rowCard);
+    const got = ids.map(i => by[i]).filter(Boolean);
+    // v53.06 answers saved before set search existed: try the set once, then remember that it was tried
+    if (needsSet(q, got.map(r => ({ name: r.name, set_name: r.set_name, number: r.number }))) && !(await env.DB.prepare('SELECT 1 FROM lookups WHERE key=?').bind('s|' + key).first())) {
+      await env.DB.prepare('INSERT OR REPLACE INTO lookups (key,ids,fetched_at) VALUES (?,?,?)').bind('s|' + key, '[]', now).run();
+      const more = await withSet(env, q, [], ctl, key, now);
+      if (more.length) {
+        const seen = new Set(more.map(c => c.id)), merged = more.concat(got.map(r => ({ id: r.id, game: r.game, name: r.name, set_name: r.set_name, number: r.number, rarity: r.rarity, tcgplayerId: r.tcgplayer_id })).filter(c => !seen.has(c.id))).slice(0, 12);
+        await env.DB.batch(more.map(c => env.DB.prepare('INSERT OR REPLACE INTO cards (id,game,name,set_name,number,rarity,tcgplayer_id,fetched_at) VALUES (?,?,?,?,?,?,?,?)').bind(c.id, c.game, c.name, c.set_name || c.set, c.number, c.rarity, c.tcgplayerId ? String(c.tcgplayerId) : '', now))
+          .concat([env.DB.prepare('INSERT OR REPLACE INTO lookups (key,ids,fetched_at) VALUES (?,?,?)').bind(key, JSON.stringify(merged.map(c => c.id)), now)]));
+        return merged.map(c => normCard({ ...c, set_name: c.set_name || c.set }));
+      }
+    }
+    return got.map(rowCard);
   }
   const known = await fromCatalog(env, q);
   if (known.length) { await env.DB.prepare('INSERT OR REPLACE INTO lookups (key,ids,fetched_at) VALUES (?,?,?)').bind(key, JSON.stringify(known.map(c => c.id)), now).run(); return known; }
@@ -102,16 +114,25 @@ async function search(env, q, ctl) {
   cards = cards.slice(0, 12);
   // v53.06 a set typed with the name ("umbreon evolving skies", "charizard vmax darkness ablaze") that the first results
   // don't reach: look inside that set too. Only when no result already carries every word typed, so plain names cost nothing more.
-  if (q.name && !q.number && !(cards.length && cards.some(c => { const hay = norm((c.name || '') + ' ' + (c.set_name || c.set || '')); return norm(q.name).split(' ').every(w => hay.includes(w)); }))) {
-    const inSet = await setSearch(env, q, ctl).catch(e => { if (e && e.held) throw e; return []; });
-    if (inSet.length) { const seen = new Set(inSet.map(c => c.id)); cards = inSet.concat(cards.filter(c => !seen.has(c.id))).slice(0, 12); }
-  }
+  cards = await withSet(env, q, cards, ctl, key, now);
   const stmts = cards.map(c => env.DB.prepare('INSERT OR REPLACE INTO cards (id,game,name,set_name,number,rarity,tcgplayer_id,fetched_at) VALUES (?,?,?,?,?,?,?,?)').bind(c.id, c.game, c.name, c.set_name || c.set, c.number, c.rarity, c.tcgplayerId ? String(c.tcgplayerId) : '', now));
   stmts.push(env.DB.prepare('INSERT OR REPLACE INTO lookups (key,ids,fetched_at) VALUES (?,?,?)').bind(key, JSON.stringify(cards.map(c => c.id)), now));
   await env.DB.batch(stmts);
   return cards.map(c => normCard({ ...c, set_name: c.set_name || c.set }));
 }
 
+// v53.06 a set typed with the name ("umbreon evolving skies") that no card in the answer carries yet. Sealed products and
+// cards without a number don't count: "Evolving Skies 3 Pack Blister [Umbreon]" holds every word but isn't the card.
+function needsSet(q, cards) {
+  const ws = norm(q.name).split(' ').filter(Boolean); if (!q.name || q.number || (ws.length < 2 && !q.set)) return false;
+  return !cards.some(c => c.number && !/^n ?a$/i.test(norm(c.number)) && (hay => ws.every(w => hay.includes(w)))(norm((c.name || '') + ' ' + (c.set_name || c.set || ''))));
+}
+async function withSet(env, q, cards, ctl) {
+  if (!needsSet(q, cards)) return cards;
+  const inSet = await setSearch(env, q, ctl).catch(e => { if (e && e.held) throw e; return []; });
+  if (!inSet.length) return cards;
+  const seen = new Set(inSet.map(c => c.id)); return inSet.concat(cards.filter(c => !seen.has(c.id))).slice(0, 12);
+}
 // the sets we know (cat_sets, kept by the catalog fill); listed once from JustTCG if it's still empty (a request per game)
 async function listSets(env, ctl) {
   await catEnsure(env);
