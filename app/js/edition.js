@@ -56,5 +56,15 @@
   // the chips: attr names the data attribute each chip carries (its value is the edition, plus pre if given)
   const SHORT = { '4th Edition (UK)': '4th (UK)' };   // so all four fit on one line on a phone
   const chips = (k, cur, attr, pre) => list(k).map(e => '<button type="button" class="ed-chip" ' + attr + '="' + esc((pre || '') + e) + '" aria-pressed="' + (e === cur) + '" aria-label="' + esc(e) + '">' + esc(SHORT[e] || e) + '</button>').join('');
-  root.CTEdition = { kind, list, fromText, start, setText, cardFor, name, merge, HINT, chips };
+  // v53.07 a saved entry's name ("Charizard - 004/102 - Base Set, 1st Edition" or an older "... - Base Set (Shadowless)")
+  function fromName(nm) {
+    const parts = String(nm || '').split(' - '); if (parts.length < 3) return null;
+    let s = parts[parts.length - 1], ed = ''; const m = /^(.*?),\s*(1st Edition|Shadowless|Unlimited|4th Edition \(UK\))\s*$/.exec(s);
+    if (m) { s = m[1]; ed = m[2]; }
+    const c = { n: parts.slice(0, -2).join(' - '), num: parts[parts.length - 2], s }, k = kind(c); if (!k) return null;
+    if (!ed && k === 'base' && norm(s) === 'base set shadowless') ed = 'Shadowless';
+    return { k, card: c, ed };
+  }
+  const rename = (nm, ed) => { const x = fromName(nm); return x ? name(x.card, ed) : nm; };
+  root.CTEdition = { kind, list, fromText, start, setText, cardFor, name, merge, HINT, chips, fromName, rename };
 })(typeof window !== 'undefined' ? window : this);

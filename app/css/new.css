@@ -2631,3 +2631,5 @@ img.ct-card-art.ct-sealed{transition:opacity .25s ease}
 @media(max-width:430px){.ed-chips{gap:5px}#as .ed-chip,dialog#scan .ed-chip,.ed-chip{height:34px;padding:0 10px;font-size:12.5px;letter-spacing:-.005em}}
 #as .ed-sec{margin-bottom:6px}
 @media(prefers-reduced-motion:reduce){.ed-chip{transition:none}}
+.ed-edw .ed-chips{margin-top:6px}
+#ed .ed-chips{gap:4px;flex-wrap:nowrap}@media(min-width:431px){#ed .ed-chips{flex-wrap:wrap}}#ed .ed-chip{height:34px;min-height:0;width:auto;flex:none;padding:0 9px;font-size:12px;font-weight:800;line-height:1;border-radius:999px}#ed .ed-chip[aria-pressed="true"]{background:var(--text,#1c1b19);color:var(--s-card,#fff);border-color:transparent}

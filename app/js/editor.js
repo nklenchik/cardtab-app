@@ -17,6 +17,9 @@
     const rows = kids.filter(k => k.classList.contains('ed-row'));
     const nameF = f('name').closest('.ed-f'), condF = f('condition').closest('.ed-f'), noteF = f('note').closest('.ed-f');
     wrap([nameF], 'ed-g-name');
+    // v53.07 early Pokémon cards: the edition, right under the name
+    const edw = document.createElement('div'); edw.className = 'ed-f ed-edw'; edw.id = 'ed-edw'; edw.hidden = true;
+    edw.innerHTML = '<span class="ed-l">Edition</span><div class="ed-chips" id="ed-ed" role="group" aria-label="Edition"></div>'; nameF.after(edw);
     wrap([rows[0], at('#ed-net-f')], 'ed-g-money');
     wrap([rows[1], condF, at('#ed-grade')], 'ed-g-when');
     wrap([noteF], 'ed-g-note');
@@ -75,7 +78,7 @@
     const last = (() => { try { return JSON.parse(localStorage.getItem('ct.lastEntry') || '{}'); } catch (e) { return {}; } })();
     const e = editing || { type: last.type || 'purchase', platform: last.platform || '', date: S.today(), qty: 1 };
     setType(e.type);
-    f('name').value = e.name || ''; f('amount').value = cents(e.amount);
+    f('name').value = e.name || ''; f('amount').value = cents(e.amount); edPaint();
     if (editing && e.type === 'sale') { f('fees').value = cents(e.fees != null ? e.fees : e.amount - e.net); f('ship').value = cents(e.ship != null ? e.ship : 0); }
     else { f('fees').value = ''; f('ship').value = last.ship != null ? S.fromCents(last.ship) : ''; }
     f('qty').value = e.qty || 1; f('date').value = e.date || S.today(); f('platform').value = e.platform || '';
@@ -109,9 +112,17 @@
     else { f('platform').value = psel.value; f('platform').hidden = true; }
   });
 
+  // the Edition row follows the name: shown for early Pokémon cards, and a tap rewrites the set part of the name
+  function edPaint() {
+    const E = window.CTEdition, x = E ? E.fromName(f('name').value) : null, w = document.getElementById('ed-edw'); if (!w) return;
+    w.hidden = !x; if (x) document.getElementById('ed-ed').innerHTML = E.chips(x.k, x.ed, 'data-ed');
+  }
+  f('name').addEventListener('input', edPaint);
+  form.addEventListener('click', e => { const b = e.target.closest('#ed-ed [data-ed]'); if (!b) return; f('name').value = window.CTEdition.rename(f('name').value, b.dataset.ed); edPaint(); });
   form.addEventListener('submit', async ev => {
     ev.preventDefault();
     const data = { type, name: f('name').value, amount: f('amount').value, fees: f('fees').value, ship: f('ship').value, qty: f('qty').value, date: f('date').value, platform: f('platform').value, condition: f('condition').value, note: f('note').value };
+    { const x = window.CTEdition ? window.CTEdition.fromName(data.name) : null; data.edition = x && x.ed ? x.ed : undefined; }
     if (G) {
       const was = editing && G.of(editing);
       if (data.condition === 'Graded' && f('gg').value) { const v = f('gg').value, g = { co: f('gco').value, g: v === '10P' ? '10' : v, cert: f('gcert').value }; if (v === '10P') g.w = 'PRISTINE'; else if (was && was.w && was.w !== 'PRISTINE' && was.co === g.co && was.g === g.g) g.w = was.w; data.grade = g; }
