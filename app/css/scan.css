@@ -201,3 +201,15 @@ dialog#scan.dragging:not(.start) .scan-form::after{content:attr(data-drop);posit
 .scan-undo{display:block;margin:8px auto 0;border:0;background:none;font:inherit;font-size:14px;font-weight:700;color:var(--ct-muted,#6b6862);text-decoration:underline;text-underline-offset:3px;padding:8px;cursor:pointer}
 @media(max-width:560px){.scan-halves{grid-template-columns:minmax(0,1fr)}.scan-drop,.scan-qrbox{min-height:220px}}
 @media(prefers-reduced-motion:reduce){.scan-live .scan-r.new,.scan-ok{animation:none}.scan-qrsk::after{animation:none}}
+/* v53.06 the edit panel stays inside the screen: long set names wrap to two lines instead of pushing it wider */
+.scan-fix{min-width:0;max-width:100%;box-sizing:border-box}
+.scan-opts{min-width:0}
+.scan-opt{min-width:0;box-sizing:border-box}
+.scan-opt span{flex:1;min-width:0}
+.scan-opt small{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3}
+.scan-fixa{gap:12px}
+/* edition chips in the review list and the edit panel */
+.scan-edq{flex-basis:100%;margin:2px 0 4px 52px;min-width:0}
+.scan-edq p{margin:0 0 8px;font-size:12.5px;font-weight:700;color:var(--bu-warn,#b8650a)}
+.scan-fix .ed-row{margin-top:10px}
+@media(max-width:430px){.scan-edq{margin-left:0}}

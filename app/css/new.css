@@ -2620,3 +2620,14 @@ img.ct-card-art.ct-sealed{transition:opacity .25s ease}
 .zm.zm-s .zm-img{background:none;border-radius:0;box-shadow:none;filter:drop-shadow(0 24px 40px rgba(0,0,0,.45))}
 /* v52.81 phones: an open entry's note lines up with the money column (Sold, Fees and shipping, You kept) above it */
 @media(max-width:760px){.ct-demo .ct-row.expanded .ct-open-actions .ct-row-note{margin-left:calc(var(--ct-art) + var(--nt-x,8px))}}
+#as.nm.st2.kb .sec.ed-sec{display:block}
+/* v53.06 Edition chips (early Pokémon sets): Add's price step, the photo review and its edit panel */
+.ed-chips{display:flex;flex-wrap:wrap;gap:6px}
+.ed-chip{height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--line,rgba(40,30,20,.14));background:var(--card,#fff);color:var(--text,#1c1b19);font:inherit;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;transition:transform .15s,background-color .15s,color .15s}
+#as .ed-chip[aria-pressed="true"],.ed-chip[aria-pressed="true"]{border-color:transparent;background:var(--text,#1c1b19);color:var(--s-card,#fff)}
+.ed-chip:active{transform:scale(.96)}
+.ed-chip:focus-visible{outline:2px solid var(--brand,#a50e37);outline-offset:2px}
+.ed-hint{margin:8px 0 0;font-size:12px;line-height:1.4;color:var(--muted,#6b6862)}
+@media(max-width:430px){.ed-chips{gap:5px}#as .ed-chip,dialog#scan .ed-chip,.ed-chip{height:34px;padding:0 10px;font-size:12.5px;letter-spacing:-.005em}}
+#as .ed-sec{margin-bottom:6px}
+@media(prefers-reduced-motion:reduce){.ed-chip{transition:none}}

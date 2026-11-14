@@ -216,7 +216,7 @@
       const p = window.CardParser ? window.CardParser.parse(it.learned.replace(/ - /g, ' ')) : { name: it.learned };
       const res = window.CardLookup ? await window.CardLookup.remote(p) : { list: [] };
       const hit = (res.list || []).find(c => listName(c) === it.learned);
-      if (hit) { row.card = hit; row.orig = hit; row.check = false; row.auto = true; row.list = [hit].concat((row.list || []).filter(c => c !== hit)).slice(0, 6); }
+      if (hit) { row.card = hit; row.orig = hit; row.check = false; row.auto = true; row.list = [hit].concat((row.list || []).filter(c => c !== hit)).slice(0, 6); edInit(row); }
     }));
     if (tok !== st.tok) return;
     const issues = (j.issues || []).filter(x => SAY[x.problem]);
@@ -263,6 +263,12 @@
     if (sw.length && sw.every(w => nrm(c.s).indexOf(w) > -1)) sc += 2;
     return sc;
   }
+  // v53.06 editions (early Pokémon sets): read from the photo when the stamp or shadow showed, else asked right in the row
+  const ED = () => window.CTEdition;
+  const edKind = r => (ED() && r.card ? ED().kind(r.card) : null);
+  function edInit(r) { const k = edKind(r); if (!k) { r.ed = ''; r.edq = false; return; } const seen = r.it.edition === '4th Edition' ? '4th Edition (UK)' : r.it.edition || ''; r.ed = ED().start(r.card, seen); r.edq = !seen && !(k === 'base' && /shadowless/i.test(r.card.s)); }
+  const edCard = r => (r.ed && ED() ? ED().cardFor(r.card, r.ed, r.full) : r.card);
+  const edName = r => (r.ed && ED() ? ED().name(edCard(r), r.ed) : listName(r.card));
   async function match(it) {
     const row = { it, card: null, list: [], check: true, price: '' };
     const game = /pok/i.test(it.game) ? 'Pokémon' : /dragon ball/i.test(it.game) ? 'Dragon Ball Super' : '';
@@ -271,15 +277,16 @@
     try {
       let res = window.CardLookup ? await window.CardLookup.remote(p) : { list: [], pick: -1 };
       if (!(res.list || []).length && p.number) res = await window.CardLookup.remote(Object.assign({}, p, { number: '' }));
-      const list = (res.list || []).slice(0, 12), sc = list.map(c => confirm(c, it)), best = Math.max(0, ...sc), tops = list.filter((c, i) => sc[i] === best);
-      row.list = list.slice().sort((a, b) => confirm(b, it) - confirm(a, it)).slice(0, 6);
+      const full = (res.list || []).slice(0, 12), list = ED() ? ED().merge(full) : full, sc = list.map(c => confirm(c, it)), best = Math.max(0, ...sc), tops = list.filter((c, i) => sc[i] === best);
+      row.full = full; row.list = list.slice().sort((a, b) => confirm(b, it) - confirm(a, it)).slice(0, 6);
       if (best >= 2) row.card = tops[0];
-      else if (res.pick >= 0 && !it.set && !it.number) row.card = list[res.pick];
+      else if (res.pick >= 0 && !it.set && !it.number) row.card = full[res.pick];
       // v53.05 the name matches exactly but the set or number read doesn't (a misread set): start on that card, marked to check
       if (!row.card) { const bare = x => nrm(String(x || '').replace(/\s*\(\d+\)\s*$/, '')), same = row.list.filter(c => bare(c.n) === bare(it.name)); if (same.length) row.card = same[0]; }
       // sure: the set and the number both agree (or a full number does), it's the only such printing, and the reading was clear
       row.check = !row.card || best < 3 || tops.length > 1 || it.sure < 0.6;
     } catch (e) { row.check = true; }
+    edInit(row);
     return row;
   }
 
@@ -292,7 +299,7 @@
     const c = r.card, bits = [];
     if (graded(r)) bits.push(r.it.grader + ' ' + r.it.grade);
     if (sealed(r)) bits.push('Sealed');
-    if (c) { if (c.s) bits.push(setName(c.s)); if (c.num) bits.push('No. ' + c.num); }
+    if (c) { if (c.s) bits.push(edKind(r) && r.ed ? ED().setText(c, r.ed) : setName(c.s)); if (c.num) bits.push('No. ' + c.num); }
     else { if (r.it.set) bits.push(r.it.set); if (r.it.number) bits.push('No. ' + r.it.number); }
     return bits.join(' · ');
   }
@@ -325,6 +332,7 @@
         (each ? '<span class="scan-in sm"><i>$</i><input type="text" inputmode="decimal" data-price="' + i + '" value="' + esc(r.price) + '" placeholder="0.00" aria-label="Price for ' + esc(nameOf(r)) + '"></span>' : '<span class="scan-share">' + (sh[i] != null ? money(sh[i]) : '') + '</span>') +
         '<div class="scan-ra"><button type="button" class="scan-ic" data-fix="' + i + '" aria-label="Change ' + esc(nameOf(r)) + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>' +
         '<button type="button" class="scan-ic" data-rm="' + i + '" aria-label="Remove ' + esc(nameOf(r)) + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
+        (r.edq && !fix && edKind(r) ? '<div class="scan-edq"><p>Which edition? The photo didn’t show it clearly</p><div class="ed-chips" role="group" aria-label="Edition">' + ED().chips(edKind(r), '', 'data-edp', i + ':') + '</div></div>' : '') +
         (fix ? fixHTML(r, i) : '') + '</div></div>';
     }).join('') + (st.streaming ? SK('Reading…', 'Looking for more cards') : '');
     if (st.fixing >= 0) { const q = $('scan-rows').querySelector('[data-q]'); if (q && document.activeElement !== q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }
@@ -334,6 +342,7 @@
     return '<div class="scan-fix"><input type="search" data-q="' + i + '" value="' + esc(q) + '" placeholder="Card name and number" aria-label="Search for the right card" autocomplete="off" enterkeyhint="search">' +
       '<div class="scan-opts">' + (r.list.length ? r.list.map((c, k) => '<button type="button" class="scan-opt' + (r.card === c ? ' on' : '') + '" data-pick="' + i + ':' + k + '">' +
         (c.art ? '<img src="' + esc(c.art.list) + '" alt="" draggable="false" loading="lazy">' : '<span class="ph"></span>') + '<span><b>' + esc(c.n) + '</b><small>' + esc([setName(c.s), c.num ? 'No. ' + c.num : ''].filter(Boolean).join(' · ')) + '</small></span></button>').join('') : '<p class="scan-none">' + (r.searching ? 'Searching…' : 'No matches yet. Try the name and number as printed.') + '</p>') + '</div>' +
+      (edKind(r) ? '<div class="ed-row"><div class="ed-chips" role="group" aria-label="Edition">' + ED().chips(edKind(r), r.ed, 'data-edp', i + ':') + '</div></div>' : '') +
       '<div class="scan-fixa"><button type="button" data-keep="' + i + '">Keep it as typed</button><button type="button" data-done="' + i + '">Done</button></div></div>';
   }
   let ft = 0;
@@ -344,7 +353,7 @@
     r.searching = true; const tok = ++r.qt;
     const res = window.CardLookup ? await window.CardLookup.remote(p) : { list: [] };
     if (tok !== r.qt || st.fixing !== i) return;
-    r.searching = false; r.list = (res.list || []).slice(0, 6);
+    r.searching = false; r.full = res.list || []; r.list = (ED() ? ED().merge(r.full) : r.full).slice(0, 6);
     const box = $('scan-rows').querySelector('.scan-r[data-i="' + i + '"] .scan-opts');
     if (box) { const tmp = document.createElement('div'); tmp.innerHTML = fixHTML(r, i); box.replaceWith(tmp.querySelector('.scan-opts')); }
   }
@@ -354,7 +363,8 @@
     if (b.dataset.del != null) { swipeRemove(+b.dataset.del); return; }
     if (b.dataset.rm != null) { const gone = st.rows.splice(+b.dataset.rm, 1)[0]; if (gone) { gone.gone = true; (st.gone = st.gone || []).push(gone); } st.fixing = -1; paint(); return; }
     if (b.dataset.fix != null) { const i = +b.dataset.fix; st.fixing = st.fixing === i ? -1 : i; const r = st.rows[i]; r.qt = r.qt || 0; paintRows(); return; }
-    if (b.dataset.pick) { const [i, k] = b.dataset.pick.split(':').map(Number), r = st.rows[i]; r.card = r.list[k]; r.check = false; r.typed = false; st.fixing = -1; paint(); return; }
+    if (b.dataset.edp) { const at = b.dataset.edp.indexOf(':'), i = +b.dataset.edp.slice(0, at), r = st.rows[i]; if (r) { r.ed = b.dataset.edp.slice(at + 1); r.edq = false; paint(); } return; }
+    if (b.dataset.pick) { const [i, k] = b.dataset.pick.split(':').map(Number), r = st.rows[i]; r.card = r.list[k]; r.check = false; r.typed = false; edInit(r); const said = ED() && edKind(r) ? ED().fromText(r.q || '') : ''; if (said && ED().list(edKind(r)).includes(said)) { r.ed = said; r.edq = false; } st.fixing = -1; paint(); return; }
     if (b.dataset.keep != null) { const i = +b.dataset.keep, r = st.rows[i], q = (r.q != null ? r.q : r.it.name).trim(); if (q) { const p = window.CardParser ? window.CardParser.parse(q) : { name: q }; r.it = Object.assign({}, r.it, { name: p.name || q, number: p.number || '', set: p.set || '' }); } r.card = null; r.check = false; r.typed = true; st.fixing = -1; paint(); return; }
     if (b.dataset.done != null) { st.fixing = -1; paintRows(); }
   }
@@ -421,9 +431,9 @@
     try {
       for (let i = 0; i < st.rows.length; i++) {
         const r = st.rows[i], c = r.card, g = graded(r) && window.CTGrade ? window.CTGrade.norm({ co: r.it.grader, g: r.it.grade, cert: r.it.cert }) : null, sl = sealed(r);
-        const name = c ? listName(c) : [r.it.name, r.it.number, r.it.set].filter(Boolean).join(' - ');
+        const ec = c ? edCard(r) : null, name = c ? edName(r) : [r.it.name, r.it.number, r.it.set].filter(Boolean).join(' - ');
         await S.add({ type: st.type, name, platform: plat, date, qty: 1, amount: sh[i], fees: sale ? fees[i] : null, ship: sale ? ship[i] : null,
-          condition: sl ? 'Sealed' : g ? 'Graded' : 'Near Mint', sealed: sl ? true : undefined, grade: g || undefined, art: (c && c.art) || null, unmatched: !c }, { label: 'Photo entries added' }).then(e => { if (e && e.id) ids.push(e.id); });
+          condition: sl ? 'Sealed' : g ? 'Graded' : 'Near Mint', sealed: sl ? true : undefined, grade: g || undefined, art: (ec && ec.art) || null, edition: (c && r.ed) || undefined, unmatched: !c }, { label: 'Photo entries added' }).then(e => { if (e && e.id) ids.push(e.id); });
         added++;
       }
     } catch (err) {
@@ -435,7 +445,7 @@
     sendAll(true); st.done = true;
     if (st.phone) {   // v53.03 on the phone from the QR code: list them on the computer and stay open for more
       const sale2 = st.type === 'sale', items = st.rows.slice(0, added).map((r, i) => { const c = r.card;
-        return { id: ids[i] || '', name: c ? c.n : r.it.name, meta: [c && c.s ? setName(c.s) : r.it.set, c && c.num ? 'No. ' + c.num : r.it.number ? 'No. ' + r.it.number : '', sale2 ? 'Sale' : 'Purchase'].filter(Boolean).join(' · '), amt: '$' + S.fromCents(sh[i] || 0), art: (c && c.art && c.art.list) || '' }; });
+        return { id: ids[i] || '', name: c ? c.n : r.it.name, meta: [c && c.s ? (edKind(r) && r.ed ? ED().setText(c, r.ed) : setName(c.s)) : r.it.set, c && c.num ? 'No. ' + c.num : r.it.number ? 'No. ' + r.it.number : '', sale2 ? 'Sale' : 'Purchase'].filter(Boolean).join(' · '), amt: '$' + S.fromCents(sh[i] || 0), art: (c && c.art && c.art.list) || '' }; });
       pairPost({ op: 'added', code: st.phone.code, items }).catch(() => {});
       st.rows = []; st.gone = []; doneHere(added, items, ids.slice()); return;
     }

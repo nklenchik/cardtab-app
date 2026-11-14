@@ -64,9 +64,9 @@
       const worth = !!p.number || String(p.name || '').replace(/[^a-z0-9]/gi, '').length >= 3;
       if (window.CARDTAB_API && worth) {
         st.busy = true; const tok = ++st.tok; clearTimeout(st.dt);
-        st.dt = setTimeout(() => window.CardLookup.remote(p).then(r => { if (tok !== st.tok) return; st.busy = false; st.list = r.list; st.sel = r.pick; st.why = r.why || ''; render(); }), 450);
+        st.dt = setTimeout(() => window.CardLookup.remote(p).then(r => { if (tok !== st.tok) return; st.busy = false; edList(r); st.why = r.why || ''; render(); }), 450);
         st.list = []; st.sel = -1;
-      } else { const r = window.CardLookup.search(p); st.list = r.list; st.sel = r.pick; st.why = r.why || ''; }
+      } else { const r = window.CardLookup.search(p); edList(r); st.why = r.why || ''; }
       // nothing matched: offer the closest spellings ("Did you mean") before adding it as typed
       st.dym = false;
       if (!st.list.length && !st.busy && window.CardLookup.suggest) { const sg = window.CardLookup.suggest(p); if (sg.length) { st.list = sg; st.sel = -1; st.why = ''; st.dym = true; } }
@@ -134,6 +134,22 @@
 
   // Card name in the list format: "Name - number - set"
   const listName = c => [c.n, c.num, c.s].filter(Boolean).join(' - ');
+  // v53.06 early Pokémon sets: Base Set and its Shadowless listing show as one card, and an Edition row on the price step
+  const ED = () => window.CTEdition;
+  function edList(r) {
+    const all = r.list || [], pk = all[r.pick]; st.full = all;
+    st.list = ED() ? ED().merge(all) : all;
+    st.sel = pk ? (st.list.indexOf(pk) > -1 ? st.list.indexOf(pk) : st.list.findIndex(c => c.n === pk.n && c.num === pk.num)) : -1;
+  }
+  function edPaint(hint) {
+    const c = st.card, k = ED() && c ? ED().kind(c) : null;
+    $('as-edw').hidden = !k;
+    if (!k) { st.ed = ''; return; }
+    $('as-ed').innerHTML = ED().chips(k, st.ed, 'data-ed');
+    const h = $('as-edh'); h.hidden = !hint; if (hint) h.textContent = ED().HINT[st.ed] || '';
+    $('as-pm').textContent = ED().setText(c, st.ed) + ' · ' + c.num + (st.grade ? ' · ' + st.grade : '');
+  }
+  $('as-ed').addEventListener('click', e => { const b = e.target.closest('[data-ed]'); if (!b) return; st.ed = b.dataset.ed; edPaint(true); });
 
   function toPrice(asTyped) {
     const p = st.parsed || {};
@@ -147,6 +163,7 @@
     if (st.sealed) $('as-pm').innerHTML = '<b class="slt">Sealed</b>' + esc(c.s || ''); else
     $('as-pm').textContent = c.typed ? 'Added as typed' : c.s + ' · ' + c.num + (st.grade ? ' · ' + st.grade : '');
     $('as-q').textContent = st.qty;
+    st.ed = !c.typed && ED() ? ED().start(c, inp.value) : ''; edPaint(false);
     show(2); price.value = ''; fees.value = ''; const ls = mem.get().ship; ship.value = ls != null ? S.fromCents(ls) : ''; $('as-err').textContent = ''; upd(); price.focus();
   }
   // Sales: sale price minus transaction fees minus your shipping = what you keep, to the cent
@@ -164,9 +181,9 @@
   async function save() {
     if (sv.disabled) return;
     const sale = st.type === 'sale', c = st.card, v = S.toCents(price.value), fe = S.toCents(fees.value) || 0, sh = S.toCents(ship.value) || 0, k = v - fe - sh;
-    const name = c.typed ? c.n : listName(c);
+    const ec = st.ed && ED() ? ED().cardFor(c, st.ed, st.full) : c, name = c.typed ? c.n : st.ed && ED() ? ED().name(ec, st.ed) : listName(c);
     try {
-      const e = await S.add({ type: st.type, name, platform: $('as-plat').value, qty: st.qty, amount: v, fees: sale ? fe : null, ship: sale ? sh : null, condition: st.sealed ? 'Sealed' : st.grade ? 'Graded' : COND_FULL[CONDS[st.cond]], sealed: st.sealed ? true : undefined, grade: st.grade && window.CTGrade ? window.CTGrade.parse(st.grade) : undefined, art: c.art || null, note: st.grade && !window.CTGrade ? 'Graded ' + st.grade : '', unmatched: !!c.typed });
+      const e = await S.add({ type: st.type, name, platform: $('as-plat').value, qty: st.qty, amount: v, fees: sale ? fe : null, ship: sale ? sh : null, condition: st.sealed ? 'Sealed' : st.grade ? 'Graded' : COND_FULL[CONDS[st.cond]], sealed: st.sealed ? true : undefined, grade: st.grade && window.CTGrade ? window.CTGrade.parse(st.grade) : undefined, art: ec.art || null, edition: st.ed || undefined, note: st.grade && !window.CTGrade ? 'Graded ' + st.grade : '', unmatched: !!c.typed });
       const amt = sale ? k : v;
       st.rows.unshift({ n: c.n, m: (c.typed ? '' : c.s + ' · ') + (st.qty > 1 ? '×' + st.qty + ' · ' : '') + (st.sealed ? 'Sealed' : CONDS[st.cond]), h: c.h, art: c.art, sale, amt, qty: st.qty, isNew: true, id: e.id, sl: st.sealed });
       st.total += sale ? amt : -amt; window.ctBuzz && window.ctBuzz();

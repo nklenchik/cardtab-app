@@ -124,6 +124,7 @@
     // v50.29: graded cards keep their grade (company, grade, optional label word and cert number); false = not graded
     if (e.grade === false || e.grade == null) { if (e.grade !== false) delete e.grade; } else { const g = window.CTGrade ? window.CTGrade.norm(e.grade) : null; if (g) e.grade = g; else delete e.grade; }
     if (e.unmatched) e.unmatched = true; else delete e.unmatched;
+    if (['1st Edition', 'Shadowless', 'Unlimited', '4th Edition (UK)'].includes(e.edition)) { /* v53.06 early Pokémon sets */ } else delete e.edition;
     if (typeof e.sealed === 'boolean') { /* v52.75 a sealed product (pack, box, ETB…) or, false, a card set by hand */ } else delete e.sealed;
     if (e.source != null) e.source = String(e.source).slice(0, 400);
     if (e.artSource != null) e.artSource = /^https?:\/\//i.test(e.artSource) ? String(e.artSource).slice(0, 500) : null;
