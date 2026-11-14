@@ -83,11 +83,14 @@ const RULES = (view, today) => 'You are Ask, inside Card Tab, an app where a tra
   '- Format: plain text. You may use **bold** for one key number and "- " for list items. No headings, no tables.\n' +
   'Today is ' + today + '.' + (view && view.label ? ' They are looking at: ' + String(view.label).slice(0, 80) + (view.from ? ' (' + view.from + ' to ' + (view.to || today) + ')' : '') + (view.platform && view.platform !== 'all' ? ', platform ' + String(view.platform).slice(0, 40) : '') + '. Use that range when the question doesn\'t name one.' : '');
 
-async function claude(env, body) {
+async function claudeRaw(env, body) {
   const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + String(env.ANTHROPIC_API_KEY || '').trim(), ...(env.ANTHROPIC_WORKSPACE_ID ? { 'anthropic-workspace-id': String(env.ANTHROPIC_WORKSPACE_ID).trim() } : {}), 'anthropic-version': '2023-06-01' }, body: JSON.stringify(body) });
   if (!r.ok) { let m = ''; try { const j = await r.json(); m = (j.error && j.error.message) || ''; } catch (er) {} const e = new Error('ai ' + r.status); e.status = r.status; e.detail = String(m).slice(0, 240); throw e; }
-  return r.json();
+  return r;
 }
+async function claude(env, body) { return (await claudeRaw(env, body)).json(); }
+// v52.99: the same call, streamed (photo scans send each card on as soon as it's read)
+const claudeStream = claudeRaw;
 
 export async function handleAsk(env, req, me, out) {
   const key = String(env.ANTHROPIC_API_KEY || '').trim();
@@ -133,9 +136,9 @@ export async function handleAsk(env, req, me, out) {
   await env.DB.batch(writes); await spend(env, m, tin, tout);
   return out({ text, limit, left: Math.max(0, limit - used - 1), resets: info.resets, plan });
 }
-async function spend(env, m, tin, tout) {
-  await env.DB.prepare('INSERT INTO ask_spend (month,tin,tout,n) VALUES (?,?,?,1) ON CONFLICT(month) DO UPDATE SET tin=tin+excluded.tin, tout=tout+excluded.tout, n=n+1').bind(m, tin, tout).run();
+async function spend(env, m, tin, tout, count = 1) {   // count: questions asked (0 for a photo scan, which only adds tokens)
+  await env.DB.prepare('INSERT INTO ask_spend (month,tin,tout,n) VALUES (?,?,?,?) ON CONFLICT(month) DO UPDATE SET tin=tin+excluded.tin, tout=tout+excluded.tout, n=n+excluded.n').bind(m, tin, tout, count).run();
 }
 export { runTool, totals as askTotals };
 // v52.20: shared with the admin dashboard's Ask (adminask.js), so both use one model and one monthly spending cap
-export { claude as claudeCall, spend as addSpend, MODEL as ASK_MODEL, PRICE as ASK_PRICE };
+export { claude as claudeCall, claudeStream, spend as addSpend, MODEL as ASK_MODEL, PRICE as ASK_PRICE };

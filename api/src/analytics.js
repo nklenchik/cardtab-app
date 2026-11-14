@@ -1,4 +1,5 @@
 import { emailStats } from './drip.js';
+import { scanStats } from './scan.js';
 import { ensureAudience, campaigns, bestUsers, tag } from './audience.js';
 // In-house analytics (v50). The app sends small batches of counts ("widget_add: featured", "page_time: board, 42s");
 // the server adds them into one row per day per count, and keeps a list of who was active each day (for active people,
@@ -165,7 +166,7 @@ export async function handleStats(env, req, out) {
     events: ev, eventsPrev: evPrev, eventsByDay: evDay,
     members: Object.fromEntries(members.map(r => [r.plan || 'free', r.n])),
     signups: signups, signupsPrev: (signPrev[0] || {}).n || 0,
-    cohorts, askSpend: spend[0] || null, eventsToday: (evToday[0] || {}).n || 0, vitals,
+    cohorts, askSpend: spend[0] || null, scan: await scanStats(env, from, to).catch(() => null), eventsToday: (evToday[0] || {}).n || 0, vitals,
     askCap: +(env.ASK_MONTH_USD || 25), passkeys: Object.entries(pkm).map(([kind, n]) => ({ kind, n })), campaigns: await campaigns(env, from, to), best: await bestUsers(env), geo: { countries: geoCc, us: geoUs, members: (geoAll[0] || {}).n || 0 }, emails: await emailStats(env, from, to), ...v504
   });
 }

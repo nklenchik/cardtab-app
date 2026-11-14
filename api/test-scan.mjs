@@ -3,7 +3,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert';
 import worker from './src/index.js';
-import { tidy } from './src/scan.js';
+import { tidy, itemsFrom, learnKey } from './src/scan.js';
 
 const sq = new DatabaseSync(':memory:'); sq.exec(readFileSync(new URL('./schema.sql', import.meta.url), 'utf8'));
 const stmt = (sql) => { const o = { sql, args: [], bind(...a) { o.args = a; return o; },
@@ -40,6 +40,13 @@ globalThis.fetch = async (url, init) => {
   assert.equal(url, 'https://api.anthropic.com/v1/messages'); assert.equal(init.headers.authorization, 'Bearer test-key');
   const body = JSON.parse(init.body); sent.push(body);
   if (mode === 'down') return new Response('{}', { status: 529 });
+  if (body.stream) {   // Anthropic's streaming format, the tool input arriving in small pieces
+    const json = JSON.stringify({ photos: [{ photo: 1, readable: true, problem: '' }], items: [{ photo: 1, kind: 'card', name: 'Charizard ex', number: '199/165', set: '151', sure: 0.9 }, { photo: 1, kind: 'card', name: 'Pikachu "Promo" {x}', number: '', sure: 0.4 }] });
+    const ev = [{ type: 'message_start', message: { usage: { input_tokens: 2100, output_tokens: 1 } } }, { type: 'content_block_start', content_block: { type: 'tool_use', name: 'cards' } }];
+    for (let i = 0; i < json.length; i += 7) ev.push({ type: 'content_block_delta', delta: { type: 'input_json_delta', partial_json: json.slice(i, i + 7) } });
+    ev.push({ type: 'message_delta', usage: { output_tokens: 140 } }, { type: 'message_stop' });
+    return new Response(ev.map(e => 'event: ' + e.type + '\ndata: ' + JSON.stringify(e) + '\n\n').join(''), { headers: { 'content-type': 'text/event-stream' } });
+  }
   if (mode === 'unread') return Response.json({ stop_reason: 'tool_use', usage: { input_tokens: 1000, output_tokens: 40 }, content: [{ type: 'tool_use', id: 'tu2', name: 'cards', input: { items: [], photos: [{ photo: 1, readable: false, problem: 'glare' }] } }] });
   if (mode === 'partial') return Response.json({ stop_reason: 'tool_use', usage: { input_tokens: 1000, output_tokens: 40 }, content: [{ type: 'tool_use', id: 'tu3', name: 'cards', input: { items: [{ photo: 2, kind: 'card', name: 'Pikachu', number: '58/102' }], photos: [{ photo: 1, readable: false, problem: 'blurry' }, { photo: 2, readable: true, problem: 'far' }] } }] });
   assert.equal(body.model, 'claude-haiku-5-5'); assert.deepEqual(body.tool_choice, { type: 'tool', name: 'cards' });
@@ -83,4 +90,37 @@ mode = 'unread'; r = await call('/auth/scan', { method: 'POST', cookie: pro, bod
 assert.equal(r.status, 200); assert.equal(j.items.length, 0); assert.equal(j.uncounted, 1); assert.deepEqual(j.issues.map(x => x.problem), ['glare']); assert.equal(used('pro@x.com'), 0); assert.equal(j.left, 5);
 mode = 'partial'; r = await call('/auth/scan', { method: 'POST', cookie: pro, body: { images: [IMG, IMG] } }); j = await r.json();
 assert.equal(j.uncounted, 1); assert.deepEqual(j.issues.map(x => x.photo + x.problem), ['1blurry', '2far']); assert.equal(used('pro@x.com'), 1);
+// itemsFrom: complete objects only, braces inside strings don't confuse it
+let g = itemsFrom('{"photos":[],"items":[{"name":"A {b}","n":1},{"name":"C', 0);
+assert.deepEqual(g.found.map(x => x.name), ['A {b}']); g = itemsFrom('{"photos":[],"items":[{"name":"A {b}","n":1},{"name":"C"}]}', g.next); assert.deepEqual(g.found.map(x => x.name), ['C']); assert.ok(g.end);
+// streamed: one line per card as it's read, then done with the scan id
+mode = 'ok';
+r = await call('/auth/scan', { method: 'POST', cookie: pro, body: { images: [IMG], stream: true } });
+assert.equal(r.headers.get('content-type'), 'application/x-ndjson');
+const lines = (await r.text()).trim().split('\n').map(l => JSON.parse(l));
+assert.deepEqual(lines.filter(l => l.item).map(l => l.item.name), ['Charizard ex', 'Pikachu "Promo" {x}']);
+const done = lines.find(l => l.done).done; assert.equal(done.items.length, 2); assert.ok(done.scan > 0);
+const lg = sq.prepare('SELECT * FROM scan_log WHERE id=?').get(done.scan); assert.equal(lg.tin, 2100); assert.equal(lg.tout, 140); assert.equal(lg.items, 2);
+assert.equal(sq.prepare('SELECT COUNT(*) n FROM scan_item WHERE scan_id=?').get(done.scan).n, 2);
+// scans add tokens to the shared cap but don't count as Ask questions
+assert.equal(sq.prepare('SELECT n FROM ask_spend').get().n, 0);
+// feedback: what happened to each row; fixes that were added teach the next scan once two scans agree
+const fb = (sid, who) => call('/auth/scan', { method: 'POST', cookie: who, body: { feedback: { scan: sid, added: 2, rows: [{ i: 0, outcome: 'kept', auto: true, final: 'Charizard ex - 199/165 - 151' }, { i: 1, outcome: 'changed', auto: false, final: 'Pikachu - 4/53 - Promo' }] } } });
+assert.equal((await fb(done.scan, fan)).status, 404);   // someone else's scan
+assert.equal((await fb(done.scan, pro)).status, 200);
+assert.equal((await (await fb(done.scan, pro)).json()).again, true);   // only once
+assert.equal(sq.prepare('SELECT outcome FROM scan_item WHERE scan_id=? AND idx=1').get(done.scan).outcome, 'changed');
+const k = learnKey({ name: 'Pikachu "Promo" {x}', number: '', set: '' });
+assert.equal(sq.prepare('SELECT n FROM scan_learn WHERE k=?').get(k).n, 1);
+r = await call('/auth/scan', { method: 'POST', cookie: pro, body: { images: [IMG], stream: true } });
+let d2 = (await r.text()).trim().split('\n').map(l => JSON.parse(l)).find(l => l.done).done;
+assert.equal(d2.items[1].learned, undefined);   // one scan isn't enough
+await fb(d2.scan, pro);
+r = await call('/auth/scan', { method: 'POST', cookie: pro, body: { images: [IMG], stream: true } });
+d2 = (await r.text()).trim().split('\n').map(l => JSON.parse(l)).find(l => l.done).done;
+assert.equal(d2.items[1].learned, 'Pikachu - 4/53 - Promo'); assert.equal(d2.items[0].learned, undefined);
+// stats for the dashboard
+const { scanStats } = await import('./src/scan.js');
+const today = new Date().toISOString().slice(0, 10), stt = await scanStats(env, today, today);
+assert.ok(stt.scans >= 3 && stt.tin > 0); assert.ok(stt.fixes.some(f => f.f === 'Pikachu - 4/53 - Promo')); assert.equal(stt.learned, 1);
 console.log('scan tests ok');

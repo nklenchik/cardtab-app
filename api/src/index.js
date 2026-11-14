@@ -150,7 +150,7 @@ export default {
     if (u.pathname === '/s/ev') { try { return await handleSiteEvent(env, req); } catch (e) { return new Response(null, { status: 204 }); } }
     if (u.pathname.startsWith('/e/')) { try { const r = await handleEmailLink(env, req, u.pathname); if (r) return r; } catch (e) { if (u.pathname.endsWith('.gif')) return new Response(null, { status: 204 }); } }   // v52.49 email links
     if (u.pathname === '/stripe/webhook' && req.method === 'POST') return handleWebhook(env, req);   // v50.63
-    if (u.pathname.startsWith('/auth/')) { try { return await handleAuth(env, req, u.pathname); } catch (e) { return new Response(JSON.stringify({ error: e.status === 503 ? 'Sign-in emails aren’t set up yet.' : 'Something went wrong. Try again.' }), { status: e.status || 500, headers: { 'content-type': 'application/json', 'access-control-allow-origin': env.APP_URL || 'https://app.cardtab.app', 'access-control-allow-credentials': 'true' } }); } }
+    if (u.pathname.startsWith('/auth/')) { try { return await handleAuth(env, req, u.pathname, ctx); } catch (e) { return new Response(JSON.stringify({ error: e.status === 503 ? 'Sign-in emails aren’t set up yet.' : 'Something went wrong. Try again.' }), { status: e.status || 500, headers: { 'content-type': 'application/json', 'access-control-allow-origin': env.APP_URL || 'https://app.cardtab.app', 'access-control-allow-credentials': 'true' } }); } }
     if (req.method === 'OPTIONS') return new Response(null, { headers: { ...cors(env), 'access-control-allow-methods': 'GET,POST', 'access-control-allow-headers': 'content-type' } });
     try {
       // v50.46: your own card photos, shared default art and its review queue

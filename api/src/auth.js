@@ -152,7 +152,7 @@ async function googleCallback(env, req) {
   return new Response(null, { status: 302, headers: h });
 }
 
-export async function handleAuth(env, req, path) {
+export async function handleAuth(env, req, path, ctx) {
   if (req.method === 'OPTIONS') return new Response(null, { headers: authCors(env, req) });
   if (path === '/auth/google/start') return googleStart(env, req);
   if (path === '/auth/google/callback') return googleCallback(env, req);
@@ -199,7 +199,7 @@ export async function handleAuth(env, req, path) {
   // v50.63 Premium billing (Stripe) and, for admins, finding people and giving Premium
   if (path.startsWith('/auth/billing') || path.startsWith('/auth/admin/people')) { try { const r = await handleBilling(env, req, me, path, (body, status = 200) => out(env, req, body, status), isAdmin(env, me.email)); if (r) return r; } catch (e) { return out(env, req, { error: e.status === 503 ? 'Payments aren’t set up yet.' : (e.message || 'Something went wrong. Try again.') }, e.status || 500); } }
   if (path === '/auth/sync' && req.method === 'POST') return handleSync(env, req, me, (body, status = 200) => out(env, req, body, status));
-  if (path === '/auth/scan' && req.method === 'POST') return handleScan(env, req, Object.assign({}, me, { role: isAdmin(env, me.email) ? 'admin' : 'user' }), (body, status = 200) => out(env, req, body, status));   // v52.96 Add from photo
+  if (path === '/auth/scan' && req.method === 'POST') return handleScan(env, req, Object.assign({}, me, { role: isAdmin(env, me.email) ? 'admin' : 'user' }), (body, status = 200) => out(env, req, body, status), Object.assign(stream => new Response(stream, { headers: { 'content-type': 'application/x-ndjson', 'cache-control': 'no-store', ...authCors(env, req) } }), { wait: p => ctx && ctx.waitUntil && ctx.waitUntil(p) }));   // v52.96 Add from photo
   if (path === '/auth/ask' && req.method === 'POST') return handleAsk(env, req, Object.assign({}, me, { role: isAdmin(env, me.email) ? 'admin' : 'user' }), (body, status = 200) => out(env, req, body, status));
   // v50.5 shared boards
   if ((path === '/auth/share' || path === '/auth/share/invite') && req.method === 'POST') return handleShare(env, req, Object.assign({}, me, { admin: isAdmin(env, me.email) }), path, (body, status = 200) => out(env, req, body, status));
