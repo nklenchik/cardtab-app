@@ -319,5 +319,7 @@
     }, { once: true });
   } };
 
+  // v52.96 Add from photo: the Photo button in the search field (the sheet stays open underneath until items are added)
+  $('as-cam').addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); if (window.CTScan) window.CTScan.open(); });
   window.CTAddSheet = { open, close, get isOpen() { return dlg.open; } };
 })();

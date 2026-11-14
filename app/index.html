@@ -30,6 +30,7 @@ if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIn
 <link rel="stylesheet" href="css/demo.css?v=50.86">
 <link rel="stylesheet" href="css/app.css?v=50.86">
 <link rel="stylesheet" href="css/addsheet.css?v=50.86">
+<link rel="stylesheet" href="css/scan.css?v=52.96">
 <link rel="stylesheet" href="css/soft.css?v=50.86">
 <link rel="stylesheet" href="css/new.css?v=52.92">
 </head>
@@ -247,7 +248,7 @@ if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIn
 <div class="addplat" id="as-addplat" hidden><input id="as-newplat" type="text" maxlength="40" autocomplete="off" placeholder="Type the platform, like a local shop" aria-label="New platform name" enterkeyhint="done"><button type="button" id="as-saveplat">Add</button><button type="button" class="ghost" id="as-cancelplat">Cancel</button></div>
 <div id="as-s1" style="display:flex;flex-direction:column;flex:1;min-height:0">
 <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-<input id="as-in" type="text" enterkeyhint="next" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Card or product name, set, number&hellip;" aria-label="Card or product"></label>
+<input id="as-in" type="text" enterkeyhint="next" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Card or product name, set, number&hellip;" aria-label="Card or product"><button type="button" class="as-cam" id="as-cam" aria-label="Add from photo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.6"/></svg><span>Photo</span></button></label>
 <div class="chips" id="as-chips" aria-live="polite"></div>
 <div class="body" id="as-res"></div>
 <button class="save" id="as-go" type="button" disabled>Pick one</button>
@@ -315,7 +316,8 @@ if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIn
 <script src="js/parser.js?v=50.86"></script>
 <script src="js/lookup.js?v=52.17"></script>
 <script src="js/editor.js?v=50.86"></script>
-<script src="js/addsheet.js?v=52.77"></script>
+<script src="js/addsheet.js?v=52.96"></script>
+<script src="js/scan.js?v=52.96"></script>
 <script src="js/xlsx-lite.js?v=50.86"></script>
 <script src="js/importer.js?v=50.86"></script>
 <script src="js/import-ui.js?v=50.86"></script>
@@ -331,10 +333,10 @@ if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIn
 <script src="js/artcrop.js?v=50.86.1"></script>
 <script src="js/rise.js?v=50.88.1"></script>
 <script src="js/kbsheet.js?v=50.89.1"></script>
-<script src="js/premcopy.js?v=52.91"></script>
+<script src="js/premcopy.js?v=52.96"></script>
 <script src="js/shell.js?v=52.85"></script>
 <script src="js/toolbar.js?v=50.86"></script>
-<script src="js/board-loader.js?v=52.95"></script>
+<script src="js/board-loader.js?v=52.96"></script>
 <script src="js/install.js?v=50.86"></script>
 <script src="js/artfill.js?v=50.86"></script>
 <script src="js/main.js?v=52.87"></script>

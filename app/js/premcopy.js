@@ -35,18 +35,20 @@
     video: I('<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z"/>'),
     bg: I('<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 16l5-5 4 4 3-3 6 6"/><circle cx="15.5" cy="8.5" r="1.5"/>'),
     win: I('<path d="M8 4h8v5a4 4 0 01-8 0zM8 6H5a3 3 0 003 4M16 6h3a3 3 0 01-3 4M12 13v4M8 21h8M10 17h4"/>'),
-    bars: I('<path d="M5 20V12M10 20V6M15 20v-9M20 20V9"/>')
+    bars: I('<path d="M5 20V12M10 20V6M15 20v-9M20 20V9"/>'),
+    cam: I('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.6"/>')
   };
   // id: [words, icon] — 27 characters or fewer
   const BUL = {
     1: ['No monthly entry limit', 'cal'], 2: ['All your history', 'hist'], 3: ['Any date range', 'range'], 4: ['Import a spreadsheet', 'imp'],
     5: ['50 Ask questions a month', 'ask'], 6: ['All Card Board features', 'board'], 7: ['Every Card Board widget', 'widget'], 8: ['Save every board layout', 'save'],
     9: ['Export to PDF and Excel', 'exp'], 10: ['Every Stories theme + video', 'story'], 11: ['All 24 Stories themes', 'theme'], 12: ['Unlimited Stories video', 'video'],
-    13: ['Every Stories background', 'bg'], 14: ['Stories for any date range', 'range'], 15: ['All-time biggest profits', 'win'], 16: ['Profit by month, all time', 'bars']
+    13: ['Every Stories background', 'bg'], 14: ['Stories for any date range', 'range'], 15: ['All-time biggest profits', 'win'], 16: ['Profit by month, all time', 'bars'],
+    17: ['50 photo scans a month', 'cam']
   };
   // v50.97: each bullet's home page. A sheet shows 3 from the page it opened on (what was tapped is always one of them) and
   // 3 from elsewhere in the app, leaning toward the features this person uses most (counted on this device only).
-  const HOME = { entries: [1, 2, 3, 4], board: [5, 6, 7, 8, 9, 15, 16], stories: [10, 11, 12, 13, 14] };
+  const HOME = { entries: [1, 2, 3, 4, 17], board: [5, 6, 7, 8, 9, 15, 16], stories: [10, 11, 12, 13, 14] };
   const ALL = Object.keys(BUL).map(Number);
   const POOL = { entries: ALL, board: ALL, stories: ALL };   // any bullet can show on any page (the admin page lists them all)
   // what this person has used, by bullet (from the app's own usage counts, kept on this device: see track.js)
@@ -61,7 +63,7 @@
   function pickWeighted(list, n, taken) { taken = taken || []; const u = used(), w = list.map(b => 1 + Math.sqrt((USE[b] || []).reduce((a, k) => a + (+u[k] || 0), 0))), out = [];
     const L = list.slice(); while (out.length < n && L.length) { const tot = w.reduce((a, x) => a + x, 0); let r = Math.random() * tot, i = 0; while (i < L.length - 1 && (r -= w[i]) > 0) i++; if (fits(taken.concat(out), L[i])) out.push(L[i]); L.splice(i, 1); w.splice(i, 1); } return out; }
   // what was tapped -> the bullet that always shows
-  const MUST = { 'locked theme': 11, 'locked background': 13, 'locked story': 12, video: 12, stories: 14, range: 3, 'all time': 2, ask: 5, layouts: 8, export: 9, share: 9, import: 4, 'entries used up': 1, 'entries nearly used': 1, limit: 1 };
+  const MUST = { 'locked theme': 11, 'locked background': 13, 'locked story': 12, video: 12, stories: 14, range: 3, 'all time': 2, ask: 5, scan: 17, layouts: 8, export: 9, share: 9, import: 4, 'entries used up': 1, 'entries nearly used': 1, limit: 1 };
   const STORIES_CTX = /^(locked theme|locked background|locked story|stories|video)$/;
   const pageNow = () => { const x = document.getElementById('csx'); if (x && x.classList.contains('in')) return 'stories'; const c = document.querySelector('.cbx'); if (c && !c.classList.contains('off') && !c.classList.contains('pmonly')) return 'board'; return 'entries'; };
   const rnd = n => Math.floor(Math.random() * n);
