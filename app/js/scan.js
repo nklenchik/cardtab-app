@@ -38,10 +38,10 @@
           '<div class="scan-seg sm" id="scan-mode" role="group" aria-label="How you paid"><button type="button" data-v="lot" aria-pressed="true">One price for all</button><button type="button" data-v="each" aria-pressed="false">Price each</button></div>' +
           '<div class="scan-two" id="scan-lotw"><label class="scan-f"><span id="scan-tlab">Total paid</span><span class="scan-in"><i>$</i><input id="scan-total" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00"></span></label></div>' +
           '<div class="scan-two" id="scan-salew" hidden><label class="scan-f"><span>Fees, all together</span><span class="scan-in"><i>$</i><input id="scan-fees" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00"></span></label><label class="scan-f"><span>Your shipping</span><span class="scan-in"><i>$</i><input id="scan-ship" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00"></span></label></div>' +
-          '<p class="scan-sum" id="scan-sum"></p></div>' +
+          '</div>' +
         '<p class="scan-err" id="scan-err2" role="alert" hidden></p>' +
-        '<button type="button" class="scan-btn" id="scan-go" disabled>Add</button>' +
         '<p class="scan-left" id="scan-left"></p>' +
+        '<div class="scan-bar"><p class="scan-sum" id="scan-sum" aria-live="polite"></p><button type="button" class="scan-btn" id="scan-go" disabled>Add</button></div>' +
       '</section></div>';
     document.body.appendChild(dlg);
     dlg.querySelectorAll('[data-scan-close]').forEach(b => b.addEventListener('click', close));
@@ -54,6 +54,7 @@
     ['scan-total', 'scan-fees', 'scan-ship'].forEach(id => { const el = $(id); el.addEventListener('input', sums); el.addEventListener('blur', () => { const c = S.toCents(el.value); if (c != null && c >= 0 && el.value.trim()) el.value = S.fromCents(c); }); });
     $('scan-go').addEventListener('click', addAll);
     $('scan-rows').addEventListener('click', onRow);
+    swipe($('scan-rows'));
     $('scan-rows').addEventListener('input', e => { if (e.target.matches('[data-price]')) sums(); if (e.target.matches('[data-q]')) findSoon(+e.target.dataset.q, e.target.value); });
     $('scan-rows').addEventListener('keydown', e => { if (e.target.matches('[data-q]') && e.key === 'Escape') { e.stopPropagation(); e.preventDefault(); st.fixing = -1; paintRows(); } });
     return dlg;
@@ -259,17 +260,18 @@
   const graded = r => r.it.kind === 'graded' && r.it.grader && r.it.grade;
   const sealed = r => r.it.kind === 'sealed' || !!(r.card && window.CTSealed && window.CTSealed.is(r.card));
   function nameOf(r) { return r.card ? r.card.n : r.it.name; }
+  const setName = s => String(s || '').replace(/^[A-Za-z0-9]{1,8}(\.[0-9]+)?\s*:\s*/, '').trim() || String(s || '');
   function metaOf(r) {
     const c = r.card, bits = [];
     if (graded(r)) bits.push(r.it.grader + ' ' + r.it.grade);
     if (sealed(r)) bits.push('Sealed');
-    if (c) { if (c.s) bits.push(c.s); if (c.num) bits.push('No. ' + c.num); }
+    if (c) { if (c.s) bits.push(setName(c.s)); if (c.num) bits.push('No. ' + c.num); }
     else { if (r.it.set) bits.push(r.it.set); if (r.it.number) bits.push('No. ' + r.it.number); }
     return bits.join(' · ');
   }
   function artOf(r) {
     const c = r.card;
-    if (c && c.art) return '<span class="scan-art' + (sealed(r) ? ' sl' : '') + '"><img src="' + esc(c.art.list) + '" alt="" draggable="false" loading="lazy"' + (sealed(r) ? ' class="ct-sealed"' : '') + '></span>';
+    if (c && c.art) return '<button type="button" class="scan-art zoom' + (sealed(r) ? ' sl' : '') + '" data-zoom="' + esc(c.art.detail || c.art.list) + '" aria-label="See ' + esc(c.n) + ' bigger"><img src="' + esc(c.art.list) + '" alt="" draggable="false" loading="lazy"' + (sealed(r) ? ' class="ct-sealed"' : '') + '></button>';
     return '<span class="scan-art ph" aria-hidden="true"></span>';
   }
   function shares() {
@@ -290,13 +292,13 @@
     $('scan-rows').innerHTML = st.rows.map((r, i) => {
       if (r.loading) return SK(r.it.name, 'Finding the card…');
       const fix = st.fixing === i;
-      return '<div class="scan-r' + (r.check ? ' chk' : '') + (fix ? ' fixing' : '') + '" data-i="' + i + '">' + artOf(r) +
+      return '<div class="scan-r' + (r.check ? ' chk' : '') + (fix ? ' fixing' : '') + '" data-i="' + i + '"><button type="button" class="scan-del" data-del="' + i + '" tabindex="-1" aria-hidden="true">Remove</button><div class="scan-rin">' + artOf(r) +
         '<div class="tx"><div class="n">' + esc(nameOf(r)) + '</div><div class="m">' + esc(metaOf(r) || 'Not matched to a card yet') + '</div>' +
         (r.check && !fix ? '<button type="button" class="scan-chk" data-fix="' + i + '">' + (r.card ? 'Check this one' : 'Not found, find it') + '</button>' : '') + '</div>' +
         (each ? '<span class="scan-in sm"><i>$</i><input type="text" inputmode="decimal" data-price="' + i + '" value="' + esc(r.price) + '" placeholder="0.00" aria-label="Price for ' + esc(nameOf(r)) + '"></span>' : '<span class="scan-share">' + (sh[i] != null ? money(sh[i]) : '') + '</span>') +
         '<div class="scan-ra"><button type="button" class="scan-ic" data-fix="' + i + '" aria-label="Change ' + esc(nameOf(r)) + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>' +
         '<button type="button" class="scan-ic" data-rm="' + i + '" aria-label="Remove ' + esc(nameOf(r)) + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
-        (fix ? fixHTML(r, i) : '') + '</div>';
+        (fix ? fixHTML(r, i) : '') + '</div></div>';
     }).join('') + (st.streaming ? SK('Reading…', 'Looking for more cards') : '');
     if (st.fixing >= 0) { const q = $('scan-rows').querySelector('[data-q]'); if (q && document.activeElement !== q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }
   }
@@ -304,7 +306,7 @@
     const q = r.q != null ? r.q : [r.it.name, r.it.number].filter(Boolean).join(' ');
     return '<div class="scan-fix"><input type="search" data-q="' + i + '" value="' + esc(q) + '" placeholder="Card name and number" aria-label="Search for the right card" autocomplete="off" enterkeyhint="search">' +
       '<div class="scan-opts">' + (r.list.length ? r.list.map((c, k) => '<button type="button" class="scan-opt' + (r.card === c ? ' on' : '') + '" data-pick="' + i + ':' + k + '">' +
-        (c.art ? '<img src="' + esc(c.art.list) + '" alt="" draggable="false" loading="lazy">' : '<span class="ph"></span>') + '<span><b>' + esc(c.n) + '</b><small>' + esc([c.s, c.num ? 'No. ' + c.num : ''].filter(Boolean).join(' · ')) + '</small></span></button>').join('') : '<p class="scan-none">' + (r.searching ? 'Searching…' : 'No matches yet. Try the name and number as printed.') + '</p>') + '</div>' +
+        (c.art ? '<img src="' + esc(c.art.list) + '" alt="" draggable="false" loading="lazy">' : '<span class="ph"></span>') + '<span><b>' + esc(c.n) + '</b><small>' + esc([setName(c.s), c.num ? 'No. ' + c.num : ''].filter(Boolean).join(' · ')) + '</small></span></button>').join('') : '<p class="scan-none">' + (r.searching ? 'Searching…' : 'No matches yet. Try the name and number as printed.') + '</p>') + '</div>' +
       '<div class="scan-fixa"><button type="button" data-keep="' + i + '">Keep it as typed</button><button type="button" data-done="' + i + '">Done</button></div></div>';
   }
   let ft = 0;
@@ -321,11 +323,45 @@
   }
   function onRow(e) {
     const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.zoom) { const im = b.querySelector('img'); if (window.CTZoom) window.CTZoom.open(b.dataset.zoom, im); return; }
+    if (b.dataset.del != null) { swipeRemove(+b.dataset.del); return; }
     if (b.dataset.rm != null) { const gone = st.rows.splice(+b.dataset.rm, 1)[0]; if (gone) { gone.gone = true; (st.gone = st.gone || []).push(gone); } st.fixing = -1; paint(); return; }
     if (b.dataset.fix != null) { const i = +b.dataset.fix; st.fixing = st.fixing === i ? -1 : i; const r = st.rows[i]; r.qt = r.qt || 0; paintRows(); return; }
     if (b.dataset.pick) { const [i, k] = b.dataset.pick.split(':').map(Number), r = st.rows[i]; r.card = r.list[k]; r.check = false; r.typed = false; st.fixing = -1; paint(); return; }
     if (b.dataset.keep != null) { const i = +b.dataset.keep, r = st.rows[i], q = (r.q != null ? r.q : r.it.name).trim(); if (q) { const p = window.CardParser ? window.CardParser.parse(q) : { name: q }; r.it = Object.assign({}, r.it, { name: p.name || q, number: p.number || '', set: p.set || '' }); } r.card = null; r.check = false; r.typed = true; st.fixing = -1; paint(); return; }
     if (b.dataset.done != null) { st.fixing = -1; paintRows(); }
+  }
+  function swipeRemove(i) {
+    const row = $('scan-rows').querySelector('.scan-r[data-i="' + i + '"]'), done = () => { const gone = st.rows.splice(i, 1)[0]; if (gone) { gone.gone = true; (st.gone = st.gone || []).push(gone); } st.fixing = -1; paint(); };
+    if (!row || matchMedia('(prefers-reduced-motion: reduce)').matches) return done();
+    row.style.height = row.offsetHeight + 'px'; row.classList.add('out');
+    requestAnimationFrame(() => { row.style.height = '0px'; }); setTimeout(done, 260);
+  }
+  // swipe a row left: past a third of the width it's removed; a short swipe leaves the Remove button showing
+  function swipe(box) {
+    let row = null, inn = null, x0 = 0, y0 = 0, dx = 0, on = false, open = null, w = 0;
+    const set = (el, x, anim) => { el.style.transition = anim ? 'transform .22s cubic-bezier(.2,.8,.2,1)' : 'none'; el.style.transform = x ? 'translateX(' + x + 'px)' : ''; };
+    const shut = () => { if (open) { set(open, 0, true); open.closest('.scan-r').classList.remove('open'); open = null; } };
+    box.addEventListener('touchstart', e => {
+      const t = e.target; if (t.closest('input,select,.scan-fix,.scan-del')) return;
+      const r = t.closest('.scan-r'); if (!r || r.classList.contains('sk') || r.classList.contains('fixing')) return;
+      if (open && open !== r.querySelector('.scan-rin')) shut();
+      row = r; inn = r.querySelector('.scan-rin'); w = r.offsetWidth; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; dx = 0; on = false;
+    }, { passive: true });
+    box.addEventListener('touchmove', e => {
+      if (!row) return; const mx = e.touches[0].clientX - x0, my = e.touches[0].clientY - y0;
+      if (!on) { if (Math.abs(mx) < 8 && Math.abs(my) < 8) return; if (Math.abs(my) > Math.abs(mx) || mx > 0 && !row.classList.contains('open')) { row = null; return; } on = true; row.classList.add('swiping'); }
+      e.preventDefault(); dx = Math.min(0, mx + (row.classList.contains('open') ? -92 : 0)); set(inn, dx, false);
+    }, { passive: false });
+    const end = () => {
+      if (!row) return; const r = row; row = null; if (!on) return; r.classList.remove('swiping');
+      const i = +r.dataset.i;
+      if (dx < -w / 3) { set(inn, -w, true); setTimeout(() => swipeRemove(i), 160); open = null; }
+      else if (dx < -46) { set(inn, -92, true); r.classList.add('open'); open = inn; }
+      else { set(inn, 0, true); r.classList.remove('open'); if (open === inn) open = null; }
+    };
+    box.addEventListener('touchend', end); box.addEventListener('touchcancel', end);
+    dlg.addEventListener('pointerdown', e => { if (open && !e.target.closest('.scan-r.open')) shut(); });
   }
   function paint() {
     const n = st.rows.length, sale = st.type === 'sale';
@@ -354,7 +390,7 @@
     const sh = shares(), sale = st.type === 'sale', plat = $('scan-plat').value, date = $('scan-date').value;
     const fees = sale ? spread(S.toCents($('scan-fees').value) || 0, sh) : null, ship = sale ? spread(S.toCents($('scan-ship').value) || 0, sh) : null;
     st.busy = true; $('scan-go').disabled = true; let added = 0; const ids = [];
-    try { localStorage.setItem('ct.scan', JSON.stringify({ mode: st.mode, plat })); } catch (e) {}
+    try { localStorage.setItem('ct.scan', JSON.stringify({ mode: st.mode, plat, type: st.type })); } catch (e) {}
     try {
       for (let i = 0; i < st.rows.length; i++) {
         const r = st.rows[i], c = r.card, g = graded(r) && window.CTGrade ? window.CTGrade.norm({ co: r.it.grader, g: r.it.grade, cert: r.it.cert }) : null, sl = sealed(r);
@@ -391,8 +427,8 @@
     ['scan-total', 'scan-fees', 'scan-ship'].forEach(id => { $(id).value = ''; });
     let mem = {}; try { mem = JSON.parse(localStorage.getItem('ct.scan') || '{}') || {}; } catch (e) {}
     if (mem.plat && plats.includes(mem.plat)) sel.value = mem.plat;   // the last platform used for a photo lot
-    st.type = 'purchase'; st.mode = mem.mode === 'each' ? 'each' : 'lot'; st.done = false;
-    [['scan-type', 'purchase'], ['scan-mode', st.mode]].forEach(([id, v]) => $(id).querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v))));
+    st.type = mem.type === 'sale' ? 'sale' : 'purchase'; st.mode = mem.mode === 'each' ? 'each' : 'lot'; st.done = false;
+    [['scan-type', st.type], ['scan-mode', st.mode]].forEach(([id, v]) => $(id).querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v))));
     dlg.classList.remove('closing'); dlg.showModal();
     const f = $('scan-form'); f.tabIndex = -1; f.style.outline = 'none'; f.focus({ preventScroll: true });
   }
