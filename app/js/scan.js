@@ -227,7 +227,7 @@
     const notes = [];
     if (st.crowded) notes.push((st.crowded > 1 ? 'Some photos had' : 'That photo had') + ' more than 4 cards, so the first 4 were read. Add another photo for the rest.');
     if (issues.length) notes.push(issueText(issues, imgs.length) + ' Some cards may be missing or need a check.' + free);
-    if (notes.length) { const e2 = $('scan-err2'); e2.textContent = notes.join(' '); e2.hidden = false; e2.classList.add('note'); }
+    if (notes.length) { const e2 = $('scan-err2'); e2.textContent = notes.join(' '); e2.hidden = false; e2.classList.add('scan-note'); }
     window.CTTrack && window.CTTrack.ev && window.CTTrack.ev('scan', String(items.length));
   }
   // v52.99 learning: how the list was used goes back to the server (never the photo): which matches were kept, changed,
@@ -396,7 +396,7 @@
     $('scan-tlab').textContent = sale ? 'Total sold for' : 'Total paid';
     $('scan-salew').hidden = !sale;
     $('scan-lotw').hidden = st.mode === 'each';
-    $('scan-err2').hidden = true; $('scan-err2').classList.remove('note');
+    $('scan-err2').hidden = true; $('scan-err2').classList.remove('scan-note');
     paintRows(); sums();
     const i = st.info; $('scan-left').textContent = i && i.plan !== 'premium' && i.left != null ? i.left + (i.left === 1 ? ' free photo scan' : ' free photo scans') + ' left this month' : '';
   }

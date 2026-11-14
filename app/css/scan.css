@@ -97,7 +97,7 @@ dialog#scan .scan-form{width:min(520px,calc(100vw - 32px));padding:24px 22px 24p
 .scan-share:empty{display:none}
 .scan-tip{margin:6px 0 0;text-align:center;font-size:12.5px;color:var(--ct-muted,#6b6862)}
 #scan-s2 .scan-tip{text-align:left;margin-top:12px}
-.scan-err.note{color:var(--ct-muted,#6b6862)}
+.scan-err.scan-note{color:var(--text,#1c1b19);background:var(--bu-warnbg,#fbeed9);border-radius:12px;padding:10px 12px;text-align:left;font-size:13px}
 @media(max-width:760px){.scan-ra{gap:0}.scan-ic{width:30px;height:30px}.scan-r{gap:6px 10px}}
 
 /* v52.98 photo check: the problem on the photo, Retake / Use anyway */
