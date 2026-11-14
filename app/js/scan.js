@@ -223,7 +223,7 @@
   function limitFail(tok) { fail(limitText(), tok, false); if (tok !== st.tok) return; $('scan-retry').hidden = true; $('scan-up').hidden = !(st.info && st.info.plan !== 'premium'); }
   function limitText() {
     const i = st.info || {}, when = i.resets ? new Date(i.resets + 'T12:00:00').toLocaleString('en-US', { month: 'short', day: 'numeric' }) : 'next month';
-    return i.plan === 'premium' ? 'You’ve used all ' + i.limit + ' photo scans this month. More on ' + when + '.' : 'You’ve used your ' + (i.limit || 5) + ' free photo scans this month. More on ' + when + ', or get 50 a month with Premium.';
+    return i.plan === 'premium' ? 'You’ve used all ' + i.limit + ' photo scans this month. More on ' + when + '.' : 'You’ve used your ' + (i.limit || 5) + ' free photo scans this month. More on ' + when + ', or get 100 a month with Premium.';
   }
   // one recognized item -> a row: the catalog's printing when it's a confident match, else what was read (marked to check)
   // v52.97: a printing is only chosen when the set or the number read from the photo backs it up. A slab label often prints
