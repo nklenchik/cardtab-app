@@ -1,6 +1,6 @@
 /* Premium billing in the app (v50.63).
    - The Premium sheet gets a plan picker: yearly (picked first, two months free) or monthly. Anyone who joined before 2027
-     sees the founders prices ($40 a year, $4 a month) until Jan 31, 2027, locked in while they stay subscribed.
+     sees the founders prices ($50 a year, $5 a month) until Jan 31, 2027, locked in while they stay subscribed.
    - Checkout opens in a sheet inside the app (Stripe's own secure form: Apple Pay, Google Pay, cards). Card Tab never sees the card.
    - Right after paying: Premium turns on without a reload, and a welcome screen shows once.
    - Settings → Plan and billing: the plan at a glance, switch monthly/yearly at the next renewal, and Stripe's billing page for
@@ -25,7 +25,7 @@
   function demoStatus() {
     const prem = S.plan() === 'premium', t = Date.now() / 1000;
     return { plan: prem ? 'premium' : 'free', gift: false, ready: true, demo: true, founders: { eligible: t < FOUNDER_UNTIL, until: FOUNDER_UNTIL, joinBefore: JOIN_BEFORE },
-      sub: prem ? { status: 'active', interval: 'year', amount: 4000, founder: true, periodEnd: Math.floor(t + 365 * 86400), cancelAtEnd: false, graceUntil: null, card: { brand: 'visa', last4: '4242' }, pending: null } : null };
+      sub: prem ? { status: 'active', interval: 'year', amount: 5000, founder: true, periodEnd: Math.floor(t + 365 * 86400), cancelAtEnd: false, graceUntil: null, card: { brand: 'visa', last4: '4242' }, pending: null } : null };
   }
   function load(force) {
     if (!REAL) { status = demoStatus(); after(); return Promise.resolve(status); }
@@ -35,8 +35,8 @@
   }
   function after() { paintRow(); banner(); notifyPayfail(); }
   const offer = () => (status && status.founders && status.founders.eligible) || false;
-  const priceOf = interval => (offer() ? (interval === 'year' ? 4000 : 400) : (interval === 'year' ? 6000 : 600));
-  const regular = interval => (interval === 'year' ? 6000 : 600);
+  const priceOf = interval => (offer() ? (interval === 'year' ? 5000 : 500) : (interval === 'year' ? 8000 : 800));
+  const regular = interval => (interval === 'year' ? 8000 : 800);
   const card = c => c ? (c.brand ? c.brand[0].toUpperCase() + c.brand.slice(1) : 'Card') + ' •••• ' + c.last4 : '';
 
   // ---------- the plan picker on the Premium sheet ----------
@@ -175,13 +175,13 @@
     } else if (status.plan === 'premium') h = '<div class="amg bl-hero"><b>Premium</b><small>Turned on for this account.</small></div>';
     else {
       h = '<div class="amg bl-hero"><b>Free</b><small>Up to 20 new entries a month, totals and the starting Card Board for your last 3 months. Every entry stays in your list.</small></div>' +
-        (offer() ? '<div class="amg bl-fnd"><b>Founding member price</b><small>$4 a month or $40 a year, locked in while you stay subscribed. Ends Jan 31, 2027.</small></div>' : '') +
+        (offer() ? '<div class="amg bl-fnd"><b>Founding member price</b><small>$5 a month or $50 a year, locked in while you stay subscribed. Ends Jan 31, 2027.</small></div>' : '') +
         '<button type="button" class="bl-go" data-bl="upgrade">Get Premium</button>';
     }
     h += '<p class="amp-n">' + (status.demo ? 'Preview: on cardtab.app this shows your real plan. ' : '') + 'Payments are handled securely by Stripe. Card Tab never sees or stores your card number.</p>';
     el.innerHTML = h;
   }
-  const priceFor = (founder, iv) => (founder ? (iv === 'year' ? 4000 : 400) : (iv === 'year' ? 6000 : 600));
+  const priceFor = (founder, iv) => (founder ? (iv === 'year' ? 5000 : 500) : (iv === 'year' ? 8000 : 800));
   async function portal() {
     if (!REAL) { toast('Preview: on cardtab.app this opens Stripe’s billing page.'); return; }
     try { const j = await api('/auth/billing/portal', {}); location.href = j.url; } catch (e) { toast(e.message || 'Couldn’t open billing. Try again.'); }
