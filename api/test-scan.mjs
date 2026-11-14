@@ -31,6 +31,8 @@ assert.deepEqual([t[1].photo, t[1].kind, t[1].grader, t[1].grade, t[1].cert], [2
 assert.equal(t[2].kind, 'card'); assert.equal(t[2].grade, '');
 assert.equal(t[3].kind, 'sealed');
 assert.deepEqual(tidy(null, 1), []);
+// at most 4 a photo
+assert.equal(tidy({ items: Array.from({ length: 6 }, (v, i) => ({ photo: 1, name: 'Card ' + i })) }, 1).length, 4);
 
 const IMG = 'data:image/jpeg;base64,' + Buffer.from('fake jpeg bytes').toString('base64');
 const sent = []; let mode = 'ok';

@@ -18,13 +18,15 @@ const GRADERS = ['PSA', 'BGS', 'CGC', 'SGC', 'TAG'];
 
 const TOOL = {
   name: 'cards', description: 'Every trading card, graded slab and sealed product visible in the photos.',
-  input_schema: { type: 'object', required: ['items'], properties: { items: { type: 'array', maxItems: 40, items: { type: 'object', required: ['photo', 'kind', 'name'], properties: {
+  input_schema: { type: 'object', required: ['items'], properties: {
+    crowded: { type: 'array', items: { type: 'integer' }, description: 'Photo numbers that show more than 4 cards (only the first 4 of each are listed)' },
+    items: { type: 'array', maxItems: 16, items: { type: 'object', required: ['photo', 'kind', 'name'], properties: {
     photo: { type: 'integer', description: 'Which photo it is in, starting at 1' },
     kind: { type: 'string', enum: KINDS, description: 'card = a raw card (sleeved or in a toploader too); graded = in a grading company slab; sealed = an unopened pack, box, tin, ETB or bundle' },
     game: { type: 'string', description: 'Pokémon, Magic: The Gathering, Yu-Gi-Oh!, One Piece, Disney Lorcana, Dragon Ball Super, Digimon, sports, or other' },
     name: { type: 'string', description: 'The card name exactly as printed, in English if the card is English (for sealed: the product name, e.g. "Prismatic Evolutions Elite Trainer Box")' },
-    number: { type: 'string', description: 'The collector number exactly as printed, e.g. 199/165, 025/198, BT29-086, OP05-119. Empty if you cannot read it clearly. Never guess digits.' },
-    set: { type: 'string', description: 'The set name or set code if printed or clearly identifiable; otherwise empty' },
+    number: { type: 'string', description: 'The collector number exactly as printed, e.g. 199/165, 025/198, BT29-086, OP05-119. On a slab label it may be just #4: give 4. Empty if you cannot read it clearly. Never guess digits.' },
+    set: { type: 'string', description: 'The set name if printed, on the slab label, or clearly identifiable from the set symbol or code (e.g. Base Set, Jungle, Scarlet & Violet 151); otherwise empty' },
     grader: { type: 'string', enum: ['', ...GRADERS], description: 'Graded only: the grading company on the label' },
     grade: { type: 'string', description: 'Graded only: the grade number on the label, e.g. 10, 9.5' },
     cert: { type: 'string', description: 'Graded only: the certification number on the label, if readable' },
@@ -35,19 +37,22 @@ const PROMPT = 'These photos are from a trading card collector adding cards to t
   'graded slab and sealed product you can see, once each, reading left to right, top to bottom, photo by photo. For each, read the name, ' +
   'collector number and set exactly as printed (on modern Pokémon cards the number and set code are at the bottom left; on Magic cards the ' +
   'collector number and set code are at the bottom left; on One Piece and Dragon Ball cards the code like OP05-119 is at the bottom right). ' +
-  'For graded slabs read the label (company, grade, cert number, card name and number). If a number is blurry, cut off or hidden by glare, ' +
+  'For graded slabs read the label: company, grade, cert number, card name, set name and card number (labels often show the year, game and set, e.g. "1999 Pokemon Game Base Set #4 Charizard Holo": set Base Set, number 4). ' +
+  'List at most 4 items per photo; if a photo shows more, list the first 4 and add its number to crowded. If a number is blurry, cut off or hidden by glare, ' +
   'leave it empty rather than guess. Skip card backs, sleeves with no card, and anything that is not a trading card product. ' +
   'If there are no cards, return an empty list.';
 
 const clean = (s, max) => String(s == null ? '' : s).replace(/[\u0000-\u001f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
+export const PER_PHOTO = 4;
 export function tidy(raw, photos) {
-  const out = [];
+  const out = [], per = {};
   for (const x of (raw && Array.isArray(raw.items) ? raw.items : []).slice(0, 40)) {
     if (!x || typeof x !== 'object') continue;
     const name = clean(x.name, 120); if (!name) continue;
     const kind = KINDS.includes(x.kind) ? x.kind : 'card', grader = GRADERS.includes(String(x.grader || '').toUpperCase()) ? String(x.grader).toUpperCase() : '';
     const grade = /^(10|[1-9](\.5)?)$/.test(String(x.grade || '').trim()) ? String(x.grade).trim() : '';
     const photo = Math.min(Math.max(1, Math.round(Number(x.photo) || 1)), photos);
+    per[photo] = (per[photo] || 0) + 1; if (per[photo] > PER_PHOTO) continue;   // at most 4 cards a photo
     out.push({ photo, kind: kind === 'graded' && !(grader && grade) ? 'card' : kind, game: clean(x.game, 40), name, number: clean(x.number, 24), set: clean(x.set, 80),
       grader: kind === 'graded' ? grader : '', grade: kind === 'graded' ? grade : '', cert: kind === 'graded' ? clean(x.cert, 20).replace(/[^\w-]/g, '') : '',
       lang: clean(x.lang, 20), sure: Math.max(0, Math.min(1, Number(x.sure) || 0)) });
@@ -89,8 +94,10 @@ export async function handleScan(env, req, me, out) {
   }
   const tin = (res.usage && res.usage.input_tokens) || 0, tout = (res.usage && res.usage.output_tokens) || 0;
   const use = (res.content || []).find(c => c.type === 'tool_use' && c.name === 'cards');
-  const items = tidy(use && use.input, imgs.length);
+  const items = tidy(use && use.input, imgs.length), inp = (use && use.input) || {};
+  const counts = {}; (Array.isArray(inp.items) ? inp.items : []).forEach(x => { const k = Math.round(Number(x && x.photo) || 1); counts[k] = (counts[k] || 0) + 1; });
+  const crowded = [...new Set([...(Array.isArray(inp.crowded) ? inp.crowded : []).map(Number), ...Object.keys(counts).filter(k => counts[k] > PER_PHOTO).map(Number)])].filter(k => k >= 1 && k <= imgs.length);
   await env.DB.batch([env.DB.prepare('INSERT INTO scan_usage (user_id,month,n) VALUES (?,?,?) ON CONFLICT(user_id,month) DO UPDATE SET n=n+excluded.n').bind(me.id, m, imgs.length)]);
   await addSpend(env, m, tin, tout);
-  return out({ items, limit, left: Math.max(0, limit - used - imgs.length), resets: info.resets, plan });
+  return out({ items, crowded, limit, left: Math.max(0, limit - used - imgs.length), resets: info.resets, plan });
 }
