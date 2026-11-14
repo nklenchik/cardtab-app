@@ -90,3 +90,11 @@
   .scan-r .scan-share{order:2}
 }
 @media(prefers-reduced-motion:reduce){.scan-shot i{animation:none;opacity:.35;transform:translateY(80%)}.scan-seg button,.scan-ic,.scan-btn{transition:none}}
+
+/* v52.97: tidier rows on narrow phones, the 4-a-photo tip, the "more than 4" note */
+.scan-chk{white-space:nowrap}
+.scan-share:empty{display:none}
+.scan-tip{margin:6px 0 0;text-align:center;font-size:12.5px;color:var(--ct-muted,#6b6862)}
+#scan-s2 .scan-tip{text-align:left;margin-top:12px}
+.scan-err.note{color:var(--ct-muted,#6b6862)}
+@media(max-width:760px){.scan-ra{gap:0}.scan-ic{width:30px;height:30px}.scan-r{gap:6px 10px}}

@@ -22,13 +22,13 @@
     dlg = document.createElement('dialog'); dlg.className = 'ed scan'; dlg.id = 'scan'; dlg.setAttribute('aria-label', 'Add from photo');
     dlg.innerHTML = '<div class="ed-form scan-form" id="scan-form">' +
       '<div class="scan-top"><h2 id="scan-h">Add from photo</h2><button type="button" class="ed-x" data-scan-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
-      '<section class="scan-step" id="scan-s1"><div class="scan-shots" id="scan-shots"></div><p class="scan-wait" id="scan-wait" aria-live="polite">Reading your cards…</p><p class="scan-err" id="scan-err" role="alert" hidden></p>' +
+      '<section class="scan-step" id="scan-s1"><div class="scan-shots" id="scan-shots"></div><p class="scan-wait" id="scan-wait" aria-live="polite">Reading your cards…</p><p class="scan-tip" id="scan-tip1">Up to 4 cards a photo, in good light.</p><p class="scan-err" id="scan-err" role="alert" hidden></p>' +
         '<div class="scan-acts" id="scan-retry" hidden><label class="scan-btn ghost">Choose other photos<input type="file" accept="image/*" multiple data-scan-file></label></div>' +
         '<div class="scan-acts" id="scan-up" hidden><button type="button" class="scan-btn ghost up" data-scan-up>See Premium</button></div></section>' +
       '<section class="scan-step" id="scan-s2" hidden>' +
         '<p class="scan-sub" id="scan-sub"></p>' +
         '<div class="scan-rows" id="scan-rows"></div>' +
-        '<label class="scan-more"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add another photo<input type="file" accept="image/*" multiple data-scan-file data-add="1"></label>' +
+        '<p class="scan-tip">Up to 4 cards a photo reads best.</p><label class="scan-more"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add another photo<input type="file" accept="image/*" multiple data-scan-file data-add="1"></label>' +
         '<div class="scan-sec"><div class="scan-lab">Details for all of them</div>' +
           '<div class="scan-seg" id="scan-type" role="group" aria-label="Purchase or sale"><button type="button" data-v="purchase" aria-pressed="true">Purchase</button><button type="button" data-v="sale" aria-pressed="false">Sale</button></div>' +
           '<div class="scan-two"><label class="scan-f"><span>Platform</span><select id="scan-plat"></select></label><label class="scan-f"><span>Date</span><input type="date" id="scan-date"></label></div>' +
@@ -95,12 +95,14 @@
       return fail(WHY[j.error] || j.error || WHY.failed, tok);
     }
     const items = j.items || [];
+    st.crowded = (j.crowded || []).length;
     if (!items.length && !st.rows.length) return fail('No cards found in ' + (imgs.length > 1 ? 'those photos' : 'that photo') + '. Try closer, with the card numbers in focus and no glare.', tok, true);
     $('scan-wait').textContent = 'Matching ' + items.length + (items.length === 1 ? ' item…' : ' items…');
     const found = await Promise.all(items.map(match));
     if (tok !== st.tok) return;
     st.rows = st.rows.concat(found);
     step(2); paint();
+    if (st.crowded) { const e2 = $('scan-err2'); e2.textContent = (st.crowded > 1 ? 'Some photos had' : 'That photo had') + ' more than 4 cards, so the first 4 were read. Add another photo for the rest.'; e2.hidden = false; e2.classList.add('note'); }
     window.CTTrack && window.CTTrack.ev && window.CTTrack.ev('scan', String(found.length));
   }
   function fail(text, tok, retry) {
@@ -114,15 +116,32 @@
     return i.plan === 'premium' ? 'You’ve used all ' + i.limit + ' photo scans this month. More on ' + when + '.' : 'You’ve used your ' + (i.limit || 5) + ' free photo scans this month. More on ' + when + ', or get 50 a month with Premium.';
   }
   // one recognized item -> a row: the catalog's printing when it's a confident match, else what was read (marked to check)
+  // v52.97: a printing is only chosen when the set or the number read from the photo backs it up. A slab label often prints
+  // just "#4", so a bare number is checked against the first part of each printing's number (4 matches 4/102).
+  const nrm = s => String(s || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const firstNum = s => (String(s || '').match(/\d+/) || [''])[0].replace(/^0+(?=\d)/, '');
+  const fullNum = s => /[\/-]|[a-z]/i.test(String(s || ''));
+  function confirm(c, it) {
+    let sc = 0;
+    if (it.number) { if (fullNum(it.number) && nrm(c.num).replace(/\b0+(?=\d)/g, '') === nrm(it.number).replace(/\b0+(?=\d)/g, '')) sc += 3; else if (firstNum(it.number) && firstNum(c.num) === firstNum(it.number)) sc += 2; }
+    const sw = nrm(it.set).split(' ').filter(w => w.length > 1 && !/^(pokemon|tcg|the|of|and)$/.test(w));
+    if (sw.length && sw.every(w => nrm(c.s).indexOf(w) > -1)) sc += 2;
+    return sc;
+  }
   async function match(it) {
-    const row = { it, card: null, list: [], check: false, price: '' };
-    const p = { name: it.name, number: it.number, set: it.set, game: /pok/i.test(it.game) ? 'Pokémon' : /dragon ball/i.test(it.game) ? 'Dragon Ball Super' : '' };
+    const row = { it, card: null, list: [], check: true, price: '' };
+    const game = /pok/i.test(it.game) ? 'Pokémon' : /dragon ball/i.test(it.game) ? 'Dragon Ball Super' : '';
+    // a bare "4" would rule out "4/102" in the lookup, so only a full number goes into the search; the bare one is used to choose
+    const p = { name: it.name, number: fullNum(it.number) ? it.number : '', set: it.set, game };
     try {
-      const res = window.CardLookup ? await window.CardLookup.remote(p) : { list: [], pick: -1 };
-      row.list = (res.list || []).slice(0, 6);
-      if (res.pick >= 0) row.card = row.list[res.pick];
-      else if (row.list.length && it.number) row.card = row.list[0];
-      row.check = !row.card || !it.number || (res.pick < 0 && row.list.length > 1) || it.sure < 0.6;
+      let res = window.CardLookup ? await window.CardLookup.remote(p) : { list: [], pick: -1 };
+      if (!(res.list || []).length && p.number) res = await window.CardLookup.remote(Object.assign({}, p, { number: '' }));
+      const list = (res.list || []).slice(0, 12), sc = list.map(c => confirm(c, it)), best = Math.max(0, ...sc), tops = list.filter((c, i) => sc[i] === best);
+      row.list = list.slice().sort((a, b) => confirm(b, it) - confirm(a, it)).slice(0, 6);
+      if (best >= 2) row.card = tops[0];
+      else if (res.pick >= 0 && !it.set && !it.number) row.card = list[res.pick];
+      // sure: the set and the number both agree (or a full number does), it's the only such printing, and the reading was clear
+      row.check = !row.card || best < 3 || tops.length > 1 || it.sure < 0.6;
     } catch (e) { row.check = true; }
     return row;
   }
@@ -205,7 +224,7 @@
     $('scan-tlab').textContent = sale ? 'Total sold for' : 'Total paid';
     $('scan-salew').hidden = !sale;
     $('scan-lotw').hidden = st.mode === 'each';
-    $('scan-err2').hidden = true;
+    $('scan-err2').hidden = true; $('scan-err2').classList.remove('note');
     paintRows(); sums();
     const i = st.info; $('scan-left').textContent = i && i.plan !== 'premium' && i.left != null ? i.left + (i.left === 1 ? ' free photo scan' : ' free photo scans') + ' left this month' : '';
   }

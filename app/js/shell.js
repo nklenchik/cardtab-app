@@ -27,7 +27,8 @@
     const canScroll = (el, stop) => { for (; el && el !== stop.parentElement; el = el.parentElement) { const cs = getComputedStyle(el);
       if (/(auto|scroll)/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 1) return true;
       if (/(auto|scroll)/.test(cs.overflowX) && el.scrollWidth > el.clientWidth + 1) return true; } return false; };
-    document.addEventListener('touchmove', e => { const d = document.querySelector('dialog[open]'); if (!d || !e.cancelable) return;
+    // v52.97: with two windows open (Add from photo over Add an item) the touch belongs to the one it's in, else the top one
+    document.addEventListener('touchmove', e => { const ds = [...document.querySelectorAll('dialog[open]')], d = ds.find(x => x.contains(e.target)) || ds[ds.length - 1]; if (!d || !e.cancelable) return;
       if (!d.contains(e.target) || !canScroll(e.target, d)) e.preventDefault(); }, { passive: false });
     const sync = () => document.documentElement.classList.toggle('sheet-up', !!document.querySelector('dialog[open]'));
     new MutationObserver(sync).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['open'] });
